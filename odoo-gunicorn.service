@@ -1,0 +1,47 @@
+[Unit]
+Description=Odoo Gunicorn Application Server
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=notify
+User=odoo
+Group=odoo
+WorkingDirectory=/app
+ExecStart=/usr/bin/gunicorn \
+    odoo.http:root \
+    --pythonpath /app \
+    --config /app/gunicorn.conf.py \
+    --bind 127.0.0.1:8069 \
+    --workers 4 \
+    --timeout 240 \
+    --max-requests 2000 \
+    --pid /var/run/odoo/gunicorn.pid \
+    --access-logfile /var/log/odoo/gunicorn-access.log \
+    --error-logfile /var/log/odoo/gunicorn-error.log \
+    --log-level info
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/odoo /var/run/odoo /app
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
+
