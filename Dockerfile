@@ -103,7 +103,6 @@ COPY --chown=odoo:odoo . /app/
 
 # Asegurar que los scripts ejecutables tengan permisos correctos
 RUN chmod +x /app/odoo-bin && \
-    if [ -f /app/start-gunicorn.sh ]; then chmod +x /app/start-gunicorn.sh; fi && \
     if [ -f /app/docker-entrypoint.sh ]; then chmod +x /app/docker-entrypoint.sh; fi
 
 # Cambiar al usuario no-root (seguridad)
