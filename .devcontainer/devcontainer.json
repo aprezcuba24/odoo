@@ -1,0 +1,38 @@
+// Devcontainer configuration for Odoo with PostgreSQL
+{
+	"name": "Odoo Development",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/app",
+	// Use 'settings' to set *default* container specific settings.json values on container create. 
+	// You can edit these settings after create using File > Preferences > Settings > Remote.
+	"settings": {
+		"terminal.integrated.defaultProfile.linux": "/bin/bash",
+		"python.defaultInterpreterPath": "/usr/local/bin/python",
+		"python.linting.enabled": true,
+		"python.linting.pylintEnabled": true,
+		"python.linting.pylintPath": "/usr/local/bin/pylint"
+	},
+	// Start both services (app and postgres) when the devcontainer is created
+	"runServices": [
+		"app",
+		"postgres"
+	],
+	// Keep containers running after VS Code shuts down
+	"shutdownAction": "stopCompose",
+	// Run commands after the container is created
+	"postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
+	// Connect as the non-root user created in the Dockerfile
+	"remoteUser": "odoo",
+	// Add the IDs of extensions you want installed when the container is created in the array below.
+	"extensions": [
+		"ms-python.python",
+		"VisualStudioExptTeam.vscodeintellicode",
+		"eamodio.gitlens",
+		"swyphcosmo.spellchecker",
+		"donjayamanne.githistory",
+		"Gruntfuggly.todo-tree",
+		"vscode-icons-team.vscode-icons",
+		"shardulm94.trailing-spaces"
+	]
+}

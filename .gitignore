@@ -8,6 +8,7 @@ _build/
 !.github
 !.mailmap
 !.weblate.json
+!.devcontainer
 # compiled python files
 *.py[co]
 __pycache__/
