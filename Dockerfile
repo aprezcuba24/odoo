@@ -9,14 +9,20 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Variables de entorno de Gunicorn (pueden ser sobrescritas)
+# Nota: Para entornos serverless, aumenta GUNICORN_TIMEOUT y GUNICORN_KEEPALIVE
+# para mantener las conexiones websocket abiertas más tiempo
 ENV GUNICORN_BIND=0.0.0.0:8069 \
     GUNICORN_WORKERS=4 \
-    GUNICORN_TIMEOUT=240 \
+    GUNICORN_WORKER_CLASS=gevent \
+    GUNICORN_WORKER_CONNECTIONS=1000 \
+    GUNICORN_TIMEOUT=600 \
+    GUNICORN_KEEPALIVE=75 \
     GUNICORN_MAX_REQUESTS=2000 \
     GUNICORN_MAX_REQUESTS_JITTER=50 \
     GUNICORN_LOG_LEVEL=info \
     GUNICORN_ACCESS_LOG=/var/log/odoo/gunicorn-access.log \
-    GUNICORN_ERROR_LOG=/var/log/odoo/gunicorn-error.log
+    GUNICORN_ERROR_LOG=/var/log/odoo/gunicorn-error.log \
+    GUNICORN_PRELOAD_APP=false
 
 # Variables de entorno de Odoo (deben ser configuradas al ejecutar el contenedor)
 # Variables requeridas para conexión a PostgreSQL (estándar de PostgreSQL):

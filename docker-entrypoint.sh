@@ -161,7 +161,11 @@ fi
 print_info "Base de datos lista. Iniciando Gunicorn..."
 
 # Ejecutar Gunicorn (reemplaza el proceso actual)
+# Usar odoo-wsgi:application que tiene la configuración correcta para websockets
+# Los logs van a stdout/stderr para que Railway pueda verlos
 exec gunicorn odoo-wsgi:application \
     --pythonpath /app \
-    --config /app/gunicorn.conf.py
+    --config /app/gunicorn.conf.py \
+    --access-logfile - \
+    --error-logfile -
 
