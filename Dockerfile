@@ -25,18 +25,22 @@ ENV GUNICORN_BIND=0.0.0.0:8069 \
     GUNICORN_PRELOAD_APP=false
 
 # Variables de entorno de Odoo (deben ser configuradas al ejecutar el contenedor)
-# Variables requeridas para conexión a PostgreSQL (estándar de PostgreSQL):
-# - PGHOST: hostname del servidor PostgreSQL (requerido)
+# Conexión a PostgreSQL — opción recomendada (un solo valor):
+# - DATABASE_URL: URI de conexión completa (ej: postgresql://user:pass@host:5432/dbname?sslmode=require)
+#   Cuando se define DATABASE_URL, las variables PG* individuales se ignoran.
+# Conexión a PostgreSQL — variables individuales (alternativa a DATABASE_URL):
+# - PGHOST: hostname del servidor PostgreSQL (requerido si no hay DATABASE_URL)
 # - PGPORT: puerto (por defecto 5432)
 # - PGUSER: usuario de la base de datos (requerido)
 # - PGPASSWORD: contraseña de la base de datos (requerido)
-# - PGDATABASE: nombre de la base de datos (requerido)
+# - PGDATABASE: nombre de la base de datos (requerido si no hay DATABASE_URL)
 # Variables opcionales para inicialización:
 # - DB_LANGUAGE: idioma por defecto (por defecto 'es_ES')
 # - DB_USERNAME: nombre de usuario admin (por defecto 'admin')
 # - DB_PASSWORD_ADMIN: contraseña del usuario admin (por defecto 'admin')
 # - DB_WITH_DEMO: instalar datos de demostración ('true' o 'false', por defecto 'false')
-# Ejemplo: docker run -e PGHOST=postgres.example.com -e PGDATABASE=odoo -e PGUSER=odoo -e PGPASSWORD=password ...
+# Ejemplo con DATABASE_URL: docker run -e DATABASE_URL=postgresql://odoo:password@postgres.example.com:5432/odoo ...
+# Ejemplo con variables individuales: docker run -e PGHOST=postgres.example.com -e PGDATABASE=odoo -e PGUSER=odoo -e PGPASSWORD=password ...
 
 # Instalar dependencias del sistema necesarias para Odoo
 # Agrupadas para optimizar el caché de Docker

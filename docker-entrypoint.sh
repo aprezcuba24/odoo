@@ -20,14 +20,30 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# If DATABASE_URL is provided, parse it into individual PG* variables
+if [ -n "$DATABASE_URL" ]; then
+    print_info "DATABASE_URL detectada. Parseando configuración de conexión..."
+    eval $(python3 -c "
+from urllib.parse import urlparse
+import os
+url = urlparse(os.environ['DATABASE_URL'])
+print(f'export PGHOST={url.hostname or \"localhost\"}')
+print(f'export PGPORT={url.port or 5432}')
+print(f'export PGUSER={url.username or \"odoo\"}')
+print(f'export PGPASSWORD={url.password or \"\"}')
+db = url.path.lstrip('/')
+print(f'export PGDATABASE={db}')
+")
+fi
+
 # Verificar que las variables de entorno de base de datos estén configuradas
-if [ -z "$PGDATABASE" ]; then
-    print_error "PGDATABASE no está configurada. Por favor, configura las variables de entorno de la base de datos."
+if [ -z "$DATABASE_URL" ] && [ -z "$PGDATABASE" ]; then
+    print_error "PGDATABASE no está configurada. Por favor, configura DATABASE_URL o las variables de entorno individuales de la base de datos."
     exit 1
 fi
 
-if [ -z "$PGHOST" ]; then
-    print_error "PGHOST no está configurada. Por favor, configura las variables de entorno de la base de datos."
+if [ -z "$DATABASE_URL" ] && [ -z "$PGHOST" ]; then
+    print_error "PGHOST no está configurada. Por favor, configura DATABASE_URL o las variables de entorno individuales de la base de datos."
     exit 1
 fi
 
@@ -57,13 +73,17 @@ import sys
 import os
 
 try:
-    conn = psycopg2.connect(
-        host=os.environ.get('PGHOST', 'localhost'),
-        port=int(os.environ.get('PGPORT', '5432')),
-        database=os.environ.get('PGDATABASE'),
-        user=os.environ.get('PGUSER', 'odoo'),
-        password=os.environ.get('PGPASSWORD', '')
-    )
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        conn = psycopg2.connect(db_url)
+    else:
+        conn = psycopg2.connect(
+            host=os.environ.get('PGHOST', 'localhost'),
+            port=int(os.environ.get('PGPORT', '5432')),
+            database=os.environ.get('PGDATABASE'),
+            user=os.environ.get('PGUSER', 'odoo'),
+            password=os.environ.get('PGPASSWORD', '')
+        )
     cur = conn.cursor()
     # Verificar si existe la tabla ir_module_module (indica que Odoo está inicializado)
     cur.execute("""

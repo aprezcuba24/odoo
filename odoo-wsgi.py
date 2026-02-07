@@ -16,17 +16,32 @@ from odoo.tools import config as conf
 # Common Configuration
 # ----------------------------------------------------------
 
-# Configurar base de datos desde variables de entorno PostgreSQL estándar
-if os.getenv('PGDATABASE'):
-    conf['db_name'] = os.getenv('PGDATABASE')
-if os.getenv('PGHOST'):
-    conf['db_host'] = os.getenv('PGHOST')
-if os.getenv('PGPORT'):
-    conf['db_port'] = int(os.getenv('PGPORT'))
-if os.getenv('PGUSER'):
-    conf['db_user'] = os.getenv('PGUSER')
-if os.getenv('PGPASSWORD'):
-    conf['db_password'] = os.getenv('PGPASSWORD')
+# Configurar base de datos desde DATABASE_URL o variables de entorno PostgreSQL estándar
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    from urllib.parse import urlparse
+    parsed = urlparse(database_url)
+    conf['db_host'] = parsed.hostname or 'localhost'
+    conf['db_port'] = parsed.port or 5432
+    conf['db_user'] = parsed.username or 'odoo'
+    conf['db_password'] = parsed.password or ''
+    conf['db_name'] = parsed.path.lstrip('/')
+    if parsed.query:
+        import urllib.parse as up
+        params = dict(up.parse_qsl(parsed.query))
+        if 'sslmode' in params:
+            conf['db_sslmode'] = params['sslmode']
+else:
+    if os.getenv('PGDATABASE'):
+        conf['db_name'] = os.getenv('PGDATABASE')
+    if os.getenv('PGHOST'):
+        conf['db_host'] = os.getenv('PGHOST')
+    if os.getenv('PGPORT'):
+        conf['db_port'] = int(os.getenv('PGPORT'))
+    if os.getenv('PGUSER'):
+        conf['db_user'] = os.getenv('PGUSER')
+    if os.getenv('PGPASSWORD'):
+        conf['db_password'] = os.getenv('PGPASSWORD')
 
 # Configurar gevent_port al mismo puerto que http_port para websockets
 # Esto es necesario porque Odoo verifica que los websockets vengan del puerto gevent_port
