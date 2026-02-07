@@ -106,7 +106,7 @@ COPY --chown=odoo:odoo requirements.txt /app/
 # Se instala como root primero, luego se cambia al usuario odoo
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt && \
-    pip install gunicorn
+    pip install gunicorn[gevent]
 
 # Copiar el resto del código de la aplicación
 COPY --chown=odoo:odoo . /app/
