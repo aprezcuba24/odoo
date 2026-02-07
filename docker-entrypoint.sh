@@ -134,7 +134,7 @@ init_database() {
 
     # Ejecutar inicialización
     print_info "Ejecutando: odoo-bin db init ${PGDATABASE} con argumentos de conexión..."
-    if /app/odoo-bin db init "${PGDATABASE}" "${INIT_ARGS[@]}" --force; then
+    if /app/odoo-bin db init "${PGDATABASE}" "${DB_ARGS[@]}" "${INIT_ARGS[@]}" --force; then
         print_info "Base de datos '${PGDATABASE}' inicializada correctamente."
         return 0
     else
@@ -149,7 +149,7 @@ update_database() {
 
     # Actualizar todos los módulos (base actualiza todo)
     print_info "Ejecutando: odoo-bin module upgrade base..."
-    if /app/odoo-bin module upgrade base; then
+    if /app/odoo-bin module upgrade base "${DB_ARGS[@]}"; then
         print_info "Base de datos '${PGDATABASE}' actualizada correctamente."
         return 0
     else

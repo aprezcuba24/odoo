@@ -123,7 +123,8 @@ EXPOSE 8069
 
 # Healthcheck para verificar que el servicio está funcionando
 # Verifica que el endpoint de salud responda correctamente
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+# start-period aumentado a 5 minutos para dar tiempo a la inicialización de la base de datos
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=5 \
     CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8069/web/health', timeout=5).read()" || exit 1
 
 # Script de entrada que inicializa/actualiza la base de datos antes de iniciar Gunicorn
