@@ -21,6 +21,16 @@ __pycache__/
 status
 # odoo filestore
 odoo/filestore
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Docker volumes and data
+/postgres-data/
+/odoo-data/
+/odoo-logs/
 # maintenance migration scripts
 odoo/addons/base/maintenance
 # windows installation config file
