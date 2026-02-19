@@ -9,29 +9,10 @@ services:
     restart: always
     ports:
       - "8069:8069"
-    environment:
-      # Database connection (external PostgreSQL)
-      - DATABASE_URL=${DATABASE_URL}
-
-      # Alternative PostgreSQL connection variables (if not using DATABASE_URL)
-      - PGHOST=${PGHOST:-}
-      - PGPORT=${PGPORT:-5432}
-      - PGUSER=${PGUSER:-}
-      - PGPASSWORD=${PGPASSWORD:-}
-      - PGDATABASE=${PGDATABASE:-odoo}
-
-      # Database initialization
-      - DB_PASSWORD_ADMIN=${DB_PASSWORD_ADMIN:-changeme}
-      - DB_LANGUAGE=${DB_LANGUAGE:-es_ES}
-      - DB_WITH_DEMO=${DB_WITH_DEMO:-false}
-
-      # Gunicorn configuration
-      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-4}
-      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-600}
-      - GUNICORN_KEEPALIVE=${GUNICORN_KEEPALIVE:-75}
-      - GUNICORN_MAX_REQUESTS=${GUNICORN_MAX_REQUESTS:-0}
-      - GUNICORN_MAX_REQUESTS_JITTER=${GUNICORN_MAX_REQUESTS_JITTER:-0}
+    env_file:
+      - .env
     volumes:
+      - .:/app:cached
       - odoo-data:/var/lib/odoo
       - odoo-logs:/var/log/odoo
     healthcheck:
