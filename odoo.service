@@ -1,0 +1,43 @@
+[Unit]
+Description=Odoo 19.0 (Gunicorn + gevent)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+WorkingDirectory=/apps/odoo
+
+# Load all env variables (DATABASE_URL, GUNICORN_BIND, etc.)
+EnvironmentFile=/apps/odoo/.env
+
+# Put the virtualenv first in PATH so python3 and gunicorn resolve correctly
+Environment=PATH=/apps/odoo/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Create the PID directory on each boot (tmpfs may have cleared it)
+ExecStartPre=/bin/mkdir -p /var/run/odoo
+ExecStartPre=/bin/chown odoo:odoo /var/run/odoo
+
+# Run the entrypoint: initialises/updates DB, then exec's Gunicorn
+ExecStart=/apps/odoo/docker-entrypoint.sh
+
+# Restart on crash; wait 5 s before each attempt
+Restart=always
+RestartSec=5s
+
+# Allow up to 10 minutes for DB initialisation on first run
+TimeoutStartSec=600
+
+# Logs go to journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=odoo
+
+# Let the process handle SIGTERM gracefully (default for Gunicorn)
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

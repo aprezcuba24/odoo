@@ -902,6 +902,147 @@ psql "$DATABASE_URL" -c "
 
 ---
 
+## Bare-Metal Deployment (Debian VPS)
+
+Use `deploy.sh` to install Odoo 19.0 directly on a Debian (or Ubuntu) VPS — no Docker required. The script sets up system packages, Python 3.12, wkhtmltopdf, a virtualenv, and a systemd service.
+
+### Prerequisites
+
+- **Debian 12 (Bookworm)** or Ubuntu 22.04+ VPS
+- Root access (run as `sudo`)
+- App code already cloned at `/apps/odoo`
+- An external **PostgreSQL 13+** database accessible from the VPS (connection URL ready)
+- `odoo.service` present in the same directory as `deploy.sh`
+
+### Step 1 — Clone the repository
+
+```bash
+sudo mkdir -p /apps
+sudo git clone <repository-url> /apps/odoo
+```
+
+### Step 2 — Run the deployment script
+
+```bash
+cd /apps/odoo
+sudo bash deploy.sh
+# Also works on Debian with sh:
+sudo sh deploy.sh
+```
+
+The script will:
+1. Install system packages (`build-essential`, `libpq-dev`, fonts, etc.)
+2. Install **Python 3.12** via the `deadsnakes` PPA if not already present
+3. Install **wkhtmltopdf** 0.12.6.1 (Bookworm build)
+4. Create the `odoo` system user and directories (`/var/log/odoo`, `/var/run/odoo`)
+5. Patch internal path references in `docker-entrypoint.sh`
+6. Create a Python virtualenv at `/apps/odoo/venv` and install all dependencies
+7. Create `/apps/odoo/.env` from `.env.example` (or from a built-in template)
+8. Install and enable the `odoo` systemd service
+
+### Step 3 — Configure the environment
+
+The script pauses and asks you to confirm that `DATABASE_URL` is set. Edit the file before answering:
+
+```bash
+sudo nano /apps/odoo/.env
+```
+
+Required variables:
+
+```bash
+# PostgreSQL connection URI
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# Gunicorn
+GUNICORN_BIND=0.0.0.0:8069
+GUNICORN_WORKERS=4
+
+# Odoo admin password (change this!)
+DB_PASSWORD_ADMIN=your_secure_password
+DB_LANGUAGE=es_ES
+DB_WITH_DEMO=false
+```
+
+Answer `s` (yes) at the prompt to start the service immediately, or `N` to start it manually later.
+
+### Step 4 — Start and verify
+
+```bash
+# Check service status
+sudo systemctl status odoo
+
+# Follow live logs
+sudo journalctl -u odoo -f
+
+# Health check
+curl http://localhost:8069/web/health
+```
+
+Access Odoo at `http://<your-server-ip>:8069`.
+
+### Updating configuration (.env changes)
+
+After editing `/apps/odoo/.env`, restart the service so systemd re-reads the file:
+
+```bash
+sudo nano /apps/odoo/.env       # make your changes
+sudo systemctl restart odoo     # picks up the new values
+sudo journalctl -u odoo -f      # confirm the service started correctly
+```
+
+> **Note:** `systemctl daemon-reload` is only needed when the `odoo.service` unit file itself
+> changes (e.g. after a `git pull` that updated it). For `.env`-only changes a plain
+> `restart` is sufficient.
+
+To verify a variable was loaded:
+```bash
+sudo systemctl show odoo --property=Environment
+```
+
+### Re-running the script
+
+The script is **idempotent**: it skips steps that are already done (existing user, existing virtualenv, existing wkhtmltopdf, etc.). You can safely re-run it after pulling updates or changing configuration.
+
+```bash
+cd /apps/odoo
+git pull
+sudo bash deploy.sh
+```
+
+### Troubleshooting
+
+**Service fails to start**
+```bash
+sudo journalctl -u odoo -n 50
+# Look for database connection errors or missing env vars
+```
+
+**Database connection refused**
+```bash
+# Test connectivity from the VPS
+psql "$DATABASE_URL" -c "SELECT 1;"
+# Verify firewall/security groups allow port 5432 from this IP
+```
+
+**Port 8069 not reachable**
+```bash
+# Check if ufw is active
+sudo ufw status
+# Open port manually if needed
+sudo ufw allow 8069/tcp
+```
+
+**Python 3.12 not found after PPA install**
+```bash
+python3.12 --version
+# If missing, add the PPA and install manually:
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update && sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
+```
+
+---
+
 ## Additional Resources
 
 - [Official Odoo Documentation](https://www.odoo.com/documentation/19.0/)

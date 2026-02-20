@@ -134,7 +134,7 @@ init_database() {
 
     # Ejecutar inicialización
     print_info "Ejecutando: odoo-bin db init ${PGDATABASE} con argumentos de conexión..."
-    if /app/odoo-bin db init "${PGDATABASE}" "${DB_ARGS[@]}" "${INIT_ARGS[@]}" --force; then
+    if /apps/odoo/odoo-bin db "${DB_ARGS[@]}" init "${PGDATABASE}" "${INIT_ARGS[@]}" --force; then
         print_info "Base de datos '${PGDATABASE}' inicializada correctamente."
         return 0
     else
@@ -149,7 +149,7 @@ update_database() {
 
     # Actualizar todos los módulos (base actualiza todo)
     print_info "Ejecutando: odoo-bin module upgrade base..."
-    if /app/odoo-bin module upgrade base "${DB_ARGS[@]}"; then
+    if /apps/odoo/odoo-bin "${DB_ARGS[@]}" -d "${PGDATABASE}" -u base --stop-after-init --no-http; then
         print_info "Base de datos '${PGDATABASE}' actualizada correctamente."
         return 0
     else
@@ -184,8 +184,8 @@ print_info "Base de datos lista. Iniciando Gunicorn..."
 # Usar odoo-wsgi:application que tiene la configuración correcta para websockets
 # Los logs van a stdout/stderr para que Railway pueda verlos
 exec gunicorn odoo-wsgi:application \
-    --pythonpath /app \
-    --config /app/gunicorn.conf.py \
+    --pythonpath /apps/odoo \
+    --config /apps/odoo/gunicorn.conf.py \
     --access-logfile - \
     --error-logfile -
 
