@@ -45,13 +45,9 @@ import sys
 class WebSocketErrorFilter(logging.Filter):
     """Filtro para suprimir errores esperados después de upgrades a websocket"""
     def filter(self, record):
-        # Si el mensaje contiene "Bad file descriptor" y viene del parser,
-        # es probable que sea un error esperado después de un upgrade a websocket
         if 'Bad file descriptor' in str(record.getMessage()):
-            if 'parser' in str(record.pathname).lower() or 'unreader' in str(record.pathname).lower():
-                # Cambiar el nivel a DEBUG en lugar de ERROR
-                record.levelno = logging.DEBUG
-                record.levelname = 'DEBUG'
+            record.levelno = logging.DEBUG
+            record.levelname = 'DEBUG'
         return True
 
 # Aplicar el filtro al logger de errores de Gunicorn
