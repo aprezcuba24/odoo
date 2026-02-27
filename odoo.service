@@ -15,9 +15,9 @@ EnvironmentFile=/apps/odoo/.env
 # Put the virtualenv first in PATH so python3 and gunicorn resolve correctly
 Environment=PATH=/apps/odoo/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Create the PID directory on each boot (tmpfs may have cleared it)
-ExecStartPre=/bin/mkdir -p /var/run/odoo
-ExecStartPre=/bin/chown odoo:odoo /var/run/odoo
+# Create /run/odoo owned by odoo:odoo on each start (survives tmpfs clears)
+RuntimeDirectory=odoo
+RuntimeDirectoryMode=0755
 
 # Run the entrypoint: initialises/updates DB, then exec's Gunicorn
 ExecStart=/apps/odoo/docker-entrypoint.sh
