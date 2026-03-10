@@ -34,6 +34,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender1 \
     libxext6 \
     libssl3 \
+    coreutils \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar Wkhtmltopdf - intentar primero desde repositorios, luego desde paquete Bookworm

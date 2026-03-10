@@ -43,11 +43,13 @@ import logging
 import sys
 
 class WebSocketErrorFilter(logging.Filter):
-    """Filtro para suprimir errores esperados después de upgrades a websocket"""
+    """Filter to suppress expected EBADF errors after WebSocket upgrades."""
     def filter(self, record):
-        if 'Bad file descriptor' in str(record.getMessage()):
-            record.levelno = logging.DEBUG
-            record.levelname = 'DEBUG'
+        if 'Socket error processing request' in str(record.getMessage()):
+            if record.exc_info:
+                exc = record.exc_info[1]
+                if isinstance(exc, OSError) and getattr(exc, 'errno', None) == 9:
+                    return False  # Suppress entirely
         return True
 
 # Aplicar el filtro al logger de errores de Gunicorn

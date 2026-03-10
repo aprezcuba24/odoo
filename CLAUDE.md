@@ -56,6 +56,11 @@ sudo journalctl -u odoo -f
 sudo systemctl restart odoo    # after editing /apps/odoo/.env
 ```
 
+In the server I do the following
+```
+sudo cp /apps/odoo/odoo.service /etc/systemd/system/odoo.service
+```
+
 ## Architecture of custom deployment files
 
 | File | Purpose |

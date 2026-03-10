@@ -20,16 +20,16 @@ class GeventWSGIHandler(PyWSGIHandler):
         """Inicializar el handler y asegurar que tenemos acceso al socket"""
         super().__init__(*args, **kwargs)
         # El socket debería estar disponible después de la inicialización
-    
+
     def get_environ(self):
         """Añadir el socket al environ para que Odoo pueda usarlo con websockets"""
         environ = super().get_environ()
-        
+
         # Añadir el socket al environ (necesario para websockets de Odoo)
         # En gevent.pywsgi, el socket está disponible como self.socket
         # que es el objeto socket del cliente conectado
         socket_obj = None
-        
+
         # Intentar obtener el socket de diferentes formas
         # El socket es el objeto de conexión TCP del cliente
         if hasattr(self, 'socket') and self.socket is not None:
@@ -42,7 +42,7 @@ class GeventWSGIHandler(PyWSGIHandler):
             # En algunas versiones, el socket puede estar en client
             socket_obj = self.client
             _logger.debug("Socket obtenido de self.client")
-        
+
         # Si encontramos el socket, añadirlo al environ
         # Esto es crítico para que Odoo pueda manejar websockets
         if socket_obj is not None:
@@ -140,33 +140,7 @@ class GeventWorkerWithSocket(GeventWorker):
     """
     wsgi_handler = GeventWSGIHandler
     
-    def handle(self, listener, client, addr):
-        """
-        Manejar una conexión, manejando correctamente los upgrades a websocket.
-        Después de un upgrade, el socket es tomado por Odoo y cualquier intento
-        de leer más datos resultará en "Bad file descriptor", lo cual es esperado.
-        """
-        try:
-            # Usar el método padre que maneja requests normalmente
-            return super().handle(listener, client, addr)
-        except (OSError, IOError) as e:
-            # Después de un upgrade a websocket, Odoo toma el socket y
-            # cualquier intento de leer más datos del socket resultará en
-            # "Bad file descriptor". Esto es esperado y no es un error real.
-            errno = getattr(e, 'errno', None)
-            if errno == 9:  # EBADF - Bad file descriptor
-                # Este error es esperado después de un upgrade a websocket
-                # El socket ha sido tomado por Odoo para manejar el websocket
-                _logger.debug("Socket tomado por websocket después de upgrade, ignorando error esperado")
-                return
-            # Para otros errores, re-lanzar
-            raise
-        except Exception as e:
-            # Capturar cualquier otro error relacionado con el socket
-            # que pueda ocurrir después de un upgrade
-            errno = getattr(e, 'errno', None)
-            if errno == 9:  # EBADF - Bad file descriptor
-                _logger.debug("Error de socket después de upgrade, ignorando")
-                return
-            raise
+    # No need to override handle() — the EBADF after WebSocket upgrade is caught
+    # internally by base_async.py and logged (suppressed via WebSocketErrorFilter
+    # in gunicorn.conf.py).
 
