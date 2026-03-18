@@ -58,7 +58,8 @@ gunicorn_error_logger.addFilter(WebSocketErrorFilter())
 
 # Process management
 daemon = False
-pidfile = os.getenv('GUNICORN_PIDFILE', '/var/run/odoo/gunicorn.pid')
+# Use /tmp for pidfile to avoid permission issues in PaaS/container environments
+pidfile = os.getenv('GUNICORN_PIDFILE', '/tmp/gunicorn.pid')
 umask = 0o007
 user = os.getenv('GUNICORN_USER', None)
 group = os.getenv('GUNICORN_GROUP', None)
@@ -77,8 +78,9 @@ reload = False
 # Graceful timeout for worker restart
 graceful_timeout = 30
 
-# Worker timeout
-worker_tmp_dir = '/dev/shm'  # Use shared memory for better performance (Linux)
+# Worker timeout - use /tmp for better compatibility in container/PaaS environments
+# /dev/shm requires specific kernel capabilities that may not be available everywhere
+worker_tmp_dir = '/tmp'
 
 # Hook para añadir el socket al environ cuando se usa gevent (necesario para websockets)
 def on_reload(server):
