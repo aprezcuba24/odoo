@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Odoo 19.0 — a Python ERP/business-apps framework — installed directly on a Debian/Ubuntu VPS (no Docker) and managed via systemd, with an **external** PostgreSQL database. The Odoo core lives in `odoo/` and the standard addons in `addons/`. Custom deployment logic is entirely in the root-level files.
+Odoo 19.0 — a Python ERP/business-apps framework — deployed as a Docker container on [Seenode](https://seenode.com), a modern PaaS with managed PostgreSQL. The deployment uses Gunicorn with gevent workers for WebSocket support. The Odoo core lives in `odoo/` and standard addons in `addons/`. Custom deployment logic is in the root-level Docker files.
 
 ## Development
 
@@ -42,43 +42,42 @@ Configuration is in `ruff.toml`. Import order follows Odoo conventions: `future 
 
 ## Production deployment
 
-Code lives at `/apps/odoo`. The setup script is idempotent and can be re-run after `git pull`.
+This project is configured for deployment on [Seenode](https://seenode.com), a PaaS similar to Render. See `SEENODE_DEPLOYMENT.md` for detailed deployment instructions.
 
-```bash
-sudo bash deploy.sh
-```
+### Quick deploy
 
-Manage via systemd:
+1. Push code to GitHub
+2. Go to https://cloud.seenode.com
+3. Create a managed PostgreSQL database
+4. Create Web Service, connect your repo
+5. Set port to `8069` and add environment variables
+6. Deploy
 
-```bash
-sudo systemctl status odoo
-sudo journalctl -u odoo -f
-sudo systemctl restart odoo    # after editing /apps/odoo/.env
-```
+### Environment variables
 
-In the server I do the following
-```
-sudo cp /apps/odoo/odoo.service /etc/systemd/system/odoo.service
-```
+Required:
+- `DATABASE_URL`: Full PostgreSQL connection string from Seenode database dashboard
+- `DB_PASSWORD_ADMIN`: Master password for Odoo database management
+- `DB_LANGUAGE`: Default language (e.g., `es_ES`)
+- `DB_USERNAME`: Default admin username (e.g., `admin`)
+- `DB_WITH_DEMO`: `true`/`false` — install demo data
 
-## Architecture of custom deployment files
+Optional (Gunicorn tuning):
+- `GUNICORN_WORKERS`: Number of workers (default: 4)
+- `GUNICORN_TIMEOUT`: Request timeout in seconds (default: 600)
+- `GUNICORN_KEEPALIVE`: Keep-alive timeout (default: 75)
+
+## Architecture of deployment files
 
 | File | Purpose |
 |------|---------|
-| `docker-entrypoint.sh` | Entry point for both Docker and systemd. Checks if DB is initialized (queries `ir_module_module`), runs `db init` on first run or `module upgrade base` on subsequent deploys, then `exec`s Gunicorn. |
-| `odoo-wsgi.py` | WSGI application. Parses `DATABASE_URL` (or `PG*` vars) into Odoo config, sets `gevent_port = http_port` (required for WebSocket auth), wraps `odoo.http.root` with `WebSocketMiddleware`. |
-| `gunicorn.conf.py` | Gunicorn configuration. All settings read from env vars. Uses `GeventWorkerWithSocket` worker class by default. Sets `preload_app=False` (required with gevent + WebSockets). |
+| `Dockerfile` | Production Docker image. Builds Python 3.12 slim image with wkhtmltopdf, installs dependencies, creates `odoo` user. Used by Seenode to build the container. |
+| `docker-entrypoint.sh` | Entry point script. Checks if database is initialized (queries `ir_module_module`), runs `odoo-bin db init` on first run or `odoo-bin -u base` on subsequent deploys, then `exec`s Gunicorn. |
+| `odoo-wsgi.py` | WSGI application. Parses `DATABASE_URL` into Odoo config, sets `gevent_port = http_port` (required for WebSocket auth), wraps `odoo.http.root` with `WebSocketMiddleware`. |
+| `gunicorn.conf.py` | Gunicorn configuration. All settings read from env vars. Uses `GeventWorkerWithSocket` worker class by default. Sets `preload_app=False` (required with gevent + WebSockets). Uses `/tmp` for pidfile and worker temp for PaaS compatibility. |
 | `gunicorn_gevent_handler.py` | Custom gevent Gunicorn worker (`GeventWorkerWithSocket`) and handler (`GeventWSGIHandler`). Injects the raw TCP socket into `environ['socket']` so Odoo can take over the connection for WebSocket upgrades. Suppresses expected `EBADF` errors after upgrade. |
-| `odoo.service` | systemd unit. Loads `/apps/odoo/.env`, runs `docker-entrypoint.sh` as the `odoo` user. `TimeoutStartSec=600` to allow DB init on first run. |
-| `deploy.sh` | One-shot VPS setup: installs system packages, Python 3.12 (deadsnakes PPA), wkhtmltopdf 0.12.6.1, creates `odoo` user, creates virtualenv at `venv/`, installs `requirements.txt` + `gunicorn[gevent]`, creates `.env`, installs and enables the systemd service. |
-
-## Environment variables
-
-`DATABASE_URL` (preferred) or individual `PG*` vars (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`).
-
-First-run initialization vars: `DB_LANGUAGE` (default `es_ES`), `DB_USERNAME` (default `admin`), `DB_PASSWORD_ADMIN`, `DB_WITH_DEMO` (`true`/`false`).
-
-Gunicorn vars: `GUNICORN_BIND`, `GUNICORN_WORKERS`, `GUNICORN_WORKER_CLASS`, `GUNICORN_TIMEOUT`, `GUNICORN_KEEPALIVE`, `GUNICORN_LOG_LEVEL`, `GUNICORN_ACCESS_LOG`, `GUNICORN_ERROR_LOG`.
+| `.env.example` | Environment variable templates with Seenode-specific examples. |
+| `SEENODE_DEPLOYMENT.md` | Step-by-step deployment guide for Seenode. |
 
 ## WebSocket notes
 
@@ -86,6 +85,14 @@ Odoo's WebSocket endpoint (`/websocket`) requires:
 1. Gunicorn worker class must be `gevent` (specifically `GeventWorkerWithSocket` here).
 2. `gevent_port` in Odoo config must equal the HTTP port (set in `odoo-wsgi.py`).
 3. `preload_app` must be `False`.
-4. Reverse proxy must forward `Upgrade` and `Connection` headers (HTTP/1.1).
+4. Seenode's load balancer forwards WebSocket headers automatically.
 
 The custom handler in `gunicorn_gevent_handler.py` exists specifically to solve the socket-handoff problem: after Odoo responds `101 Switching Protocols`, it takes over the raw socket. Gunicorn then sees `EBADF` when it tries to read the next request — this is expected and suppressed.
+
+## Notes
+
+- **No persistent volumes**: Seenode does not currently offer persistent disks. Configure attachment storage to use the database (default) or external S3-compatible storage.
+- **Zero-downtime deploys**: Seenode keeps the old instance running while the new one starts and passes health checks.
+- **Database upgrades**: Every deploy runs `odoo-bin -u base` to update the database schema. This takes 2-3 minutes on subsequent deploys.
+- **Health checks**: The Dockerfile includes a healthcheck on `/web/health`. Seenode uses this to determine deployment health.
+- **Logs**: All logs go to stdout/stderr and are visible in the Seenode dashboard. No file-based logging in production.

@@ -1,13 +1,10 @@
 # WSGI Handler configuration file for Gunicorn
 #
-# This file configures Odoo to run with Gunicorn in production.
+# This file configures Odoo to run with Gunicorn in production on PaaS platforms.
 # Adjust the settings below according to your environment.
 #
 # Usage:
 #   $ gunicorn odoo-wsgi:application --pythonpath . -c gunicorn.conf.py
-#
-# Or with systemd:
-#   $ systemctl start odoo-gunicorn
 
 import os
 from odoo.tools import config as conf
@@ -100,50 +97,4 @@ application = WebSocketMiddleware(root)
 
 # Nota: application.initialize() se llamará automáticamente cuando sea necesario
 # Con preload_app=False, cada worker inicializará su propia instancia
-
-# ----------------------------------------------------------
-# Gunicorn Configuration
-# ----------------------------------------------------------
-
-# Server socket
-bind = os.getenv('GUNICORN_BIND', '127.0.0.1:8069')
-backlog = 2048
-
-# Worker processes
-workers = int(os.getenv('GUNICORN_WORKERS', '4'))
-# Usar gevent para soportar websockets (requerido para /websocket endpoint)
-worker_class = os.getenv('GUNICORN_WORKER_CLASS', 'gevent')
-worker_connections = int(os.getenv('GUNICORN_WORKER_CONNECTIONS', '1000'))
-timeout = int(os.getenv('GUNICORN_TIMEOUT', '240'))
-keepalive = int(os.getenv('GUNICORN_KEEPALIVE', '2'))
-
-# Restart workers after this many requests, to help prevent memory leaks
-max_requests = int(os.getenv('GUNICORN_MAX_REQUESTS', '2000'))
-max_requests_jitter = 50
-
-# Process naming
-proc_name = 'odoo'
-
-# Logging
-accesslog = os.getenv('GUNICORN_ACCESS_LOG', '-')  # '-' means stdout
-errorlog = os.getenv('GUNICORN_ERROR_LOG', '-')    # '-' means stderr
-loglevel = os.getenv('GUNICORN_LOG_LEVEL', 'info')
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
-
-# Process management
-daemon = False
-pidfile = os.getenv('GUNICORN_PIDFILE', '/var/run/odoo/gunicorn.pid')
-umask = 0o007
-user = os.getenv('GUNICORN_USER', None)
-group = os.getenv('GUNICORN_GROUP', None)
-tmp_upload_dir = None
-
-# SSL (if needed)
-# keyfile = '/path/to/keyfile'
-# certfile = '/path/to/certfile'
-
-# Server mechanics
-# preload_app debe ser False con gevent para websockets
-preload_app = os.getenv('GUNICORN_PRELOAD_APP', 'False').lower() == 'true'
-reload = False
 
