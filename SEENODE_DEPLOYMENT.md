@@ -2,6 +2,79 @@
 
 This guide walks you through deploying Odoo 19.0 on [Seenode](https://seenode.com), a modern PaaS similar to Render with managed PostgreSQL, WebSocket support, and automatic SSL.
 
+There are **two deployment modes** available:
+
+- **Runtime mode** (recommended if Dockerfile is not supported): uses `build.sh` + `docker-entrypoint.sh` — [jump to Runtime mode](#runtime-mode-no-dockerfile)
+- **Dockerfile mode**: Seenode auto-detects the Dockerfile — [jump to Dockerfile mode](#dockerfile-mode)
+
+---
+
+## Runtime mode (no Dockerfile)
+
+Use this mode when Seenode does not allow Dockerfile-based deployments and instead asks for a runtime, build command, and start command.
+
+### Why `pip install -r requirements.txt` fails alone
+
+Odoo requires several native C libraries (`libpq-dev`, `libxml2-dev`, `libsass-dev`, `libldap2-dev`, etc.) to be present **before** pip can compile its Python dependencies. The `build.sh` script installs those system libraries first and then runs pip.
+
+### 1. Push code to GitHub
+
+```bash
+git add -A
+git commit -m "Add build.sh for Seenode runtime deployment"
+git push origin main
+```
+
+### 2. Create PostgreSQL database
+
+1. In the Seenode dashboard go to **Databases** → **Create database**
+2. Choose **PostgreSQL** (version 16 recommended)
+3. Wait for provisioning and copy the **Connection URL**
+
+### 3. Create Web Service
+
+1. Click **New** → **Web Service** → connect your GitHub repository
+2. Select the branch (`main`)
+3. Choose a **Python runtime** (Python 3.12 recommended)
+4. Set the following:
+
+| Field | Value |
+|-------|-------|
+| **Port** | `8069` |
+| **Build command** | `bash build.sh` |
+| **Start command** | `bash docker-entrypoint.sh` |
+
+### 4. Configure environment variables
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `DATABASE_URL` | Connection URL from step 2 | Full PostgreSQL URI |
+| `DB_PASSWORD_ADMIN` | Strong password | Odoo master password |
+| `DB_LANGUAGE` | `es_ES` | Default language |
+| `DB_USERNAME` | `admin` | Default admin username |
+| `DB_WITH_DEMO` | `false` | No demo data in production |
+
+Optional Gunicorn tuning:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GUNICORN_WORKERS` | `(2×CPU)+1` | Number of workers |
+| `GUNICORN_TIMEOUT` | `600` | Request timeout in seconds |
+| `GUNICORN_KEEPALIVE` | `75` | Keep-alive timeout |
+
+### 5. Deploy
+
+Click **Create Web Service**. The first deployment:
+1. `build.sh` installs system libraries and Python packages (~3-5 min)
+2. `docker-entrypoint.sh` initialises the database schema (~3-5 min)
+3. Gunicorn starts and health checks pass
+
+Subsequent deployments skip the full system install (cached by Seenode) and only run the database upgrade.
+
+---
+
+## Dockerfile mode
+
 ## Prerequisites
 
 - GitHub or GitLab account (for repository connection)

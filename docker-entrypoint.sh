@@ -1,6 +1,11 @@
 #!/bin/bash
-# Script de entrada para Docker - Inicializa/actualiza la base de datos y luego inicia Gunicorn
+# Script de entrada para Docker o runtime PaaS (Seenode, Render, Railway?)
+# Inicializa/actualiza la base de datos y luego inicia Gunicorn.
 set -e
+
+# Resolve the directory that contains this script so paths work both in Docker
+# (/app as WORKDIR) and in a runtime PaaS deployment (arbitrary working dir).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Colores para output
 RED='\033[0;31m'
@@ -22,7 +27,7 @@ print_error() {
 
 # If DATABASE_URL is provided, parse it into individual PG* variables
 if [ -n "$DATABASE_URL" ]; then
-    print_info "DATABASE_URL detectada. Parseando configuración de conexión..."
+    print_info "DATABASE_URL detectada. Parseando configuraci?n de conexi?n..."
     eval $(python3 -c "
 from urllib.parse import urlparse
 import os
@@ -36,18 +41,18 @@ print(f'export PGDATABASE={db}')
 ")
 fi
 
-# Verificar que las variables de entorno de base de datos estén configuradas
+# Verificar que las variables de entorno de base de datos est?n configuradas
 if [ -z "$DATABASE_URL" ] && [ -z "$PGDATABASE" ]; then
-    print_error "PGDATABASE no está configurada. Por favor, configura DATABASE_URL o las variables de entorno individuales de la base de datos."
+    print_error "PGDATABASE no est? configurada. Por favor, configura DATABASE_URL o las variables de entorno individuales de la base de datos."
     exit 1
 fi
 
 if [ -z "$DATABASE_URL" ] && [ -z "$PGHOST" ]; then
-    print_error "PGHOST no está configurada. Por favor, configura DATABASE_URL o las variables de entorno individuales de la base de datos."
+    print_error "PGHOST no est? configurada. Por favor, configura DATABASE_URL o las variables de entorno individuales de la base de datos."
     exit 1
 fi
 
-# Construir array de argumentos de conexión para odoo-bin
+# Construir array de argumentos de conexi?n para odoo-bin
 DB_ARGS=()
 if [ -n "$PGHOST" ]; then
     DB_ARGS+=("--db_host=${PGHOST}")
@@ -62,9 +67,9 @@ if [ -n "$PGPASSWORD" ]; then
     DB_ARGS+=("-w" "${PGPASSWORD}")
 fi
 
-# Función para verificar si la base de datos está inicializada
+# Funci?n para verificar si la base de datos est? inicializada
 check_database_initialized() {
-    print_info "Verificando si la base de datos '${PGDATABASE}' está inicializada..."
+    print_info "Verificando si la base de datos '${PGDATABASE}' est? inicializada..."
 
     # Usar Python para verificar si existe la tabla ir_module_module
     python3 << EOF
@@ -85,7 +90,7 @@ try:
             password=os.environ.get('PGPASSWORD', '')
         )
     cur = conn.cursor()
-    # Verificar si existe la tabla ir_module_module (indica que Odoo está inicializado)
+    # Verificar si existe la tabla ir_module_module (indica que Odoo est? inicializado)
     cur.execute("""
         SELECT EXISTS (
             SELECT FROM information_schema.tables 
@@ -107,11 +112,11 @@ except Exception as e:
 EOF
 }
 
-# Función para inicializar la base de datos
+# Funci?n para inicializar la base de datos
 init_database() {
     print_info "Inicializando base de datos '${PGDATABASE}' desde cero..."
 
-    # Parámetros adicionales para inicialización
+    # Par?metros adicionales para inicializaci?n
     INIT_ARGS=()
     if [ -n "$DB_LANGUAGE" ]; then
         INIT_ARGS+=("--language=${DB_LANGUAGE}")
@@ -132,9 +137,9 @@ init_database() {
         INIT_ARGS+=("--with-demo")
     fi
 
-    # Ejecutar inicialización
-    print_info "Ejecutando: odoo-bin db init ${PGDATABASE} con argumentos de conexión..."
-    if ./odoo-bin db "${DB_ARGS[@]}" init "${PGDATABASE}" "${INIT_ARGS[@]}" --force; then
+    # Ejecutar inicializaci?n
+    print_info "Ejecutando: odoo-bin db init ${PGDATABASE} con argumentos de conexi?n..."
+    if "$SCRIPT_DIR/odoo-bin" db "${DB_ARGS[@]}" init "${PGDATABASE}" "${INIT_ARGS[@]}" --force; then
         print_info "Base de datos '${PGDATABASE}' inicializada correctamente."
         return 0
     else
@@ -143,13 +148,13 @@ init_database() {
     fi
 }
 
-# Función para actualizar todos los módulos
+# Funci?n para actualizar todos los m?dulos
 update_database() {
     print_info "Actualizando esquema de la base de datos '${PGDATABASE}'..."
 
-    # Actualizar todos los módulos (base actualiza todo)
+    # Actualizar todos los m?dulos (base actualiza todo)
     print_info "Ejecutando: odoo-bin module upgrade base..."
-    if ./odoo-bin "${DB_ARGS[@]}" -d "${PGDATABASE}" -u base --stop-after-init --no-http; then
+    if "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${PGDATABASE}" -u base --stop-after-init --no-http; then
         print_info "Base de datos '${PGDATABASE}' actualizada correctamente."
         return 0
     else
@@ -159,18 +164,18 @@ update_database() {
 }
 
 # Proceso principal
-print_info "Iniciando proceso de inicialización/actualización de base de datos..."
+print_info "Iniciando proceso de inicializaci?n/actualizaci?n de base de datos..."
 
-# Verificar si la base de datos está inicializada
+# Verificar si la base de datos est? inicializada
 if check_database_initialized 2>/dev/null; then
-    print_info "La base de datos '${PGDATABASE}' ya existe y está inicializada."
+    print_info "La base de datos '${PGDATABASE}' ya existe y est? inicializada."
     print_info "Actualizando esquema de la base de datos (esto se ejecuta en cada deploy)..."
     if ! update_database; then
         print_warn "Error al actualizar la base de datos. Continuando de todas formas..."
-        print_warn "La aplicación se iniciará pero puede que el esquema no esté actualizado."
+        print_warn "La aplicaci?n se iniciar? pero puede que el esquema no est? actualizado."
     fi
 else
-    print_warn "La base de datos '${PGDATABASE}' no está inicializada o no existe."
+    print_warn "La base de datos '${PGDATABASE}' no est? inicializada o no existe."
     print_info "Inicializando base de datos desde cero (primera vez)..."
     if ! init_database; then
         print_error "Error al inicializar la base de datos. Abortando."
@@ -181,11 +186,11 @@ fi
 print_info "Base de datos lista. Iniciando Gunicorn..."
 
 # Ejecutar Gunicorn (reemplaza el proceso actual)
-# Usar odoo-wsgi:application que tiene la configuración correcta para websockets
+# Usar odoo-wsgi:application que tiene la configuraci?n correcta para websockets
 # Los logs van a stdout/stderr para PaaS
 exec gunicorn odoo-wsgi:application \
-    --pythonpath /app \
-    --config /app/gunicorn.conf.py \
+    --pythonpath "$SCRIPT_DIR" \
+    --config "$SCRIPT_DIR/gunicorn.conf.py" \
     --access-logfile - \
     --error-logfile -
 
