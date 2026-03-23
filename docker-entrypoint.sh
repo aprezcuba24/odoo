@@ -163,6 +163,66 @@ update_database() {
     fi
 }
 
+# PaaS: el filesystem es efímero; el filestore se pierde en cada deploy.
+# Fuerza almacenamiento en BD y elimina bundles de assets que apuntan a ficheros ya borrados.
+configure_attachment_storage() {
+    print_info "Configurando almacenamiento de adjuntos para PaaS (ir_attachment.location=db)..."
+
+    python3 << 'EOF'
+import os
+import sys
+
+import psycopg2
+
+try:
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        conn = psycopg2.connect(db_url)
+    else:
+        conn = psycopg2.connect(
+            host=os.environ.get("PGHOST", "localhost"),
+            port=int(os.environ.get("PGPORT", "5432")),
+            database=os.environ.get("PGDATABASE"),
+            user=os.environ.get("PGUSER", "odoo"),
+            password=os.environ.get("PGPASSWORD", ""),
+        )
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO ir_config_parameter (key, value)
+        VALUES ('ir_attachment.location', 'db')
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+        """
+    )
+    cur.execute(
+        """
+        DELETE FROM ir_attachment
+        WHERE store_fname IS NOT NULL
+          AND url LIKE '/web/assets/%%';
+        """
+    )
+    deleted = cur.rowcount
+    conn.commit()
+    cur.close()
+    conn.close()
+    print(f"[INFO] Eliminados {deleted} adjuntos de bundles /web/assets (se regeneran al servir).")
+except Exception as e:
+    print(f"Error configurando adjuntos PaaS: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+}
+
+# Migra adjuntos que siguen en filestore a la base de datos (tras cambiar ir_attachment.location).
+migrate_attachments_to_db() {
+    print_info "Migrando adjuntos existentes del filestore a la base de datos (force_storage)..."
+
+    if printf '%s\n' "env['ir.attachment'].force_storage()" | "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${PGDATABASE}" shell --no-http; then
+        print_info "Migración de adjuntos completada."
+    else
+        print_warn "force_storage() falló; revisa los logs. Los adjuntos pueden seguir referenciando rutas de filestore inexistentes."
+    fi
+}
+
 # Proceso principal
 print_info "Iniciando proceso de inicializaci?n/actualizaci?n de base de datos..."
 
@@ -182,6 +242,9 @@ else
         exit 1
     fi
 fi
+
+configure_attachment_storage
+migrate_attachments_to_db
 
 print_info "Base de datos lista. Iniciando Gunicorn..."
 
