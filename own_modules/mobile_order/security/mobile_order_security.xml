@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_mobile_order" model="ir.module.category">
+        <field name="name">Mobile Orders</field>
+        <field name="description">Manage mobile app devices and API-related sales</field>
+        <field name="sequence">25</field>
+    </record>
+
+    <record id="group_mobile_order_user" model="res.groups">
+        <field name="name">Mobile order user</field>
+        <field name="category_id" ref="module_category_mobile_order"/>
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+
+    <record id="group_mobile_order_manager" model="res.groups">
+        <field name="name">Mobile order manager</field>
+        <field name="category_id" ref="module_category_mobile_order"/>
+        <field name="implied_ids" eval="[(4, ref('group_mobile_order_user')), (4, ref('sales_team.group_sale_manager'))]"/>
+    </record>
+</odoo>
