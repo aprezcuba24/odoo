@@ -4,6 +4,12 @@ from odoo import http
 from odoo.http import request
 
 from .decorators import mobile_auth, mobile_json_response
+from .serialization import (
+    pos_category_to_mobile_dict,
+    product_product_to_mobile_dict,
+    serialize_many,
+    serialize_one,
+)
 
 
 class MobileCatalogController(http.Controller):
@@ -13,14 +19,7 @@ class MobileCatalogController(http.Controller):
         PosCategory = request.env['pos.category'].sudo()
         domain = PosCategory._load_pos_data_domain({}, mobile_pos_config)
         categories = PosCategory.search(domain, order='sequence, id, name')
-        items = [
-            {
-                'id': c.id,
-                'name': c.name,
-                'parent_id': c.parent_id.id if c.parent_id else None,
-            }
-            for c in categories
-        ]
+        items = serialize_many(categories, pos_category_to_mobile_dict)
         return mobile_json_response({'items': items, 'total': len(items)})
 
     @http.route('/api/mobile/products', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
@@ -46,20 +45,7 @@ class MobileCatalogController(http.Controller):
         Product = request.env['product.product'].sudo()
         products = Product.search(domain, limit=limit, offset=offset, order='name, id')
         total = Product.search_count(domain)
-        data = []
-        for prod in products:
-            data.append({
-                'id': prod.id,
-                'name': prod.display_name,
-                'default_code': prod.default_code,
-                'list_price': prod.lst_price,
-                'uom_name': prod.uom_id.name if prod.uom_id else None,
-                'barcode': prod.barcode,
-                'pos_categories': [
-                    {'id': c.id, 'name': c.name}
-                    for c in prod.product_tmpl_id.pos_categ_ids
-                ],
-            })
+        data = serialize_many(products, product_product_to_mobile_dict)
         return mobile_json_response({
             'items': data,
             'total': total,
@@ -76,17 +62,10 @@ class MobileCatalogController(http.Controller):
             return mobile_json_response({'error': 'not_found'}, 404)
         if not prod.filtered_domain(mobile_product_domain):
             return mobile_json_response({'error': 'not_found'}, 404)
-        return mobile_json_response({
-            'id': prod.id,
-            'name': prod.display_name,
-            'default_code': prod.default_code,
-            'list_price': prod.lst_price,
-            'uom_name': prod.uom_id.name if prod.uom_id else None,
-            'barcode': prod.barcode,
-            'description_sale': prod.description_sale,
-            'pos_categories': [
-                {'id': c.id, 'name': c.name}
-                for c in prod.product_tmpl_id.pos_categ_ids
-            ],
-            'pos_config_id': mobile_pos_config.id,
-        })
+        payload = serialize_one(
+            prod,
+            product_product_to_mobile_dict,
+            include_description_sale=True,
+        )
+        payload['pos_config_id'] = mobile_pos_config.id
+        return mobile_json_response(payload)
