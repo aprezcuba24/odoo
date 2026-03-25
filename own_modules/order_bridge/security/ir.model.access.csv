@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_order_bridge_device_salesman,order_bridge.device.salesman,order_bridge.model_order_bridge_device,sales_team.group_sale_salesman,1,1,1,0
+access_order_bridge_device_user,order_bridge.device.user,order_bridge.model_order_bridge_device,order_bridge.group_order_bridge_user,1,1,1,0
+access_order_bridge_device_manager,order_bridge.device.manager,order_bridge.model_order_bridge_device,order_bridge.group_order_bridge_manager,1,1,1,1

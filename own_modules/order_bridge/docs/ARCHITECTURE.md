@@ -1,0 +1,146 @@
+# order_bridge — Arquitectura y decisiones de diseño
+
+Documento de referencia para el módulo **Order bridge** (`order_bridge`) en Odoo 19. Resume el alcance, la arquitectura, los módulos reutilizados y las decisiones tomadas.
+
+## Objetivo
+
+Exponer una **API REST JSON** para clientes externos (apps, kioscos, integraciones) que actúan como canal de pedidos: los usuarios finales se identifican por **teléfono**, el **dispositivo** queda registrado con una clave única generada en el cliente, y un **administrador de la tienda** valida el teléfono (y por tanto el dispositivo activo). Las órdenes se almacenan en Odoo; debe quedar claro qué pedidos provienen de **dispositivos aún no validados**.
+
+## Actualización desde `mobile_order`
+
+Si la base de datos tenía instalado el addon **`mobile_order`** (carpeta y nombre técnicos antiguos):
+
+1. **Antes** de arrancar Odoo con solo la carpeta `order_bridge`, ejecuta en PostgreSQL (o equivalente):
+
+   ```sql
+   UPDATE ir_module_module SET name = 'order_bridge' WHERE name = 'mobile_order';
+   UPDATE ir_model_data SET module = 'order_bridge' WHERE module = 'mobile_order';
+   ```
+
+2. Sustituye el código del addon: elimina `mobile_order` y despliega `order_bridge` en el mismo `addons_path`.
+
+3. Actualiza el módulo: `-u order_bridge`. El script `migrations/19.0.2.0.0/pre-rename_mobile_order.py` renombra tablas, columnas y metadatos ORM del esquema antiguo.
+
+Instalaciones nuevas no necesitan el paso SQL.
+
+## Módulos Odoo reutilizados (Community)
+
+| Módulo | Uso |
+|--------|-----|
+| **sale** | `sale.order` / `sale.order.line`, estados `draft` → `sent` → `sale` → `cancel`. |
+| **product** | Catálogo (`product.product`), precios, venta (`sale_ok`). |
+| **point_of_sale** | `pos.config`, `pos.category`, y la misma lógica de dominio que el TPV (`product.template._load_pos_data_domain`) para alinear el catálogo API con un punto de venta concreto. |
+| **contacts** (base) | `res.partner` y campo `phone`. |
+| **phone_validation** | Normalización de números vía `phone_format` (E.164 cuando es posible). |
+
+Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referencia de patrones HTTP/JSON en core (este módulo no usa `/json/2`).
+
+### Catálogo API y TPV
+
+- En **`res.company`** el campo **`order_bridge_pos_config_id`** enlaza **un único** `pos.config` por compañía con el catálogo expuesto por la API.
+- Configuración: **Ajustes → Punto de venta** (bloque «Order bridge») o pestaña **Order bridge** en el formulario de la compañía.
+- Si no hay configuración enlazada, las rutas de catálogo y la creación de pedidos desde la API responden **503** con `error: configuration`.
+- Los productos expuestos cumplen el mismo dominio que el POS: compañía del TPV, `available_in_pos`, `sale_ok`, y si el TPV tiene **Restringir categorías**, filtro por `pos_categ_ids` como en Odoo estándar.
+- Filtros opcionales en listado: `category_id` (categoría interna de producto), `pos_category_id` (categoría POS, `child_of`).
+
+## Principios de diseño
+
+1. **Sin usuarios Odoo para clientes finales**  
+   No portal ni `res.users` por cliente. Identidad = `device_key` + vínculo a `res.partner`.
+
+2. **Lo que se valida es el dispositivo ligado al teléfono**  
+   El usuario introduce el teléfono en el cliente; la app genera y guarda un `device_key` (p. ej. UUID v4). El backend registra `phone` + `device_key`. Tras la validación administrativa, ese dispositivo se considera validado.
+
+3. **Un teléfono, un dispositivo activo**  
+   Si se registra un nuevo `device_key` para el mismo teléfono normalizado, los dispositivos anteriores con ese teléfono se **desactivan**. El nuevo queda pendiente de validación de nuevo (**re-validación** por seguridad).
+
+4. **Pedidos antes de validar**  
+   La API **permite crear pedidos** con dispositivo no validado; en `sale.order` queda almacenado si el dispositivo estaba validado o no (`order_bridge_device_validated`), para informes y filtros en backend.
+
+5. **Órdenes creadas por administrador**  
+   Origen `order_bridge_origin = 'admin'`, sin `order_bridge_device_id`. Visibles en el cliente junto a las del usuario (`partner_id` común), con referencia de puente cuando aplica.
+
+6. **API stateless orientada a JSON**  
+   Respuestas JSON planas (`make_json_response`), rutas `auth='public'`, `csrf=False`, y autorización por cabecera `Authorization: Bearer <device_key>` resuelta en código (no confundir con API keys de `res.users`).
+
+## Modelos de datos
+
+### `order_bridge.device`
+
+Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normalizado), `phone_validated`, `active`, fechas de registro y última actividad, `device_info` opcional.
+
+### Extensiones
+
+- **`res.company`**: `order_bridge_pos_config_id` → `pos.config` usado por la API para esa compañía.
+- **`res.partner`**: relación a dispositivos; campos calculados almacenados `order_bridge_registered`, `order_bridge_phone_validated`; contador de pedidos del puente (no almacenado).
+- **`sale.order`**: `order_bridge_origin` (`app` | `admin`), `order_bridge_device_id`, `order_bridge_device_validated` (snapshot al crear), `order_bridge_ref` (secuencia tipo `OB-00001`), `order_bridge_pos_config_id` (TPV aplicable al crear desde la API).
+
+## API REST (prefijo `/api/order_bridge/`)
+
+| Método | Ruta | Auth |
+|--------|------|------|
+| POST | `/register` | Ninguna (body JSON) |
+| OPTIONS | `/*` | CORS preflight |
+| GET | `/status` | Bearer `device_key` |
+| GET | `/categories` | Bearer |
+| GET | `/products`, `/products/<id>` | Bearer |
+| POST | `/orders` | Bearer |
+| GET | `/orders`, `/orders/<id>` | Bearer |
+| POST | `/orders/<id>/cancel` | Bearer |
+| GET | `/profile` | Bearer |
+
+Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la referencia legible se expone como `order_ref` y el origen como `origin`.
+
+## Autenticación en código (`@api_device_auth`)
+
+1. Lee `Authorization: Bearer <token>`.
+2. Busca `order_bridge.device` activo con ese `device_key`.
+3. Si no existe → 401.
+4. **No** bloquea si `phone_validated` es falso (solo afecta a flags en pedidos).
+5. Actualiza `last_activity` en el dispositivo.
+6. Inyecta dispositivo y partner en el controlador (vía `sudo()` acotado a datos del dispositivo).
+
+## Seguridad operativa
+
+- Tras validar el dispositivo, las operaciones quedan acotadas al `partner_id` del dispositivo (no se acepta `partner_id` arbitrario del cliente).
+- `device_key` aleatorio de alta entropía; almacenado en claro en BD (similar al prefijo de API keys de Odoo: secreto largo no elegido por el usuario).
+- Registro idempotente: mismo `device_key` devuelve estado actual sin duplicar filas.
+
+## Consideraciones técnicas
+
+- **CORS**: cabeceras en respuestas y manejo `OPTIONS` para clientes HTTP no navegador / herramientas de prueba.
+- **Cron**: desactivar dispositivos sin actividad tras N días (parámetro de sistema `order_bridge.device_inactivity_days`).
+- **Administración**: menús y acciones para listar dispositivos, validar/revocar, filtrar pedidos del puente por origen y por “dispositivo no validado”.
+
+## Diagrama de componentes (resumen)
+
+```mermaid
+flowchart LR
+    Client[ExternalClient] -->|JSON REST| CTRL[Controllers order_bridge]
+    CTRL --> DEV[order_bridge.device]
+    CTRL --> SO[sale.order]
+    CTRL --> POS[pos.config]
+    POS --> PROD[product.product]
+    DEV --> P[res.partner]
+    SO --> P
+    SO --> PROD
+    ADMIN[Usuario interno Odoo] --> DEV
+    ADMIN --> SO
+    ADMIN --> POS
+```
+
+## Flujos resumidos
+
+1. **Alta**: Cliente genera `device_key` → POST `/register` con `phone`, `name`, `device_key` → partner + device; admin valida en backend → GET `/status` refleja `validated`.
+2. **Pedido**: POST `/orders` con líneas; se crea `sale.order` con `order_bridge_origin=app` y snapshot de validación del dispositivo.
+3. **Cambio de dispositivo**: nuevo `device_key` + mismo teléfono → dispositivos previos con ese teléfono inactivos → nuevo pendiente de validación.
+
+---
+
+## Documentación adicional
+
+- [Ejemplos curl / pruebas manuales](API_EXAMPLES.md)
+
+---
+
+*Última alineación con el plan funcional acordado para el proyecto.*

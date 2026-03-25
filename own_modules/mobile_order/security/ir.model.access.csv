@@ -1,4 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_mobile_device_salesman,mobile.device.salesman,mobile_order.model_mobile_device,sales_team.group_sale_salesman,1,1,1,0
-access_mobile_device_user,mobile.device.user,mobile_order.model_mobile_device,mobile_order.group_mobile_order_user,1,1,1,0
-access_mobile_device_manager,mobile.device.manager,mobile_order.model_mobile_device,mobile_order.group_mobile_order_manager,1,1,1,1
