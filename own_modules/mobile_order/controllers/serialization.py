@@ -36,3 +36,13 @@ def product_product_to_mobile_dict(p, *, include_description_sale=False):
     if include_description_sale:
         d['description_sale'] = p.description_sale
     return d
+
+
+def serialize_pagination(items, limit, offset, total, pos_config_id):
+    return {
+        'items': items,
+        'limit': limit,
+        'offset': offset,
+        'total': total,
+        'pos_config_id': pos_config_id,
+    }
