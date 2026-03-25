@@ -11,6 +11,7 @@
                     <field name="mobile_order_ref" readonly="1"/>
                     <field name="mobile_device_id" options="{'no_create': True}"/>
                     <field name="mobile_device_validated" readonly="1"/>
+                    <field name="mobile_pos_config_id" options="{'no_create': True}" invisible="not mobile_pos_config_id"/>
                 </group>
             </xpath>
         </field>

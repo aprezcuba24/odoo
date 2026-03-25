@@ -6,6 +6,7 @@ from odoo.fields import Command
 from odoo.http import request
 
 from .decorators import (
+    mobile_catalog_context,
     get_json_body,
     mobile_auth,
     mobile_cors_preflight,
@@ -43,6 +44,15 @@ class MobileOrdersController(http.Controller):
         lines = body.get('lines') or []
         if not lines:
             return mobile_json_response({'error': 'validation', 'message': 'lines required'}, 400)
+        pos_config, _catalog_company, product_domain = mobile_catalog_context(partner)
+        if not pos_config:
+            return mobile_json_response(
+                {
+                    'error': 'configuration',
+                    'message': 'No point of sale is linked for the mobile app. Configure it on the company or in Settings.',
+                },
+                503,
+            )
         line_cmds = []
         Product = request.env['product.product'].sudo()
         for line in lines:
@@ -55,7 +65,7 @@ class MobileOrdersController(http.Controller):
             if not pid or qty <= 0:
                 return mobile_json_response({'error': 'validation', 'message': 'invalid line'}, 400)
             product = Product.browse(int(pid)).exists()
-            if not product or not product.sale_ok or not product.active:
+            if not product or not product.filtered_domain(product_domain):
                 return mobile_json_response({'error': 'validation', 'message': f'product {pid} not available'}, 400)
             line_cmds.append(Command.create({
                 'product_id': product.id,
@@ -64,9 +74,10 @@ class MobileOrdersController(http.Controller):
         try:
             order = request.env['sale.order'].sudo().create({
                 'partner_id': partner.id,
-                'company_id': partner.company_id.id or request.env.company.id,
+                'company_id': pos_config.company_id.id,
                 'mobile_origin': 'app',
                 'mobile_device_id': mobile_device.id,
+                'mobile_pos_config_id': pos_config.id,
                 'order_line': line_cmds,
             })
         except UserError as e:

@@ -22,6 +22,15 @@ class SaleOrder(models.Model):
         copy=False,
     )
     mobile_order_ref = fields.Char(string='Mobile reference', copy=False, index=True)
+    mobile_pos_config_id = fields.Many2one(
+        'pos.config',
+        string='Mobile POS config',
+        help='Point of sale configuration whose product catalog applied when this order was created from the app.',
+        readonly=True,
+        copy=False,
+        ondelete='set null',
+        check_company=True,
+    )
 
     @api.model_create_multi
     def create(self, vals_list):

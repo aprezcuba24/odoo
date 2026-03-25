@@ -11,7 +11,10 @@ curl -sS -X POST "$BASE/api/mobile/register" \
 # Estado
 curl -sS "$BASE/api/mobile/status" -H "Authorization: Bearer $KEY"
 
-# Catálogo
+# Categorías POS (mismo conjunto que el TPV enlazado a la compañía)
+curl -sS "$BASE/api/mobile/categories" -H "Authorization: Bearer $KEY"
+
+# Catálogo (productos del TPV; opcional: pos_category_id, category_id)
 curl -sS "$BASE/api/mobile/products?limit=10" -H "Authorization: Bearer $KEY"
 
 # Crear pedido

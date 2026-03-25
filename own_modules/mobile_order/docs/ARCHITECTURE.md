@@ -12,10 +12,19 @@ Exponer una **API REST JSON** para una aplicación Android que actúa como punto
 |--------|-----|
 | **sale** | `sale.order` / `sale.order.line`, estados `draft` → `sent` → `sale` → `cancel`. |
 | **product** | Catálogo (`product.product`), precios, venta (`sale_ok`). |
+| **point_of_sale** | `pos.config`, `pos.category`, y la misma lógica de dominio que el TPV (`product.template._load_pos_data_domain`) para alinear el catálogo móvil con un punto de venta concreto. |
 | **contacts** (base) | `res.partner` y campo `phone`. |
 | **phone_validation** | Normalización de números vía `phone_format` (E.164 cuando es posible). |
 
 Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referencia de patrones HTTP/JSON en core (este módulo no usa `/json/2`).
+
+### Catálogo móvil y TPV
+
+- En **`res.company`** el campo **`mobile_pos_config_id`** enlaza **un único** `pos.config` por compañía con la APK.
+- Configuración: **Ajustes → Punto de venta** (bloque «Mobile app») o pestaña **Mobile app** en el formulario de la compañía.
+- Si no hay configuración enlazada, las rutas de catálogo y la creación de pedidos desde la app responden **503** con `error: configuration`.
+- Los productos expuestos cumplen el mismo dominio que el POS: compañía del TPV, `available_in_pos`, `sale_ok`, y si el TPV tiene **Restringir categorías**, filtro por `pos_categ_ids` como en Odoo estándar.
+- Filtros opcionales en listado: `category_id` (categoría interna de producto), `pos_category_id` (categoría POS, `child_of`).
 
 ## Principios de diseño
 
@@ -45,8 +54,9 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 
 ### Extensiones
 
+- **`res.company`**: `mobile_pos_config_id` → `pos.config` usado por la API móvil para esa compañía.
 - **`res.partner`**: relación a dispositivos; campos calculados almacenados `mobile_app_registered`, `mobile_phone_validated`; contador de pedidos móviles (no almacenado).
-- **`sale.order`**: `mobile_origin` (`app` | `admin`), `mobile_device_id`, `mobile_device_validated` (related almacenado al dispositivo), `mobile_order_ref` (secuencia tipo `MO-00001`).
+- **`sale.order`**: `mobile_origin` (`app` | `admin`), `mobile_device_id`, `mobile_device_validated` (snapshot al crear), `mobile_order_ref` (secuencia tipo `MO-00001`), `mobile_pos_config_id` (TPV aplicable al crear desde la app).
 
 ## API REST (prefijo `/api/mobile/`)
 
@@ -55,6 +65,7 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 | POST | `/register` | Ninguna (body JSON) |
 | OPTIONS | `/*` | CORS preflight |
 | GET | `/status` | Bearer `device_key` |
+| GET | `/categories` | Bearer |
 | GET | `/products`, `/products/<id>` | Bearer |
 | POST | `/orders` | Bearer |
 | GET | `/orders`, `/orders/<id>` | Bearer |
@@ -91,11 +102,14 @@ flowchart LR
     APK[App Android] -->|JSON REST| CTRL[Controllers mobile_order]
     CTRL --> DEV[mobile.device]
     CTRL --> SO[sale.order]
+    CTRL --> POS[pos.config]
+    POS --> PROD[product.product]
     DEV --> P[res.partner]
     SO --> P
-    SO --> PROD[product.product]
+    SO --> PROD
     ADMIN[Usuario interno Odoo] --> DEV
     ADMIN --> SO
+    ADMIN --> POS
 ```
 
 ## Flujos resumidos
