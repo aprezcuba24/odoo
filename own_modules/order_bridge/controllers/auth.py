@@ -4,7 +4,7 @@ from odoo import http
 from odoo.exceptions import UserError
 from odoo.http import request
 
-from .decorators import (
+from ..utils.decorators import (
     api_cors_preflight,
     api_device_auth,
     api_json_response,

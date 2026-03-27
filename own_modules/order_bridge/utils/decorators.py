@@ -64,11 +64,8 @@ def catalog_context_for_partner(partner):
     catalog_company = Company._order_bridge_catalog_company_for_partner(
         partner, request.env.company.sudo()
     )
-    pos_config = catalog_company.order_bridge_pos_config_id
-    if not pos_config:
-        return None, catalog_company, None
     product_domain = catalog_company._order_bridge_product_domain()
-    return pos_config, catalog_company, product_domain
+    return product_domain
 
 
 _POS_CONFIG_ERROR = {

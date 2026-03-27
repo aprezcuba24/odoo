@@ -3,9 +3,9 @@
 from odoo import http
 from odoo.http import request
 
-from .decorators import api_device_auth, api_json_response
-from .query_domain import extend_domain_from_int_params
-from .serialization import (
+from ..utils.decorators import api_device_auth, api_json_response
+from ..utils.query_domain import extend_domain_from_int_params
+from ..utils.serialization import (
     pos_category_to_api_dict,
     product_product_to_api_dict,
     serialize_many,
