@@ -91,6 +91,25 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 
 Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la referencia legible se expone como `order_ref` y el origen como `origin`.
 
+### Contrato OpenAPI y clientes TypeScript
+
+- **Especificación:** [`docs/openapi.json`](openapi.json) (OpenAPI 3.1), generada desde los modelos Pydantic en `schemas/`.
+- **Regenerar** tras cambiar cuerpos de petición, respuestas o rutas:
+
+  ```bash
+  python3 own_modules/order_bridge/scripts/export_openapi.py
+  ```
+
+  Hacer commit del JSON actualizado. Los tests `TestOrderBridgeOpenapi` comprueban que el fichero coincide con el generador.
+
+- **Aplicación TypeScript en otro repositorio:** generar tipos (y opcionalmente helpers) a partir del JSON, por ejemplo:
+
+  ```bash
+  npx openapi-typescript path/al/openapi.json -o src/order-bridge-api.d.ts
+  ```
+
+  Puedes fijar la versión del contrato copiando el archivo desde este repo, un submódulo git, o la URL raw del fichero en la rama que uses.
+
 ## Autenticación en código (`@api_device_auth`)
 
 1. Lee `Authorization: Bearer <token>`.
