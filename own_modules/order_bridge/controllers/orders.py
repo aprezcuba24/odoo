@@ -1,10 +1,13 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from pydantic import ValidationError
+
 from odoo import http
 from odoo.exceptions import UserError
 from odoo.fields import Command
 from odoo.http import request
 
+from ..schemas import OrderCreateBody, OrdersListQuery, pydantic_errors_to_api_body
 from ..utils.decorators import (
     _POS_CONFIG_ERROR,
     api_cors_preflight,
@@ -27,9 +30,13 @@ class OrdersController(http.Controller):
     @api_device_auth
     def orders(self, api_device=None, api_partner=None, **kwargs):
         partner = api_partner.sudo()
-        limit = min(int(request.params.get('limit') or 50), 200)
-        offset = int(request.params.get('offset') or 0)
-        state = request.params.get('state')
+        try:
+            q = OrdersListQuery.from_request_params(request.params)
+        except ValidationError as e:
+            return api_json_response(pydantic_errors_to_api_body(e), 400)
+        limit = q.limit
+        offset = q.offset
+        state = q.state
         domain = [
             ('partner_id', '=', partner.id),
             ('order_bridge_origin', 'in', ['app', 'admin']),
@@ -43,17 +50,22 @@ class OrdersController(http.Controller):
         return api_json_response(serialize_pagination(items, limit, offset, total))
 
     @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['POST'], csrf=False)
-    def orders_create(self, partner, api_device, pos_config=None, **kwargs):
+    @api_device_auth
+    def orders_create(self, api_device=None, api_partner=None, **kwargs):
+        partner = api_partner.sudo()
         body = get_json_body()
         if body is None:
             return api_json_response({'error': 'invalid_json'}, 400)
-        lines = body.get('lines') or []
-        if not lines:
-            return api_json_response({'error': 'validation', 'message': 'lines required'}, 400)
+        try:
+            body_in = OrderCreateBody.model_validate(body)
+        except ValidationError as e:
+            return api_json_response(pydantic_errors_to_api_body(e), 400)
         pos_config, _catalog_company, product_domain = catalog_context_for_partner(partner)
         if not pos_config:
             return api_json_response(_POS_CONFIG_ERROR, status=503)
-        line_cmds = self._validate_lines(lines, product_domain)
+        line_cmds, line_error = self._build_line_commands(body_in.lines, product_domain)
+        if line_error:
+            return line_error
         try:
             order = request.env['sale.order'].sudo().create({
                 'partner_id': partner.id,
@@ -67,26 +79,21 @@ class OrdersController(http.Controller):
             return api_json_response({'error': 'validation', 'message': str(e)}, 400)
         return api_json_response(serialize_one(order, sale_order_created_to_api_dict))
 
-    def _validate_lines(self, lines, product_domain):
+    def _build_line_commands(self, lines, product_domain):
         line_cmds = []
         Product = request.env['product.product'].sudo()
         for line in lines:
-            pid = line.get('product_id')
-            qty = line.get('qty') or line.get('product_uom_qty') or 0
-            try:
-                qty = float(qty)
-            except (TypeError, ValueError):
-                return api_json_response({'error': 'validation', 'message': 'invalid qty'}, 400)
-            if not pid or qty <= 0:
-                return api_json_response({'error': 'validation', 'message': 'invalid line'}, 400)
-            product = Product.browse(int(pid)).exists()
+            product = Product.browse(line.product_id).exists()
             if not product or not product.filtered_domain(product_domain):
-                return api_json_response({'error': 'validation', 'message': f'product {pid} not available'}, 400)
+                return None, api_json_response(
+                    {'error': 'validation', 'message': f'product {line.product_id} not available'},
+                    400,
+                )
             line_cmds.append(Command.create({
                 'product_id': product.id,
-                'product_uom_qty': qty,
+                'product_uom_qty': line.qty,
             }))
-        return line_cmds
+        return line_cmds, None
 
     def _retrieve_order(self, order_id, api_partner):
         order = request.env['sale.order'].sudo().browse(order_id).exists()

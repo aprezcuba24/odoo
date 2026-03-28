@@ -82,3 +82,46 @@ class TestOrderBridgeApi(HttpCase):
     def test_products_requires_auth(self):
         res = self.url_open('/api/order_bridge/products', timeout=60)
         self.assertEqual(res.status_code, 401)
+
+    def test_register_missing_device_key_returns_400(self):
+        res = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '+34600111200'}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 400, res.text)
+        body = json.loads(res.text)
+        self.assertEqual(body.get('error'), 'validation')
+        self.assertIn('details', body)
+
+    def test_orders_post_requires_device_auth(self):
+        res = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': 1, 'qty': 1}]}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+            method='POST',
+        )
+        self.assertEqual(res.status_code, 401, res.text)
+
+    def test_products_invalid_category_id_returns_400(self):
+        pos = self.env['pos.config'].create({'name': 'Order bridge API query test POS'})
+        self.env.company.order_bridge_pos_config_id = pos
+        key = str(uuid.uuid4())
+        reg = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '+34600111333', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        self.assertEqual(reg.status_code, 200, reg.text)
+        res = self.url_open(
+            '/api/order_bridge/products?category_id=not_int',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 400, res.text)
+        data = json.loads(res.text)
+        self.assertEqual(data.get('error'), 'validation')
+        self.assertIn('details', data)

@@ -1,10 +1,17 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from pydantic import ValidationError
+
 from odoo import http
 from odoo.exceptions import UserError
 from odoo.http import request
 
-from ..models.partner_address import ADDRESS_FIELD_NAMES
+from ..schemas import (
+    ProfilePatchBody,
+    ProfilePutBody,
+    RegisterBody,
+    pydantic_errors_to_api_body,
+)
 from ..utils.decorators import (
     api_cors_preflight,
     api_device_auth,
@@ -22,11 +29,16 @@ class DeviceAuthController(http.Controller):
         body = get_json_body()
         if body is None:
             return api_json_response({'error': 'invalid_json'}, 400)
-        phone = body.get('phone')
-        device_key = body.get('device_key')
-        device_info = body.get('device_info')
         try:
-            result = request.env['order_bridge.device'].register_or_get(phone, device_key, device_info)
+            body_in = RegisterBody.model_validate(body)
+        except ValidationError as e:
+            return api_json_response(pydantic_errors_to_api_body(e), 400)
+        try:
+            result = request.env['order_bridge.device'].register_or_get(
+                body_in.phone,
+                body_in.device_key,
+                body_in.device_info,
+            )
         except UserError as e:
             return api_json_response({'error': 'validation', 'message': str(e)}, 400)
         device = result['device']
@@ -64,37 +76,21 @@ class DeviceAuthController(http.Controller):
         body = get_json_body()
         if body is None:
             return api_json_response({'error': 'invalid_json'}, 400)
+        try:
+            body_in = ProfilePutBody.model_validate(body)
+        except ValidationError as e:
+            return api_json_response(pydantic_errors_to_api_body(e), 400)
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
-        name = body.get('name')
-        if name is None or not str(name).strip():
-            return api_json_response(
-                {'error': 'validation', 'message': 'name is required'},
-                400,
-            )
-        addr_obj = body.get('address')
-        if not isinstance(addr_obj, dict):
-            return api_json_response(
-                {'error': 'validation', 'message': 'address object required'},
-                400,
-            )
-        parts = {}
-        for key in ADDRESS_FIELD_NAMES:
-            if key not in addr_obj:
-                return api_json_response(
-                    {'error': 'validation', 'message': f'address.{key} is required'},
-                    400,
-                )
-            raw = addr_obj[key]
-            val = '' if raw is None else str(raw).strip()
-            if not val:
-                return api_json_response(
-                    {'error': 'validation', 'message': f'address.{key} must be non-empty'},
-                    400,
-                )
-            parts[key] = val
         try:
-            PartnerAddress.order_bridge_put_full(p, str(name).strip(), **parts)
+            PartnerAddress.order_bridge_put_full(
+                p,
+                body_in.name,
+                street=body_in.address.street,
+                neighborhood=body_in.address.neighborhood,
+                municipality=body_in.address.municipality,
+                state=body_in.address.state,
+            )
         except UserError as e:
             return api_json_response({'error': 'validation', 'message': str(e)}, 400)
         p.invalidate_recordset()
@@ -106,31 +102,19 @@ class DeviceAuthController(http.Controller):
         body = get_json_body()
         if body is None:
             return api_json_response({'error': 'invalid_json'}, 400)
+        try:
+            body_in = ProfilePatchBody.model_validate(body)
+        except ValidationError as e:
+            return api_json_response(pydantic_errors_to_api_body(e), 400)
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
-        name = body.get('name')
-        addr_in = body.get('address')
-        if name is not None and not str(name).strip():
-            return api_json_response(
-                {'error': 'validation', 'message': 'name cannot be empty'},
-                400,
-            )
         addr_patch = None
-        if addr_in is not None:
-            if not isinstance(addr_in, dict):
-                return api_json_response(
-                    {'error': 'validation', 'message': 'address must be an object'},
-                    400,
-                )
-            addr_patch = {
-                k: addr_in[k]
-                for k in ADDRESS_FIELD_NAMES
-                if k in addr_in
-            }
+        if body_in.address is not None:
+            addr_patch = body_in.address.model_dump(exclude_unset=True)
         try:
             PartnerAddress.order_bridge_patch(
                 p,
-                name=str(name).strip() if name is not None else None,
+                name=body_in.name,
                 address=addr_patch,
             )
         except UserError as e:
