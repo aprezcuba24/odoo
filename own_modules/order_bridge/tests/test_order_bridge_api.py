@@ -13,7 +13,6 @@ class TestOrderBridgeApi(HttpCase):
         payload = json.dumps({
             'phone': '+34600111222',
             'device_key': key,
-            'name': 'API Test Customer',
         })
         res = self.url_open(
             '/api/order_bridge/register',
@@ -26,6 +25,8 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(data.get('status'), 'ok')
         self.assertIn('partner_id', data)
         self.assertFalse(data.get('validated'))
+        partner = self.env['res.partner'].browse(data['partner_id'])
+        self.assertEqual(partner.name, partner.phone)
 
         res2 = self.url_open(
             '/api/order_bridge/status',
@@ -34,6 +35,49 @@ class TestOrderBridgeApi(HttpCase):
         )
         self.assertEqual(res2.status_code, 200, res2.text)
         self.assertFalse(json.loads(res2.text).get('validated'))
+
+    def test_profile_put_get_and_patch(self):
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '+34600999888', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        put_body = json.dumps({
+            'name': 'Profile Customer',
+            'address': {
+                'street': 'Calle Principal 10',
+                'neighborhood': 'Col Norte',
+                'municipality': 'Municipio X',
+                'state': 'Estado Y',
+            },
+        })
+        r_put = self.url_open(
+            '/api/order_bridge/profile',
+            data=put_body,
+            headers=auth,
+            timeout=60,
+            method='PUT',
+        )
+        self.assertEqual(r_put.status_code, 200, r_put.text)
+        j_put = json.loads(r_put.text)
+        self.assertEqual(j_put.get('name'), 'Profile Customer')
+        addr = j_put.get('address') or {}
+        self.assertEqual(addr.get('street'), 'Calle Principal 10')
+
+        r_patch = self.url_open(
+            '/api/order_bridge/profile',
+            data=json.dumps({'address': {'neighborhood': 'Col Sur'}}),
+            headers=auth,
+            timeout=60,
+            method='PATCH',
+        )
+        self.assertEqual(r_patch.status_code, 200, r_patch.text)
+        j_patch = json.loads(r_patch.text)
+        self.assertEqual((j_patch.get('address') or {}).get('neighborhood'), 'Col Sur')
+        self.assertEqual((j_patch.get('address') or {}).get('street'), 'Calle Principal 10')
 
     def test_products_requires_auth(self):
         res = self.url_open('/api/order_bridge/products', timeout=60)

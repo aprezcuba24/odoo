@@ -23,6 +23,9 @@ class ResPartner(models.Model):
         string='Bridge orders',
         compute='_compute_order_bridge_order_count',
     )
+    order_bridge_partner_address_ids = fields.One2many(
+        'order_bridge.partner_address', 'partner_id', string='Order bridge address'
+    )
 
     @api.depends('order_bridge_device_ids.active', 'order_bridge_device_ids.phone_validated')
     def _compute_order_bridge_flags(self):

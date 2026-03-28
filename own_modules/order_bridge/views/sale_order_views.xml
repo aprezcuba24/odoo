@@ -12,6 +12,7 @@
                     <field name="order_bridge_device_id" options="{'no_create': True}"/>
                     <field name="order_bridge_device_validated" readonly="1"/>
                     <field name="order_bridge_pos_config_id" options="{'no_create': True}" invisible="not order_bridge_pos_config_id"/>
+                    <field name="order_bridge_snapshot_address_id" readonly="1" invisible="not order_bridge_snapshot_address_id" options="{'no_create': True}"/>
                 </group>
             </xpath>
         </field>

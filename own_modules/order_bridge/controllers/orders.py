@@ -6,6 +6,7 @@ from odoo.fields import Command
 from odoo.http import request
 
 from ..utils.decorators import (
+    _POS_CONFIG_ERROR,
     api_cors_preflight,
     api_device_auth,
     api_json_response,
@@ -53,7 +54,9 @@ class OrdersController(http.Controller):
         lines = body.get('lines') or []
         if not lines:
             return api_json_response({'error': 'validation', 'message': 'lines required'}, 400)
-        product_domain = catalog_context_for_partner(partner)
+        pos_config, _catalog_company, product_domain = catalog_context_for_partner(partner)
+        if not pos_config:
+            return api_json_response(_POS_CONFIG_ERROR, status=503)
         line_cmds = self._validate_lines(lines, product_domain)
         try:
             order = request.env['sale.order'].sudo().create({

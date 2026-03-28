@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
     ('Access-Control-Allow-Headers', 'Authorization, Content-Type'),
-    ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
+    ('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS'),
     ('Access-Control-Max-Age', '86400'),
 ]
 
@@ -59,13 +59,17 @@ def resolve_api_device():
 
 
 def catalog_context_for_partner(partner):
-    """Return (pos_config, catalog_company, product_domain) or (None, company, None) if POS not linked."""
+    """Return (pos_config, catalog_company, product_domain).
+
+    pos_config is False when the catalog company has no order bridge POS linked.
+    """
     Company = request.env['res.company'].sudo()
     catalog_company = Company._order_bridge_catalog_company_for_partner(
         partner, request.env.company.sudo()
     )
+    pos_config = catalog_company._order_bridge_pos_config()
     product_domain = catalog_company._order_bridge_product_domain()
-    return product_domain
+    return pos_config, catalog_company, product_domain
 
 
 _POS_CONFIG_ERROR = {

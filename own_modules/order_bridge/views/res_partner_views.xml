@@ -37,6 +37,15 @@
                             <field name="device_info"/>
                         </list>
                     </field>
+                    <separator string="Order bridge delivery address"/>
+                    <field name="order_bridge_partner_address_ids" nolabel="1">
+                        <list editable="bottom" create="1" delete="1">
+                            <field name="street"/>
+                            <field name="neighborhood"/>
+                            <field name="municipality"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
                 </page>
             </notebook>
         </field>

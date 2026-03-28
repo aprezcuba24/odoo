@@ -45,22 +45,22 @@ Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referen
 
 ## Principios de diseño
 
-1. **Sin usuarios Odoo para clientes finales**  
+1. **Sin usuarios Odoo para clientes finales**
    No portal ni `res.users` por cliente. Identidad = `device_key` + vínculo a `res.partner`.
 
-2. **Lo que se valida es el dispositivo ligado al teléfono**  
+2. **Lo que se valida es el dispositivo ligado al teléfono**
    El usuario introduce el teléfono en el cliente; la app genera y guarda un `device_key` (p. ej. UUID v4). El backend registra `phone` + `device_key`. Tras la validación administrativa, ese dispositivo se considera validado.
 
-3. **Un teléfono, un dispositivo activo**  
+3. **Un teléfono, un dispositivo activo**
    Si se registra un nuevo `device_key` para el mismo teléfono normalizado, los dispositivos anteriores con ese teléfono se **desactivan**. El nuevo queda pendiente de validación de nuevo (**re-validación** por seguridad).
 
-4. **Pedidos antes de validar**  
+4. **Pedidos antes de validar**
    La API **permite crear pedidos** con dispositivo no validado; en `sale.order` queda almacenado si el dispositivo estaba validado o no (`order_bridge_device_validated`), para informes y filtros en backend.
 
-5. **Órdenes creadas por administrador**  
+5. **Órdenes creadas por administrador**
    Origen `order_bridge_origin = 'admin'`, sin `order_bridge_device_id`. Visibles en el cliente junto a las del usuario (`partner_id` común), con referencia de puente cuando aplica.
 
-6. **API stateless orientada a JSON**  
+6. **API stateless orientada a JSON**
    Respuestas JSON planas (`make_json_response`), rutas `auth='public'`, `csrf=False`, y autorización por cabecera `Authorization: Bearer <device_key>` resuelta en código (no confundir con API keys de `res.users`).
 
 ## Modelos de datos

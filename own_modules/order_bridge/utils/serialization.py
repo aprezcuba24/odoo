@@ -50,6 +50,40 @@ def serialize_pagination(items, limit, offset, total, pos_config_id=None):
     return payload
 
 
+def order_bridge_address_fields_to_api_dict(addr):
+    """Serialize `order_bridge.partner_address` or `order_bridge.order_address_snapshot` rows."""
+    if not addr:
+        return None
+    return {
+        'street': addr.street or '',
+        'neighborhood': addr.neighborhood or '',
+        'municipality': addr.municipality or '',
+        'state': addr.state or '',
+    }
+
+
+def order_bridge_delivery_address_snapshot_to_api_dict(snap):
+    return order_bridge_address_fields_to_api_dict(snap)
+
+
+def order_bridge_profile_to_api_dict(partner, device):
+    """Profile payload for GET/PUT/PATCH `/api/order_bridge/profile`."""
+    partner.ensure_one()
+    device.ensure_one()
+    addr = (
+        partner.env['order_bridge.partner_address']
+        .sudo()
+        .search([('partner_id', '=', partner.id)], limit=1)
+    )
+    return {
+        'id': partner.id,
+        'name': partner.name,
+        'phone': partner.phone or device.phone,
+        'email': partner.email,
+        'address': order_bridge_address_fields_to_api_dict(addr),
+    }
+
+
 def sale_order_line_to_api_dict(line):
     return {
         'product_id': line.product_id.id,
@@ -71,6 +105,9 @@ def sale_order_to_api_dict(order, *, lines=False):
         'amount_total': order.amount_total,
         'currency': order.currency_id.name if order.currency_id else None,
         'device_validated': order.order_bridge_device_validated,
+        'delivery_address': order_bridge_delivery_address_snapshot_to_api_dict(
+            order.order_bridge_snapshot_address_id
+        ),
     }
     if lines:
         order_lines = order.order_line.filtered(lambda l: not l.display_type)
@@ -85,4 +122,7 @@ def sale_order_created_to_api_dict(order):
         'order_ref': order.order_bridge_ref,
         'state': order.state,
         'device_validated': order.order_bridge_device_validated,
+        'delivery_address': order_bridge_delivery_address_snapshot_to_api_dict(
+            order.order_bridge_snapshot_address_id
+        ),
     }

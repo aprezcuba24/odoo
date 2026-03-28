@@ -63,7 +63,7 @@ class OrderBridgeDevice(models.Model):
             others.write({'active': False})
 
     @api.model
-    def register_or_get(self, phone_raw, device_key, name, device_info=None):
+    def register_or_get(self, phone_raw, device_key, device_info=None):
         """Register device or return existing state (idempotent on same device_key)."""
         self = self.sudo()
         if not device_key or not str(device_key).strip():
@@ -86,13 +86,11 @@ class OrderBridgeDevice(models.Model):
         )
         if not partner:
             partner = Partner.create({
-                'name': name or normalized,
+                'name': normalized,
                 'phone': normalized,
             })
         else:
             vals = {}
-            if name:
-                vals['name'] = name
             if partner.phone != normalized:
                 vals['phone'] = normalized
             if vals:
