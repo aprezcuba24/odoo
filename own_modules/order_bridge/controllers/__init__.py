@@ -3,4 +3,3 @@
 from . import auth
 from . import catalog
 from . import orders
-from . import serialization

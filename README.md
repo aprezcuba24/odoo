@@ -72,6 +72,36 @@ docker compose -f .devcontainer/docker-compose.yml up --build
 
 Same URL and DB defaults as above.
 
+### Remove the dev database (reset)
+
+This wipes the **PostgreSQL database named `odoo`** used by the devcontainer / compose stack. All Odoo data in that database is lost. Stop Odoo first so no session holds the database open.
+
+**Using container names** (matches [`.devcontainer/docker-compose.yml`](.devcontainer/docker-compose.yml)):
+
+```bash
+docker stop odoo-app
+docker start odoo-postgres   # only if Postgres is not already running
+docker exec odoo-postgres psql -U odoo -d postgres -c "DROP DATABASE IF EXISTS odoo;"
+docker start odoo-app
+```
+
+After restart, Odoo recreates an empty `odoo` database on first use (`-d odoo`).
+
+**Optional — clear the filestore** (attachments and local data under the bind mount). From the repository root, with Odoo stopped:
+
+```bash
+rm -rf .odoo_data
+```
+
+**Using Docker Compose** from the repository root (same effect):
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml stop app
+docker compose -f .devcontainer/docker-compose.yml start postgres
+docker compose -f .devcontainer/docker-compose.yml exec postgres psql -U odoo -d postgres -c "DROP DATABASE IF EXISTS odoo;"
+docker compose -f .devcontainer/docker-compose.yml start app
+```
+
 ### Odoo CLI (PostgreSQL already running)
 
 With dependencies installed and working directory at the repo root:

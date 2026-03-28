@@ -2,7 +2,7 @@
 
 {
     'name': 'Order Bridge',
-    'version': '19.0.2.0.0',
+    'version': '19.0.2.0.1',
     'category': 'Sales/Sales',
     'summary': 'REST API for external apps: link a POS per company, register devices by phone, validate in Order Bridge.',
     'description': """
@@ -18,7 +18,7 @@ JSON REST API under ``/api/order_bridge/`` for apps and integrations. Clients us
 
 **Depends on:** sale, point_of_sale, product, phone_validation.
     """,
-    'depends': ['sale', 'product', 'phone_validation', 'point_of_sale'],
+    'depends': ['sale', 'product', 'phone_validation', 'point_of_sale', 'pos_sale'],
     'data': [
         'security/order_bridge_security.xml',
         'security/ir.model.access.csv',

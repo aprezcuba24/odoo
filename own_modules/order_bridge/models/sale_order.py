@@ -41,6 +41,21 @@ class SaleOrder(models.Model):
         ondelete='set null',
     )
 
+    @api.model
+    def _load_pos_data_fields(self, config):
+        # pos_sale lists picking_ids and other fields that exist only when optional modules
+        # (e.g. sale_stock) are installed — keep only names that exist on this registry.
+        fields_list = super()._load_pos_data_fields(config)
+        return [f for f in fields_list if f in self._fields]
+
+    @api.model
+    def _load_pos_data_read(self, records, config):
+        # Same guard as _load_pos_data_fields (mixin calls read here; must not pass unknown names).
+        if not config:
+            raise ValueError("config must be provided to read PoS data.")
+        fields = [f for f in self._load_pos_data_fields(config) if f in self._fields]
+        return records.read(fields, load=False) or []
+
     @api.model_create_multi
     def create(self, vals_list):
         seq = self.env['ir.sequence'].sudo()

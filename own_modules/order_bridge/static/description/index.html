@@ -29,8 +29,9 @@
                 </li>
                 <li>
                     <strong>Validate devices in the backend</strong> — after a client calls <code>POST /api/order_bridge/register</code>
-                    with phone and device key, open <em>Sales → Order bridge → Devices</em> (or the partner's devices) and confirm
-                    the phone when appropriate. Orders are still allowed before validation; they are flagged on the sale order for review.
+                    with phone and device key, staff open <em>Sales → Order bridge → Devices</em> (or the contact's
+                    <em>Order bridge</em> tab) and validate the phone when appropriate. Orders are still allowed before
+                    validation; they are flagged on the sale order for review. See the next section for who can open these screens.
                 </li>
             </ol>
         </div>
@@ -38,6 +39,29 @@
 </section>
 
 <section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Where to manage devices in Odoo</h2>
+        <div class="oe_span12">
+            <p>
+                This module <strong>depends on the Sales app</strong> (<code>sale</code>): Sales is installed automatically
+                with Order Bridge and <strong>must stay installed</strong>. The backend menus for devices, bridge orders,
+                and bridge customers are under the <strong>Sales</strong> app: <em>Sales → Order bridge</em>
+                (<em>Devices</em>, <em>Bridge orders</em>, <em>Bridge customers</em>).
+            </p>
+            <p class="oe_mt16">
+                Only users with <strong>Salesperson</strong> access (or a security group that includes it) see those menus
+                and the <em>Order bridge</em> tab on contact forms. From a contact you can also use
+                <em>Open devices</em> to filter the device list to that customer. Sale orders show the linked API device
+                and validation snapshot on the order form when relevant.
+            </p>
+            <p class="oe_mt16 text-muted small">
+                External apps use the REST API and device keys; they do not use these backend menus.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
     <div class="oe_row oe_spaced">
         <h2 class="oe_slogan">Dependencies and API overview</h2>
         <div class="oe_span12">
