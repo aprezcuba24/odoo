@@ -23,15 +23,10 @@ from ..utils.serialization import (
 
 
 class OrdersController(http.Controller):
-    @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['GET', 'POST', 'OPTIONS'], csrf=False)
+    @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
     @api_device_auth
     def orders(self, api_device=None, api_partner=None, **kwargs):
         partner = api_partner.sudo()
-        if request.httprequest.method == 'GET':
-            return self._orders_list(partner, **kwargs)
-        return self._orders_create(partner, api_device, **kwargs)
-
-    def _orders_list(self, partner, **kwargs):
         limit = min(int(request.params.get('limit') or 50), 200)
         offset = int(request.params.get('offset') or 0)
         state = request.params.get('state')
@@ -47,7 +42,8 @@ class OrdersController(http.Controller):
         items = serialize_many(orders, sale_order_to_api_dict)
         return api_json_response(serialize_pagination(items, limit, offset, total))
 
-    def _orders_create(self, partner, api_device, pos_config=None, **kwargs):
+    @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['POST'], csrf=False)
+    def orders_create(self, partner, api_device, pos_config=None, **kwargs):
         body = get_json_body()
         if body is None:
             return api_json_response({'error': 'invalid_json'}, 400)

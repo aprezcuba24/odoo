@@ -48,40 +48,22 @@ class DeviceAuthController(http.Controller):
             'partner_id': api_partner.id,
         })
 
-    @http.route(
-        '/api/order_bridge/profile',
-        type='http',
-        auth='public',
-        methods=['GET', 'PUT', 'PATCH', 'OPTIONS'],
-        csrf=False,
-    )
+    @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['GET'], csrf=False)
     @api_device_auth
-    def profile(self, api_device=None, api_partner=None, **kwargs):
-        method = request.httprequest.method
-        if method == 'GET':
-            return self._profile_get(api_device, api_partner)
-        if method == 'OPTIONS':
-            return self._profile_options()
-        body = get_json_body()
-        if body is None:
-            return api_json_response({'error': 'invalid_json'}, 400)
-        if method == 'PUT':
-            return self._profile_put(api_device, api_partner, body)
-        if method == 'PATCH':
-            return self._profile_patch(api_device, api_partner, body)
-        return self._profile_options()
-
-    def _profile_get(self, api_device, api_partner):
+    def profile_get(self, api_device=None, api_partner=None, **kwargs):
         p = api_partner.sudo()
         return api_json_response(self._profile_payload(api_device, p))
 
-    def _profile_options(self):
+    @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['OPTIONS'], csrf=False)
+    def profile_options(self, **kwargs):
         return api_cors_preflight()
 
-    def _profile_payload(self, api_device, partner_sudo):
-        return order_bridge_profile_to_api_dict(partner_sudo, api_device)
-
-    def _profile_put(self, api_device, api_partner, body):
+    @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['PUT'], csrf=False)
+    @api_device_auth
+    def profile_put(self, api_device=None, api_partner=None, **kwargs):
+        body = get_json_body()
+        if body is None:
+            return api_json_response({'error': 'invalid_json'}, 400)
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
         name = body.get('name')
@@ -118,7 +100,12 @@ class DeviceAuthController(http.Controller):
         p.invalidate_recordset()
         return api_json_response(self._profile_payload(api_device, p))
 
-    def _profile_patch(self, api_device, api_partner, body):
+    @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['PATCH'], csrf=False)
+    @api_device_auth
+    def profile_patch(self, api_device=None, api_partner=None, **kwargs):
+        body = get_json_body()
+        if body is None:
+            return api_json_response({'error': 'invalid_json'}, 400)
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
         name = body.get('name')
@@ -150,3 +137,6 @@ class DeviceAuthController(http.Controller):
             return api_json_response({'error': 'validation', 'message': str(e)}, 400)
         p.invalidate_recordset()
         return api_json_response(self._profile_payload(api_device, p))
+
+    def _profile_payload(self, api_device, partner_sudo):
+        return order_bridge_profile_to_api_dict(partner_sudo, api_device)
