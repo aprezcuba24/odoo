@@ -4,8 +4,12 @@ import functools
 import json
 import logging
 
+from pydantic import ValidationError
+
 from odoo import fields
 from odoo.http import request
+
+from ..schemas.errors import pydantic_errors_to_api_body
 
 _logger = logging.getLogger(__name__)
 
@@ -109,4 +113,50 @@ def api_device_auth(_func=None, *, require_pos_config=False):
 
     if _func is not None:
         return decorator(_func)
+    return decorator
+
+
+def api_validated_query(model_cls, *, kwarg_name='q'):
+    """Parse and validate GET query params; inject model instance as ``kwarg_name``."""
+
+    def decorator(endpoint):
+        @functools.wraps(endpoint)
+        def wrapper(self, *args, **kwargs):
+            try:
+                parsed = model_cls.from_request_params(request.params)
+            except ValidationError as e:
+                return api_json_response(pydantic_errors_to_api_body(e), 400)
+            kwargs[kwarg_name] = parsed
+            return endpoint(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def api_validated_json_body(model_cls, *, kwarg_name='body'):
+    """Parse JSON body and validate with Pydantic; inject model as ``kwarg_name``.
+
+    Returns 400 for invalid JSON or validation errors. For OPTIONS requests,
+    returns CORS preflight without calling the handler (for routes without
+    ``api_device_auth``).
+    """
+
+    def decorator(endpoint):
+        @functools.wraps(endpoint)
+        def wrapper(self, *args, **kwargs):
+            if request.httprequest.method == 'OPTIONS':
+                return api_cors_preflight()
+            body = get_json_body()
+            if body is None:
+                return api_json_response({'error': 'invalid_json'}, 400)
+            try:
+                parsed = model_cls.model_validate(body)
+            except ValidationError as e:
+                return api_json_response(pydantic_errors_to_api_body(e), 400)
+            kwargs[kwarg_name] = parsed
+            return endpoint(self, *args, **kwargs)
+
+        return wrapper
+
     return decorator

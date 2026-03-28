@@ -1,7 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from pydantic import ValidationError
-
 from odoo import http
 from odoo.exceptions import UserError
 from odoo.http import request
@@ -10,34 +8,25 @@ from ..schemas import (
     ProfilePatchBody,
     ProfilePutBody,
     RegisterBody,
-    pydantic_errors_to_api_body,
 )
 from ..utils.decorators import (
     api_cors_preflight,
     api_device_auth,
     api_json_response,
-    get_json_body,
+    api_validated_json_body,
 )
 from ..utils.serialization import order_bridge_profile_to_api_dict
 
 
 class DeviceAuthController(http.Controller):
     @http.route('/api/order_bridge/register', type='http', auth='public', methods=['POST', 'OPTIONS'], csrf=False)
-    def register(self, **kwargs):
-        if request.httprequest.method == 'OPTIONS':
-            return api_cors_preflight()
-        body = get_json_body()
-        if body is None:
-            return api_json_response({'error': 'invalid_json'}, 400)
-        try:
-            body_in = RegisterBody.model_validate(body)
-        except ValidationError as e:
-            return api_json_response(pydantic_errors_to_api_body(e), 400)
+    @api_validated_json_body(RegisterBody)
+    def register(self, body=None, **kwargs):
         try:
             result = request.env['order_bridge.device'].register_or_get(
-                body_in.phone,
-                body_in.device_key,
-                body_in.device_info,
+                body.phone,
+                body.device_key,
+                body.device_info,
             )
         except UserError as e:
             return api_json_response({'error': 'validation', 'message': str(e)}, 400)
@@ -72,24 +61,18 @@ class DeviceAuthController(http.Controller):
 
     @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['PUT'], csrf=False)
     @api_device_auth
-    def profile_put(self, api_device=None, api_partner=None, **kwargs):
-        body = get_json_body()
-        if body is None:
-            return api_json_response({'error': 'invalid_json'}, 400)
-        try:
-            body_in = ProfilePutBody.model_validate(body)
-        except ValidationError as e:
-            return api_json_response(pydantic_errors_to_api_body(e), 400)
+    @api_validated_json_body(ProfilePutBody)
+    def profile_put(self, api_device=None, api_partner=None, body=None, **kwargs):
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
         try:
             PartnerAddress.order_bridge_put_full(
                 p,
-                body_in.name,
-                street=body_in.address.street,
-                neighborhood=body_in.address.neighborhood,
-                municipality=body_in.address.municipality,
-                state=body_in.address.state,
+                body.name,
+                street=body.address.street,
+                neighborhood=body.address.neighborhood,
+                municipality=body.address.municipality,
+                state=body.address.state,
             )
         except UserError as e:
             return api_json_response({'error': 'validation', 'message': str(e)}, 400)
@@ -98,23 +81,17 @@ class DeviceAuthController(http.Controller):
 
     @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['PATCH'], csrf=False)
     @api_device_auth
-    def profile_patch(self, api_device=None, api_partner=None, **kwargs):
-        body = get_json_body()
-        if body is None:
-            return api_json_response({'error': 'invalid_json'}, 400)
-        try:
-            body_in = ProfilePatchBody.model_validate(body)
-        except ValidationError as e:
-            return api_json_response(pydantic_errors_to_api_body(e), 400)
+    @api_validated_json_body(ProfilePatchBody)
+    def profile_patch(self, api_device=None, api_partner=None, body=None, **kwargs):
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
         addr_patch = None
-        if body_in.address is not None:
-            addr_patch = body_in.address.model_dump(exclude_unset=True)
+        if body.address is not None:
+            addr_patch = body.address.model_dump(exclude_unset=True)
         try:
             PartnerAddress.order_bridge_patch(
                 p,
-                name=body_in.name,
+                name=body.name,
                 address=addr_patch,
             )
         except UserError as e:

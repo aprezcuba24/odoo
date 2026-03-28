@@ -1,12 +1,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from pydantic import ValidationError
-
 from odoo import http
 from odoo.http import request
 
-from ..schemas import ProductsListQuery, pydantic_errors_to_api_body
-from ..utils.decorators import api_device_auth, api_json_response
+from ..schemas import ProductsListQuery
+from ..utils.decorators import api_device_auth, api_json_response, api_validated_query
 from ..utils.serialization import (
     pos_category_to_api_dict,
     product_product_to_api_dict,
@@ -28,11 +26,8 @@ class CatalogController(http.Controller):
 
     @http.route('/api/order_bridge/products', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
     @api_device_auth(require_pos_config=True)
-    def products(self, pos_config=None, product_domain=None, **kwargs):
-        try:
-            q = ProductsListQuery.from_request_params(request.params)
-        except ValidationError as e:
-            return api_json_response(pydantic_errors_to_api_body(e), 400)
+    @api_validated_query(ProductsListQuery)
+    def products(self, pos_config=None, product_domain=None, q=None, **kwargs):
         domain = list(product_domain)
         if q.category_id is not None:
             domain.append(('product_tmpl_id.categ_id', 'child_of', q.category_id))

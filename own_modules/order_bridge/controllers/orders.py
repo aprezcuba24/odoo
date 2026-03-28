@@ -1,20 +1,19 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from pydantic import ValidationError
-
 from odoo import http
 from odoo.exceptions import UserError
 from odoo.fields import Command
 from odoo.http import request
 
-from ..schemas import OrderCreateBody, OrdersListQuery, pydantic_errors_to_api_body
+from ..schemas import OrderCreateBody, OrdersListQuery
 from ..utils.decorators import (
     _POS_CONFIG_ERROR,
     api_cors_preflight,
     api_device_auth,
     api_json_response,
+    api_validated_json_body,
+    api_validated_query,
     catalog_context_for_partner,
-    get_json_body,
 )
 from ..utils.serialization import (
     sale_order_created_to_api_dict,
@@ -28,12 +27,9 @@ from ..utils.serialization import (
 class OrdersController(http.Controller):
     @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
     @api_device_auth
-    def orders(self, api_device=None, api_partner=None, **kwargs):
+    @api_validated_query(OrdersListQuery)
+    def orders(self, api_device=None, api_partner=None, q=None, **kwargs):
         partner = api_partner.sudo()
-        try:
-            q = OrdersListQuery.from_request_params(request.params)
-        except ValidationError as e:
-            return api_json_response(pydantic_errors_to_api_body(e), 400)
         limit = q.limit
         offset = q.offset
         state = q.state
@@ -51,19 +47,13 @@ class OrdersController(http.Controller):
 
     @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['POST'], csrf=False)
     @api_device_auth
-    def orders_create(self, api_device=None, api_partner=None, **kwargs):
+    @api_validated_json_body(OrderCreateBody)
+    def orders_create(self, api_device=None, api_partner=None, body=None, **kwargs):
         partner = api_partner.sudo()
-        body = get_json_body()
-        if body is None:
-            return api_json_response({'error': 'invalid_json'}, 400)
-        try:
-            body_in = OrderCreateBody.model_validate(body)
-        except ValidationError as e:
-            return api_json_response(pydantic_errors_to_api_body(e), 400)
         pos_config, _catalog_company, product_domain = catalog_context_for_partner(partner)
         if not pos_config:
             return api_json_response(_POS_CONFIG_ERROR, status=503)
-        line_cmds, line_error = self._build_line_commands(body_in.lines, product_domain)
+        line_cmds, line_error = self._build_line_commands(body.lines, product_domain)
         if line_error:
             return line_error
         try:
