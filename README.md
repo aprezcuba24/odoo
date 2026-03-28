@@ -54,13 +54,13 @@ Render’s platform overview and docs: [render.com](https://render.com/) and [Re
 ### Dev Container (recommended)
 
 1. Open the repo in VS Code / Cursor and **Reopen in Container** (uses [`.devcontainer/docker-compose.yml`](.devcontainer/docker-compose.yml)).
-2. The app container sets `ODOO_ADDONS_PATH` so `own_modules` is loaded. Default command:
+2. The app container sets `ODOO_ADDONS_PATH` and **`ODOO_DATA_DIR=/app/.odoo_data`** (writable filestore on the bind mount). The service runs:
 
    ```bash
-   python3 odoo-bin --dev=all
+   python3 odoo-bin --dev=all -d odoo
    ```
 
-3. Open `http://localhost:8069`. Database: `odoo` (user/password `odoo` as in compose).
+3. Open `http://localhost:8069`. Create the database **`odoo`** once (manager UI or `odoo-bin db … init odoo`) if it does not exist. Postgres user/password in compose: `odoo` / `odoo`.
 
 ### Docker Compose from the host (no IDE)
 
@@ -101,3 +101,31 @@ ruff format .
 ```
 
 Configuration: [`ruff.toml`](ruff.toml).
+
+---
+
+## Troubleshooting: broken CSS/JS (assets) locally
+
+**1. Writable data directory**
+The devcontainer sets `ODOO_DATA_DIR=/app/.odoo_data` so the filestore is on the bind mount. If `/web/assets/...` returns **500** or the UI is unstyled, check the server log: a `FileNotFoundError` under `.odoo_data/filestore/` means the **database still lists asset attachments whose files were deleted** (for example after changing `ODOO_DATA_DIR`, pruning `filestore`, or copying only the DB).
+
+Clear those bundle rows so Odoo recreates them on the next request (same env vars as the running server, from `/app`):
+
+```bash
+python3 odoo-bin shell -d odoo --no-http <<'PY'
+Att = env["ir.attachment"].sudo()
+atts = Att.search([
+    ("public", "=", True),
+    ("url", "!=", False),
+    ("url", "like", "/web/assets/%"),
+    ("res_model", "=", "ir.ui.view"),
+    ("res_id", "=", 0),
+])
+n = len(atts)
+atts.unlink()
+env.cr.commit()
+print("removed", n, "asset attachments")
+PY
+```
+
+Then hard-refresh the browser (`Ctrl+Shift+R`). If problems persist, run `python3 odoo-bin -d odoo -u web --stop-after-init --no-http` once.
