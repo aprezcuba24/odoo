@@ -17,6 +17,7 @@ services:
       - PGPASSWORD=odoo
       - PGDATABASE=odoo
       - PGPORT=5432
+      - ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules
     depends_on:
       - postgres
     command: python3 odoo-bin --dev=all

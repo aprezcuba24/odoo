@@ -7,6 +7,11 @@ set -e
 # (/app as WORKDIR) and in a runtime PaaS deployment (arbitrary working dir).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Odoo addons path: core + community + this repo's custom addons (override with ODOO_ADDONS_PATH).
+if [ -z "${ODOO_ADDONS_PATH:-}" ]; then
+    export ODOO_ADDONS_PATH="${SCRIPT_DIR}/odoo/addons,${SCRIPT_DIR}/addons,${SCRIPT_DIR}/own_modules"
+fi
+
 # Colores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
