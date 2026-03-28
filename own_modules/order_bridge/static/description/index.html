@@ -1,0 +1,62 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Order Bridge</h2>
+        <h3 class="oe_slogan">REST API for external clients: device registration, POS-aligned catalog, and sale orders.</h3>
+        <div class="oe_span12">
+            <p>
+                Exposes JSON endpoints under <code>/api/order_bridge/</code> for mobile apps, kiosks, or integrations.
+                Clients authenticate with a <strong>device key</strong> (Bearer token), not Odoo users.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">What you must configure</h2>
+        <div class="oe_span12">
+            <ol class="oe_mt16">
+                <li>
+                    <strong>Link a point of sale per company</strong> — required for catalog and order creation from the API.
+                    Go to <em>Settings → Point of Sale</em>, open the <em>Order bridge</em> block, and set
+                    <em>Order bridge point of sale</em> to a <code>pos.config</code> whose products and category rules
+                    should match what external clients see. Alternatively, set the same field on the company form
+                    (<em>Order bridge</em> tab).
+                </li>
+                <li>
+                    Without this link, catalog and order routes respond with <code>503</code> and an error indicating
+                    missing configuration.
+                </li>
+                <li>
+                    <strong>Validate devices in the backend</strong> — after a client calls <code>POST /api/order_bridge/register</code>
+                    with phone and device key, open <em>Sales → Order bridge → Devices</em> (or the partner's devices) and confirm
+                    the phone when appropriate. Orders are still allowed before validation; they are flagged on the sale order for review.
+                </li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Dependencies and API overview</h2>
+        <div class="oe_span12">
+            <p>
+                Requires <strong>Sales</strong>, <strong>Point of Sale</strong>, <strong>Products</strong>, and
+                <strong>Phone validation</strong> (for normalized phone numbers).
+            </p>
+            <p class="oe_mt16"><strong>Main routes</strong> (all under your Odoo base URL):</p>
+            <ul>
+                <li><code>POST /api/order_bridge/register</code> — register device (no auth)</li>
+                <li><code>GET /api/order_bridge/status</code> — device state (Bearer)</li>
+                <li><code>GET /api/order_bridge/categories</code>, <code>GET /api/order_bridge/products</code> — catalog (Bearer)</li>
+                <li><code>GET|POST /api/order_bridge/orders</code>, <code>GET /api/order_bridge/orders/&lt;id&gt;</code>,
+                    <code>POST /api/order_bridge/orders/&lt;id&gt;/cancel</code> — orders (Bearer)</li>
+                <li><code>GET|PUT|PATCH /api/order_bridge/profile</code> — profile (Bearer)</li>
+            </ul>
+            <p class="oe_mt16 text-muted small">
+                Use <em>Update Apps List</em> after upgrading this module so the Apps screen shows the latest description.
+            </p>
+        </div>
+    </div>
+</section>

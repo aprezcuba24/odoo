@@ -4,15 +4,19 @@
     'name': 'Order Bridge',
     'version': '19.0.2.0.0',
     'category': 'Sales/Sales',
-    'summary': 'REST API bridge: device key auth, catalog, and external client sales orders',
+    'summary': 'REST API for external apps: link a POS per company, register devices by phone, validate in Order Bridge.',
     'description': """
 Order Bridge
 ============
 
-Expose JSON REST endpoints for external clients (apps, kiosks, integrations):
-device registration by phone, admin validation, product catalog aligned to a
-POS config, and sale orders (including orders from non-validated devices,
-flagged for review).
+JSON REST API under ``/api/order_bridge/`` for apps and integrations. Clients use a device key (Bearer), not Odoo logins.
+
+**Setup**
+
+- **Point of Sale → Order bridge:** choose the POS whose products and category rules define the public catalog (or set the same on the company). Required; otherwise catalog and orders return HTTP 503.
+- **Devices:** after ``POST /api/order_bridge/register``, validate phones in Order Bridge → Devices when you trust the device. Orders can be created before validation and are marked for review.
+
+**Depends on:** sale, point_of_sale, product, phone_validation.
     """,
     'depends': ['sale', 'product', 'phone_validation', 'point_of_sale'],
     'data': [
