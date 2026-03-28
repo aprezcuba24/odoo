@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_order_bridge" model="ir.ui.view">
+        <field name="name">sale.order.form.order.bridge</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='sale_header']" position="after">
+                <group name="order_bridge_info" string="Order bridge" groups="sales_team.group_sale_salesman">
+                    <field name="order_bridge_origin"/>
+                    <field name="order_bridge_ref" readonly="1"/>
+                    <field name="order_bridge_device_id" options="{'no_create': True}"/>
+                    <field name="order_bridge_device_validated" readonly="1"/>
+                    <field name="order_bridge_pos_config_id" options="{'no_create': True}" invisible="not order_bridge_pos_config_id"/>
+                    <field name="order_bridge_snapshot_address_id" readonly="1" invisible="not order_bridge_snapshot_address_id" options="{'no_create': True}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_order_tree_order_bridge" model="ir.ui.view">
+        <field name="name">sale.order.list.order.bridge</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="order_bridge_origin" optional="hide"/>
+                <field name="order_bridge_ref" optional="hide"/>
+                <field name="order_bridge_device_validated" optional="hide" string="Device OK"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_quotation_tree_order_bridge" model="ir.ui.view">
+        <field name="name">sale.order.quotation.list.order.bridge</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="order_bridge_origin" optional="hide"/>
+                <field name="order_bridge_ref" optional="hide"/>
+                <field name="order_bridge_device_validated" optional="hide" string="Device OK"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
