@@ -30,6 +30,11 @@ class StatusResponse(BaseModel):
     partner_name: str
     partner_id: int
 
+    @field_validator('phone', mode='before')
+    @classmethod
+    def phone_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
 
 class ProfileAddressOut(BaseModel):
     model_config = ConfigDict(extra='forbid')

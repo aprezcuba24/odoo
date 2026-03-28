@@ -4,12 +4,18 @@ import functools
 import json
 import logging
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from odoo import fields
 from odoo.http import request
 
 from ..schemas.errors import pydantic_errors_to_api_body
+from ..schemas.responses import (
+    ConfigurationErrorResponse,
+    SimpleErrorResponse,
+    UnauthorizedErrorResponse,
+    ValidationErrorResponse,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -22,6 +28,8 @@ CORS_HEADERS = [
 
 
 def api_json_response(payload, status=200):
+    if isinstance(payload, BaseModel):
+        payload = payload.model_dump(mode='json')
     return request.make_json_response(
         payload,
         status=status,
@@ -76,10 +84,10 @@ def catalog_context_for_partner(partner):
     return pos_config, catalog_company, product_domain
 
 
-_POS_CONFIG_ERROR = {
-    'error': 'configuration',
-    'message': 'No point of sale is linked for the order bridge. Configure it on the company or in Settings.',
-}
+_POS_CONFIG_ERROR = ConfigurationErrorResponse(
+    error='configuration',
+    message='No point of sale is linked for the order bridge. Configure it on the company or in Settings.',
+)
 
 
 def api_device_auth(_func=None, *, require_pos_config=False):
@@ -96,7 +104,13 @@ def api_device_auth(_func=None, *, require_pos_config=False):
                 return api_cors_preflight()
             device = resolve_api_device()
             if not device:
-                return api_json_response({'error': 'unauthorized', 'message': 'Invalid or missing device key'}, 401)
+                return api_json_response(
+                    UnauthorizedErrorResponse(
+                        error='unauthorized',
+                        message='Invalid or missing device key',
+                    ),
+                    401,
+                )
             device.sudo().write({'last_activity': fields.Datetime.now()})
             kwargs['api_device'] = device
             kwargs['api_partner'] = device.partner_id
@@ -125,7 +139,8 @@ def api_validated_query(model_cls, *, kwarg_name='q'):
             try:
                 parsed = model_cls.from_request_params(request.params)
             except ValidationError as e:
-                return api_json_response(pydantic_errors_to_api_body(e), 400)
+                body = pydantic_errors_to_api_body(e)
+                return api_json_response(ValidationErrorResponse.model_validate(body), 400)
             kwargs[kwarg_name] = parsed
             return endpoint(self, *args, **kwargs)
 
@@ -149,11 +164,12 @@ def api_validated_json_body(model_cls, *, kwarg_name='body'):
                 return api_cors_preflight()
             body = get_json_body()
             if body is None:
-                return api_json_response({'error': 'invalid_json'}, 400)
+                return api_json_response(SimpleErrorResponse(error='invalid_json'), 400)
             try:
                 parsed = model_cls.model_validate(body)
             except ValidationError as e:
-                return api_json_response(pydantic_errors_to_api_body(e), 400)
+                err = pydantic_errors_to_api_body(e)
+                return api_json_response(ValidationErrorResponse.model_validate(err), 400)
             kwargs[kwarg_name] = parsed
             return endpoint(self, *args, **kwargs)
 
