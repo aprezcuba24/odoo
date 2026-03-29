@@ -33,6 +33,13 @@ class TestOrderBridgeOpenapi(TransactionCase):
             committed,
             'Run: python3 own_modules/order_bridge/scripts/export_openapi.py',
         )
+        static_path = Path(__file__).resolve().parents[1] / 'static' / 'openapi.json'
+        self.assertTrue(static_path.is_file(), 'Run export_openapi.py to create static/openapi.json')
+        self.assertEqual(
+            committed_path.read_text(encoding='utf-8'),
+            static_path.read_text(encoding='utf-8'),
+            'docs/openapi.json and static/openapi.json must stay in sync',
+        )
 
     def test_response_models_match_api_payloads(self):
         R.RegisterOkResponse.model_validate({

@@ -2,4 +2,5 @@
 
 from . import auth
 from . import catalog
+from . import openapi
 from . import orders

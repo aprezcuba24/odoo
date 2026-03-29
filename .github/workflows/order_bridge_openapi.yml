@@ -19,4 +19,6 @@ jobs:
       - name: Regenerate OpenAPI spec
         run: python3 own_modules/order_bridge/scripts/export_openapi.py
       - name: Fail if openapi.json was not committed
-        run: git diff --exit-code own_modules/order_bridge/docs/openapi.json
+        run: |
+          git diff --exit-code own_modules/order_bridge/docs/openapi.json
+          git diff --exit-code own_modules/order_bridge/static/openapi.json

@@ -80,6 +80,7 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 | Método | Ruta | Auth |
 |--------|------|------|
 | POST | `/register` | Ninguna (body JSON) |
+| GET | `/openapi.json` | Ninguna (documentación del contrato) |
 | OPTIONS | `/*` | CORS preflight |
 | GET | `/status` | Bearer `device_key` |
 | GET | `/categories` | Bearer |
@@ -94,6 +95,8 @@ Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la re
 ### Contrato OpenAPI y clientes TypeScript
 
 - **Especificación:** [`docs/openapi.json`](openapi.json) (OpenAPI 3.1), generada desde los modelos Pydantic en `schemas/`.
+- **Por HTTP (recomendado, siempre disponible):** `GET /order_bridge/static/openapi.json` (sin autenticación). Odoo sirve los ficheros bajo `/order_bridge/static/` **antes** de enlazar base de datos, así que esta URL responde **200** aunque no haya `?db=` en la primera visita. Mismo JSON que el generador escribe en [`static/openapi.json`](../static/openapi.json) y en [`docs/openapi.json`](openapi.json).
+- **Alternativa bajo el prefijo de la API:** `GET /api/order_bridge/openapi.json` — añade las mismas cabeceras **CORS** que el resto de rutas `/api/order_bridge/*`. Requiere que la petición use el despachador con base de datos (sesión con BD elegida o `?db=NOMBRE_BD` si hay varias) y que el proceso haya cargado el controlador (tras `-u order_bridge` o reinicio). Si aquí ves **404** pero el módulo está instalado, reinicia Odoo o usa la URL `static` anterior.
 - **Regenerar** tras cambiar cuerpos de petición, respuestas o rutas:
 
   ```bash
@@ -102,13 +105,13 @@ Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la re
 
   Hacer commit del JSON actualizado. Los tests `TestOrderBridgeOpenapi` comprueban que el fichero coincide con el generador.
 
-- **Aplicación TypeScript en otro repositorio:** generar tipos (y opcionalmente helpers) a partir del JSON, por ejemplo:
+- **Aplicación TypeScript en otro repositorio:** generar tipos (y opcionalmente helpers) con [`openapi-typescript`](https://github.com/drwpow/openapi-typescript); el primer argumento admite **URL o ruta local**:
 
   ```bash
-  npx openapi-typescript path/al/openapi.json -o src/order-bridge-api.d.ts
+  npx openapi-typescript https://TU_DOMINIO/order_bridge/static/openapi.json -o src/order-bridge-api.d.ts
   ```
 
-  Puedes fijar la versión del contrato copiando el archivo desde este repo, un submódulo git, o la URL raw del fichero en la rama que uses.
+  Sustituye `TU_DOMINIO` por el host (en local suele ser `http://localhost:8069`). Si necesitas CORS explícito desde un origen distinto, puedes usar en su lugar `https://TU_DOMINIO/api/order_bridge/openapi.json` cuando la ruta API esté activa. También vale un fichero local (`./docs/openapi.json`) o la URL raw en Git.
 
 ## Autenticación en código (`@api_device_auth`)
 

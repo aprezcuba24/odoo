@@ -335,10 +335,13 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
 def main() -> None:
     pkg = load_order_bridge_schemas()
     spec = build_spec(pkg)
-    out = Path(__file__).resolve().parent.parent / 'docs' / 'openapi.json'
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(spec, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-    print(f'Wrote {out}')
+    text = json.dumps(spec, indent=2, sort_keys=True) + '\n'
+    root = Path(__file__).resolve().parent.parent
+    for rel in ('docs/openapi.json', 'static/openapi.json'):
+        out = root / rel
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding='utf-8')
+        print(f'Wrote {out}')
 
 
 if __name__ == '__main__':
