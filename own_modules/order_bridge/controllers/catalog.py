@@ -5,7 +5,7 @@ from odoo.http import request
 
 from ..schemas import ProductsListQuery
 from ..schemas.responses import SimpleErrorResponse
-from ..utils.decorators import api_device_auth, api_json_response, api_validated_query
+from ..utils.decorators import api_access, api_json_response, api_validated_query
 from ..utils.serialization import (
     categories_list_response,
     product_to_detail_response,
@@ -15,7 +15,7 @@ from ..utils.serialization import (
 
 class CatalogController(http.Controller):
     @http.route('/api/order_bridge/categories', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
-    @api_device_auth(require_pos_config=True)
+    @api_access
     def categories(self, pos_config=None, **kwargs):
         PosCategory = request.env['pos.category'].sudo()
         domain = PosCategory._load_pos_data_domain({}, pos_config)
@@ -23,7 +23,7 @@ class CatalogController(http.Controller):
         return api_json_response(categories_list_response(categories))
 
     @http.route('/api/order_bridge/products', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
-    @api_device_auth(require_pos_config=True)
+    @api_access
     @api_validated_query(ProductsListQuery)
     def products(self, pos_config=None, product_domain=None, q=None, **kwargs):
         domain = list(product_domain)
@@ -39,7 +39,7 @@ class CatalogController(http.Controller):
         )
 
     @http.route('/api/order_bridge/products/<int:product_id>', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
-    @api_device_auth(require_pos_config=True)
+    @api_access
     def product_detail(self, product_id, pos_config=None, product_domain=None, **kwargs):
         prod = request.env['product.product'].sudo().browse(product_id).exists()
         if not prod:

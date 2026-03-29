@@ -73,6 +73,7 @@ def resolve_api_device():
 def catalog_context_for_partner(partner):
     """Return (pos_config, catalog_company, product_domain).
 
+    ``partner`` may be falsy for anonymous catalog (uses request env company).
     pos_config is False when the catalog company has no order bridge POS linked.
     """
     Company = request.env['res.company'].sudo()
@@ -90,6 +91,47 @@ _POS_CONFIG_ERROR = ConfigurationErrorResponse(
 )
 
 
+def _order_bridge_request_context(
+    kwargs,
+    *,
+    require_device=True,
+    inject_catalog_pos=False,
+):
+    """CORS preflight, resolve device, optional catalog POS/domain into ``kwargs``.
+
+    Returns a werkzeug response to return immediately, or ``None`` if the handler
+    should run.
+    """
+    if request.httprequest.method == 'OPTIONS':
+        return api_cors_preflight()
+    device = resolve_api_device()
+    if not device:
+        if require_device:
+            return api_json_response(
+                UnauthorizedErrorResponse(
+                    error='unauthorized',
+                    message='Invalid or missing device key',
+                ),
+                401,
+            )
+        kwargs['api_device'] = None
+        kwargs['api_partner'] = None
+        partner = None
+    else:
+        device.sudo().write({'last_activity': fields.Datetime.now()})
+        kwargs['api_device'] = device
+        kwargs['api_partner'] = device.partner_id
+        partner = device.partner_id
+    if inject_catalog_pos:
+        pos_config, catalog_company, product_domain = catalog_context_for_partner(partner)
+        if not pos_config:
+            return api_json_response(_POS_CONFIG_ERROR, status=503)
+        kwargs['pos_config'] = pos_config
+        kwargs['catalog_company'] = catalog_company
+        kwargs['product_domain'] = product_domain
+    return None
+
+
 def api_device_auth(_func=None, *, require_pos_config=False):
     """Require a valid active device; inject api_device and api_partner.
 
@@ -100,27 +142,13 @@ def api_device_auth(_func=None, *, require_pos_config=False):
     def decorator(endpoint):
         @functools.wraps(endpoint)
         def wrapper(self, *args, **kwargs):
-            if request.httprequest.method == 'OPTIONS':
-                return api_cors_preflight()
-            device = resolve_api_device()
-            if not device:
-                return api_json_response(
-                    UnauthorizedErrorResponse(
-                        error='unauthorized',
-                        message='Invalid or missing device key',
-                    ),
-                    401,
-                )
-            device.sudo().write({'last_activity': fields.Datetime.now()})
-            kwargs['api_device'] = device
-            kwargs['api_partner'] = device.partner_id
-            if require_pos_config:
-                pos_config, catalog_company, product_domain = catalog_context_for_partner(device.partner_id)
-                if not pos_config:
-                    return api_json_response(_POS_CONFIG_ERROR, status=503)
-                kwargs['pos_config'] = pos_config
-                kwargs['catalog_company'] = catalog_company
-                kwargs['product_domain'] = product_domain
+            early = _order_bridge_request_context(
+                kwargs,
+                require_device=True,
+                inject_catalog_pos=require_pos_config,
+            )
+            if early is not None:
+                return early
             return endpoint(self, *args, **kwargs)
 
         return wrapper
@@ -128,6 +156,28 @@ def api_device_auth(_func=None, *, require_pos_config=False):
     if _func is not None:
         return decorator(_func)
     return decorator
+
+
+def api_access(endpoint):
+    """Inject catalog POS/domain; Bearer device key optional.
+
+    Without a valid device key, the catalog uses ``request.env.company`` (same as
+    anonymous public website). With a valid key, ``last_activity`` is updated and
+    the partner's company is used when set.
+    """
+
+    @functools.wraps(endpoint)
+    def wrapper(self, *args, **kwargs):
+        early = _order_bridge_request_context(
+            kwargs,
+            require_device=False,
+            inject_catalog_pos=True,
+        )
+        if early is not None:
+            return early
+        return endpoint(self, *args, **kwargs)
+
+    return wrapper
 
 
 def api_validated_query(model_cls, *, kwarg_name='q'):

@@ -27,6 +27,8 @@ class ResCompany(models.Model):
     @api.model
     def _order_bridge_catalog_company_for_partner(self, partner, env_company):
         """Company whose linked POS config applies (partner company or current env company)."""
+        if not partner:
+            return env_company
         partner = partner.sudo()
         return partner.company_id or env_company
 

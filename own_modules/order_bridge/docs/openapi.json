@@ -1140,7 +1140,7 @@
     }
   },
   "info": {
-    "description": "JSON REST API for external clients under `/api/order_bridge/`. Authenticates with a device key (Bearer), except `POST /register`.",
+    "description": "JSON REST API for external clients under `/api/order_bridge/`. Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs (`/categories`, `/products`, `/products/{id}`).",
     "title": "Order Bridge API",
     "version": "19.0.2.0.1"
   },
@@ -1160,16 +1160,6 @@
             },
             "description": "OK"
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid or missing device key"
-          },
           "503": {
             "content": {
               "application/json": {
@@ -1181,11 +1171,6 @@
             "description": "Order bridge POS not configured"
           }
         },
-        "security": [
-          {
-            "deviceBearer": []
-          }
-        ],
         "summary": "POS categories for catalog"
       }
     },
@@ -1533,16 +1518,6 @@
             },
             "description": "Validation or business rule error"
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid or missing device key"
-          },
           "503": {
             "content": {
               "application/json": {
@@ -1554,11 +1529,6 @@
             "description": "Order bridge POS not configured"
           }
         },
-        "security": [
-          {
-            "deviceBearer": []
-          }
-        ],
         "summary": "Product list (paginated)"
       }
     },
@@ -1586,16 +1556,6 @@
             },
             "description": "OK"
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid or missing device key"
-          },
           "404": {
             "content": {
               "application/json": {
@@ -1617,11 +1577,6 @@
             "description": "Order bridge POS not configured"
           }
         },
-        "security": [
-          {
-            "deviceBearer": []
-          }
-        ],
         "summary": "Product detail"
       }
     },

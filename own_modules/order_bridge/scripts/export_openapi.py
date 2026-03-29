@@ -165,10 +165,8 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
             'get': {
                 'summary': 'POS categories for catalog',
                 'operationId': 'order_bridge_categories',
-                'security': [{'deviceBearer': []}],
                 'responses': {
                     '200': _ok('CategoriesListResponse'),
-                    **unauthorized,
                     **cfg_503,
                 },
             },
@@ -177,7 +175,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
             'get': {
                 'summary': 'Product list (paginated)',
                 'operationId': 'order_bridge_products',
-                'security': [{'deviceBearer': []}],
                 'parameters': [
                     {
                         'name': 'limit',
@@ -206,7 +203,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 ],
                 'responses': {
                     '200': _ok('ProductsPageResponse'),
-                    **unauthorized,
                     **val_400,
                     **cfg_503,
                 },
@@ -216,7 +212,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
             'get': {
                 'summary': 'Product detail',
                 'operationId': 'order_bridge_product_detail',
-                'security': [{'deviceBearer': []}],
                 'parameters': [
                     {
                         'name': 'product_id',
@@ -227,7 +222,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 ],
                 'responses': {
                     '200': _ok('ProductDetailResponse'),
-                    **unauthorized,
                     **not_found,
                     **cfg_503,
                 },
@@ -324,7 +318,8 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
             'title': 'Order Bridge API',
             'version': '19.0.2.0.1',
             'description': 'JSON REST API for external clients under `/api/order_bridge/`. '
-            'Authenticates with a device key (Bearer), except `POST /register`.',
+            'Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs '
+            '(`/categories`, `/products`, `/products/{id}`).',
         },
         'paths': paths,
         'components': components,
