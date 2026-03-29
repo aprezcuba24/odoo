@@ -11,6 +11,7 @@ from ..schemas.responses import (
     ProductDetailResponse,
     ProductListRow,
     ProductsPageResponse,
+    ProfileAddressOut,
     ProfileResponse,
     SaleOrderDetailResponse,
     SaleOrderLineOut,
@@ -87,7 +88,10 @@ def order_bridge_profile_to_response(partner, device):
         .sudo()
         .search([('partner_id', '=', partner.id)], limit=1)
     )
-    address = delivery_address_from_record(addr) if addr else None
+    da = delivery_address_from_record(addr) if addr else None
+    address = (
+        ProfileAddressOut.model_validate(da.model_dump()) if da else None
+    )
     return ProfileResponse(
         id=partner.id,
         name=partner.name,

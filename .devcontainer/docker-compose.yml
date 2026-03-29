@@ -21,7 +21,7 @@ services:
       - ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules
     depends_on:
       - postgres
-    command: python3 odoo-bin --dev=all -d odoo
+    command: sleep infinity
     networks:
       - odoo-network
 
