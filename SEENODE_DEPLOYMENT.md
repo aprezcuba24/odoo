@@ -7,6 +7,14 @@ There are **two deployment modes** available:
 - **Runtime mode** (recommended if Dockerfile is not supported): uses `build.sh` + `docker-entrypoint.sh` — [jump to Runtime mode](#runtime-mode-no-dockerfile)
 - **Dockerfile mode**: Seenode auto-detects the Dockerfile — [jump to Dockerfile mode](#dockerfile-mode)
 
+## Memory (RAM) requirements
+
+The web service needs enough RAM for **(1)** `odoo-bin -u base` during each deploy before Gunicorn listens on port 8069, and **(2)** Gunicorn workers serving the UI. Both steps load the Odoo stack.
+
+- **Use at least 1GB RAM** for the Odoo web service in production. **`512MB is not supported`** for this setup: the platform OOM killer often stops the process during upgrade or when you navigate heavy screens, which looks like a **restart loop** (repeated entrypoint logs) or **crash after login**.
+- If you cannot resize yet: set **`GUNICORN_WORKERS=1`** (or `2`) in the service environment. That reduces memory **after** Gunicorn starts; it does not fix OOM during `odoo-bin -u base`—for that, use a larger instance or temporarily set **`SKIP_DB_UPGRADE=true`** and run `odoo-bin -u base` manually from an environment with sufficient RAM (same `DATABASE_URL`).
+- **Exit code 137** in logs often indicates OOM.
+
 ---
 
 ## Runtime mode (no Dockerfile)
@@ -54,11 +62,12 @@ git push origin main
 | `DB_USERNAME` | `admin` | Default admin username |
 | `DB_WITH_DEMO` | `false` | No demo data in production |
 
-Optional Gunicorn tuning:
+Optional deploy / resource tuning:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GUNICORN_WORKERS` | `(2×CPU)+1` | Number of workers |
+| `SKIP_DB_UPGRADE` | *unset* | Set `true` to skip `odoo-bin -u base` on startup (emergency only; run upgrade manually) |
+| `GUNICORN_WORKERS` | `2` | Use `1` on very small instances to limit RAM while browsing |
 | `GUNICORN_TIMEOUT` | `600` | Request timeout in seconds |
 | `GUNICORN_KEEPALIVE` | `75` | Keep-alive timeout |
 
@@ -146,12 +155,14 @@ In the service dashboard, add these environment variables:
 | `DB_USERNAME` | `admin` | Default admin username |
 | `DB_WITH_DEMO` | `false` | No demo data in production |
 
-Optional Gunicorn overrides:
+Optional deploy / Gunicorn overrides:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GUNICORN_WORKERS` | 4 | Number of workers |
+| `SKIP_DB_UPGRADE` | *unset* | Set `true` to skip `odoo-bin -u base` on startup (emergency only; run upgrade manually) |
+| `GUNICORN_WORKERS` | 2 | Number of workers (`1` for minimal RAM) |
 | `GUNICORN_TIMEOUT` | 600 | Request timeout (seconds) |
+| `GUNICORN_KEEPALIVE` | 75 | Keep-alive timeout (seconds) |
 
 ### 6. Deploy
 
@@ -203,7 +214,7 @@ Every push to your connected branch triggers a new deployment:
 3. See real-time stdout/stderr output from Gunicorn and Odoo
 
 ### Health Checks
-The Dockerfile includes a healthcheck that verifies `/web/health` responds. Seenode uses this to determine if the deployment is healthy.
+The Dockerfile includes a healthcheck that verifies `/web/health` responds, with a **long start period** (one hour) so the check does not fail while `odoo-bin -u base` is still running before Gunicorn binds port 8069. Seenode uses this (or equivalent probes) to determine if the deployment is healthy.
 
 ## File Storage Considerations
 
@@ -252,6 +263,22 @@ The Dockerfile includes a healthcheck that verifies `/web/health` responds. Seen
 - Subsequent deploys are faster (3-5 min)
 - Increase instance size if database initialization times out
 
+### Deploy loop, or crash after login when opening menus
+
+These usually mean the **container was killed and restarted** (not a random Odoo bug).
+
+| Symptom | Likely cause | What to do |
+|--------|----------------|------------|
+| `[INFO] DATABASE_URL detectada...` repeats from the top | OOM during `odoo-bin -u base`, or (less often) health check timing if RAM is already sufficient | Increase web service to **≥1GB RAM**. Optionally `SKIP_DB_UPGRADE=true` once, then run `odoo-bin -u base` manually with enough memory. |
+| Login works, then session dies when navigating | OOM during normal requests (multiple workers × Odoo RSS) | **≥1GB RAM** and/or **`GUNICORN_WORKERS=1`**. |
+| Exit code **137** in logs | Often **OOM killer** | Increase RAM; reduce workers. |
+
+Confirm in platform logs: messages like **out of memory** or **512MB** limits.
+
+### Health check failures during long upgrades
+
+If the database upgrade step reliably takes many minutes and the platform still replaces instances before Gunicorn starts, ensure the **Docker healthcheck start period** in [`Dockerfile`](Dockerfile) is long enough for your environment (default is **3600s**), and align any Seenode deploy grace / probe settings if available.
+
 ## Scaling
 
 ### Vertical Scaling (More Resources)
@@ -271,9 +298,9 @@ Seenode supports multiple instances:
 
 | Component | Minimal | Recommended |
 |-----------|---------|-------------|
-| App (Web Service) | 512MB / $3/mo | 1GB / $6/mo |
+| App (Web Service) | *512MB tiers are not suitable for this Odoo image* | **1GB+** / typical starter pricing |
 | Database (Tier 2) | 1GB storage / $5/mo | 5GB storage / $10/mo |
-| **Total** | ~$8/mo | ~$16/mo |
+| **Total** | Plan for **≥1GB app RAM** + DB | Scale with workload |
 
 *Prices based on Seenode pricing at time of writing. Check [seenode.com/pricing](https://seenode.com/pricing) for current rates.*
 

@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # Nota: Para entornos PaaS/serverless, usa GUNICORN_WORKER_CLASS para websockets
 # y logs a stdout/stderr para visibilidad
 ENV GUNICORN_BIND=0.0.0.0:8069 \
-    GUNICORN_WORKERS=4 \
+    GUNICORN_WORKERS=2 \
     GUNICORN_WORKER_CLASS=gunicorn_gevent_handler.GeventWorkerWithSocket \
     GUNICORN_WORKER_CONNECTIONS=1000 \
     GUNICORN_TIMEOUT=600 \
@@ -123,8 +123,8 @@ EXPOSE 8069
 
 # Healthcheck para verificar que el servicio está funcionando
 # Verifica que el endpoint de salud responda correctamente
-# start-period aumentado a 5 minutos para dar tiempo a la inicialización de la base de datos
-HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=5 \
+# start-period largo: odoo-bin -u base puede tardar >5 min sin servir HTTP (health fallaría antes)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=3600s --retries=5 \
     CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8069/web/health', timeout=5).read()" || exit 1
 
 # Script de entrada que inicializa/actualiza la base de datos antes de iniciar Gunicorn

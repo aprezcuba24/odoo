@@ -190,8 +190,8 @@ DB_LANGUAGE=es_ES
 # Disable demo data for production
 DB_WITH_DEMO=false
 
-# Adjust Gunicorn workers based on CPU cores
-GUNICORN_WORKERS=4
+# Gunicorn workers (use 1-2 on small PaaS instances to avoid OOM)
+GUNICORN_WORKERS=2
 ```
 
 #### 3. Deploy Application
@@ -410,7 +410,8 @@ Railway provides the simplest deployment experience:
 | `DB_PASSWORD_ADMIN` | changeme | Odoo master password (change in production!) |
 | `DB_LANGUAGE` | es_ES | Default language (en_US, es_ES, fr_FR, etc.) |
 | `DB_WITH_DEMO` | false | Install demo data (set to false in production) |
-| `GUNICORN_WORKERS` | 4 | Number of worker processes (2-4 per CPU core) |
+| `SKIP_DB_UPGRADE` | *unset* | Skip `odoo-bin -u base` on startup if `true` (emergency; run upgrade manually) |
+| `GUNICORN_WORKERS` | 2 | Worker processes (raise on large hosts; use `1` on tight RAM) |
 | `GUNICORN_TIMEOUT` | 600 | Request timeout in seconds |
 | `GUNICORN_KEEPALIVE` | 75 | Keep-alive timeout in seconds |
 | `GUNICORN_MAX_REQUESTS` | 0 | Max requests before worker restart (0=disabled) |

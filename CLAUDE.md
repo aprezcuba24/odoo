@@ -62,8 +62,9 @@ Required:
 - `DB_USERNAME`: Default admin username (e.g., `admin`)
 - `DB_WITH_DEMO`: `true`/`false` — install demo data
 
-Optional (Gunicorn tuning):
-- `GUNICORN_WORKERS`: Number of workers (default: 4)
+Optional (deploy / Gunicorn):
+- `SKIP_DB_UPGRADE`: Set `true` to skip `odoo-bin -u base` on startup (emergency; run upgrade manually with enough RAM)
+- `GUNICORN_WORKERS`: Number of workers (default: **2** in Docker; use `1` on very small instances)
 - `GUNICORN_TIMEOUT`: Request timeout in seconds (default: 600)
 - `GUNICORN_KEEPALIVE`: Keep-alive timeout (default: 75)
 
@@ -91,6 +92,7 @@ The custom handler in `gunicorn_gevent_handler.py` exists specifically to solve 
 
 ## Notes
 
+- **RAM**: Prefer **≥1GB** for the web service on PaaS. `512MB` commonly hits OOM during deploy (`-u base`) or when browsing with multiple workers. See `SEENODE_DEPLOYMENT.md` (Memory requirements, troubleshooting).
 - **No persistent volumes**: Seenode does not currently offer persistent disks. Configure attachment storage to use the database (default) or external S3-compatible storage.
 - **Zero-downtime deploys**: Seenode keeps the old instance running while the new one starts and passes health checks.
 - **Database upgrades**: Every deploy runs `odoo-bin -u base` to update the database schema. This takes 2-3 minutes on subsequent deploys.

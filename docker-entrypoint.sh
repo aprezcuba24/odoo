@@ -223,16 +223,29 @@ migrate_attachments_to_db() {
     fi
 }
 
+# SKIP_DB_UPGRADE=true|1|yes omite odoo-bin -u base (emergencia / falta de RAM en deploy)
+skip_db_upgrade() {
+    case "$(printf '%s' "${SKIP_DB_UPGRADE:-}" | tr '[:upper:]' '[:lower:]')" in
+        true|1|yes) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # Proceso principal
 print_info "Iniciando proceso de inicializaci?n/actualizaci?n de base de datos..."
 
 # Verificar si la base de datos est? inicializada
 if check_database_initialized 2>/dev/null; then
     print_info "La base de datos '${PGDATABASE}' ya existe y est? inicializada."
-    print_info "Actualizando esquema de la base de datos (esto se ejecuta en cada deploy)..."
-    if ! update_database; then
-        print_warn "Error al actualizar la base de datos. Continuando de todas formas..."
-        print_warn "La aplicaci?n se iniciar? pero puede que el esquema no est? actualizado."
+    if skip_db_upgrade; then
+        print_warn "SKIP_DB_UPGRADE activado: se omite odoo-bin -u base en este arranque."
+        print_warn "Ejecuta el upgrade manualmente contra esta misma base (odoo-bin -u base) con RAM suficiente."
+    else
+        print_info "Actualizando esquema de la base de datos (esto se ejecuta en cada deploy)..."
+        if ! update_database; then
+            print_warn "Error al actualizar la base de datos. Continuando de todas formas..."
+            print_warn "La aplicaci?n se iniciar? pero puede que el esquema no est? actualizado."
+        fi
     fi
 else
     print_warn "La base de datos '${PGDATABASE}' no est? inicializada o no existe."
