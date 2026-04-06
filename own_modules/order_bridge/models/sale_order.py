@@ -24,15 +24,6 @@ class SaleOrder(models.Model):
         copy=False,
     )
     order_bridge_ref = fields.Char(string='Bridge reference', copy=False, index=True)
-    order_bridge_pos_config_id = fields.Many2one(
-        'pos.config',
-        string='Bridge POS config',
-        help='Point of sale configuration whose product catalog applied when this order was created from the API.',
-        readonly=True,
-        copy=False,
-        ondelete='set null',
-        check_company=True,
-    )
     order_bridge_snapshot_address_id = fields.Many2one(
         'order_bridge.order_address_snapshot',
         string='Delivery address snapshot',
@@ -40,21 +31,6 @@ class SaleOrder(models.Model):
         copy=False,
         ondelete='set null',
     )
-
-    @api.model
-    def _load_pos_data_fields(self, config):
-        # pos_sale lists picking_ids and other fields that exist only when optional modules
-        # (e.g. sale_stock) are installed — keep only names that exist on this registry.
-        fields_list = super()._load_pos_data_fields(config)
-        return [f for f in fields_list if f in self._fields]
-
-    @api.model
-    def _load_pos_data_read(self, records, config):
-        # Same guard as _load_pos_data_fields (mixin calls read here; must not pass unknown names).
-        if not config:
-            raise ValueError("config must be provided to read PoS data.")
-        fields = [f for f in self._load_pos_data_fields(config) if f in self._fields]
-        return records.read(fields, load=False) or []
 
     @api.model_create_multi
     def create(self, vals_list):

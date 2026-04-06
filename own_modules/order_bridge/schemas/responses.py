@@ -60,17 +60,8 @@ class ProfileResponse(BaseModel):
         return _odoo_falsy_str(v)
 
 
-class PosCategoryNested(BaseModel):
-    """POS category row embedded on a product (`pos_categories`)."""
-
-    model_config = ConfigDict(extra='forbid')
-
-    id: int
-    name: str
-
-
-class PosCategoryRow(BaseModel):
-    """Row in `GET /categories` list."""
+class ProductCategoryRow(BaseModel):
+    """`product.category` row in `GET /categories` or embedded on a product (`category`)."""
 
     model_config = ConfigDict(extra='forbid')
 
@@ -82,7 +73,7 @@ class PosCategoryRow(BaseModel):
 class CategoriesListResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    items: list[PosCategoryRow]
+    items: list[ProductCategoryRow]
     total: int
 
 
@@ -95,7 +86,7 @@ class ProductListRow(BaseModel):
     list_price: float
     uom_name: str | None = None
     barcode: str | None = None
-    pos_categories: list[PosCategoryNested]
+    category: ProductCategoryRow | None = None
 
     @field_validator('default_code', 'uom_name', 'barcode', mode='before')
     @classmethod
@@ -104,12 +95,11 @@ class ProductListRow(BaseModel):
 
 
 class ProductDetailResponse(ProductListRow):
-    """Single product with long description and POS config id."""
+    """Single product with long description."""
 
     model_config = ConfigDict(extra='forbid')
 
     description_sale: str | None = None
-    pos_config_id: int
 
     @field_validator('description_sale', mode='before')
     @classmethod
@@ -130,7 +120,6 @@ class ProductsPageResponse(PaginationMeta):
     model_config = ConfigDict(extra='forbid')
 
     items: list[ProductListRow]
-    pos_config_id: int
 
 
 class DeliveryAddressOut(BaseModel):

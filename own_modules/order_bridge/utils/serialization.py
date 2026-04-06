@@ -6,8 +6,7 @@ from ..schemas.responses import (
     OrderCancelResponse,
     OrderCreatedResponse,
     OrdersPageResponse,
-    PosCategoryNested,
-    PosCategoryRow,
+    ProductCategoryRow,
     ProductDetailResponse,
     ProductListRow,
     ProductsPageResponse,
@@ -31,8 +30,19 @@ def delivery_address_from_record(addr):
     )
 
 
-def pos_category_to_response(category):
-    return PosCategoryRow(
+def _category_from_template(tmpl):
+    c = tmpl.categ_id
+    if not c:
+        return None
+    return ProductCategoryRow(
+        id=c.id,
+        name=c.name,
+        parent_id=c.parent_id.id if c.parent_id else None,
+    )
+
+
+def product_category_to_response(category):
+    return ProductCategoryRow(
         id=category.id,
         name=category.name,
         parent_id=category.parent_id.id if category.parent_id else None,
@@ -40,7 +50,7 @@ def pos_category_to_response(category):
 
 
 def categories_list_response(categories):
-    rows = [pos_category_to_response(c) for c in categories]
+    rows = [product_category_to_response(c) for c in categories]
     return CategoriesListResponse(items=rows, total=len(rows))
 
 
@@ -52,30 +62,25 @@ def product_to_list_row(product):
         list_price=float(product.lst_price),
         uom_name=product.uom_id.name if product.uom_id else None,
         barcode=product.barcode,
-        pos_categories=[
-            PosCategoryNested(id=c.id, name=c.name)
-            for c in product.product_tmpl_id.pos_categ_ids
-        ],
+        category=_category_from_template(product.product_tmpl_id),
     )
 
 
-def product_to_detail_response(product, pos_config_id):
+def product_to_detail_response(product):
     base = product_to_list_row(product).model_dump()
     return ProductDetailResponse.model_validate({
         **base,
         'description_sale': product.description_sale,
-        'pos_config_id': pos_config_id,
     })
 
 
-def products_page_response(products, limit, offset, total, pos_config_id):
+def products_page_response(products, limit, offset, total):
     items = [product_to_list_row(p) for p in products]
     return ProductsPageResponse(
         items=items,
         limit=limit,
         offset=offset,
         total=total,
-        pos_config_id=pos_config_id,
     )
 
 

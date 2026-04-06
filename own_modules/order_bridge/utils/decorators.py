@@ -11,7 +11,6 @@ from odoo.http import request
 
 from ..schemas.errors import pydantic_errors_to_api_body
 from ..schemas.responses import (
-    ConfigurationErrorResponse,
     SimpleErrorResponse,
     UnauthorizedErrorResponse,
     ValidationErrorResponse,
@@ -71,33 +70,25 @@ def resolve_api_device():
 
 
 def catalog_context_for_partner(partner):
-    """Return (pos_config, catalog_company, product_domain).
+    """Return (catalog_company, product_domain).
 
     ``partner`` may be falsy for anonymous catalog (uses request env company).
-    pos_config is False when the catalog company has no order bridge POS linked.
     """
     Company = request.env['res.company'].sudo()
     catalog_company = Company._order_bridge_catalog_company_for_partner(
         partner, request.env.company.sudo()
     )
-    pos_config = catalog_company._order_bridge_pos_config()
     product_domain = catalog_company._order_bridge_product_domain()
-    return pos_config, catalog_company, product_domain
-
-
-_POS_CONFIG_ERROR = ConfigurationErrorResponse(
-    error='configuration',
-    message='No point of sale is linked for the order bridge. Configure it on the company or in Settings.',
-)
+    return catalog_company, product_domain
 
 
 def _order_bridge_request_context(
     kwargs,
     *,
     require_device=True,
-    inject_catalog_pos=False,
+    inject_catalog_domain=False,
 ):
-    """CORS preflight, resolve device, optional catalog POS/domain into ``kwargs``.
+    """CORS preflight, resolve device, optional catalog company/domain into ``kwargs``.
 
     Returns a werkzeug response to return immediately, or ``None`` if the handler
     should run.
@@ -122,21 +113,17 @@ def _order_bridge_request_context(
         kwargs['api_device'] = device
         kwargs['api_partner'] = device.partner_id
         partner = device.partner_id
-    if inject_catalog_pos:
-        pos_config, catalog_company, product_domain = catalog_context_for_partner(partner)
-        if not pos_config:
-            return api_json_response(_POS_CONFIG_ERROR, status=503)
-        kwargs['pos_config'] = pos_config
+    if inject_catalog_domain:
+        catalog_company, product_domain = catalog_context_for_partner(partner)
         kwargs['catalog_company'] = catalog_company
         kwargs['product_domain'] = product_domain
     return None
 
 
-def api_device_auth(_func=None, *, require_pos_config=False):
+def api_device_auth(_func=None, *, inject_catalog_domain=False):
     """Require a valid active device; inject api_device and api_partner.
 
-    With require_pos_config=True, also require a linked POS for the catalog company
-    and inject pos_config, catalog_company, product_domain.
+    With inject_catalog_domain=True, also inject catalog_company and product_domain.
     """
 
     def decorator(endpoint):
@@ -145,7 +132,7 @@ def api_device_auth(_func=None, *, require_pos_config=False):
             early = _order_bridge_request_context(
                 kwargs,
                 require_device=True,
-                inject_catalog_pos=require_pos_config,
+                inject_catalog_domain=inject_catalog_domain,
             )
             if early is not None:
                 return early
@@ -159,7 +146,7 @@ def api_device_auth(_func=None, *, require_pos_config=False):
 
 
 def api_access(endpoint):
-    """Inject catalog POS/domain; Bearer device key optional.
+    """Inject catalog company/domain; Bearer device key optional.
 
     Without a valid device key, the catalog uses ``request.env.company`` (same as
     anonymous public website). With a valid key, ``last_activity`` is updated and
@@ -171,7 +158,7 @@ def api_access(endpoint):
         early = _order_bridge_request_context(
             kwargs,
             require_device=False,
-            inject_catalog_pos=True,
+            inject_catalog_domain=True,
         )
         if early is not None:
             return early

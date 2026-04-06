@@ -8,8 +8,6 @@ from odoo.tests.common import TransactionCase, tagged
 class TestOrderBridgeAddressSnapshot(TransactionCase):
     def test_app_order_copies_partner_address_to_snapshot(self):
         company = self.env.company
-        pos = self.env['pos.config'].create({'name': 'Order bridge test POS'})
-        company.order_bridge_pos_config_id = pos
 
         partner = self.env['res.partner'].create({
             'name': '+529991234567',
@@ -29,8 +27,8 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
         })
         tmpl = self.env['product.template'].create({
             'name': 'Bridge line item',
-            'available_in_pos': True,
             'sale_ok': True,
+            'order_bridge_visible': True,
             'list_price': 10.99,
         })
         product = tmpl.product_variant_id
@@ -39,7 +37,6 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'company_id': company.id,
             'order_bridge_origin': 'app',
             'order_bridge_device_id': device.id,
-            'order_bridge_pos_config_id': pos.id,
             'order_line': [
                 Command.create({'product_id': product.id, 'product_uom_qty': 1.0}),
             ],
@@ -53,8 +50,6 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
 
     def test_app_order_without_saved_address_has_no_snapshot(self):
         company = self.env.company
-        pos = self.env['pos.config'].create({'name': 'Order bridge test POS 2'})
-        company.order_bridge_pos_config_id = pos
 
         partner = self.env['res.partner'].create({
             'name': '+529998765432',
@@ -67,8 +62,8 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
         })
         tmpl = self.env['product.template'].create({
             'name': 'Bridge line item 2',
-            'available_in_pos': True,
             'sale_ok': True,
+            'order_bridge_visible': True,
             'list_price': 5.0,
         })
         product = tmpl.product_variant_id
@@ -77,7 +72,6 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'company_id': company.id,
             'order_bridge_origin': 'app',
             'order_bridge_device_id': device.id,
-            'order_bridge_pos_config_id': pos.id,
             'order_line': [
                 Command.create({'product_id': product.id, 'product_uom_qty': 1.0}),
             ],

@@ -8,7 +8,6 @@ from odoo.http import request
 from ..schemas import OrderCreateBody, OrdersListQuery
 from ..schemas.responses import MessageErrorResponse, SimpleErrorResponse
 from ..utils.decorators import (
-    _POS_CONFIG_ERROR,
     api_cors_preflight,
     api_device_auth,
     api_json_response,
@@ -49,19 +48,16 @@ class OrdersController(http.Controller):
     @api_validated_json_body(OrderCreateBody)
     def orders_create(self, api_device=None, api_partner=None, body=None, **kwargs):
         partner = api_partner.sudo()
-        pos_config, _catalog_company, product_domain = catalog_context_for_partner(partner)
-        if not pos_config:
-            return api_json_response(_POS_CONFIG_ERROR, status=503)
+        _catalog_company, product_domain = catalog_context_for_partner(partner)
         line_cmds, line_error = self._build_line_commands(body.lines, product_domain)
         if line_error:
             return line_error
         try:
             order = request.env['sale.order'].sudo().create({
                 'partner_id': partner.id,
-                'company_id': pos_config.company_id.id,
+                'company_id': _catalog_company.id,
                 'order_bridge_origin': 'app',
                 'order_bridge_device_id': api_device.id,
-                'order_bridge_pos_config_id': pos_config.id,
                 'order_line': line_cmds,
             })
         except UserError as e:

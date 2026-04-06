@@ -80,13 +80,18 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual((j_patch.get('address') or {}).get('street'), 'Calle Principal 10')
 
     def test_products_public_without_device_key(self):
-        pos = self.env['pos.config'].create({'name': 'Order bridge public catalog POS'})
-        self.env.company.order_bridge_pos_config_id = pos
+        self.env['product.template'].create({
+            'name': 'Order bridge catalog product',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 1.0,
+        })
         res = self.url_open('/api/order_bridge/products', timeout=60)
         self.assertEqual(res.status_code, 200, res.text)
         data = json.loads(res.text)
         self.assertIn('items', data)
-        self.assertEqual(data.get('pos_config_id'), pos.id)
+        self.assertNotIn('pos_config_id', data)
+        self.assertGreaterEqual(data.get('total', 0), 1)
 
     def test_register_missing_device_key_returns_400(self):
         res = self.url_open(
@@ -111,8 +116,6 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(res.status_code, 401, res.text)
 
     def test_products_invalid_category_id_returns_400(self):
-        pos = self.env['pos.config'].create({'name': 'Order bridge API query test POS'})
-        self.env.company.order_bridge_pos_config_id = pos
         key = str(uuid.uuid4())
         reg = self.url_open(
             '/api/order_bridge/register',

@@ -96,7 +96,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
     val_400 = {'400': _one_of(['ValidationErrorResponse', 'MessageErrorResponse'], 'Validation or business rule error')}
     val_400_body = {'400': _one_of(['ValidationErrorResponse', 'SimpleErrorResponse'], 'Invalid JSON or validation error')}
     not_found = {'404': _ok('SimpleErrorResponse', 'Resource not found')}
-    cfg_503 = {'503': _ok('ConfigurationErrorResponse', 'Order bridge POS not configured')}
 
     paths: dict[str, Any] = {
         '/api/order_bridge/register': {
@@ -163,11 +162,10 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/categories': {
             'get': {
-                'summary': 'POS categories for catalog',
+                'summary': 'Product categories for catalog',
                 'operationId': 'order_bridge_categories',
                 'responses': {
                     '200': _ok('CategoriesListResponse'),
-                    **cfg_503,
                 },
             },
         },
@@ -194,17 +192,10 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                         'required': False,
                         'schema': {'type': 'integer', 'exclusiveMinimum': 0},
                     },
-                    {
-                        'name': 'pos_category_id',
-                        'in': 'query',
-                        'required': False,
-                        'schema': {'type': 'integer', 'exclusiveMinimum': 0},
-                    },
                 ],
                 'responses': {
                     '200': _ok('ProductsPageResponse'),
                     **val_400,
-                    **cfg_503,
                 },
             },
         },
@@ -223,7 +214,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 'responses': {
                     '200': _ok('ProductDetailResponse'),
                     **not_found,
-                    **cfg_503,
                 },
             },
         },
@@ -265,7 +255,6 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                     '200': _ok('OrderCreatedResponse'),
                     **unauthorized,
                     **val_400_body,
-                    **cfg_503,
                 },
             },
         },
@@ -316,7 +305,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         'openapi': '3.1.0',
         'info': {
             'title': 'Order Bridge API',
-            'version': '19.0.2.0.1',
+            'version': '19.0.2.0.2',
             'description': 'JSON REST API for external clients under `/api/order_bridge/`. '
             'Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs '
             '(`/categories`, `/products`, `/products/{id}`).',

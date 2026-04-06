@@ -94,7 +94,7 @@
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/PosCategoryRow"
+              "$ref": "#/components/schemas/ProductCategoryRow"
             },
             "title": "Items",
             "type": "array"
@@ -346,29 +346,9 @@
         "title": "PaginationMeta",
         "type": "object"
       },
-      "PosCategoryNested": {
+      "ProductCategoryRow": {
         "additionalProperties": false,
-        "description": "POS category row embedded on a product (`pos_categories`).",
-        "properties": {
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ],
-        "title": "PosCategoryNested",
-        "type": "object"
-      },
-      "PosCategoryRow": {
-        "additionalProperties": false,
-        "description": "Row in `GET /categories` list.",
+        "description": "`product.category` row in `GET /categories` or embedded on a product (`category`).",
         "properties": {
           "id": {
             "title": "Id",
@@ -395,12 +375,12 @@
           "id",
           "name"
         ],
-        "title": "PosCategoryRow",
+        "title": "ProductCategoryRow",
         "type": "object"
       },
       "ProductDetailResponse": {
         "additionalProperties": false,
-        "description": "Single product with long description and POS config id.",
+        "description": "Single product with long description.",
         "properties": {
           "barcode": {
             "anyOf": [
@@ -413,6 +393,17 @@
             ],
             "default": null,
             "title": "Barcode"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductCategoryRow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "default_code": {
             "anyOf": [
@@ -450,17 +441,6 @@
             "title": "Name",
             "type": "string"
           },
-          "pos_categories": {
-            "items": {
-              "$ref": "#/components/schemas/PosCategoryNested"
-            },
-            "title": "Pos Categories",
-            "type": "array"
-          },
-          "pos_config_id": {
-            "title": "Pos Config Id",
-            "type": "integer"
-          },
           "uom_name": {
             "anyOf": [
               {
@@ -477,9 +457,7 @@
         "required": [
           "id",
           "name",
-          "list_price",
-          "pos_categories",
-          "pos_config_id"
+          "list_price"
         ],
         "title": "ProductDetailResponse",
         "type": "object"
@@ -498,6 +476,17 @@
             ],
             "default": null,
             "title": "Barcode"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductCategoryRow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "default_code": {
             "anyOf": [
@@ -523,13 +512,6 @@
             "title": "Name",
             "type": "string"
           },
-          "pos_categories": {
-            "items": {
-              "$ref": "#/components/schemas/PosCategoryNested"
-            },
-            "title": "Pos Categories",
-            "type": "array"
-          },
           "uom_name": {
             "anyOf": [
               {
@@ -546,8 +528,7 @@
         "required": [
           "id",
           "name",
-          "list_price",
-          "pos_categories"
+          "list_price"
         ],
         "title": "ProductListRow",
         "type": "object"
@@ -570,10 +551,6 @@
             "title": "Offset",
             "type": "integer"
           },
-          "pos_config_id": {
-            "title": "Pos Config Id",
-            "type": "integer"
-          },
           "total": {
             "title": "Total",
             "type": "integer"
@@ -583,8 +560,7 @@
           "limit",
           "offset",
           "total",
-          "items",
-          "pos_config_id"
+          "items"
         ],
         "title": "ProductsPageResponse",
         "type": "object"
@@ -1142,7 +1118,7 @@
   "info": {
     "description": "JSON REST API for external clients under `/api/order_bridge/`. Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs (`/categories`, `/products`, `/products/{id}`).",
     "title": "Order Bridge API",
-    "version": "19.0.2.0.1"
+    "version": "19.0.2.0.2"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1159,19 +1135,9 @@
               }
             },
             "description": "OK"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                }
-              }
-            },
-            "description": "Order bridge POS not configured"
           }
         },
-        "summary": "POS categories for catalog"
+        "summary": "Product categories for catalog"
       }
     },
     "/api/order_bridge/orders": {
@@ -1303,16 +1269,6 @@
               }
             },
             "description": "Invalid or missing device key"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                }
-              }
-            },
-            "description": "Order bridge POS not configured"
           }
         },
         "security": [
@@ -1479,15 +1435,6 @@
               "exclusiveMinimum": 0,
               "type": "integer"
             }
-          },
-          {
-            "in": "query",
-            "name": "pos_category_id",
-            "required": false,
-            "schema": {
-              "exclusiveMinimum": 0,
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -1517,16 +1464,6 @@
               }
             },
             "description": "Validation or business rule error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                }
-              }
-            },
-            "description": "Order bridge POS not configured"
           }
         },
         "summary": "Product list (paginated)"
@@ -1565,16 +1502,6 @@
               }
             },
             "description": "Resource not found"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
-                }
-              }
-            },
-            "description": "Order bridge POS not configured"
           }
         },
         "summary": "Product detail"

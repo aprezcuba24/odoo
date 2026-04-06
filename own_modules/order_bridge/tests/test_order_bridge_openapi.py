@@ -85,12 +85,11 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'list_price': 1.5,
                 'uom_name': 'Units',
                 'barcode': None,
-                'pos_categories': [{'id': 2, 'name': 'PC'}],
+                'category': {'id': 2, 'name': 'PC', 'parent_id': None},
             }],
             'limit': 80,
             'offset': 0,
             'total': 50,
-            'pos_config_id': 3,
         })
         R.ProductDetailResponse.model_validate({
             'id': 10,
@@ -99,9 +98,8 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'list_price': 2.0,
             'uom_name': None,
             'barcode': False,
-            'pos_categories': [{'id': 1, 'name': 'X'}],
+            'category': {'id': 1, 'name': 'X', 'parent_id': 99},
             'description_sale': 'Long',
-            'pos_config_id': 1,
         })
         R.OrdersPageResponse.model_validate({
             'items': [{
