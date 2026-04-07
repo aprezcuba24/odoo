@@ -3,6 +3,7 @@
 import functools
 import json
 import logging
+from datetime import timedelta
 
 from pydantic import BaseModel, ValidationError
 
@@ -17,6 +18,8 @@ from ..schemas.responses import (
 )
 
 _logger = logging.getLogger(__name__)
+
+_LAST_ACTIVITY_WRITE_INTERVAL = timedelta(seconds=60)
 
 CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
@@ -48,7 +51,7 @@ def get_bearer_device_key():
 
 
 def get_json_body():
-    raw = request.httprequest.get_data(cache=False, as_text=True) or ''
+    raw = request.httprequest.get_data(cache=True, as_text=True) or ''
     if not raw.strip():
         return {}
     try:
@@ -109,7 +112,9 @@ def _order_bridge_request_context(
         kwargs['api_partner'] = None
         partner = None
     else:
-        device.sudo().write({'last_activity': fields.Datetime.now()})
+        now = fields.Datetime.now()
+        if not device.last_activity or (now - device.last_activity) > _LAST_ACTIVITY_WRITE_INTERVAL:
+            device.sudo().write({'last_activity': now})
         kwargs['api_device'] = device
         kwargs['api_partner'] = device.partner_id
         partner = device.partner_id
