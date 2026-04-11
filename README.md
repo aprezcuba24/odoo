@@ -159,3 +159,8 @@ PY
 ```
 
 Then hard-refresh the browser (`Ctrl+Shift+R`). If problems persist, run `python3 odoo-bin -d odoo -u web --stop-after-init --no-http` once.
+
+# Start web
+```
+python3 odoo-bin --dev=all -d odoo
+```

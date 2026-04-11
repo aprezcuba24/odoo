@@ -6,8 +6,8 @@ from odoo.fields import Command
 from odoo.http import request
 
 from ..schemas import OrderCreateBody, OrdersListQuery
+from ..schemas.responses import MessageErrorResponse, SimpleErrorResponse
 from ..utils.decorators import (
-    _POS_CONFIG_ERROR,
     api_cors_preflight,
     api_device_auth,
     api_json_response,
@@ -16,11 +16,10 @@ from ..utils.decorators import (
     catalog_context_for_partner,
 )
 from ..utils.serialization import (
-    sale_order_created_to_api_dict,
-    sale_order_to_api_dict,
-    serialize_many,
-    serialize_one,
-    serialize_pagination,
+    order_cancel_response,
+    orders_page_response,
+    sale_order_to_created_response,
+    sale_order_to_detail_response,
 )
 
 
@@ -42,32 +41,31 @@ class OrdersController(http.Controller):
         Order = request.env['sale.order'].sudo()
         orders = Order.search(domain, limit=limit, offset=offset, order='date_order desc, id desc')
         total = Order.search_count(domain)
-        items = serialize_many(orders, sale_order_to_api_dict)
-        return api_json_response(serialize_pagination(items, limit, offset, total))
+        return api_json_response(orders_page_response(orders, limit, offset, total))
 
     @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['POST'], csrf=False)
     @api_device_auth
     @api_validated_json_body(OrderCreateBody)
     def orders_create(self, api_device=None, api_partner=None, body=None, **kwargs):
         partner = api_partner.sudo()
-        pos_config, _catalog_company, product_domain = catalog_context_for_partner(partner)
-        if not pos_config:
-            return api_json_response(_POS_CONFIG_ERROR, status=503)
+        _catalog_company, product_domain = catalog_context_for_partner(partner)
         line_cmds, line_error = self._build_line_commands(body.lines, product_domain)
         if line_error:
             return line_error
         try:
             order = request.env['sale.order'].sudo().create({
                 'partner_id': partner.id,
-                'company_id': pos_config.company_id.id,
+                'company_id': _catalog_company.id,
                 'order_bridge_origin': 'app',
                 'order_bridge_device_id': api_device.id,
-                'order_bridge_pos_config_id': pos_config.id,
                 'order_line': line_cmds,
             })
         except UserError as e:
-            return api_json_response({'error': 'validation', 'message': str(e)}, 400)
-        return api_json_response(serialize_one(order, sale_order_created_to_api_dict))
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(e)),
+                400,
+            )
+        return api_json_response(sale_order_to_created_response(order))
 
     def _build_line_commands(self, lines, product_domain):
         line_cmds = []
@@ -76,7 +74,10 @@ class OrdersController(http.Controller):
             product = Product.browse(line.product_id).exists()
             if not product or not product.filtered_domain(product_domain):
                 return None, api_json_response(
-                    {'error': 'validation', 'message': f'product {line.product_id} not available'},
+                    MessageErrorResponse(
+                        error='validation',
+                        message=f'product {line.product_id} not available',
+                    ),
                     400,
                 )
             line_cmds.append(Command.create({
@@ -88,7 +89,7 @@ class OrdersController(http.Controller):
     def _retrieve_order(self, order_id, api_partner):
         order = request.env['sale.order'].sudo().browse(order_id).exists()
         if not order or order.partner_id.id != api_partner.id or order.order_bridge_origin not in ('app', 'admin'):
-            return None, api_json_response({'error': 'not_found'}, 404)
+            return None, api_json_response(SimpleErrorResponse(error='not_found'), 404)
         return order, None
 
     @http.route('/api/order_bridge/orders/<int:order_id>', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
@@ -97,7 +98,7 @@ class OrdersController(http.Controller):
         order, error = self._retrieve_order(order_id, api_partner)
         if error:
             return error
-        return api_json_response(serialize_one(order, sale_order_to_api_dict, lines=True))
+        return api_json_response(sale_order_to_detail_response(order))
 
     @http.route(
         '/api/order_bridge/orders/<int:order_id>/cancel',
@@ -114,9 +115,18 @@ class OrdersController(http.Controller):
         if error:
             return error
         if order.state != 'draft':
-            return api_json_response({'error': 'forbidden', 'message': 'only draft orders can be cancelled'}, 400)
+            return api_json_response(
+                MessageErrorResponse(
+                    error='forbidden',
+                    message='only draft orders can be cancelled',
+                ),
+                400,
+            )
         try:
             order.action_cancel()
         except UserError as e:
-            return api_json_response({'error': 'validation', 'message': str(e)}, 400)
-        return api_json_response({'id': order.id, 'state': order.state})
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(e)),
+                400,
+            )
+        return api_json_response(order_cancel_response(order))

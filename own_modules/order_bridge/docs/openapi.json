@@ -1,0 +1,1745 @@
+{
+  "components": {
+    "schemas": {
+      "AddressFull": {
+        "additionalProperties": false,
+        "properties": {
+          "municipality": {
+            "minLength": 1,
+            "title": "Municipality",
+            "type": "string"
+          },
+          "neighborhood": {
+            "minLength": 1,
+            "title": "Neighborhood",
+            "type": "string"
+          },
+          "state": {
+            "minLength": 1,
+            "title": "State",
+            "type": "string"
+          },
+          "street": {
+            "minLength": 1,
+            "title": "Street",
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "neighborhood",
+          "municipality",
+          "state"
+        ],
+        "title": "AddressFull",
+        "type": "object"
+      },
+      "AddressPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "municipality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality"
+          },
+          "neighborhood": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "State"
+          },
+          "street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Street"
+          }
+        },
+        "title": "AddressPatch",
+        "type": "object"
+      },
+      "CategoriesListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductCategoryRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "CategoriesListResponse",
+        "type": "object"
+      },
+      "ConfigurationErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "description": "Typically 'configuration'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "ConfigurationErrorResponse",
+        "type": "object"
+      },
+      "DeliveryAddressOut": {
+        "additionalProperties": false,
+        "properties": {
+          "municipality": {
+            "title": "Municipality",
+            "type": "string"
+          },
+          "neighborhood": {
+            "title": "Neighborhood",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "street": {
+            "title": "Street",
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "neighborhood",
+          "municipality",
+          "state"
+        ],
+        "title": "DeliveryAddressOut",
+        "type": "object"
+      },
+      "MessageErrorResponse": {
+        "additionalProperties": false,
+        "description": "e.g. forbidden with a message.",
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "MessageErrorResponse",
+        "type": "object"
+      },
+      "OrderCancelResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ],
+        "title": "OrderCancelResponse",
+        "type": "object"
+      },
+      "OrderCreateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/OrderLineIn"
+            },
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lines"
+        ],
+        "title": "OrderCreateBody",
+        "type": "object"
+      },
+      "OrderCreatedResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "delivery_address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAddressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "device_validated": {
+            "title": "Device Validated",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Ref"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "state",
+          "device_validated"
+        ],
+        "title": "OrderCreatedResponse",
+        "type": "object"
+      },
+      "OrderLineIn": {
+        "additionalProperties": false,
+        "properties": {
+          "product_id": {
+            "exclusiveMinimum": 0,
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "qty": {
+            "exclusiveMinimum": 0,
+            "title": "Qty",
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "qty"
+        ],
+        "title": "OrderLineIn",
+        "type": "object"
+      },
+      "OrdersPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SaleOrderSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "total",
+          "items"
+        ],
+        "title": "OrdersPageResponse",
+        "type": "object"
+      },
+      "PaginationMeta": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "PaginationMeta",
+        "type": "object"
+      },
+      "ProductCategoryRow": {
+        "additionalProperties": false,
+        "description": "`product.category` row in `GET /categories` or embedded on a product (`category`).",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parent Id"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ProductCategoryRow",
+        "type": "object"
+      },
+      "ProductDetailResponse": {
+        "additionalProperties": false,
+        "description": "Single product with long description.",
+        "properties": {
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Barcode"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductCategoryRow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "default_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Default Code"
+          },
+          "description_sale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description Sale"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "list_price": {
+            "title": "List Price",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "uom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Uom Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "list_price"
+        ],
+        "title": "ProductDetailResponse",
+        "type": "object"
+      },
+      "ProductListRow": {
+        "additionalProperties": false,
+        "properties": {
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Barcode"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductCategoryRow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "default_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Default Code"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "list_price": {
+            "title": "List Price",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "uom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Uom Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "list_price"
+        ],
+        "title": "ProductListRow",
+        "type": "object"
+      },
+      "ProductsPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductListRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "total",
+          "items"
+        ],
+        "title": "ProductsPageResponse",
+        "type": "object"
+      },
+      "ProfileAddressOut": {
+        "additionalProperties": false,
+        "properties": {
+          "municipality": {
+            "title": "Municipality",
+            "type": "string"
+          },
+          "neighborhood": {
+            "title": "Neighborhood",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "street": {
+            "title": "Street",
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "neighborhood",
+          "municipality",
+          "state"
+        ],
+        "title": "ProfileAddressOut",
+        "type": "object"
+      },
+      "ProfilePatchBody": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AddressPatch"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          }
+        },
+        "title": "ProfilePatchBody",
+        "type": "object"
+      },
+      "ProfilePutBody": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressFull"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "address"
+        ],
+        "title": "ProfilePutBody",
+        "type": "object"
+      },
+      "ProfileResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProfileAddressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone"
+        ],
+        "title": "ProfileResponse",
+        "type": "object"
+      },
+      "RegisterBody": {
+        "properties": {
+          "device_info": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Device Info"
+          },
+          "device_key": {
+            "minLength": 1,
+            "title": "Device Key",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Phone"
+          }
+        },
+        "required": [
+          "device_key"
+        ],
+        "title": "RegisterBody",
+        "type": "object"
+      },
+      "RegisterOkResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "partner_id": {
+            "title": "Partner Id",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Always 'ok' on success",
+            "title": "Status",
+            "type": "string"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "status",
+          "created",
+          "partner_id",
+          "validated"
+        ],
+        "title": "RegisterOkResponse",
+        "type": "object"
+      },
+      "SaleOrderDetailResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "delivery_address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAddressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "device_validated": {
+            "title": "Device Validated",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/SaleOrderLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Ref"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "origin",
+          "state",
+          "amount_total",
+          "device_validated",
+          "lines"
+        ],
+        "title": "SaleOrderDetailResponse",
+        "type": "object"
+      },
+      "SaleOrderLineOut": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_subtotal": {
+            "title": "Price Subtotal",
+            "type": "number"
+          },
+          "price_unit": {
+            "title": "Price Unit",
+            "type": "number"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "name",
+          "qty",
+          "price_unit",
+          "price_subtotal"
+        ],
+        "title": "SaleOrderLineOut",
+        "type": "object"
+      },
+      "SaleOrderSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "delivery_address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAddressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "device_validated": {
+            "title": "Device Validated",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Ref"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "origin",
+          "state",
+          "amount_total",
+          "device_validated"
+        ],
+        "title": "SaleOrderSummary",
+        "type": "object"
+      },
+      "SimpleErrorResponse": {
+        "additionalProperties": false,
+        "description": "e.g. invalid_json, not_found.",
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "SimpleErrorResponse",
+        "type": "object"
+      },
+      "StatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "partner_id": {
+            "title": "Partner Id",
+            "type": "integer"
+          },
+          "partner_name": {
+            "title": "Partner Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Phone"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "validated",
+          "partner_name",
+          "partner_id"
+        ],
+        "title": "StatusResponse",
+        "type": "object"
+      },
+      "UnauthorizedErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "description": "Typically 'unauthorized'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "UnauthorizedErrorResponse",
+        "type": "object"
+      },
+      "ValidationDetailItem": {
+        "additionalProperties": false,
+        "properties": {
+          "loc": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Loc",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Msg",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationDetailItem",
+        "type": "object"
+      },
+      "ValidationErrorResponse": {
+        "additionalProperties": false,
+        "description": "Pydantic validation errors include ``details``; some handlers return only ``message``.",
+        "properties": {
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationDetailItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Details"
+          },
+          "error": {
+            "description": "Typically 'validation'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "ValidationErrorResponse",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "deviceBearer": {
+        "description": "Device key from registration (`Authorization: Bearer <device_key>`).",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "JSON REST API for external clients under `/api/order_bridge/`. Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs (`/categories`, `/products`, `/products/{id}`).",
+    "title": "Order Bridge API",
+    "version": "19.0.2.0.2"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/order_bridge/categories": {
+      "get": {
+        "operationId": "order_bridge_categories",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoriesListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Product categories for catalog"
+      }
+    },
+    "/api/order_bridge/orders": {
+      "get": {
+        "operationId": "order_bridge_orders_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdersPageResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MessageErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Validation or business rule error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "List orders for device partner"
+      },
+      "post": {
+        "operationId": "order_bridge_orders_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCreatedResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SimpleErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Invalid JSON or validation error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Create sale order"
+      }
+    },
+    "/api/order_bridge/orders/{order_id}": {
+      "get": {
+        "operationId": "order_bridge_order_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOrderDetailResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Order detail with lines"
+      }
+    },
+    "/api/order_bridge/orders/{order_id}/cancel": {
+      "post": {
+        "operationId": "order_bridge_order_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCancelResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MessageErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Validation or business rule error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Cancel draft order"
+      }
+    },
+    "/api/order_bridge/products": {
+      "get": {
+        "operationId": "order_bridge_products",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 80,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category_id",
+            "required": false,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductsPageResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MessageErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Validation or business rule error"
+          }
+        },
+        "summary": "Product list (paginated)"
+      }
+    },
+    "/api/order_bridge/products/{product_id}": {
+      "get": {
+        "operationId": "order_bridge_product_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Resource not found"
+          }
+        },
+        "summary": "Product detail"
+      }
+    },
+    "/api/order_bridge/profile": {
+      "get": {
+        "operationId": "order_bridge_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Get partner profile"
+      },
+      "patch": {
+        "operationId": "order_bridge_profile_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SimpleErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Invalid JSON or validation error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Partial profile update"
+      },
+      "put": {
+        "operationId": "order_bridge_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePutBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SimpleErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Invalid JSON or validation error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Replace profile (full address)"
+      }
+    },
+    "/api/order_bridge/register": {
+      "post": {
+        "deprecated": false,
+        "operationId": "order_bridge_register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterOkResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SimpleErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Invalid JSON or validation error"
+          }
+        },
+        "summary": "Register or retrieve device"
+      }
+    },
+    "/api/order_bridge/status": {
+      "get": {
+        "operationId": "order_bridge_status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid or missing device key"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Device validation status"
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Order Bridge device and catalog API",
+      "name": "order_bridge"
+    }
+  ]
+}

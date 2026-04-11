@@ -9,13 +9,14 @@ from ..schemas import (
     ProfilePutBody,
     RegisterBody,
 )
+from ..schemas.responses import MessageErrorResponse, RegisterOkResponse, StatusResponse
 from ..utils.decorators import (
     api_cors_preflight,
     api_device_auth,
     api_json_response,
     api_validated_json_body,
 )
-from ..utils.serialization import order_bridge_profile_to_api_dict
+from ..utils.serialization import order_bridge_profile_to_response
 
 
 class DeviceAuthController(http.Controller):
@@ -29,25 +30,28 @@ class DeviceAuthController(http.Controller):
                 body.device_info,
             )
         except UserError as e:
-            return api_json_response({'error': 'validation', 'message': str(e)}, 400)
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(e)),
+                400,
+            )
         device = result['device']
         partner = result['partner']
-        return api_json_response({
-            'status': 'ok',
-            'created': result['created'],
-            'partner_id': partner.id,
-            'validated': device.phone_validated,
-        })
+        return api_json_response(RegisterOkResponse(
+            status='ok',
+            created=result['created'],
+            partner_id=partner.id,
+            validated=device.phone_validated,
+        ))
 
     @http.route('/api/order_bridge/status', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
     @api_device_auth
     def status(self, api_device=None, api_partner=None, **kwargs):
-        return api_json_response({
-            'validated': api_device.phone_validated,
-            'phone': api_device.phone,
-            'partner_name': api_partner.name,
-            'partner_id': api_partner.id,
-        })
+        return api_json_response(StatusResponse(
+            validated=api_device.phone_validated,
+            phone=api_device.phone,
+            partner_name=api_partner.name,
+            partner_id=api_partner.id,
+        ))
 
     @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['GET'], csrf=False)
     @api_device_auth
@@ -75,7 +79,10 @@ class DeviceAuthController(http.Controller):
                 state=body.address.state,
             )
         except UserError as e:
-            return api_json_response({'error': 'validation', 'message': str(e)}, 400)
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(e)),
+                400,
+            )
         p.invalidate_recordset()
         return api_json_response(self._profile_payload(api_device, p))
 
@@ -95,9 +102,12 @@ class DeviceAuthController(http.Controller):
                 address=addr_patch,
             )
         except UserError as e:
-            return api_json_response({'error': 'validation', 'message': str(e)}, 400)
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(e)),
+                400,
+            )
         p.invalidate_recordset()
         return api_json_response(self._profile_payload(api_device, p))
 
     def _profile_payload(self, api_device, partner_sudo):
-        return order_bridge_profile_to_api_dict(partner_sudo, api_device)
+        return order_bridge_profile_to_response(partner_sudo, api_device)

@@ -47,7 +47,6 @@ class ProductsListQuery(BaseModel):
     limit: int = Field(default=80, ge=1, le=200)
     offset: int = Field(default=0, ge=0)
     category_id: int | None = Field(default=None, gt=0)
-    pos_category_id: int | None = Field(default=None, gt=0)
 
     @classmethod
     def from_request_params(cls, params: Any) -> ProductsListQuery:

@@ -1,7 +1,7 @@
 <section class="oe_container">
     <div class="oe_row oe_spaced">
         <h2 class="oe_slogan">Order Bridge</h2>
-        <h3 class="oe_slogan">REST API for external clients: device registration, POS-aligned catalog, and sale orders.</h3>
+        <h3 class="oe_slogan">REST API for external clients: device registration, product catalog, and sale orders.</h3>
         <div class="oe_span12">
             <p>
                 Exposes JSON endpoints under <code>/api/order_bridge/</code> for mobile apps, kiosks, or integrations.
@@ -17,15 +17,10 @@
         <div class="oe_span12">
             <ol class="oe_mt16">
                 <li>
-                    <strong>Link a point of sale per company</strong> — required for catalog and order creation from the API.
-                    Go to <em>Settings → Point of Sale</em>, open the <em>Order bridge</em> block, and set
-                    <em>Order bridge point of sale</em> to a <code>pos.config</code> whose products and category rules
-                    should match what external clients see. Alternatively, set the same field on the company form
-                    (<em>Order bridge</em> tab).
-                </li>
-                <li>
-                    Without this link, catalog and order routes respond with <code>503</code> and an error indicating
-                    missing configuration.
+                    <strong>Catalog products</strong> — on each product template, enable <em>Visible in Order bridge</em>
+                    (under the same options as <em>Can be Sold</em>). Only active, saleable products with this flag
+                    (and matching the company rules) appear in <code>/categories</code> and <code>/products</code> and can be
+                    added to API orders.
                 </li>
                 <li>
                     <strong>Validate devices in the backend</strong> — after a client calls <code>POST /api/order_bridge/register</code>
@@ -66,7 +61,7 @@
         <h2 class="oe_slogan">Dependencies and API overview</h2>
         <div class="oe_span12">
             <p>
-                Requires <strong>Sales</strong>, <strong>Point of Sale</strong>, <strong>Products</strong>, and
+                Requires <strong>Sales</strong>, <strong>Products</strong>, and
                 <strong>Phone validation</strong> (for normalized phone numbers).
             </p>
             <p class="oe_mt16"><strong>Main routes</strong> (all under your Odoo base URL):</p>
