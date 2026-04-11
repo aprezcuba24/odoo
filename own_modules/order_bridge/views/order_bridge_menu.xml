@@ -27,7 +27,15 @@
         name="Tienda Apk"
         parent="sale.sale_menu_root"
         sequence="26"
-        groups="sales_team.group_sale_salesman"/>
+        groups="sales_team.group_sale_salesman,base.group_system"/>
+
+    <menuitem
+        id="menu_order_bridge_general_settings"
+        name="Datos generales"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_general_settings"
+        sequence="4"
+        groups="order_bridge.group_order_bridge_manager,base.group_system"/>
 
     <menuitem
         id="menu_order_bridge_municipalities"

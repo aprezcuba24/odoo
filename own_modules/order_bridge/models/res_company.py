@@ -6,6 +6,14 @@ from odoo import api, models
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        companies = super().create(vals_list)
+        GeneralSettings = self.env['order_bridge.general_settings'].sudo()
+        for company in companies:
+            GeneralSettings._get_or_create_for_company(company)
+        return companies
+
     @api.model
     def _order_bridge_catalog_company_for_partner(self, partner, env_company):
         """Empresa usada para el dominio del catálogo (empresa del contacto o empresa actual)."""

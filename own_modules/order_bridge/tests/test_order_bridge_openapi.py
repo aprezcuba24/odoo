@@ -182,3 +182,5 @@ class TestOrderBridgeOpenapi(TransactionCase):
             }],
             'total': 1,
         })
+        R.GeneralSettingsResponse.model_validate({'shop_phone': '+34 900 000 000'})
+        R.GeneralSettingsResponse.model_validate({'shop_phone': None})

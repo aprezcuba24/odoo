@@ -3,6 +3,7 @@
 from ..schemas.responses import (
     CategoriesListResponse,
     DeliveryAddressOut,
+    GeneralSettingsResponse,
     MunicipalitiesListResponse,
     MunicipalityWithNeighborhoodsRow,
     NeighborhoodRow,
@@ -57,6 +58,10 @@ def product_category_to_response(category):
 def categories_list_response(categories):
     rows = [product_category_to_response(c) for c in categories]
     return CategoriesListResponse(items=rows, total=len(rows))
+
+
+def general_settings_response(record):
+    return GeneralSettingsResponse(shop_phone=record.shop_phone)
 
 
 def municipalities_list_response(municipalities):

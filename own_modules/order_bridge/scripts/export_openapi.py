@@ -178,6 +178,15 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 },
             },
         },
+        '/api/order_bridge/settings': {
+            'get': {
+                'summary': 'Datos generales de la tienda (teléfono, etc.)',
+                'operationId': 'order_bridge_settings',
+                'responses': {
+                    '200': _ok('GeneralSettingsResponse'),
+                },
+            },
+        },
         '/api/order_bridge/products': {
             'get': {
                 'summary': 'Listado de productos (paginado)',
@@ -314,10 +323,10 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         'openapi': '3.1.0',
         'info': {
             'title': 'API Tienda Apk',
-            'version': '19.0.2.0.3',
+            'version': '19.0.2.0.4',
             'description': 'API REST JSON para clientes externos bajo `/api/order_bridge/`. '
             'Autenticación con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET públicas del catálogo '
-            '(`/categories`, `/municipalities`, `/products`, `/products/{id}`).',
+            '(`/categories`, `/municipalities`, `/settings`, `/products`, `/products/{id}`).',
         },
         'paths': paths,
         'components': components,

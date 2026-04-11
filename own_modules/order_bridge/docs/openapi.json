@@ -200,6 +200,26 @@
         "title": "DeliveryAddressOut",
         "type": "object"
       },
+      "GeneralSettingsResponse": {
+        "additionalProperties": false,
+        "description": "`GET /api/order_bridge/settings` \u2014 datos generales de la tienda (cat\u00e1logo).",
+        "properties": {
+          "shop_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Shop Phone"
+          }
+        },
+        "title": "GeneralSettingsResponse",
+        "type": "object"
+      },
       "MessageErrorResponse": {
         "additionalProperties": false,
         "description": "e.g. forbidden with a message.",
@@ -1262,9 +1282,9 @@
     }
   },
   "info": {
-    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/products`, `/products/{id}`).",
+    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/settings`, `/products`, `/products/{id}`).",
     "title": "API Tienda Apk",
-    "version": "19.0.2.0.3"
+    "version": "19.0.2.0.4"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1864,6 +1884,24 @@
           }
         },
         "summary": "Registrar u obtener dispositivo"
+      }
+    },
+    "/api/order_bridge/settings": {
+      "get": {
+        "operationId": "order_bridge_settings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralSettingsResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          }
+        },
+        "summary": "Datos generales de la tienda (tel\u00e9fono, etc.)"
       }
     },
     "/api/order_bridge/status": {

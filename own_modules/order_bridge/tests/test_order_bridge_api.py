@@ -147,6 +147,15 @@ class TestOrderBridgeApi(HttpCase):
         self.assertNotIn('pos_config_id', data)
         self.assertGreaterEqual(data.get('total', 0), 1)
 
+    def test_settings_get_shop_phone(self):
+        company = self.env.company.sudo()
+        rec = self.env['order_bridge.general_settings'].sudo()._get_or_create_for_company(company)
+        rec.write({'shop_phone': '+34 900 111 222'})
+        res = self.url_open('/api/order_bridge/settings', timeout=60)
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        self.assertEqual(data.get('shop_phone'), '+34 900 111 222')
+
     def test_register_missing_device_key_returns_400(self):
         res = self.url_open(
             '/api/order_bridge/register',

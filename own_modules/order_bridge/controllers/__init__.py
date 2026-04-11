@@ -5,3 +5,4 @@ from . import catalog
 from . import municipalities
 from . import openapi
 from . import orders
+from . import settings

@@ -2,7 +2,7 @@
 
 {
     'name': 'Tienda Apk',
-    'version': '19.0.2.0.3',
+    'version': '19.0.2.0.5',
     'category': 'Ventas/Ventas',
     'summary': 'API REST para aplicaciones externas: catálogo por marca en producto, registro de dispositivo por teléfono y validación en Tienda Apk.',
     'description': """
@@ -23,6 +23,8 @@ API REST JSON bajo ``/api/order_bridge/`` para apps e integraciones. Los cliente
         'security/order_bridge_security.xml',
         'security/ir.model.access.csv',
         'data/order_bridge_data.xml',
+        'data/order_bridge_general_settings.xml',
+        'views/general_settings_views.xml',
         'views/municipality_views.xml',
         'views/device_views.xml',
         'views/res_partner_views.xml',

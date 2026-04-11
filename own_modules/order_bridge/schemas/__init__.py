@@ -14,6 +14,7 @@ from .query import OrdersListQuery, ProductsListQuery
 from .responses import (
     CategoriesListResponse,
     ConfigurationErrorResponse,
+    GeneralSettingsResponse,
     MessageErrorResponse,
     OrderCancelResponse,
     OrderCreatedResponse,
@@ -47,6 +48,7 @@ __all__ = [
     'ValidationErrorResponse',
     'CategoriesListResponse',
     'ConfigurationErrorResponse',
+    'GeneralSettingsResponse',
     'MessageErrorResponse',
     'OrderCancelResponse',
     'OrderCreatedResponse',

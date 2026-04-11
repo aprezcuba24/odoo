@@ -67,6 +67,19 @@ class ProfileResponse(BaseModel):
         return _odoo_falsy_str(v)
 
 
+class GeneralSettingsResponse(BaseModel):
+    """`GET /api/order_bridge/settings` — datos generales de la tienda (catálogo)."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    shop_phone: str | None = None
+
+    @field_validator('shop_phone', mode='before')
+    @classmethod
+    def shop_phone_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
+
 class ProductCategoryRow(BaseModel):
     """`product.category` row in `GET /categories` or embedded on a product (`category`)."""
 
