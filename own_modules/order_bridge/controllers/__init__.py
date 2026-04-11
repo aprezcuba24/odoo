@@ -2,5 +2,6 @@
 
 from . import auth
 from . import catalog
+from . import municipalities
 from . import openapi
 from . import orders

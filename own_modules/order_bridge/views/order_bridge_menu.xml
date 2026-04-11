@@ -19,7 +19,7 @@
         <field name="view_mode">list,kanban,form</field>
         <field name="domain">[('order_bridge_registered', '=', True)]</field>
         <field name="context">{'default_customer_rank': 1}</field>
-        <field name="search_view_id" ref="base.view_res_partner_filter"/>
+        <field name="search_view_id" ref="view_res_partner_filter_order_bridge"/>
     </record>
 
     <menuitem
@@ -27,6 +27,22 @@
         name="Tienda Apk"
         parent="sale.sale_menu_root"
         sequence="26"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_municipalities"
+        name="Municipios"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_municipality"
+        sequence="5"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_neighborhoods"
+        name="Barrios"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_neighborhood"
+        sequence="6"
         groups="sales_team.group_sale_salesman"/>
 
     <menuitem

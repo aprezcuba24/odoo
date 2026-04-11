@@ -40,9 +40,16 @@ class ProfileAddressOut(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     street: str
-    neighborhood: str
-    municipality: str
+    municipality_id: int | None = None
+    municipality_name: str | None = None
+    neighborhood_id: int | None = None
+    neighborhood_name: str | None = None
     state: str
+
+    @field_validator('municipality_name', 'neighborhood_name', mode='before')
+    @classmethod
+    def name_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
 
 
 class ProfileResponse(BaseModel):
@@ -126,9 +133,38 @@ class DeliveryAddressOut(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     street: str
-    neighborhood: str
-    municipality: str
+    municipality_id: int | None = None
+    municipality_name: str | None = None
+    neighborhood_id: int | None = None
+    neighborhood_name: str | None = None
     state: str
+
+    @field_validator('municipality_name', 'neighborhood_name', mode='before')
+    @classmethod
+    def name_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
+
+class NeighborhoodRow(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    id: int
+    name: str
+
+
+class MunicipalityWithNeighborhoodsRow(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    id: int
+    name: str
+    neighborhoods: list[NeighborhoodRow]
+
+
+class MunicipalitiesListResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    items: list[MunicipalityWithNeighborhoodsRow]
+    total: int
 
 
 class SaleOrderSummary(BaseModel):

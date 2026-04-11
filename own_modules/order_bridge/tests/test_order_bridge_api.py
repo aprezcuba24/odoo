@@ -11,7 +11,7 @@ class TestOrderBridgeApi(HttpCase):
     def test_register_and_status_flow(self):
         key = str(uuid.uuid4())
         payload = json.dumps({
-            'phone': '+34600111222',
+            'phone': '60011122',
             'device_key': key,
         })
         res = self.url_open(
@@ -40,17 +40,26 @@ class TestOrderBridgeApi(HttpCase):
         key = str(uuid.uuid4())
         self.url_open(
             '/api/order_bridge/register',
-            data=json.dumps({'phone': '+34600999888', 'device_key': key}),
+            data=json.dumps({'phone': '60099988', 'device_key': key}),
             headers={'Content-Type': 'application/json'},
             timeout=60,
         )
+        m = self.env['order_bridge.municipality'].create({'name': 'Municipio X'})
+        n1 = self.env['order_bridge.neighborhood'].create({
+            'name': 'Col Norte',
+            'municipality_id': m.id,
+        })
+        n2 = self.env['order_bridge.neighborhood'].create({
+            'name': 'Col Sur',
+            'municipality_id': m.id,
+        })
         auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
         put_body = json.dumps({
             'name': 'Profile Customer',
             'address': {
                 'street': 'Calle Principal 10',
-                'neighborhood': 'Col Norte',
-                'municipality': 'Municipio X',
+                'municipality_id': m.id,
+                'neighborhood_id': n1.id,
                 'state': 'Estado Y',
             },
         })
@@ -66,18 +75,36 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(j_put.get('name'), 'Profile Customer')
         addr = j_put.get('address') or {}
         self.assertEqual(addr.get('street'), 'Calle Principal 10')
+        self.assertEqual(addr.get('municipality_id'), m.id)
+        self.assertEqual(addr.get('neighborhood_id'), n1.id)
 
         r_patch = self.url_open(
             '/api/order_bridge/profile',
-            data=json.dumps({'address': {'neighborhood': 'Col Sur'}}),
+            data=json.dumps({'address': {'neighborhood_id': n2.id, 'municipality_id': m.id}}),
             headers=auth,
             timeout=60,
             method='PATCH',
         )
         self.assertEqual(r_patch.status_code, 200, r_patch.text)
         j_patch = json.loads(r_patch.text)
-        self.assertEqual((j_patch.get('address') or {}).get('neighborhood'), 'Col Sur')
+        self.assertEqual((j_patch.get('address') or {}).get('neighborhood_id'), n2.id)
         self.assertEqual((j_patch.get('address') or {}).get('street'), 'Calle Principal 10')
+
+    def test_municipalities_public_list(self):
+        m = self.env['order_bridge.municipality'].create({'name': 'Mun API'})
+        self.env['order_bridge.neighborhood'].create({
+            'name': 'Bar 1',
+            'municipality_id': m.id,
+        })
+        res = self.url_open('/api/order_bridge/municipalities', timeout=60)
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        self.assertIn('items', data)
+        self.assertGreaterEqual(data.get('total', 0), 1)
+        row = next((x for x in data['items'] if x['id'] == m.id), None)
+        self.assertTrue(row)
+        self.assertEqual(len(row['neighborhoods']), 1)
+        self.assertEqual(row['neighborhoods'][0]['name'], 'Bar 1')
 
     def test_products_public_without_device_key(self):
         self.env['product.template'].create({
@@ -96,7 +123,7 @@ class TestOrderBridgeApi(HttpCase):
     def test_register_missing_device_key_returns_400(self):
         res = self.url_open(
             '/api/order_bridge/register',
-            data=json.dumps({'phone': '+34600111200'}),
+            data=json.dumps({'phone': '60011120'}),
             headers={'Content-Type': 'application/json'},
             timeout=60,
         )
@@ -119,7 +146,7 @@ class TestOrderBridgeApi(HttpCase):
         key = str(uuid.uuid4())
         reg = self.url_open(
             '/api/order_bridge/register',
-            data=json.dumps({'phone': '+34600111333', 'device_key': key}),
+            data=json.dumps({'phone': '60011333', 'device_key': key}),
             headers={'Content-Type': 'application/json'},
             timeout=60,
         )

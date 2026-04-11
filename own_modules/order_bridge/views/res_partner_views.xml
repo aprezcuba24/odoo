@@ -41,8 +41,8 @@
                     <field name="order_bridge_partner_address_ids" nolabel="1">
                         <list editable="bottom" create="1" delete="1">
                             <field name="street"/>
-                            <field name="neighborhood"/>
-                            <field name="municipality"/>
+                            <field name="municipality_id"/>
+                            <field name="neighborhood_id"/>
                             <field name="state"/>
                         </list>
                     </field>

@@ -3,6 +3,9 @@
 from ..schemas.responses import (
     CategoriesListResponse,
     DeliveryAddressOut,
+    MunicipalitiesListResponse,
+    MunicipalityWithNeighborhoodsRow,
+    NeighborhoodRow,
     OrderCancelResponse,
     OrderCreatedResponse,
     OrdersPageResponse,
@@ -24,8 +27,10 @@ def delivery_address_from_record(addr):
         return None
     return DeliveryAddressOut(
         street=addr.street or '',
-        neighborhood=addr.neighborhood or '',
-        municipality=addr.municipality or '',
+        municipality_id=addr.municipality_id.id if addr.municipality_id else None,
+        municipality_name=addr.municipality_id.name if addr.municipality_id else None,
+        neighborhood_id=addr.neighborhood_id.id if addr.neighborhood_id else None,
+        neighborhood_name=addr.neighborhood_id.name if addr.neighborhood_id else None,
         state=addr.state or '',
     )
 
@@ -52,6 +57,19 @@ def product_category_to_response(category):
 def categories_list_response(categories):
     rows = [product_category_to_response(c) for c in categories]
     return CategoriesListResponse(items=rows, total=len(rows))
+
+
+def municipalities_list_response(municipalities):
+    items = []
+    for m in municipalities:
+        n_rows = [
+            NeighborhoodRow(id=n.id, name=n.name)
+            for n in m.neighborhood_ids.filtered('active').sorted('name')
+        ]
+        items.append(
+            MunicipalityWithNeighborhoodsRow(id=m.id, name=m.name, neighborhoods=n_rows),
+        )
+    return MunicipalitiesListResponse(items=items, total=len(items))
 
 
 def product_to_list_row(product):

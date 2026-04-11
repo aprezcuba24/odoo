@@ -4,15 +4,15 @@
       "AddressFull": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
-            "minLength": 1,
-            "title": "Municipality",
-            "type": "string"
+          "municipality_id": {
+            "exclusiveMinimum": 0,
+            "title": "Municipality Id",
+            "type": "integer"
           },
-          "neighborhood": {
-            "minLength": 1,
-            "title": "Neighborhood",
-            "type": "string"
+          "neighborhood_id": {
+            "exclusiveMinimum": 0,
+            "title": "Neighborhood Id",
+            "type": "integer"
           },
           "state": {
             "minLength": 1,
@@ -27,8 +27,8 @@
         },
         "required": [
           "street",
-          "neighborhood",
-          "municipality",
+          "municipality_id",
+          "neighborhood_id",
           "state"
         ],
         "title": "AddressFull",
@@ -37,29 +37,29 @@
       "AddressPatch": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
+          "municipality_id": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "title": "Municipality"
+            "title": "Municipality Id"
           },
-          "neighborhood": {
+          "neighborhood_id": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "title": "Neighborhood"
+            "title": "Neighborhood Id"
           },
           "state": {
             "anyOf": [
@@ -134,13 +134,53 @@
       "DeliveryAddressOut": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
-            "title": "Municipality",
-            "type": "string"
+          "municipality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Id"
           },
-          "neighborhood": {
-            "title": "Neighborhood",
-            "type": "string"
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Name"
+          },
+          "neighborhood_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Id"
+          },
+          "neighborhood_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Name"
           },
           "state": {
             "title": "State",
@@ -153,8 +193,6 @@
         },
         "required": [
           "street",
-          "neighborhood",
-          "municipality",
           "state"
         ],
         "title": "DeliveryAddressOut",
@@ -178,6 +216,74 @@
           "message"
         ],
         "title": "MessageErrorResponse",
+        "type": "object"
+      },
+      "MunicipalitiesListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MunicipalityWithNeighborhoodsRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "MunicipalitiesListResponse",
+        "type": "object"
+      },
+      "MunicipalityWithNeighborhoodsRow": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "neighborhoods": {
+            "items": {
+              "$ref": "#/components/schemas/NeighborhoodRow"
+            },
+            "title": "Neighborhoods",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "neighborhoods"
+        ],
+        "title": "MunicipalityWithNeighborhoodsRow",
+        "type": "object"
+      },
+      "NeighborhoodRow": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NeighborhoodRow",
         "type": "object"
       },
       "OrderCancelResponse": {
@@ -568,13 +674,53 @@
       "ProfileAddressOut": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
-            "title": "Municipality",
-            "type": "string"
+          "municipality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Id"
           },
-          "neighborhood": {
-            "title": "Neighborhood",
-            "type": "string"
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Name"
+          },
+          "neighborhood_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Id"
+          },
+          "neighborhood_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Name"
           },
           "state": {
             "title": "State",
@@ -587,8 +733,6 @@
         },
         "required": [
           "street",
-          "neighborhood",
-          "municipality",
           "state"
         ],
         "title": "ProfileAddressOut",
@@ -1116,9 +1260,9 @@
     }
   },
   "info": {
-    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/products`, `/products/{id}`).",
+    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/products`, `/products/{id}`).",
     "title": "API Tienda Apk",
-    "version": "19.0.2.0.2"
+    "version": "19.0.2.0.3"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1138,6 +1282,24 @@
           }
         },
         "summary": "Categor\u00edas de producto del cat\u00e1logo"
+      }
+    },
+    "/api/order_bridge/municipalities": {
+      "get": {
+        "operationId": "order_bridge_municipalities",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MunicipalitiesListResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          }
+        },
+        "summary": "Municipios con barrios (nomencladores Tienda Apk)"
       }
     },
     "/api/order_bridge/orders": {

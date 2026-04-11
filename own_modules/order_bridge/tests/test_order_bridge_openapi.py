@@ -68,8 +68,10 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'email': 'a@b.co',
             'address': {
                 'street': 'S',
-                'neighborhood': 'N',
-                'municipality': 'M',
+                'municipality_id': 1,
+                'municipality_name': 'M',
+                'neighborhood_id': 2,
+                'neighborhood_name': 'N',
                 'state': 'ST',
             },
         })
@@ -130,8 +132,10 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'device_validated': False,
             'delivery_address': {
                 'street': 's',
-                'neighborhood': 'n',
-                'municipality': 'm',
+                'municipality_id': 1,
+                'municipality_name': 'm',
+                'neighborhood_id': 2,
+                'neighborhood_name': 'n',
                 'state': 'st',
             },
             'lines': [{
@@ -169,4 +173,12 @@ class TestOrderBridgeOpenapi(TransactionCase):
         R.MessageErrorResponse.model_validate({
             'error': 'forbidden',
             'message': 'solo se pueden cancelar pedidos en borrador',
+        })
+        R.MunicipalitiesListResponse.model_validate({
+            'items': [{
+                'id': 1,
+                'name': 'Mun',
+                'neighborhoods': [{'id': 10, 'name': 'Bar'}],
+            }],
+            'total': 1,
         })

@@ -27,8 +27,8 @@ class AddressFull(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     street: str = Field(..., min_length=1)
-    neighborhood: str = Field(..., min_length=1)
-    municipality: str = Field(..., min_length=1)
+    municipality_id: int = Field(..., gt=0)
+    neighborhood_id: int = Field(..., gt=0)
     state: str = Field(..., min_length=1)
 
 
@@ -43,9 +43,18 @@ class AddressPatch(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     street: str | None = None
-    neighborhood: str | None = None
-    municipality: str | None = None
+    municipality_id: int | None = None
+    neighborhood_id: int | None = None
     state: str | None = None
+
+    @field_validator('municipality_id', 'neighborhood_id')
+    @classmethod
+    def positive_id_if_set(cls, v: int | None) -> int | None:
+        if v is None:
+            return v
+        if v < 1:
+            raise ValueError('el id debe ser mayor que cero')
+        return v
 
 
 class ProfilePatchBody(BaseModel):

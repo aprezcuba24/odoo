@@ -68,8 +68,8 @@ class SaleOrder(models.Model):
             snap = Snapshot.create({
                 'sale_order_id': order.id,
                 'street': addr.street or '',
-                'neighborhood': addr.neighborhood or '',
-                'municipality': addr.municipality or '',
+                'neighborhood_id': addr.neighborhood_id.id if addr.neighborhood_id else False,
+                'municipality_id': addr.municipality_id.id if addr.municipality_id else False,
                 'state': addr.state or '',
             })
             order.write({'order_bridge_snapshot_address_id': snap.id})

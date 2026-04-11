@@ -26,6 +26,30 @@ class ResPartner(models.Model):
     order_bridge_partner_address_ids = fields.One2many(
         'order_bridge.partner_address', 'partner_id', string='Dirección Tienda Apk'
     )
+    order_bridge_municipality_id = fields.Many2one(
+        'order_bridge.municipality',
+        string='Municipio',
+        compute='_compute_order_bridge_address_location',
+        store=True,
+        readonly=True,
+    )
+    order_bridge_neighborhood_id = fields.Many2one(
+        'order_bridge.neighborhood',
+        string='Barrio',
+        compute='_compute_order_bridge_address_location',
+        store=True,
+        readonly=True,
+    )
+
+    @api.depends(
+        'order_bridge_partner_address_ids.municipality_id',
+        'order_bridge_partner_address_ids.neighborhood_id',
+    )
+    def _compute_order_bridge_address_location(self):
+        for partner in self:
+            addr = partner.order_bridge_partner_address_ids[:1]
+            partner.order_bridge_municipality_id = addr.municipality_id
+            partner.order_bridge_neighborhood_id = addr.neighborhood_id
 
     @api.depends('order_bridge_device_ids.active', 'order_bridge_device_ids.phone_validated')
     def _compute_order_bridge_flags(self):
