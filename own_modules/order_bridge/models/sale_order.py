@@ -8,25 +8,25 @@ class SaleOrder(models.Model):
 
     order_bridge_origin = fields.Selection(
         selection=[
-            ('app', 'Client app'),
-            ('admin', 'Administrator'),
+            ('app', 'App cliente'),
+            ('admin', 'Administrador'),
         ],
-        string='Order bridge origin',
+        string='Origen Tienda Apk',
         index=True,
     )
     order_bridge_device_id = fields.Many2one(
-        'order_bridge.device', string='API device', ondelete='set null'
+        'order_bridge.device', string='Dispositivo API', ondelete='set null'
     )
     order_bridge_device_validated = fields.Boolean(
-        string='Device validated at order',
-        help='Snapshot at creation: whether the client device was validated when the order was placed.',
+        string='Dispositivo validado al pedido',
+        help='Instantánea al crear el pedido: si el dispositivo cliente estaba validado en ese momento.',
         readonly=True,
         copy=False,
     )
-    order_bridge_ref = fields.Char(string='Bridge reference', copy=False, index=True)
+    order_bridge_ref = fields.Char(string='Referencia tienda', copy=False, index=True)
     order_bridge_snapshot_address_id = fields.Many2one(
         'order_bridge.order_address_snapshot',
-        string='Delivery address snapshot',
+        string='Instantánea de dirección de entrega',
         readonly=True,
         copy=False,
         ondelete='set null',

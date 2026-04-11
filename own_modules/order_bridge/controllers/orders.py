@@ -76,7 +76,7 @@ class OrdersController(http.Controller):
                 return None, api_json_response(
                     MessageErrorResponse(
                         error='validation',
-                        message=f'product {line.product_id} not available',
+                        message=f'el producto {line.product_id} no está disponible',
                     ),
                     400,
                 )
@@ -118,7 +118,7 @@ class OrdersController(http.Controller):
             return api_json_response(
                 MessageErrorResponse(
                     error='forbidden',
-                    message='only draft orders can be cancelled',
+                    message='solo se pueden cancelar pedidos en borrador',
                 ),
                 400,
             )

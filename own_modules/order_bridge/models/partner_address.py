@@ -7,18 +7,18 @@ ADDRESS_FIELD_NAMES = ('street', 'neighborhood', 'municipality', 'state')
 
 class OrderBridgePartnerAddress(models.Model):
     _name = 'order_bridge.partner_address'
-    _description = 'Order bridge partner delivery address (API)'
+    _description = 'Dirección de entrega del contacto (API Tienda Apk)'
 
     partner_id = fields.Many2one(
         'res.partner', required=True, ondelete='cascade', index=True
     )
-    street = fields.Char(string='Address line')
+    street = fields.Char(string='Dirección')
     neighborhood = fields.Char()
     municipality = fields.Char()
-    state = fields.Char(string='State / region')
+    state = fields.Char(string='Estado / provincia')
 
     _sql_constraints = [
-        ('partner_unique', 'unique(partner_id)', 'Only one order bridge address per partner.'),
+        ('partner_unique', 'unique(partner_id)', 'Solo una dirección Tienda Apk por contacto.'),
     ]
 
     @api.model
@@ -66,17 +66,17 @@ class OrderBridgePartnerAddress(models.Model):
 
 class OrderBridgeOrderAddressSnapshot(models.Model):
     _name = 'order_bridge.order_address_snapshot'
-    _description = 'Snapshot of delivery address when a bridge order was created'
+    _description = 'Instantánea de la dirección de entrega al crear un pedido Tienda Apk'
 
     sale_order_id = fields.Many2one(
         'sale.order', required=True, ondelete='cascade', index=True
     )
-    street = fields.Char(string='Address line', readonly=True)
+    street = fields.Char(string='Dirección', readonly=True)
     neighborhood = fields.Char(readonly=True)
     municipality = fields.Char(readonly=True)
-    state = fields.Char(string='State / region', readonly=True)
+    state = fields.Char(string='Estado / provincia', readonly=True)
 
     _sql_constraints = [
-        ('sale_order_unique', 'unique(sale_order_id)', 'One address snapshot per sale order.'),
+        ('sale_order_unique', 'unique(sale_order_id)', 'Una instantánea de dirección por pedido de venta.'),
     ]
 

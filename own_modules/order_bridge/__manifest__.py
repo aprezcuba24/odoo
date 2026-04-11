@@ -1,22 +1,22 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
-    'name': 'Order Bridge',
+    'name': 'Tienda Apk',
     'version': '19.0.2.0.2',
-    'category': 'Sales/Sales',
-    'summary': 'REST API for external apps: catalog by product flag, device registration by phone, validate in Order Bridge.',
+    'category': 'Ventas/Ventas',
+    'summary': 'API REST para aplicaciones externas: catálogo por marca en producto, registro de dispositivo por teléfono y validación en Tienda Apk.',
     'description': """
-Order Bridge
-============
+Tienda Apk
+==========
 
-JSON REST API under ``/api/order_bridge/`` for apps and integrations. Clients use a device key (Bearer), not Odoo logins.
+API REST JSON bajo ``/api/order_bridge/`` para apps e integraciones. Los clientes usan una clave de dispositivo (Bearer), no usuarios de Odoo.
 
-**Setup**
+**Configuración**
 
-- **Catalog:** enable **Visible in Order bridge** on each product template you want in the public API. Only saleable, active products for the catalog company (or without company) are listed.
-- **Devices:** after ``POST /api/order_bridge/register``, validate phones in Order Bridge → Devices when you trust the device. Orders can be created before validation and are marked for review.
+- **Catálogo:** active **Visible en Tienda Apk** en cada plantilla de producto que quieras en la API pública. Solo se listan productos vendibles y activos de la empresa del catálogo (o sin empresa).
+- **Dispositivos:** tras ``POST /api/order_bridge/register``, valida los teléfonos en Tienda Apk → Dispositivos cuando confíes en el dispositivo. Los pedidos pueden crearse antes de la validación y quedan marcados para revisión.
 
-**Depends on:** sale, product, phone_validation.
+**Depende de:** ventas (sale), producto (product), validación de teléfono (phone_validation).
     """,
     'depends': ['sale', 'product', 'phone_validation'],
     'data': [

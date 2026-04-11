@@ -31,7 +31,7 @@ def normalize_phone_for_registration(env, phone_raw):
 
 class OrderBridgeDevice(models.Model):
     _name = 'order_bridge.device'
-    _description = 'Registered API client device'
+    _description = 'Dispositivo cliente API registrado'
     _order = 'registration_date desc, id desc'
 
     device_key = fields.Char(required=True, index='btree', readonly=True)
@@ -41,10 +41,10 @@ class OrderBridgeDevice(models.Model):
     active = fields.Boolean(default=True)
     registration_date = fields.Datetime(default=fields.Datetime.now, required=True)
     last_activity = fields.Datetime()
-    device_info = fields.Char(string='Device info')
+    device_info = fields.Char(string='Información del dispositivo')
 
     _sql_constraints = [
-        ('device_key_unique', 'unique(device_key)', 'Device key must be unique.'),
+        ('device_key_unique', 'unique(device_key)', 'La clave del dispositivo debe ser única.'),
     ]
 
     def action_validate_phone(self):
@@ -67,7 +67,7 @@ class OrderBridgeDevice(models.Model):
         """Register device or return existing state (idempotent on same device_key)."""
         self = self.sudo()
         if not device_key or not str(device_key).strip():
-            raise UserError(_('Device key is required.'))
+            raise UserError(_('La clave del dispositivo es obligatoria.'))
         device_key = str(device_key).strip()
         existing = self.search([('device_key', '=', device_key)], limit=1)
         if existing:
@@ -78,7 +78,7 @@ class OrderBridgeDevice(models.Model):
             }
         normalized = normalize_phone_for_registration(self.env, phone_raw)
         if not normalized:
-            raise UserError(_('Phone is required.'))
+            raise UserError(_('El teléfono es obligatorio.'))
         Partner = self.env['res.partner'].sudo()
         partner = Partner.search(
             ['|', ('phone', '=', normalized), ('phone_sanitized', '=', normalized)],

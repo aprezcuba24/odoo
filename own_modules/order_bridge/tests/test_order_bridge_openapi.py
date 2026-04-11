@@ -159,7 +159,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
         R.ValidationErrorResponse.model_validate({'error': 'validation', 'message': 'UserError'})
         R.UnauthorizedErrorResponse.model_validate({
             'error': 'unauthorized',
-            'message': 'Invalid or missing device key',
+            'message': 'Clave de dispositivo no válida o ausente',
         })
         R.SimpleErrorResponse.model_validate({'error': 'invalid_json'})
         R.ConfigurationErrorResponse.model_validate({
@@ -168,5 +168,5 @@ class TestOrderBridgeOpenapi(TransactionCase):
         })
         R.MessageErrorResponse.model_validate({
             'error': 'forbidden',
-            'message': 'only draft orders can be cancelled',
+            'message': 'solo se pueden cancelar pedidos en borrador',
         })

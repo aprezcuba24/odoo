@@ -16,7 +16,7 @@ def _odoo_falsy_str(v: Any) -> str | None:
 class RegisterOkResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    status: str = Field(..., description="Always 'ok' on success")
+    status: str = Field(..., description="Siempre 'ok' si tiene éxito")
     created: bool
     partner_id: int
     validated: bool
@@ -209,7 +209,7 @@ class ValidationErrorResponse(BaseModel):
 
     model_config = ConfigDict(extra='forbid')
 
-    error: str = Field(..., description="Typically 'validation'")
+    error: str = Field(..., description="Normalmente 'validation'")
     message: str
     details: list[ValidationDetailItem] | None = None
 
@@ -217,7 +217,7 @@ class ValidationErrorResponse(BaseModel):
 class UnauthorizedErrorResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    error: str = Field(..., description="Typically 'unauthorized'")
+    error: str = Field(..., description="Normalmente 'unauthorized'")
     message: str
 
 
@@ -232,7 +232,7 @@ class SimpleErrorResponse(BaseModel):
 class ConfigurationErrorResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    error: str = Field(..., description="Typically 'configuration'")
+    error: str = Field(..., description="Normalmente 'configuration'")
     message: str
 
 

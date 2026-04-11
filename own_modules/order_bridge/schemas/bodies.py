@@ -53,7 +53,7 @@ class ProfilePatchBody(BaseModel):
             return v
         s = str(v).strip()
         if not s:
-            raise ValueError('name cannot be empty')
+            raise ValueError('el nombre no puede estar vacío')
         return s
 
 

@@ -104,7 +104,7 @@ def _order_bridge_request_context(
             return api_json_response(
                 UnauthorizedErrorResponse(
                     error='unauthorized',
-                    message='Invalid or missing device key',
+                    message='Clave de dispositivo no válida o ausente',
                 ),
                 401,
             )

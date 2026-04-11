@@ -81,7 +81,7 @@ class TestOrderBridgeApi(HttpCase):
 
     def test_products_public_without_device_key(self):
         self.env['product.template'].create({
-            'name': 'Order bridge catalog product',
+            'name': 'Producto catálogo Tienda Apk',
             'sale_ok': True,
             'order_bridge_visible': True,
             'list_price': 1.0,

@@ -8,14 +8,14 @@ class ResCompany(models.Model):
 
     @api.model
     def _order_bridge_catalog_company_for_partner(self, partner, env_company):
-        """Company used for catalog domain (partner company or current env company)."""
+        """Empresa usada para el dominio del catálogo (empresa del contacto o empresa actual)."""
         if not partner:
             return env_company
         partner = partner.sudo()
         return partner.company_id or env_company
 
     def _order_bridge_product_domain(self):
-        """Domain on product.product for the Order Bridge catalog."""
+        """Dominio en product.product para el catálogo Tienda Apk."""
         self.ensure_one()
         company = self
         return [

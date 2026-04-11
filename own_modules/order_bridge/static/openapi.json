@@ -115,7 +115,7 @@
         "additionalProperties": false,
         "properties": {
           "error": {
-            "description": "Typically 'configuration'",
+            "description": "Normalmente 'configuration'",
             "title": "Error",
             "type": "string"
           },
@@ -740,7 +740,7 @@
             "type": "integer"
           },
           "status": {
-            "description": "Always 'ok' on success",
+            "description": "Siempre 'ok' si tiene \u00e9xito",
             "title": "Status",
             "type": "string"
           },
@@ -1027,7 +1027,7 @@
         "additionalProperties": false,
         "properties": {
           "error": {
-            "description": "Typically 'unauthorized'",
+            "description": "Normalmente 'unauthorized'",
             "title": "Error",
             "type": "string"
           },
@@ -1090,7 +1090,7 @@
             "title": "Details"
           },
           "error": {
-            "description": "Typically 'validation'",
+            "description": "Normalmente 'validation'",
             "title": "Error",
             "type": "string"
           },
@@ -1109,15 +1109,15 @@
     },
     "securitySchemes": {
       "deviceBearer": {
-        "description": "Device key from registration (`Authorization: Bearer <device_key>`).",
+        "description": "Clave de dispositivo del registro (`Authorization: Bearer <device_key>`).",
         "scheme": "bearer",
         "type": "http"
       }
     }
   },
   "info": {
-    "description": "JSON REST API for external clients under `/api/order_bridge/`. Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs (`/categories`, `/products`, `/products/{id}`).",
-    "title": "Order Bridge API",
+    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/products`, `/products/{id}`).",
+    "title": "API Tienda Apk",
     "version": "19.0.2.0.2"
   },
   "openapi": "3.1.0",
@@ -1134,10 +1134,10 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           }
         },
-        "summary": "Product categories for catalog"
+        "summary": "Categor\u00edas de producto del cat\u00e1logo"
       }
     },
     "/api/order_bridge/orders": {
@@ -1183,7 +1183,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1200,7 +1200,7 @@
                 }
               }
             },
-            "description": "Validation or business rule error"
+            "description": "Error de validaci\u00f3n o regla de negocio"
           },
           "401": {
             "content": {
@@ -1210,7 +1210,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1218,7 +1218,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "List orders for device partner"
+        "summary": "Listar pedidos del contacto del dispositivo"
       },
       "post": {
         "operationId": "order_bridge_orders_create",
@@ -1241,7 +1241,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1258,7 +1258,7 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           },
           "401": {
             "content": {
@@ -1268,7 +1268,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1276,7 +1276,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Create sale order"
+        "summary": "Crear pedido de venta"
       }
     },
     "/api/order_bridge/orders/{order_id}": {
@@ -1301,7 +1301,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "401": {
             "content": {
@@ -1311,7 +1311,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           },
           "404": {
             "content": {
@@ -1321,7 +1321,7 @@
                 }
               }
             },
-            "description": "Resource not found"
+            "description": "Recurso no encontrado"
           }
         },
         "security": [
@@ -1329,7 +1329,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Order detail with lines"
+        "summary": "Detalle del pedido con l\u00edneas"
       }
     },
     "/api/order_bridge/orders/{order_id}/cancel": {
@@ -1354,7 +1354,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1371,7 +1371,7 @@
                 }
               }
             },
-            "description": "Validation or business rule error"
+            "description": "Error de validaci\u00f3n o regla de negocio"
           },
           "401": {
             "content": {
@@ -1381,7 +1381,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           },
           "404": {
             "content": {
@@ -1391,7 +1391,7 @@
                 }
               }
             },
-            "description": "Resource not found"
+            "description": "Recurso no encontrado"
           }
         },
         "security": [
@@ -1399,7 +1399,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Cancel draft order"
+        "summary": "Cancelar pedido en borrador"
       }
     },
     "/api/order_bridge/products": {
@@ -1446,7 +1446,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1463,10 +1463,10 @@
                 }
               }
             },
-            "description": "Validation or business rule error"
+            "description": "Error de validaci\u00f3n o regla de negocio"
           }
         },
-        "summary": "Product list (paginated)"
+        "summary": "Listado de productos (paginado)"
       }
     },
     "/api/order_bridge/products/{product_id}": {
@@ -1491,7 +1491,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "404": {
             "content": {
@@ -1501,10 +1501,10 @@
                 }
               }
             },
-            "description": "Resource not found"
+            "description": "Recurso no encontrado"
           }
         },
-        "summary": "Product detail"
+        "summary": "Detalle de producto"
       }
     },
     "/api/order_bridge/profile": {
@@ -1519,7 +1519,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "401": {
             "content": {
@@ -1529,7 +1529,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1537,7 +1537,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Get partner profile"
+        "summary": "Obtener perfil del contacto"
       },
       "patch": {
         "operationId": "order_bridge_profile_patch",
@@ -1560,7 +1560,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1577,7 +1577,7 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           },
           "401": {
             "content": {
@@ -1587,7 +1587,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1595,7 +1595,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Partial profile update"
+        "summary": "Actualizaci\u00f3n parcial del perfil"
       },
       "put": {
         "operationId": "order_bridge_profile_put",
@@ -1618,7 +1618,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1635,7 +1635,7 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           },
           "401": {
             "content": {
@@ -1645,7 +1645,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1653,7 +1653,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Replace profile (full address)"
+        "summary": "Sustituir perfil (direcci\u00f3n completa)"
       }
     },
     "/api/order_bridge/register": {
@@ -1679,7 +1679,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1696,10 +1696,10 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           }
         },
-        "summary": "Register or retrieve device"
+        "summary": "Registrar u obtener dispositivo"
       }
     },
     "/api/order_bridge/status": {
@@ -1714,7 +1714,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "401": {
             "content": {
@@ -1724,7 +1724,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1732,13 +1732,13 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Device validation status"
+        "summary": "Estado de validaci\u00f3n del dispositivo"
       }
     }
   },
   "tags": [
     {
-      "description": "Order Bridge device and catalog API",
+      "description": "API de dispositivos y cat\u00e1logo Tienda Apk",
       "name": "order_bridge"
     }
   ]

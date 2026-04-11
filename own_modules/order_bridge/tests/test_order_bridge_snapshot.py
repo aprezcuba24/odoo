@@ -26,7 +26,7 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'phone': partner.phone,
         })
         tmpl = self.env['product.template'].create({
-            'name': 'Bridge line item',
+            'name': 'Línea pedido Tienda Apk',
             'sale_ok': True,
             'order_bridge_visible': True,
             'list_price': 10.99,
@@ -61,7 +61,7 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'phone': partner.phone,
         })
         tmpl = self.env['product.template'].create({
-            'name': 'Bridge line item 2',
+            'name': 'Línea pedido Tienda Apk 2',
             'sale_ok': True,
             'order_bridge_visible': True,
             'list_price': 5.0,

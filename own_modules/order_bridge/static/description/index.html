@@ -1,11 +1,11 @@
 <section class="oe_container">
     <div class="oe_row oe_spaced">
-        <h2 class="oe_slogan">Order Bridge</h2>
-        <h3 class="oe_slogan">REST API for external clients: device registration, product catalog, and sale orders.</h3>
+        <h2 class="oe_slogan">Tienda Apk</h2>
+        <h3 class="oe_slogan">API REST para clientes externos: registro de dispositivos, catálogo de productos y pedidos de venta.</h3>
         <div class="oe_span12">
             <p>
-                Exposes JSON endpoints under <code>/api/order_bridge/</code> for mobile apps, kiosks, or integrations.
-                Clients authenticate with a <strong>device key</strong> (Bearer token), not Odoo users.
+                Expone puntos finales JSON bajo <code>/api/order_bridge/</code> para apps móviles, quioscos u integraciones.
+                Los clientes se autentican con una <strong>clave de dispositivo</strong> (token Bearer), no con usuarios de Odoo.
             </p>
         </div>
     </div>
@@ -13,20 +13,20 @@
 
 <section class="oe_container oe_dark">
     <div class="oe_row oe_spaced">
-        <h2 class="oe_slogan">What you must configure</h2>
+        <h2 class="oe_slogan">Qué debe configurar</h2>
         <div class="oe_span12">
             <ol class="oe_mt16">
                 <li>
-                    <strong>Catalog products</strong> — on each product template, enable <em>Visible in Order bridge</em>
-                    (under the same options as <em>Can be Sold</em>). Only active, saleable products with this flag
-                    (and matching the company rules) appear in <code>/categories</code> and <code>/products</code> and can be
-                    added to API orders.
+                    <strong>Productos del catálogo</strong> — en cada plantilla de producto, active <em>Visible en Tienda Apk</em>
+                    (junto a las mismas opciones que <em>Se puede vender</em>). Solo los productos activos, vendibles y con esta marca
+                    (y que cumplan las reglas de empresa) aparecen en <code>/categories</code> y <code>/products</code> y pueden
+                    añadirse a pedidos por API.
                 </li>
                 <li>
-                    <strong>Validate devices in the backend</strong> — after a client calls <code>POST /api/order_bridge/register</code>
-                    with phone and device key, staff open <em>Sales → Order bridge → Devices</em> (or the contact's
-                    <em>Order bridge</em> tab) and validate the phone when appropriate. Orders are still allowed before
-                    validation; they are flagged on the sale order for review. See the next section for who can open these screens.
+                    <strong>Validar dispositivos en el backend</strong> — tras <code>POST /api/order_bridge/register</code>
+                    con teléfono y clave de dispositivo, el personal abre <em>Ventas → Tienda Apk → Dispositivos</em> (o la pestaña
+                    <em>Tienda Apk</em> del contacto) y valida el teléfono cuando corresponda. Los pedidos pueden crearse antes de la
+                    validación; quedan marcados en el pedido de venta para revisión.
                 </li>
             </ol>
         </div>
@@ -35,22 +35,22 @@
 
 <section class="oe_container">
     <div class="oe_row oe_spaced">
-        <h2 class="oe_slogan">Where to manage devices in Odoo</h2>
+        <h2 class="oe_slogan">Dónde gestionar dispositivos en Odoo</h2>
         <div class="oe_span12">
             <p>
-                This module <strong>depends on the Sales app</strong> (<code>sale</code>): Sales is installed automatically
-                with Order Bridge and <strong>must stay installed</strong>. The backend menus for devices, bridge orders,
-                and bridge customers are under the <strong>Sales</strong> app: <em>Sales → Order bridge</em>
-                (<em>Devices</em>, <em>Bridge orders</em>, <em>Bridge customers</em>).
+                Este módulo <strong>depende de la aplicación Ventas</strong> (<code>sale</code>): Ventas se instala automáticamente
+                con Tienda Apk y <strong>debe permanecer instalada</strong>. Los menús de dispositivos, pedidos y clientes de la tienda
+                están bajo <strong>Ventas</strong>: <em>Ventas → Tienda Apk</em>
+                (<em>Dispositivos</em>, <em>Pedidos Tienda Apk</em>, <em>Clientes Tienda Apk</em>).
             </p>
             <p class="oe_mt16">
-                Only users with <strong>Salesperson</strong> access (or a security group that includes it) see those menus
-                and the <em>Order bridge</em> tab on contact forms. From a contact you can also use
-                <em>Open devices</em> to filter the device list to that customer. Sale orders show the linked API device
-                and validation snapshot on the order form when relevant.
+                Solo los usuarios con acceso de <strong>comercial</strong> (o un grupo de seguridad que lo incluya) ven esos menús
+                y la pestaña <em>Tienda Apk</em> en contactos. Desde un contacto puede usar
+                <em>Abrir dispositivos</em> para filtrar la lista por ese cliente. Los pedidos de venta muestran el dispositivo API
+                vinculado y la instantánea de validación en el formulario cuando aplica.
             </p>
             <p class="oe_mt16 text-muted small">
-                External apps use the REST API and device keys; they do not use these backend menus.
+                Las aplicaciones externas usan la API REST y las claves de dispositivo; no usan estos menús del backend.
             </p>
         </div>
     </div>
@@ -58,23 +58,23 @@
 
 <section class="oe_container oe_dark">
     <div class="oe_row oe_spaced">
-        <h2 class="oe_slogan">Dependencies and API overview</h2>
+        <h2 class="oe_slogan">Dependencias y vista general de la API</h2>
         <div class="oe_span12">
             <p>
-                Requires <strong>Sales</strong>, <strong>Products</strong>, and
-                <strong>Phone validation</strong> (for normalized phone numbers).
+                Requiere <strong>Ventas</strong>, <strong>Productos</strong> y
+                <strong>Validación de teléfono</strong> (para números normalizados).
             </p>
-            <p class="oe_mt16"><strong>Main routes</strong> (all under your Odoo base URL):</p>
+            <p class="oe_mt16"><strong>Rutas principales</strong> (todas bajo la URL base de Odoo):</p>
             <ul>
-                <li><code>POST /api/order_bridge/register</code> — register device (no auth)</li>
-                <li><code>GET /api/order_bridge/status</code> — device state (Bearer)</li>
-                <li><code>GET /api/order_bridge/categories</code>, <code>GET /api/order_bridge/products</code> — catalog (Bearer)</li>
+                <li><code>POST /api/order_bridge/register</code> — registrar dispositivo (sin autenticación)</li>
+                <li><code>GET /api/order_bridge/status</code> — estado del dispositivo (Bearer)</li>
+                <li><code>GET /api/order_bridge/categories</code>, <code>GET /api/order_bridge/products</code> — catálogo (Bearer)</li>
                 <li><code>GET|POST /api/order_bridge/orders</code>, <code>GET /api/order_bridge/orders/&lt;id&gt;</code>,
-                    <code>POST /api/order_bridge/orders/&lt;id&gt;/cancel</code> — orders (Bearer)</li>
-                <li><code>GET|PUT|PATCH /api/order_bridge/profile</code> — profile (Bearer)</li>
+                    <code>POST /api/order_bridge/orders/&lt;id&gt;/cancel</code> — pedidos (Bearer)</li>
+                <li><code>GET|PUT|PATCH /api/order_bridge/profile</code> — perfil (Bearer)</li>
             </ul>
             <p class="oe_mt16 text-muted small">
-                Use <em>Update Apps List</em> after upgrading this module so the Apps screen shows the latest description.
+                Use <em>Actualizar lista de aplicaciones</em> tras actualizar este módulo para ver la descripción más reciente en Aplicaciones.
             </p>
         </div>
     </div>

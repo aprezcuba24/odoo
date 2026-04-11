@@ -7,24 +7,24 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     order_bridge_device_ids = fields.One2many(
-        'order_bridge.device', 'partner_id', string='API devices'
+        'order_bridge.device', 'partner_id', string='Dispositivos API'
     )
     order_bridge_registered = fields.Boolean(
-        string='Order bridge registered',
+        string='Registrado en Tienda Apk',
         compute='_compute_order_bridge_flags',
         store=True,
     )
     order_bridge_phone_validated = fields.Boolean(
-        string='Order bridge phone validated',
+        string='Teléfono validado (Tienda Apk)',
         compute='_compute_order_bridge_flags',
         store=True,
     )
     order_bridge_order_count = fields.Integer(
-        string='Bridge orders',
+        string='Pedidos Tienda Apk',
         compute='_compute_order_bridge_order_count',
     )
     order_bridge_partner_address_ids = fields.One2many(
-        'order_bridge.partner_address', 'partner_id', string='Order bridge address'
+        'order_bridge.partner_address', 'partner_id', string='Dirección Tienda Apk'
     )
 
     @api.depends('order_bridge_device_ids.active', 'order_bridge_device_ids.phone_validated')
@@ -46,7 +46,7 @@ class ResPartner(models.Model):
     def action_open_order_bridge_devices(self):
         self.ensure_one()
         return {
-            'name': _('API devices'),
+            'name': _('Dispositivos API'),
             'type': 'ir.actions.act_window',
             'res_model': 'order_bridge.device',
             'view_mode': 'list,form',
@@ -57,7 +57,7 @@ class ResPartner(models.Model):
     def action_open_order_bridge_orders(self):
         self.ensure_one()
         return {
-            'name': _('Bridge orders'),
+            'name': _('Pedidos Tienda Apk'),
             'type': 'ir.actions.act_window',
             'res_model': 'sale.order',
             'view_mode': 'list,form',
