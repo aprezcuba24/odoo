@@ -17,12 +17,14 @@ class OrderBridgePartnerAddress(models.Model):
     neighborhood_id = fields.Many2one(
         'order_bridge.neighborhood',
         string='Barrio',
+        required=True,
         ondelete='restrict',
         index=True,
     )
     municipality_id = fields.Many2one(
         'order_bridge.municipality',
         string='Municipio',
+        required=True,
         ondelete='restrict',
         index=True,
     )
@@ -117,10 +119,7 @@ class OrderBridgePartnerAddress(models.Model):
         else:
             m_id = patch_vals.get('municipality_id', False)
             n_id = patch_vals.get('neighborhood_id', False)
-        if m_id and n_id:
-            self._order_bridge_validate_location_ids_standalone(m_id, n_id)
-        elif m_id or n_id:
-            raise UserError(_('Indique municipio y barrio a la vez.'))
+        self._order_bridge_validate_location_ids_standalone(m_id, n_id)
         if record:
             record.write(patch_vals)
         else:

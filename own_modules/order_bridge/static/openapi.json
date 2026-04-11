@@ -47,6 +47,7 @@
               }
             ],
             "default": null,
+            "description": "Tras el merge con la direcci\u00f3n guardada, municipio y barrio deben quedar definidos.",
             "title": "Municipality Id"
           },
           "neighborhood_id": {
@@ -59,6 +60,7 @@
               }
             ],
             "default": null,
+            "description": "Tras el merge con la direcci\u00f3n guardada, municipio y barrio deben quedar definidos.",
             "title": "Neighborhood Id"
           },
           "state": {

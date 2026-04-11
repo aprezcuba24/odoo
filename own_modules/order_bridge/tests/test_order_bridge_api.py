@@ -90,6 +90,33 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual((j_patch.get('address') or {}).get('neighborhood_id'), n2.id)
         self.assertEqual((j_patch.get('address') or {}).get('street'), 'Calle Principal 10')
 
+    def test_profile_patch_address_street_without_municipality_neighborhood_returns_400(self):
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60077766', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        m = self.env['order_bridge.municipality'].create({'name': 'Mun Patch'})
+        self.env['order_bridge.neighborhood'].create({
+            'name': 'Bar Patch',
+            'municipality_id': m.id,
+        })
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        res = self.url_open(
+            '/api/order_bridge/profile',
+            data=json.dumps({'address': {'street': 'Solo calle sin ubicación'}}),
+            headers=auth,
+            timeout=60,
+            method='PATCH',
+        )
+        self.assertEqual(res.status_code, 400, res.text)
+        body = json.loads(res.text)
+        self.assertEqual(body.get('error'), 'validation')
+        self.assertIn('municipio', (body.get('message') or '').lower())
+        self.assertIn('barrio', (body.get('message') or '').lower())
+
     def test_municipalities_public_list(self):
         m = self.env['order_bridge.municipality'].create({'name': 'Mun API'})
         self.env['order_bridge.neighborhood'].create({

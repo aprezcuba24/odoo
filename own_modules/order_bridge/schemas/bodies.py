@@ -43,8 +43,14 @@ class AddressPatch(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     street: str | None = None
-    municipality_id: int | None = None
-    neighborhood_id: int | None = None
+    municipality_id: int | None = Field(
+        default=None,
+        description='Tras el merge con la dirección guardada, municipio y barrio deben quedar definidos.',
+    )
+    neighborhood_id: int | None = Field(
+        default=None,
+        description='Tras el merge con la dirección guardada, municipio y barrio deben quedar definidos.',
+    )
     state: str | None = None
 
     @field_validator('municipality_id', 'neighborhood_id')
