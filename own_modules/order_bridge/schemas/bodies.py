@@ -14,6 +14,14 @@ class RegisterBody(BaseModel):
     phone: str | None = None
     device_info: str | None = None
 
+    @field_validator('phone')
+    @classmethod
+    def phone_eight_digits(cls, v: str | None) -> str | None:
+        s = str(v).strip()
+        if not s.isdigit() or len(s) != 8:
+            raise ValueError('El teléfono debe tener 8 dígitos')
+        return s
+
 
 class AddressFull(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
