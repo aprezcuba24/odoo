@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 
 class RegisterBody(BaseModel):
@@ -103,3 +103,19 @@ class OrderCreateBody(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     lines: list[OrderLineIn] = Field(..., min_length=1)
+
+    @model_validator(mode='after')
+    def check_stock(self, info: ValidationInfo) -> OrderCreateBody:
+        ctx = info.context
+        if not ctx:
+            return self
+        env = ctx.get('env')
+        catalog_company = ctx.get('catalog_company')
+        product_domain = ctx.get('product_domain')
+        if not env or not catalog_company or product_domain is None:
+            return self
+        # Deferred import so ``schemas`` can load in export_openapi without package parents.
+        from odoo.addons.order_bridge.utils import order_stock
+
+        order_stock.validate_order_lines_stock(env, catalog_company, product_domain, self.lines)
+        return self

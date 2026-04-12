@@ -178,6 +178,57 @@ class TestOrderBridgeApi(HttpCase):
         )
         self.assertEqual(res.status_code, 401, res.text)
 
+    def test_orders_post_storable_insufficient_stock_returns_400_after_first_confirmed(self):
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011224', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        tmpl = self.env['product.template'].create({
+            'name': 'Storable OB stock test',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'is_storable': True,
+            'list_price': 10.0,
+        })
+        product = tmpl.product_variant_id
+        wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        self.assertTrue(wh)
+        self.env['stock.quant'].with_context(inventory_mode=True).create({
+            'product_id': product.id,
+            'location_id': wh.lot_stock_id.id,
+            'inventory_quantity': 1.0,
+        }).action_apply_inventory()
+
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        ok = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': product.id, 'qty': 1}]}),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(ok.status_code, 200, ok.text)
+        self.assertEqual(json.loads(ok.text).get('state'), 'sale')
+
+        bad = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': product.id, 'qty': 1}]}),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(bad.status_code, 400, bad.text)
+        payload = json.loads(bad.text)
+        self.assertEqual(payload.get('error'), 'insufficient_stock')
+        products = payload.get('products')
+        self.assertIsInstance(products, list)
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].get('product_id'), product.id)
+        self.assertEqual(products[0].get('available_qty'), 0.0)
+
     def test_products_invalid_category_id_returns_400(self):
         key = str(uuid.uuid4())
         reg = self.url_open(

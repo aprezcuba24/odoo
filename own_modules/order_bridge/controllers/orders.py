@@ -14,6 +14,7 @@ from ..utils.decorators import (
     api_validated_json_body,
     api_validated_query,
     catalog_context_for_partner,
+    order_create_body_validation_context,
 )
 from ..utils.serialization import (
     order_cancel_response,
@@ -45,7 +46,7 @@ class OrdersController(http.Controller):
 
     @http.route('/api/order_bridge/orders', type='http', auth='public', methods=['POST'], csrf=False)
     @api_device_auth
-    @api_validated_json_body(OrderCreateBody)
+    @api_validated_json_body(OrderCreateBody, validation_context=order_create_body_validation_context)
     def orders_create(self, api_device=None, api_partner=None, body=None, **kwargs):
         partner = api_partner.sudo()
         _catalog_company, product_domain = catalog_context_for_partner(partner)
@@ -118,7 +119,7 @@ class OrdersController(http.Controller):
             return api_json_response(
                 MessageErrorResponse(
                     error='forbidden',
-                    message='solo se pueden cancelar pedidos en borrador',
+                    message='no se puede cancelar este pedido en su estado actual',
                 ),
                 400,
             )

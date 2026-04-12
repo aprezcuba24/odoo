@@ -95,6 +95,12 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
     unauthorized = {'401': _ok('UnauthorizedErrorResponse', 'Clave de dispositivo no válida o ausente')}
     val_400 = {'400': _one_of(['ValidationErrorResponse', 'MessageErrorResponse'], 'Error de validación o regla de negocio')}
     val_400_body = {'400': _one_of(['ValidationErrorResponse', 'SimpleErrorResponse'], 'JSON no válido o error de validación')}
+    orders_create_400 = {
+        '400': _one_of(
+            ['ValidationErrorResponse', 'SimpleErrorResponse', 'InsufficientStockErrorResponse'],
+            'JSON no válido, stock insuficiente o error de validación',
+        ),
+    }
     not_found = {'404': _ok('SimpleErrorResponse', 'Recurso no encontrado')}
 
     paths: dict[str, Any] = {
@@ -272,7 +278,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 'responses': {
                     '200': _ok('OrderCreatedResponse'),
                     **unauthorized,
-                    **val_400_body,
+                    **orders_create_400,
                 },
             },
         },

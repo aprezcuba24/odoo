@@ -208,6 +208,8 @@ class SaleOrderLineOut(BaseModel):
     qty: float
     price_unit: float
     price_subtotal: float
+    qty_delivered: float
+    qty_reserved: float
 
 
 class SaleOrderDetailResponse(SaleOrderSummary):
@@ -251,6 +253,26 @@ class ValidationDetailItem(BaseModel):
     loc: list[str]
     msg: str
     type: str
+
+
+class InsufficientStockProductItem(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    product_id: int = Field(..., description='Variante de producto (`product.product`)')
+    available_qty: float = Field(..., description='Cantidad disponible en el almacén del catálogo')
+
+
+class InsufficientStockErrorResponse(BaseModel):
+    """Stock insuficiente al validar líneas del POST crear pedido."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    error: str = Field(default='insufficient_stock', description="Código fijo 'insufficient_stock'")
+    message: str = Field(..., description='Mensaje resumido')
+    products: list[InsufficientStockProductItem] = Field(
+        ...,
+        description='Productos almacenables con cantidad libre inferior a la solicitada',
+    )
 
 
 class ValidationErrorResponse(BaseModel):

@@ -32,6 +32,26 @@ class SaleOrder(models.Model):
         ondelete='set null',
     )
 
+    def _order_bridge_try_confirm(self):
+        """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""
+        bridge = self.filtered(
+            lambda o: o.order_bridge_origin in ('app', 'admin')
+            and o.state in ('draft', 'sent')
+            and not o.locked
+        )
+        for order in bridge:
+            lines = order.order_line.filtered(
+                lambda l: not l.display_type and not l.is_downpayment and l.product_id
+            )
+            if not lines:
+                continue
+            order.action_confirm()
+
+    def write(self, vals):
+        res = super().write(vals)
+        self._order_bridge_try_confirm()
+        return res
+
     @api.model_create_multi
     def create(self, vals_list):
         seq = self.env['ir.sequence'].sudo()
@@ -73,4 +93,5 @@ class SaleOrder(models.Model):
                 'state': addr.state or '',
             })
             order.write({'order_bridge_snapshot_address_id': snap.id})
+        records._order_bridge_try_confirm()
         return records

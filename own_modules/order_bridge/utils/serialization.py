@@ -129,6 +129,21 @@ def order_bridge_profile_to_response(partner, device):
     )
 
 
+def _sale_order_line_qty_reserved(line):
+    """Quantity reserved on stock moves for this line (not done), in line UoM."""
+    if not line.product_id.is_storable:
+        return 0.0
+    total = 0.0
+    for move in line.move_ids:
+        if move.state in ('done', 'cancel'):
+            continue
+        for ml in move.move_line_ids:
+            total += ml.product_uom_id._compute_quantity(
+                ml.quantity, line.product_uom_id, rounding_method='HALF-UP'
+            )
+    return total
+
+
 def sale_order_line_to_response(line):
     return SaleOrderLineOut(
         product_id=line.product_id.id,
@@ -136,6 +151,8 @@ def sale_order_line_to_response(line):
         qty=float(line.product_uom_qty),
         price_unit=float(line.price_unit),
         price_subtotal=float(line.price_subtotal),
+        qty_delivered=float(line.qty_delivered),
+        qty_reserved=_sale_order_line_qty_reserved(line),
     )
 
 

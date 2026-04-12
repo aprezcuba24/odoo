@@ -144,6 +144,8 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'qty': 2.0,
                 'price_unit': 5.0,
                 'price_subtotal': 10.0,
+                'qty_delivered': 0.0,
+                'qty_reserved': 0.0,
             }],
         })
         R.OrderCreatedResponse.model_validate({
@@ -172,7 +174,12 @@ class TestOrderBridgeOpenapi(TransactionCase):
         })
         R.MessageErrorResponse.model_validate({
             'error': 'forbidden',
-            'message': 'solo se pueden cancelar pedidos en borrador',
+            'message': 'no se puede cancelar este pedido en su estado actual',
+        })
+        R.InsufficientStockErrorResponse.model_validate({
+            'error': 'insufficient_stock',
+            'message': 'Stock insuficiente para uno o más productos',
+            'products': [{'product_id': 1, 'available_qty': 0.0}],
         })
         R.MunicipalitiesListResponse.model_validate({
             'items': [{

@@ -220,6 +220,58 @@
         "title": "GeneralSettingsResponse",
         "type": "object"
       },
+      "InsufficientStockErrorResponse": {
+        "additionalProperties": false,
+        "description": "Stock insuficiente al validar l\u00edneas del POST crear pedido.",
+        "properties": {
+          "error": {
+            "default": "insufficient_stock",
+            "description": "C\u00f3digo fijo 'insufficient_stock'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "description": "Mensaje resumido",
+            "title": "Message",
+            "type": "string"
+          },
+          "products": {
+            "description": "Productos almacenables con cantidad libre inferior a la solicitada",
+            "items": {
+              "$ref": "#/components/schemas/InsufficientStockProductItem"
+            },
+            "title": "Products",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message",
+          "products"
+        ],
+        "title": "InsufficientStockErrorResponse",
+        "type": "object"
+      },
+      "InsufficientStockProductItem": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "description": "Cantidad disponible en el almac\u00e9n del cat\u00e1logo",
+            "title": "Available Qty",
+            "type": "number"
+          },
+          "product_id": {
+            "description": "Variante de producto (`product.product`)",
+            "title": "Product Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id",
+          "available_qty"
+        ],
+        "title": "InsufficientStockProductItem",
+        "type": "object"
+      },
       "MessageErrorResponse": {
         "additionalProperties": false,
         "description": "e.g. forbidden with a message.",
@@ -1040,6 +1092,14 @@
           "qty": {
             "title": "Qty",
             "type": "number"
+          },
+          "qty_delivered": {
+            "title": "Qty Delivered",
+            "type": "number"
+          },
+          "qty_reserved": {
+            "title": "Qty Reserved",
+            "type": "number"
           }
         },
         "required": [
@@ -1047,7 +1107,9 @@
           "name",
           "qty",
           "price_unit",
-          "price_subtotal"
+          "price_subtotal",
+          "qty_delivered",
+          "qty_reserved"
         ],
         "title": "SaleOrderLineOut",
         "type": "object"
@@ -1437,12 +1499,15 @@
                     },
                     {
                       "$ref": "#/components/schemas/SimpleErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InsufficientStockErrorResponse"
                     }
                   ]
                 }
               }
             },
-            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
+            "description": "JSON no v\u00e1lido, stock insuficiente o error de validaci\u00f3n"
           },
           "401": {
             "content": {
