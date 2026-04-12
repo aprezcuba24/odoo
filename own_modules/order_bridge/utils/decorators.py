@@ -33,7 +33,7 @@ CORS_HEADERS = [
 
 def api_json_response(payload, status=200):
     if isinstance(payload, BaseModel):
-        payload = payload.model_dump(mode='json')
+        payload = payload.model_dump(mode='json', exclude_none=False)
     return request.make_json_response(
         payload,
         status=status,

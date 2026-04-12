@@ -156,7 +156,57 @@ def sale_order_line_to_response(line):
     )
 
 
+def _infer_delivery_status_from_lines(order):
+    """When ``sale_stock`` leaves ``delivery_status`` empty (no pickings, all cancelled, etc.).
+
+    Infer *partial* / *full* from line quantities so the API still reflects delivered goods.
+    """
+    if order.state not in ('sale', 'done'):
+        return None
+    lines = order.order_line.filtered(
+        lambda l: not l.display_type and not l.is_downpayment and l.product_id
+    )
+    if not lines:
+        return None
+    total = 0.0
+    delivered = 0.0
+    for line in lines:
+        total += line.product_uom_qty
+        delivered += line.qty_delivered
+    if delivered <= 0 or total <= 0:
+        return None
+    if delivered + 1e-9 >= total:
+        return 'full'
+    return 'partial'
+
+
+def _effective_date_iso(order):
+    """ISO datetime for first customer delivery; fallback to done pickings if field is empty."""
+    ed = order.effective_date
+    if ed:
+        return ed.isoformat()
+    pickings = order.picking_ids.filtered(
+        lambda p: p.state == 'done' and p.location_dest_id.usage == 'customer'
+    )
+    dates = [p.date_done for p in pickings if p.date_done]
+    if not dates:
+        return None
+    return min(dates).isoformat()
+
+
+def _delivery_fields_from_order(order):
+    """Map sale_stock ``delivery_status`` / ``effective_date`` for API (False → None).
+
+    If Odoo leaves ``delivery_status`` empty but lines show deliveries, infer *partial* / *full*.
+    """
+    ds = order.delivery_status or _infer_delivery_status_from_lines(order)
+    delivery_status = ds if ds else None
+    effective_date = _effective_date_iso(order)
+    return delivery_status, effective_date
+
+
 def sale_order_to_summary(order):
+    delivery_status, effective_date = _delivery_fields_from_order(order)
     return SaleOrderSummary(
         id=order.id,
         name=order.name,
@@ -168,6 +218,8 @@ def sale_order_to_summary(order):
         currency=order.currency_id.name if order.currency_id else None,
         device_validated=order.order_bridge_device_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
+        delivery_status=delivery_status,
+        effective_date=effective_date,
     )
 
 
@@ -181,6 +233,7 @@ def sale_order_to_detail_response(order):
 
 
 def sale_order_to_created_response(order):
+    delivery_status, effective_date = _delivery_fields_from_order(order)
     return OrderCreatedResponse(
         id=order.id,
         name=order.name,
@@ -188,6 +241,8 @@ def sale_order_to_created_response(order):
         state=order.state,
         device_validated=order.order_bridge_device_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
+        delivery_status=delivery_status,
+        effective_date=effective_date,
     )
 
 

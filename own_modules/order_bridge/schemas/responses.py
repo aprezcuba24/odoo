@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -180,6 +180,9 @@ class MunicipalitiesListResponse(BaseModel):
     total: int
 
 
+DeliveryStatusLiteral = Literal['pending', 'started', 'partial', 'full']
+
+
 class SaleOrderSummary(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
@@ -193,11 +196,20 @@ class SaleOrderSummary(BaseModel):
     currency: str | None = None
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
+    delivery_status: DeliveryStatusLiteral | None = None
+    effective_date: str | None = None
 
     @field_validator('order_ref', 'currency', mode='before')
     @classmethod
     def falsy_to_none(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
+
+    @field_validator('delivery_status', mode='before')
+    @classmethod
+    def delivery_status_falsy(cls, v: Any) -> str | None:
+        if v is None or v is False:
+            return None
+        return str(v)
 
 
 class SaleOrderLineOut(BaseModel):
@@ -233,11 +245,20 @@ class OrderCreatedResponse(BaseModel):
     state: str
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
+    delivery_status: DeliveryStatusLiteral | None = None
+    effective_date: str | None = None
 
     @field_validator('order_ref', mode='before')
     @classmethod
     def order_ref_falsy(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
+
+    @field_validator('delivery_status', mode='before')
+    @classmethod
+    def created_delivery_status_falsy(cls, v: Any) -> str | None:
+        if v is None or v is False:
+            return None
+        return str(v)
 
 
 class OrderCancelResponse(BaseModel):
