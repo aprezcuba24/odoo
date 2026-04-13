@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -16,7 +16,7 @@ def _odoo_falsy_str(v: Any) -> str | None:
 class RegisterOkResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    status: str = Field(..., description="Always 'ok' on success")
+    status: str = Field(..., description="Siempre 'ok' si tiene éxito")
     created: bool
     partner_id: int
     validated: bool
@@ -40,9 +40,16 @@ class ProfileAddressOut(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     street: str
-    neighborhood: str
-    municipality: str
+    municipality_id: int | None = None
+    municipality_name: str | None = None
+    neighborhood_id: int | None = None
+    neighborhood_name: str | None = None
     state: str
+
+    @field_validator('municipality_name', 'neighborhood_name', mode='before')
+    @classmethod
+    def name_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
 
 
 class ProfileResponse(BaseModel):
@@ -57,6 +64,19 @@ class ProfileResponse(BaseModel):
     @field_validator('email', mode='before')
     @classmethod
     def email_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
+
+class GeneralSettingsResponse(BaseModel):
+    """`GET /api/order_bridge/settings` — datos generales de la tienda (catálogo)."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    shop_phone: str | None = None
+
+    @field_validator('shop_phone', mode='before')
+    @classmethod
+    def shop_phone_falsy(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
 
 
@@ -126,9 +146,41 @@ class DeliveryAddressOut(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     street: str
-    neighborhood: str
-    municipality: str
+    municipality_id: int | None = None
+    municipality_name: str | None = None
+    neighborhood_id: int | None = None
+    neighborhood_name: str | None = None
     state: str
+
+    @field_validator('municipality_name', 'neighborhood_name', mode='before')
+    @classmethod
+    def name_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
+
+class NeighborhoodRow(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    id: int
+    name: str
+
+
+class MunicipalityWithNeighborhoodsRow(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    id: int
+    name: str
+    neighborhoods: list[NeighborhoodRow]
+
+
+class MunicipalitiesListResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    items: list[MunicipalityWithNeighborhoodsRow]
+    total: int
+
+
+DeliveryStatusLiteral = Literal['pending', 'started', 'partial', 'full']
 
 
 class SaleOrderSummary(BaseModel):
@@ -144,11 +196,20 @@ class SaleOrderSummary(BaseModel):
     currency: str | None = None
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
+    delivery_status: DeliveryStatusLiteral | None = None
+    effective_date: str | None = None
 
     @field_validator('order_ref', 'currency', mode='before')
     @classmethod
     def falsy_to_none(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
+
+    @field_validator('delivery_status', mode='before')
+    @classmethod
+    def delivery_status_falsy(cls, v: Any) -> str | None:
+        if v is None or v is False:
+            return None
+        return str(v)
 
 
 class SaleOrderLineOut(BaseModel):
@@ -159,6 +220,8 @@ class SaleOrderLineOut(BaseModel):
     qty: float
     price_unit: float
     price_subtotal: float
+    qty_delivered: float
+    qty_reserved: float
 
 
 class SaleOrderDetailResponse(SaleOrderSummary):
@@ -182,11 +245,20 @@ class OrderCreatedResponse(BaseModel):
     state: str
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
+    delivery_status: DeliveryStatusLiteral | None = None
+    effective_date: str | None = None
 
     @field_validator('order_ref', mode='before')
     @classmethod
     def order_ref_falsy(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
+
+    @field_validator('delivery_status', mode='before')
+    @classmethod
+    def created_delivery_status_falsy(cls, v: Any) -> str | None:
+        if v is None or v is False:
+            return None
+        return str(v)
 
 
 class OrderCancelResponse(BaseModel):
@@ -204,12 +276,32 @@ class ValidationDetailItem(BaseModel):
     type: str
 
 
+class InsufficientStockProductItem(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    product_id: int = Field(..., description='Variante de producto (`product.product`)')
+    available_qty: float = Field(..., description='Cantidad disponible en el almacén del catálogo')
+
+
+class InsufficientStockErrorResponse(BaseModel):
+    """Stock insuficiente al validar líneas del POST crear pedido."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    error: str = Field(default='insufficient_stock', description="Código fijo 'insufficient_stock'")
+    message: str = Field(..., description='Mensaje resumido')
+    products: list[InsufficientStockProductItem] = Field(
+        ...,
+        description='Productos almacenables con cantidad libre inferior a la solicitada',
+    )
+
+
 class ValidationErrorResponse(BaseModel):
     """Pydantic validation errors include ``details``; some handlers return only ``message``."""
 
     model_config = ConfigDict(extra='forbid')
 
-    error: str = Field(..., description="Typically 'validation'")
+    error: str = Field(..., description="Normalmente 'validation'")
     message: str
     details: list[ValidationDetailItem] | None = None
 
@@ -217,7 +309,7 @@ class ValidationErrorResponse(BaseModel):
 class UnauthorizedErrorResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    error: str = Field(..., description="Typically 'unauthorized'")
+    error: str = Field(..., description="Normalmente 'unauthorized'")
     message: str
 
 
@@ -232,7 +324,7 @@ class SimpleErrorResponse(BaseModel):
 class ConfigurationErrorResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    error: str = Field(..., description="Typically 'configuration'")
+    error: str = Field(..., description="Normalmente 'configuration'")
     message: str
 
 

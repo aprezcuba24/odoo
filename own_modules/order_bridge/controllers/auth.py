@@ -74,8 +74,8 @@ class DeviceAuthController(http.Controller):
                 p,
                 body.name,
                 street=body.address.street,
-                neighborhood=body.address.neighborhood,
-                municipality=body.address.municipality,
+                neighborhood_id=body.address.neighborhood_id,
+                municipality_id=body.address.municipality_id,
                 state=body.address.state,
             )
         except UserError as e:

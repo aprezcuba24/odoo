@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 
 class RegisterBody(BaseModel):
@@ -14,13 +14,21 @@ class RegisterBody(BaseModel):
     phone: str | None = None
     device_info: str | None = None
 
+    @field_validator('phone')
+    @classmethod
+    def phone_eight_digits(cls, v: str | None) -> str | None:
+        s = str(v).strip()
+        if not s.isdigit() or len(s) != 8:
+            raise ValueError('El teléfono debe tener 8 dígitos')
+        return s
+
 
 class AddressFull(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     street: str = Field(..., min_length=1)
-    neighborhood: str = Field(..., min_length=1)
-    municipality: str = Field(..., min_length=1)
+    municipality_id: int = Field(..., gt=0)
+    neighborhood_id: int = Field(..., gt=0)
     state: str = Field(..., min_length=1)
 
 
@@ -35,9 +43,24 @@ class AddressPatch(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     street: str | None = None
-    neighborhood: str | None = None
-    municipality: str | None = None
+    municipality_id: int | None = Field(
+        default=None,
+        description='Tras el merge con la dirección guardada, municipio y barrio deben quedar definidos.',
+    )
+    neighborhood_id: int | None = Field(
+        default=None,
+        description='Tras el merge con la dirección guardada, municipio y barrio deben quedar definidos.',
+    )
     state: str | None = None
+
+    @field_validator('municipality_id', 'neighborhood_id')
+    @classmethod
+    def positive_id_if_set(cls, v: int | None) -> int | None:
+        if v is None:
+            return v
+        if v < 1:
+            raise ValueError('el id debe ser mayor que cero')
+        return v
 
 
 class ProfilePatchBody(BaseModel):
@@ -53,7 +76,7 @@ class ProfilePatchBody(BaseModel):
             return v
         s = str(v).strip()
         if not s:
-            raise ValueError('name cannot be empty')
+            raise ValueError('el nombre no puede estar vacío')
         return s
 
 
@@ -80,3 +103,19 @@ class OrderCreateBody(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     lines: list[OrderLineIn] = Field(..., min_length=1)
+
+    @model_validator(mode='after')
+    def check_stock(self, info: ValidationInfo) -> OrderCreateBody:
+        ctx = info.context
+        if not ctx:
+            return self
+        env = ctx.get('env')
+        catalog_company = ctx.get('catalog_company')
+        product_domain = ctx.get('product_domain')
+        if not env or not catalog_company or product_domain is None:
+            return self
+        # Deferred import so ``schemas`` can load in export_openapi without package parents.
+        from odoo.addons.order_bridge.utils import order_stock
+
+        order_stock.validate_order_lines_stock(env, catalog_company, product_domain, self.lines)
+        return self

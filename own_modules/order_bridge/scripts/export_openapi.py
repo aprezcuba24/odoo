@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-"""Build OpenAPI 3.1 spec for Order Bridge from Pydantic models (no Odoo import)."""
+"""Genera la especificación OpenAPI 3.1 para Tienda Apk a partir de modelos Pydantic (sin importar Odoo)."""
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def _ref(name: str) -> dict[str, str]:
 
 def _ok(schema_name: str, description: str | None = None) -> dict[str, Any]:
     return {
-        'description': description or 'OK',
+        'description': description or 'Respuesta correcta',
         'content': {'application/json': {'schema': _ref(schema_name)}},
     }
 
@@ -88,19 +88,25 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         'deviceBearer': {
             'type': 'http',
             'scheme': 'bearer',
-            'description': 'Device key from registration (`Authorization: Bearer <device_key>`).',
+            'description': 'Clave de dispositivo del registro (`Authorization: Bearer <device_key>`).',
         }
     }
 
-    unauthorized = {'401': _ok('UnauthorizedErrorResponse', 'Invalid or missing device key')}
-    val_400 = {'400': _one_of(['ValidationErrorResponse', 'MessageErrorResponse'], 'Validation or business rule error')}
-    val_400_body = {'400': _one_of(['ValidationErrorResponse', 'SimpleErrorResponse'], 'Invalid JSON or validation error')}
-    not_found = {'404': _ok('SimpleErrorResponse', 'Resource not found')}
+    unauthorized = {'401': _ok('UnauthorizedErrorResponse', 'Clave de dispositivo no válida o ausente')}
+    val_400 = {'400': _one_of(['ValidationErrorResponse', 'MessageErrorResponse'], 'Error de validación o regla de negocio')}
+    val_400_body = {'400': _one_of(['ValidationErrorResponse', 'SimpleErrorResponse'], 'JSON no válido o error de validación')}
+    orders_create_400 = {
+        '400': _one_of(
+            ['ValidationErrorResponse', 'SimpleErrorResponse', 'InsufficientStockErrorResponse'],
+            'JSON no válido, stock insuficiente o error de validación',
+        ),
+    }
+    not_found = {'404': _ok('SimpleErrorResponse', 'Recurso no encontrado')}
 
     paths: dict[str, Any] = {
         '/api/order_bridge/register': {
             'post': {
-                'summary': 'Register or retrieve device',
+                'summary': 'Registrar u obtener dispositivo',
                 'operationId': 'order_bridge_register',
                 'requestBody': {
                     'required': True,
@@ -115,7 +121,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/status': {
             'get': {
-                'summary': 'Device validation status',
+                'summary': 'Estado de validación del dispositivo',
                 'operationId': 'order_bridge_status',
                 'security': [{'deviceBearer': []}],
                 'responses': {
@@ -126,13 +132,13 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/profile': {
             'get': {
-                'summary': 'Get partner profile',
+                'summary': 'Obtener perfil del contacto',
                 'operationId': 'order_bridge_profile_get',
                 'security': [{'deviceBearer': []}],
                 'responses': {'200': _ok('ProfileResponse'), **unauthorized},
             },
             'put': {
-                'summary': 'Replace profile (full address)',
+                'summary': 'Sustituir perfil (dirección completa)',
                 'operationId': 'order_bridge_profile_put',
                 'security': [{'deviceBearer': []}],
                 'requestBody': {
@@ -146,7 +152,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 },
             },
             'patch': {
-                'summary': 'Partial profile update',
+                'summary': 'Actualización parcial del perfil',
                 'operationId': 'order_bridge_profile_patch',
                 'security': [{'deviceBearer': []}],
                 'requestBody': {
@@ -162,16 +168,34 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/categories': {
             'get': {
-                'summary': 'Product categories for catalog',
+                'summary': 'Categorías de producto del catálogo',
                 'operationId': 'order_bridge_categories',
                 'responses': {
                     '200': _ok('CategoriesListResponse'),
                 },
             },
         },
+        '/api/order_bridge/municipalities': {
+            'get': {
+                'summary': 'Municipios con barrios (nomencladores Tienda Apk)',
+                'operationId': 'order_bridge_municipalities',
+                'responses': {
+                    '200': _ok('MunicipalitiesListResponse'),
+                },
+            },
+        },
+        '/api/order_bridge/settings': {
+            'get': {
+                'summary': 'Datos generales de la tienda (teléfono, etc.)',
+                'operationId': 'order_bridge_settings',
+                'responses': {
+                    '200': _ok('GeneralSettingsResponse'),
+                },
+            },
+        },
         '/api/order_bridge/products': {
             'get': {
-                'summary': 'Product list (paginated)',
+                'summary': 'Listado de productos (paginado)',
                 'operationId': 'order_bridge_products',
                 'parameters': [
                     {
@@ -201,7 +225,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/products/{product_id}': {
             'get': {
-                'summary': 'Product detail',
+                'summary': 'Detalle de producto',
                 'operationId': 'order_bridge_product_detail',
                 'parameters': [
                     {
@@ -219,7 +243,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/orders': {
             'get': {
-                'summary': 'List orders for device partner',
+                'summary': 'Listar pedidos del contacto del dispositivo',
                 'operationId': 'order_bridge_orders_list',
                 'security': [{'deviceBearer': []}],
                 'parameters': [
@@ -244,7 +268,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 },
             },
             'post': {
-                'summary': 'Create sale order',
+                'summary': 'Crear pedido de venta',
                 'operationId': 'order_bridge_orders_create',
                 'security': [{'deviceBearer': []}],
                 'requestBody': {
@@ -254,13 +278,13 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 'responses': {
                     '200': _ok('OrderCreatedResponse'),
                     **unauthorized,
-                    **val_400_body,
+                    **orders_create_400,
                 },
             },
         },
         '/api/order_bridge/orders/{order_id}': {
             'get': {
-                'summary': 'Order detail with lines',
+                'summary': 'Detalle del pedido con líneas',
                 'operationId': 'order_bridge_order_detail',
                 'security': [{'deviceBearer': []}],
                 'parameters': [
@@ -280,7 +304,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/order_bridge/orders/{order_id}/cancel': {
             'post': {
-                'summary': 'Cancel draft order',
+                'summary': 'Cancelar pedido en borrador',
                 'operationId': 'order_bridge_order_cancel',
                 'security': [{'deviceBearer': []}],
                 'parameters': [
@@ -304,15 +328,15 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
     return {
         'openapi': '3.1.0',
         'info': {
-            'title': 'Order Bridge API',
-            'version': '19.0.2.0.2',
-            'description': 'JSON REST API for external clients under `/api/order_bridge/`. '
-            'Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs '
-            '(`/categories`, `/products`, `/products/{id}`).',
+            'title': 'API Tienda Apk',
+            'version': '19.0.2.0.4',
+            'description': 'API REST JSON para clientes externos bajo `/api/order_bridge/`. '
+            'Autenticación con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET públicas del catálogo '
+            '(`/categories`, `/municipalities`, `/settings`, `/products`, `/products/{id}`).',
         },
         'paths': paths,
         'components': components,
-        'tags': [{'name': 'order_bridge', 'description': 'Order Bridge device and catalog API'}],
+        'tags': [{'name': 'order_bridge', 'description': 'API de dispositivos y catálogo Tienda Apk'}],
     }
 
 

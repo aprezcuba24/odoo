@@ -7,7 +7,7 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     order_bridge_visible = fields.Boolean(
-        string='Visible in Order bridge',
-        help='If enabled, this product’s variants can appear in the Order Bridge public catalog and be ordered via the API (subject to company and sale rules).',
+        string='Visible en Tienda Apk',
+        help='Si está activo, las variantes de este producto pueden aparecer en el catálogo público de Tienda Apk y pedirse por la API (según empresa y reglas de venta).',
         default=False,
     )

@@ -63,6 +63,20 @@ Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referen
 6. **API stateless orientada a JSON**
    Respuestas JSON planas (`make_json_response`), rutas `auth='public'`, `csrf=False`, y autorización por cabecera `Authorization: Bearer <device_key>` resuelta en código (no confundir con API keys de `res.users`).
 
+## Inventario: qué debe cumplir un producto para mover stock
+
+El módulo depende de **sale_stock**. Al crear un pedido por API, `sale.order` se **confirma en automático** (`_order_bridge_try_confirm` → `action_confirm`), igual que un pedido manual confirmado.
+
+**Producto almacenable (descuento / reserva según Odoo estándar)**
+
+- **Tipo:** `consu` en la plantilla (**Bienes** en la UI). No aplica a **Servicio** ni **Combo** (Odoo fuerza `is_storable` a falso si el tipo no es bienes).
+- **Rastrear inventario** (`is_storable` / *Track Inventory*): debe estar activo en `product.template` para que el producto sea tratado como inventariable. Si está desactivado, no se exige stock libre en la validación Pydantic (`validate_order_lines_stock` omite esas líneas) y no se generan movimientos de stock como producto almacenable.
+- **Almacén:** debe existir al menos un `stock.warehouse` para la compañía del catálogo; si no, la API responde error al validar el pedido.
+
+**Momento en que “baja” la cantidad a mano**
+
+- Tras la confirmación, `sale_stock` crea las entregas; la **cantidad física disponible** suele reducirse cuando el **albarán de salida se valida** (estado hecho), no solo al confirmar el pedido (puede haber reserva intermedia según configuración de la ruta y reglas de almacén).
+
 ## Modelos de datos
 
 ### `order_bridge.device`

@@ -12,10 +12,12 @@ from odoo.http import request
 
 from ..schemas.errors import pydantic_errors_to_api_body
 from ..schemas.responses import (
+    InsufficientStockErrorResponse,
     SimpleErrorResponse,
     UnauthorizedErrorResponse,
     ValidationErrorResponse,
 )
+from ..utils.order_stock import InsufficientStockError
 
 _logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ CORS_HEADERS = [
 
 def api_json_response(payload, status=200):
     if isinstance(payload, BaseModel):
-        payload = payload.model_dump(mode='json')
+        payload = payload.model_dump(mode='json', exclude_none=False)
     return request.make_json_response(
         payload,
         status=status,
@@ -85,6 +87,19 @@ def catalog_context_for_partner(partner):
     return catalog_company, product_domain
 
 
+def order_create_body_validation_context(kwargs):
+    """Build Pydantic ``context`` for ``OrderCreateBody`` (stock validation)."""
+    partner = kwargs.get('api_partner')
+    if not partner:
+        return None
+    catalog_company, product_domain = catalog_context_for_partner(partner)
+    return {
+        'env': request.env,
+        'catalog_company': catalog_company,
+        'product_domain': product_domain,
+    }
+
+
 def _order_bridge_request_context(
     kwargs,
     *,
@@ -104,7 +119,7 @@ def _order_bridge_request_context(
             return api_json_response(
                 UnauthorizedErrorResponse(
                     error='unauthorized',
-                    message='Invalid or missing device key',
+                    message='Clave de dispositivo no válida o ausente',
                 ),
                 401,
             )
@@ -191,8 +206,12 @@ def api_validated_query(model_cls, *, kwarg_name='q'):
     return decorator
 
 
-def api_validated_json_body(model_cls, *, kwarg_name='body'):
+def api_validated_json_body(model_cls, *, kwarg_name='body', validation_context=None):
     """Parse JSON body and validate with Pydantic; inject model as ``kwarg_name``.
+
+    If ``validation_context`` is a callable, it receives ``kwargs`` (after upstream
+    decorators inject e.g. ``api_partner``) and must return a dict passed as
+    ``context=`` to ``model_validate`` (Pydantic v2).
 
     Returns 400 for invalid JSON or validation errors. For OPTIONS requests,
     returns CORS preflight without calling the handler (for routes without
@@ -207,8 +226,17 @@ def api_validated_json_body(model_cls, *, kwarg_name='body'):
             body = get_json_body()
             if body is None:
                 return api_json_response(SimpleErrorResponse(error='invalid_json'), 400)
+            ctx = validation_context(kwargs) if validation_context else None
             try:
-                parsed = model_cls.model_validate(body)
+                parsed = model_cls.model_validate(body, context=ctx)
+            except InsufficientStockError as e:
+                return api_json_response(
+                    InsufficientStockErrorResponse(
+                        message='Stock insuficiente para uno o más productos',
+                        products=e.products,
+                    ),
+                    400,
+                )
             except ValidationError as e:
                 err = pydantic_errors_to_api_body(e)
                 return api_json_response(ValidationErrorResponse.model_validate(err), 400)

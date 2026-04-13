@@ -68,8 +68,10 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'email': 'a@b.co',
             'address': {
                 'street': 'S',
-                'neighborhood': 'N',
-                'municipality': 'M',
+                'municipality_id': 1,
+                'municipality_name': 'M',
+                'neighborhood_id': 2,
+                'neighborhood_name': 'N',
                 'state': 'ST',
             },
         })
@@ -130,8 +132,10 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'device_validated': False,
             'delivery_address': {
                 'street': 's',
-                'neighborhood': 'n',
-                'municipality': 'm',
+                'municipality_id': 1,
+                'municipality_name': 'm',
+                'neighborhood_id': 2,
+                'neighborhood_name': 'n',
                 'state': 'st',
             },
             'lines': [{
@@ -140,6 +144,8 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'qty': 2.0,
                 'price_unit': 5.0,
                 'price_subtotal': 10.0,
+                'qty_delivered': 0.0,
+                'qty_reserved': 0.0,
             }],
         })
         R.OrderCreatedResponse.model_validate({
@@ -159,7 +165,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
         R.ValidationErrorResponse.model_validate({'error': 'validation', 'message': 'UserError'})
         R.UnauthorizedErrorResponse.model_validate({
             'error': 'unauthorized',
-            'message': 'Invalid or missing device key',
+            'message': 'Clave de dispositivo no válida o ausente',
         })
         R.SimpleErrorResponse.model_validate({'error': 'invalid_json'})
         R.ConfigurationErrorResponse.model_validate({
@@ -168,5 +174,20 @@ class TestOrderBridgeOpenapi(TransactionCase):
         })
         R.MessageErrorResponse.model_validate({
             'error': 'forbidden',
-            'message': 'only draft orders can be cancelled',
+            'message': 'no se puede cancelar este pedido en su estado actual',
         })
+        R.InsufficientStockErrorResponse.model_validate({
+            'error': 'insufficient_stock',
+            'message': 'Stock insuficiente para uno o más productos',
+            'products': [{'product_id': 1, 'available_qty': 0.0}],
+        })
+        R.MunicipalitiesListResponse.model_validate({
+            'items': [{
+                'id': 1,
+                'name': 'Mun',
+                'neighborhoods': [{'id': 10, 'name': 'Bar'}],
+            }],
+            'total': 1,
+        })
+        R.GeneralSettingsResponse.model_validate({'shop_phone': '+34 900 000 000'})
+        R.GeneralSettingsResponse.model_validate({'shop_phone': None})

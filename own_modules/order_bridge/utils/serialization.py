@@ -3,6 +3,10 @@
 from ..schemas.responses import (
     CategoriesListResponse,
     DeliveryAddressOut,
+    GeneralSettingsResponse,
+    MunicipalitiesListResponse,
+    MunicipalityWithNeighborhoodsRow,
+    NeighborhoodRow,
     OrderCancelResponse,
     OrderCreatedResponse,
     OrdersPageResponse,
@@ -24,8 +28,10 @@ def delivery_address_from_record(addr):
         return None
     return DeliveryAddressOut(
         street=addr.street or '',
-        neighborhood=addr.neighborhood or '',
-        municipality=addr.municipality or '',
+        municipality_id=addr.municipality_id.id if addr.municipality_id else None,
+        municipality_name=addr.municipality_id.name if addr.municipality_id else None,
+        neighborhood_id=addr.neighborhood_id.id if addr.neighborhood_id else None,
+        neighborhood_name=addr.neighborhood_id.name if addr.neighborhood_id else None,
         state=addr.state or '',
     )
 
@@ -52,6 +58,23 @@ def product_category_to_response(category):
 def categories_list_response(categories):
     rows = [product_category_to_response(c) for c in categories]
     return CategoriesListResponse(items=rows, total=len(rows))
+
+
+def general_settings_response(record):
+    return GeneralSettingsResponse(shop_phone=record.shop_phone)
+
+
+def municipalities_list_response(municipalities):
+    items = []
+    for m in municipalities:
+        n_rows = [
+            NeighborhoodRow(id=n.id, name=n.name)
+            for n in m.neighborhood_ids.filtered('active').sorted('name')
+        ]
+        items.append(
+            MunicipalityWithNeighborhoodsRow(id=m.id, name=m.name, neighborhoods=n_rows),
+        )
+    return MunicipalitiesListResponse(items=items, total=len(items))
 
 
 def product_to_list_row(product):
@@ -106,6 +129,21 @@ def order_bridge_profile_to_response(partner, device):
     )
 
 
+def _sale_order_line_qty_reserved(line):
+    """Quantity reserved on stock moves for this line (not done), in line UoM."""
+    if not line.product_id.is_storable:
+        return 0.0
+    total = 0.0
+    for move in line.move_ids:
+        if move.state in ('done', 'cancel'):
+            continue
+        for ml in move.move_line_ids:
+            total += ml.product_uom_id._compute_quantity(
+                ml.quantity, line.product_uom_id, rounding_method='HALF-UP'
+            )
+    return total
+
+
 def sale_order_line_to_response(line):
     return SaleOrderLineOut(
         product_id=line.product_id.id,
@@ -113,10 +151,62 @@ def sale_order_line_to_response(line):
         qty=float(line.product_uom_qty),
         price_unit=float(line.price_unit),
         price_subtotal=float(line.price_subtotal),
+        qty_delivered=float(line.qty_delivered),
+        qty_reserved=_sale_order_line_qty_reserved(line),
     )
 
 
+def _infer_delivery_status_from_lines(order):
+    """When ``sale_stock`` leaves ``delivery_status`` empty (no pickings, all cancelled, etc.).
+
+    Infer *partial* / *full* from line quantities so the API still reflects delivered goods.
+    """
+    if order.state not in ('sale', 'done'):
+        return None
+    lines = order.order_line.filtered(
+        lambda l: not l.display_type and not l.is_downpayment and l.product_id
+    )
+    if not lines:
+        return None
+    total = 0.0
+    delivered = 0.0
+    for line in lines:
+        total += line.product_uom_qty
+        delivered += line.qty_delivered
+    if delivered <= 0 or total <= 0:
+        return None
+    if delivered + 1e-9 >= total:
+        return 'full'
+    return 'partial'
+
+
+def _effective_date_iso(order):
+    """ISO datetime for first customer delivery; fallback to done pickings if field is empty."""
+    ed = order.effective_date
+    if ed:
+        return ed.isoformat()
+    pickings = order.picking_ids.filtered(
+        lambda p: p.state == 'done' and p.location_dest_id.usage == 'customer'
+    )
+    dates = [p.date_done for p in pickings if p.date_done]
+    if not dates:
+        return None
+    return min(dates).isoformat()
+
+
+def _delivery_fields_from_order(order):
+    """Map sale_stock ``delivery_status`` / ``effective_date`` for API (False → None).
+
+    If Odoo leaves ``delivery_status`` empty but lines show deliveries, infer *partial* / *full*.
+    """
+    ds = order.delivery_status or _infer_delivery_status_from_lines(order)
+    delivery_status = ds if ds else None
+    effective_date = _effective_date_iso(order)
+    return delivery_status, effective_date
+
+
 def sale_order_to_summary(order):
+    delivery_status, effective_date = _delivery_fields_from_order(order)
     return SaleOrderSummary(
         id=order.id,
         name=order.name,
@@ -128,6 +218,8 @@ def sale_order_to_summary(order):
         currency=order.currency_id.name if order.currency_id else None,
         device_validated=order.order_bridge_device_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
+        delivery_status=delivery_status,
+        effective_date=effective_date,
     )
 
 
@@ -141,6 +233,7 @@ def sale_order_to_detail_response(order):
 
 
 def sale_order_to_created_response(order):
+    delivery_status, effective_date = _delivery_fields_from_order(order)
     return OrderCreatedResponse(
         id=order.id,
         name=order.name,
@@ -148,6 +241,8 @@ def sale_order_to_created_response(order):
         state=order.state,
         device_validated=order.order_bridge_device_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
+        delivery_status=delivery_status,
+        effective_date=effective_date,
     )
 
 

@@ -9,7 +9,7 @@ def pydantic_errors_to_api_body(exc: ValidationError) -> dict:
     if not errors:
         return {
             'error': 'validation',
-            'message': 'Validation error',
+            'message': 'Error de validación',
             'details': [],
         }
     details = [
@@ -22,6 +22,6 @@ def pydantic_errors_to_api_body(exc: ValidationError) -> dict:
     ]
     return {
         'error': 'validation',
-        'message': errors[0].get('msg', 'Validation error'),
+        'message': errors[0].get('msg', 'Error de validación'),
         'details': details,
     }

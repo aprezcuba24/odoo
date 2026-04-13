@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from odoo.exceptions import UserError
 from odoo.fields import Command
 from odoo.tests.common import TransactionCase, tagged
 
@@ -13,11 +14,16 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'name': '+529991234567',
             'phone': '+529991234567',
         })
+        mun = self.env['order_bridge.municipality'].create({'name': 'Capital'})
+        nbh = self.env['order_bridge.neighborhood'].create({
+            'name': 'Centro',
+            'municipality_id': mun.id,
+        })
         self.env['order_bridge.partner_address'].create({
             'partner_id': partner.id,
             'street': 'Avenida 1',
-            'neighborhood': 'Centro',
-            'municipality': 'Capital',
+            'municipality_id': mun.id,
+            'neighborhood_id': nbh.id,
             'state': 'MX',
         })
         device = self.env['order_bridge.device'].create({
@@ -26,7 +32,7 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'phone': partner.phone,
         })
         tmpl = self.env['product.template'].create({
-            'name': 'Bridge line item',
+            'name': 'Línea pedido Tienda Apk',
             'sale_ok': True,
             'order_bridge_visible': True,
             'list_price': 10.99,
@@ -44,8 +50,8 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
         self.assertTrue(order.order_bridge_snapshot_address_id)
         snap = order.order_bridge_snapshot_address_id
         self.assertEqual(snap.street, 'Avenida 1')
-        self.assertEqual(snap.neighborhood, 'Centro')
-        self.assertEqual(snap.municipality, 'Capital')
+        self.assertEqual(snap.neighborhood_id, nbh)
+        self.assertEqual(snap.municipality_id, mun)
         self.assertEqual(snap.state, 'MX')
 
     def test_app_order_without_saved_address_has_no_snapshot(self):
@@ -61,7 +67,7 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             'phone': partner.phone,
         })
         tmpl = self.env['product.template'].create({
-            'name': 'Bridge line item 2',
+            'name': 'Línea pedido Tienda Apk 2',
             'sale_ok': True,
             'order_bridge_visible': True,
             'list_price': 5.0,
@@ -77,3 +83,20 @@ class TestOrderBridgeAddressSnapshot(TransactionCase):
             ],
         })
         self.assertFalse(order.order_bridge_snapshot_address_id)
+
+    def test_neighborhood_unlink_blocked_when_used_in_address(self):
+        partner = self.env['res.partner'].create({'name': 'p-unlink', 'phone': '+529990000001'})
+        mun = self.env['order_bridge.municipality'].create({'name': 'M-unlink'})
+        nbh = self.env['order_bridge.neighborhood'].create({
+            'name': 'B-unlink',
+            'municipality_id': mun.id,
+        })
+        self.env['order_bridge.partner_address'].create({
+            'partner_id': partner.id,
+            'street': 'x',
+            'municipality_id': mun.id,
+            'neighborhood_id': nbh.id,
+            'state': 's',
+        })
+        with self.assertRaises(UserError):
+            nbh.unlink()

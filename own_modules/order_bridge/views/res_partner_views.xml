@@ -16,15 +16,15 @@
                     icon="fa-plug"
                     groups="sales_team.group_sale_salesman"
                     invisible="order_bridge_order_count == 0">
-                    <field name="order_bridge_order_count" widget="statinfo" string="Bridge orders"/>
+                    <field name="order_bridge_order_count" widget="statinfo" string="Pedidos Tienda Apk"/>
                 </button>
             </div>
             <notebook position="inside">
-                <page string="Order bridge" name="order_bridge_page" groups="sales_team.group_sale_salesman">
+                <page string="Tienda Apk" name="order_bridge_page" groups="sales_team.group_sale_salesman">
                     <group>
                         <field name="order_bridge_registered" readonly="1"/>
                         <field name="order_bridge_phone_validated" readonly="1"/>
-                        <button name="action_open_order_bridge_devices" type="object" string="Open devices" class="btn-link" colspan="2"/>
+                        <button name="action_open_order_bridge_devices" type="object" string="Abrir dispositivos" class="btn-link" colspan="2"/>
                     </group>
                     <field name="order_bridge_device_ids" nolabel="1">
                         <list create="false" delete="false" edit="false">
@@ -37,12 +37,12 @@
                             <field name="device_info"/>
                         </list>
                     </field>
-                    <separator string="Order bridge delivery address"/>
+                    <separator string="Dirección de entrega Tienda Apk"/>
                     <field name="order_bridge_partner_address_ids" nolabel="1">
                         <list editable="bottom" create="1" delete="1">
                             <field name="street"/>
-                            <field name="neighborhood"/>
-                            <field name="municipality"/>
+                            <field name="municipality_id"/>
+                            <field name="neighborhood_id"/>
                             <field name="state"/>
                         </list>
                     </field>

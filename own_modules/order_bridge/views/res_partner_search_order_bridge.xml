@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_partner_filter_order_bridge" model="ir.ui.view">
+        <field name="name">res.partner.select.order.bridge.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="order_bridge_municipality_id"/>
+                <field name="order_bridge_neighborhood_id"/>
+            </xpath>
+            <xpath expr="//group[@name='group_by']" position="inside">
+                <filter name="order_bridge_municipality" string="Municipio" context="{'group_by': 'order_bridge_municipality_id'}"/>
+                <filter name="order_bridge_neighborhood" string="Barrio" context="{'group_by': 'order_bridge_neighborhood_id'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
     <record id="seq_order_bridge_ref" model="ir.sequence">
-        <field name="name">Order bridge reference</field>
+        <field name="name">Referencia Tienda Apk</field>
         <field name="code">order_bridge.order.ref</field>
         <field name="prefix">OB-</field>
         <field name="padding">5</field>
@@ -14,7 +14,7 @@
     </record>
 
     <record id="ir_cron_order_bridge_device_inactive" model="ir.cron">
-        <field name="name">Order bridge: deactivate inactive devices</field>
+        <field name="name">Tienda Apk: desactivar dispositivos inactivos</field>
         <field name="model_id" ref="order_bridge.model_order_bridge_device"/>
         <field name="state">code</field>
         <field name="code">model.cron_deactivate_inactive_devices()</field>

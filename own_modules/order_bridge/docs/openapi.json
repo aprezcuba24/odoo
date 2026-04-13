@@ -4,15 +4,15 @@
       "AddressFull": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
-            "minLength": 1,
-            "title": "Municipality",
-            "type": "string"
+          "municipality_id": {
+            "exclusiveMinimum": 0,
+            "title": "Municipality Id",
+            "type": "integer"
           },
-          "neighborhood": {
-            "minLength": 1,
-            "title": "Neighborhood",
-            "type": "string"
+          "neighborhood_id": {
+            "exclusiveMinimum": 0,
+            "title": "Neighborhood Id",
+            "type": "integer"
           },
           "state": {
             "minLength": 1,
@@ -27,8 +27,8 @@
         },
         "required": [
           "street",
-          "neighborhood",
-          "municipality",
+          "municipality_id",
+          "neighborhood_id",
           "state"
         ],
         "title": "AddressFull",
@@ -37,29 +37,31 @@
       "AddressPatch": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
+          "municipality_id": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "title": "Municipality"
+            "description": "Tras el merge con la direcci\u00f3n guardada, municipio y barrio deben quedar definidos.",
+            "title": "Municipality Id"
           },
-          "neighborhood": {
+          "neighborhood_id": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "title": "Neighborhood"
+            "description": "Tras el merge con la direcci\u00f3n guardada, municipio y barrio deben quedar definidos.",
+            "title": "Neighborhood Id"
           },
           "state": {
             "anyOf": [
@@ -115,7 +117,7 @@
         "additionalProperties": false,
         "properties": {
           "error": {
-            "description": "Typically 'configuration'",
+            "description": "Normalmente 'configuration'",
             "title": "Error",
             "type": "string"
           },
@@ -134,13 +136,53 @@
       "DeliveryAddressOut": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
-            "title": "Municipality",
-            "type": "string"
+          "municipality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Id"
           },
-          "neighborhood": {
-            "title": "Neighborhood",
-            "type": "string"
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Name"
+          },
+          "neighborhood_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Id"
+          },
+          "neighborhood_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Name"
           },
           "state": {
             "title": "State",
@@ -153,11 +195,81 @@
         },
         "required": [
           "street",
-          "neighborhood",
-          "municipality",
           "state"
         ],
         "title": "DeliveryAddressOut",
+        "type": "object"
+      },
+      "GeneralSettingsResponse": {
+        "additionalProperties": false,
+        "description": "`GET /api/order_bridge/settings` \u2014 datos generales de la tienda (cat\u00e1logo).",
+        "properties": {
+          "shop_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Shop Phone"
+          }
+        },
+        "title": "GeneralSettingsResponse",
+        "type": "object"
+      },
+      "InsufficientStockErrorResponse": {
+        "additionalProperties": false,
+        "description": "Stock insuficiente al validar l\u00edneas del POST crear pedido.",
+        "properties": {
+          "error": {
+            "default": "insufficient_stock",
+            "description": "C\u00f3digo fijo 'insufficient_stock'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "description": "Mensaje resumido",
+            "title": "Message",
+            "type": "string"
+          },
+          "products": {
+            "description": "Productos almacenables con cantidad libre inferior a la solicitada",
+            "items": {
+              "$ref": "#/components/schemas/InsufficientStockProductItem"
+            },
+            "title": "Products",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message",
+          "products"
+        ],
+        "title": "InsufficientStockErrorResponse",
+        "type": "object"
+      },
+      "InsufficientStockProductItem": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "description": "Cantidad disponible en el almac\u00e9n del cat\u00e1logo",
+            "title": "Available Qty",
+            "type": "number"
+          },
+          "product_id": {
+            "description": "Variante de producto (`product.product`)",
+            "title": "Product Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id",
+          "available_qty"
+        ],
+        "title": "InsufficientStockProductItem",
         "type": "object"
       },
       "MessageErrorResponse": {
@@ -178,6 +290,74 @@
           "message"
         ],
         "title": "MessageErrorResponse",
+        "type": "object"
+      },
+      "MunicipalitiesListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MunicipalityWithNeighborhoodsRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "MunicipalitiesListResponse",
+        "type": "object"
+      },
+      "MunicipalityWithNeighborhoodsRow": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "neighborhoods": {
+            "items": {
+              "$ref": "#/components/schemas/NeighborhoodRow"
+            },
+            "title": "Neighborhoods",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "neighborhoods"
+        ],
+        "title": "MunicipalityWithNeighborhoodsRow",
+        "type": "object"
+      },
+      "NeighborhoodRow": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NeighborhoodRow",
         "type": "object"
       },
       "OrderCancelResponse": {
@@ -231,9 +411,39 @@
             ],
             "default": null
           },
+          "delivery_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pending",
+                  "started",
+                  "partial",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Delivery Status"
+          },
           "device_validated": {
             "title": "Device Validated",
             "type": "boolean"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effective Date"
           },
           "id": {
             "title": "Id",
@@ -568,13 +778,53 @@
       "ProfileAddressOut": {
         "additionalProperties": false,
         "properties": {
-          "municipality": {
-            "title": "Municipality",
-            "type": "string"
+          "municipality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Id"
           },
-          "neighborhood": {
-            "title": "Neighborhood",
-            "type": "string"
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Name"
+          },
+          "neighborhood_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Id"
+          },
+          "neighborhood_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Name"
           },
           "state": {
             "title": "State",
@@ -587,8 +837,6 @@
         },
         "required": [
           "street",
-          "neighborhood",
-          "municipality",
           "state"
         ],
         "title": "ProfileAddressOut",
@@ -740,7 +988,7 @@
             "type": "integer"
           },
           "status": {
-            "description": "Always 'ok' on success",
+            "description": "Siempre 'ok' si tiene \u00e9xito",
             "title": "Status",
             "type": "string"
           },
@@ -800,9 +1048,39 @@
             ],
             "default": null
           },
+          "delivery_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pending",
+                  "started",
+                  "partial",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Delivery Status"
+          },
           "device_validated": {
             "title": "Device Validated",
             "type": "boolean"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effective Date"
           },
           "id": {
             "title": "Id",
@@ -874,6 +1152,14 @@
           "qty": {
             "title": "Qty",
             "type": "number"
+          },
+          "qty_delivered": {
+            "title": "Qty Delivered",
+            "type": "number"
+          },
+          "qty_reserved": {
+            "title": "Qty Reserved",
+            "type": "number"
           }
         },
         "required": [
@@ -881,7 +1167,9 @@
           "name",
           "qty",
           "price_unit",
-          "price_subtotal"
+          "price_subtotal",
+          "qty_delivered",
+          "qty_reserved"
         ],
         "title": "SaleOrderLineOut",
         "type": "object"
@@ -928,9 +1216,39 @@
             ],
             "default": null
           },
+          "delivery_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pending",
+                  "started",
+                  "partial",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Delivery Status"
+          },
           "device_validated": {
             "title": "Device Validated",
             "type": "boolean"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effective Date"
           },
           "id": {
             "title": "Id",
@@ -1027,7 +1345,7 @@
         "additionalProperties": false,
         "properties": {
           "error": {
-            "description": "Typically 'unauthorized'",
+            "description": "Normalmente 'unauthorized'",
             "title": "Error",
             "type": "string"
           },
@@ -1090,7 +1408,7 @@
             "title": "Details"
           },
           "error": {
-            "description": "Typically 'validation'",
+            "description": "Normalmente 'validation'",
             "title": "Error",
             "type": "string"
           },
@@ -1109,16 +1427,16 @@
     },
     "securitySchemes": {
       "deviceBearer": {
-        "description": "Device key from registration (`Authorization: Bearer <device_key>`).",
+        "description": "Clave de dispositivo del registro (`Authorization: Bearer <device_key>`).",
         "scheme": "bearer",
         "type": "http"
       }
     }
   },
   "info": {
-    "description": "JSON REST API for external clients under `/api/order_bridge/`. Authenticates with a device key (Bearer), except `POST /register` and the public catalog GETs (`/categories`, `/products`, `/products/{id}`).",
-    "title": "Order Bridge API",
-    "version": "19.0.2.0.2"
+    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/settings`, `/products`, `/products/{id}`).",
+    "title": "API Tienda Apk",
+    "version": "19.0.2.0.4"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1134,10 +1452,28 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           }
         },
-        "summary": "Product categories for catalog"
+        "summary": "Categor\u00edas de producto del cat\u00e1logo"
+      }
+    },
+    "/api/order_bridge/municipalities": {
+      "get": {
+        "operationId": "order_bridge_municipalities",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MunicipalitiesListResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          }
+        },
+        "summary": "Municipios con barrios (nomencladores Tienda Apk)"
       }
     },
     "/api/order_bridge/orders": {
@@ -1183,7 +1519,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1200,7 +1536,7 @@
                 }
               }
             },
-            "description": "Validation or business rule error"
+            "description": "Error de validaci\u00f3n o regla de negocio"
           },
           "401": {
             "content": {
@@ -1210,7 +1546,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1218,7 +1554,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "List orders for device partner"
+        "summary": "Listar pedidos del contacto del dispositivo"
       },
       "post": {
         "operationId": "order_bridge_orders_create",
@@ -1241,7 +1577,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1253,12 +1589,15 @@
                     },
                     {
                       "$ref": "#/components/schemas/SimpleErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InsufficientStockErrorResponse"
                     }
                   ]
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido, stock insuficiente o error de validaci\u00f3n"
           },
           "401": {
             "content": {
@@ -1268,7 +1607,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1276,7 +1615,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Create sale order"
+        "summary": "Crear pedido de venta"
       }
     },
     "/api/order_bridge/orders/{order_id}": {
@@ -1301,7 +1640,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "401": {
             "content": {
@@ -1311,7 +1650,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           },
           "404": {
             "content": {
@@ -1321,7 +1660,7 @@
                 }
               }
             },
-            "description": "Resource not found"
+            "description": "Recurso no encontrado"
           }
         },
         "security": [
@@ -1329,7 +1668,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Order detail with lines"
+        "summary": "Detalle del pedido con l\u00edneas"
       }
     },
     "/api/order_bridge/orders/{order_id}/cancel": {
@@ -1354,7 +1693,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1371,7 +1710,7 @@
                 }
               }
             },
-            "description": "Validation or business rule error"
+            "description": "Error de validaci\u00f3n o regla de negocio"
           },
           "401": {
             "content": {
@@ -1381,7 +1720,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           },
           "404": {
             "content": {
@@ -1391,7 +1730,7 @@
                 }
               }
             },
-            "description": "Resource not found"
+            "description": "Recurso no encontrado"
           }
         },
         "security": [
@@ -1399,7 +1738,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Cancel draft order"
+        "summary": "Cancelar pedido en borrador"
       }
     },
     "/api/order_bridge/products": {
@@ -1446,7 +1785,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1463,10 +1802,10 @@
                 }
               }
             },
-            "description": "Validation or business rule error"
+            "description": "Error de validaci\u00f3n o regla de negocio"
           }
         },
-        "summary": "Product list (paginated)"
+        "summary": "Listado de productos (paginado)"
       }
     },
     "/api/order_bridge/products/{product_id}": {
@@ -1491,7 +1830,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "404": {
             "content": {
@@ -1501,10 +1840,10 @@
                 }
               }
             },
-            "description": "Resource not found"
+            "description": "Recurso no encontrado"
           }
         },
-        "summary": "Product detail"
+        "summary": "Detalle de producto"
       }
     },
     "/api/order_bridge/profile": {
@@ -1519,7 +1858,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "401": {
             "content": {
@@ -1529,7 +1868,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1537,7 +1876,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Get partner profile"
+        "summary": "Obtener perfil del contacto"
       },
       "patch": {
         "operationId": "order_bridge_profile_patch",
@@ -1560,7 +1899,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1577,7 +1916,7 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           },
           "401": {
             "content": {
@@ -1587,7 +1926,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1595,7 +1934,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Partial profile update"
+        "summary": "Actualizaci\u00f3n parcial del perfil"
       },
       "put": {
         "operationId": "order_bridge_profile_put",
@@ -1618,7 +1957,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1635,7 +1974,7 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           },
           "401": {
             "content": {
@@ -1645,7 +1984,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1653,7 +1992,7 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Replace profile (full address)"
+        "summary": "Sustituir perfil (direcci\u00f3n completa)"
       }
     },
     "/api/order_bridge/register": {
@@ -1679,7 +2018,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "400": {
             "content": {
@@ -1696,10 +2035,28 @@
                 }
               }
             },
-            "description": "Invalid JSON or validation error"
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
           }
         },
-        "summary": "Register or retrieve device"
+        "summary": "Registrar u obtener dispositivo"
+      }
+    },
+    "/api/order_bridge/settings": {
+      "get": {
+        "operationId": "order_bridge_settings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralSettingsResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          }
+        },
+        "summary": "Datos generales de la tienda (tel\u00e9fono, etc.)"
       }
     },
     "/api/order_bridge/status": {
@@ -1714,7 +2071,7 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Respuesta correcta"
           },
           "401": {
             "content": {
@@ -1724,7 +2081,7 @@
                 }
               }
             },
-            "description": "Invalid or missing device key"
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
           }
         },
         "security": [
@@ -1732,13 +2089,13 @@
             "deviceBearer": []
           }
         ],
-        "summary": "Device validation status"
+        "summary": "Estado de validaci\u00f3n del dispositivo"
       }
     }
   },
   "tags": [
     {
-      "description": "Order Bridge device and catalog API",
+      "description": "API de dispositivos y cat\u00e1logo Tienda Apk",
       "name": "order_bridge"
     }
   ]
