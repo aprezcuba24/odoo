@@ -1,5 +1,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from urllib.parse import urlparse
+
+from odoo.http import request
+
 from ..schemas.responses import (
     CategoriesListResponse,
     DeliveryAddressOut,
@@ -55,6 +59,58 @@ def product_category_to_response(category):
     )
 
 
+def _order_bridge_url_host_is_loopback(url: str) -> bool:
+    """True if URL host is localhost / loopback (not reachable from another device)."""
+    if not url:
+        return True
+    try:
+        host = (urlparse(url).hostname or '').lower()
+    except ValueError:
+        return True
+    if not host:
+        return True
+    if host in ('localhost', '::1', '0.0.0.0'):
+        return True
+    if host.startswith('127.'):
+        return True
+    return False
+
+
+def _order_bridge_public_base_url():
+    """Base URL for absolute image links in JSON.
+
+    Prefer the URL the **current** client used to call the API (``url_root``) so phones
+    and browsers on another network get hosts they can reach. ``web.base.url`` is only
+    preferred when the request URL is loopback (e.g. local admin) but ICP points to a
+    public URL.
+    """
+    url_root = request.httprequest.url_root.rstrip('/')
+    icp = (request.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')
+
+    if not _order_bridge_url_host_is_loopback(url_root):
+        return url_root
+    if icp and not _order_bridge_url_host_is_loopback(icp):
+        return icp
+    return url_root or icp
+
+
+def _product_image_urls(product):
+    """Absolute URLs for ``/web/image`` (requires ``_can_return_content`` on ``product.product``).
+
+    Use variant or template binary fields so URLs appear even if ``image_1920`` was not
+    recomputed yet on the variant after a batch ``search`` (image often lives on template).
+    """
+    tmpl = product.product_tmpl_id
+    if not (product.image_variant_1920 or tmpl.image_1920):
+        return None, None
+    base = _order_bridge_public_base_url()
+    pid = product.id
+    return (
+        f'{base}/web/image/product.product/{pid}/image_512',
+        f'{base}/web/image/product.product/{pid}/image_128',
+    )
+
+
 def categories_list_response(categories):
     rows = [product_category_to_response(c) for c in categories]
     return CategoriesListResponse(items=rows, total=len(rows))
@@ -78,6 +134,7 @@ def municipalities_list_response(municipalities):
 
 
 def product_to_list_row(product):
+    image_url, thumb_url = _product_image_urls(product)
     return ProductListRow(
         id=product.id,
         name=product.display_name,
@@ -86,6 +143,8 @@ def product_to_list_row(product):
         uom_name=product.uom_id.name if product.uom_id else None,
         barcode=product.barcode,
         category=_category_from_template(product.product_tmpl_id),
+        image_url=image_url,
+        image_thumbnail_url=thumb_url,
     )
 
 
@@ -145,6 +204,9 @@ def _sale_order_line_qty_reserved(line):
 
 
 def sale_order_line_to_response(line):
+    image_url, thumb_url = (None, None)
+    if line.product_id:
+        image_url, thumb_url = _product_image_urls(line.product_id)
     return SaleOrderLineOut(
         product_id=line.product_id.id,
         name=line.name,
@@ -153,6 +215,8 @@ def sale_order_line_to_response(line):
         price_subtotal=float(line.price_subtotal),
         qty_delivered=float(line.qty_delivered),
         qty_reserved=_sale_order_line_qty_reserved(line),
+        image_url=image_url,
+        image_thumbnail_url=thumb_url,
     )
 
 
@@ -224,7 +288,7 @@ def sale_order_to_summary(order):
 
 
 def sale_order_to_detail_response(order):
-    lines = order.order_line.filtered(lambda l: not l.display_type)
+    lines = order.order_line.filtered(lambda l: not l.display_type and l.product_id)
     summary = sale_order_to_summary(order)
     return SaleOrderDetailResponse.model_validate({
         **summary.model_dump(),

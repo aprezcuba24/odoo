@@ -2,6 +2,7 @@
 
 import json
 import uuid
+from urllib.parse import urlparse
 
 from odoo.tests.common import HttpCase, tagged
 
@@ -281,6 +282,87 @@ class TestOrderBridgeApi(HttpCase):
         self.assertIn('delivery_status', row)
         self.assertIn('effective_date', row)
         self.assertEqual(row.get('delivery_status'), 'pending')
+
+    def test_order_detail_includes_line_product_images(self):
+        png_b64 = (
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+        )
+        tmpl = self.env['product.template'].create({
+            'name': 'Servicio imagen detalle pedido',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 3.0,
+            'type': 'service',
+            'image_1920': png_b64,
+        })
+        product = tmpl.product_variant_id
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011555', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        post = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': product.id, 'qty': 1}]}),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(post.status_code, 200, post.text)
+        order_id = json.loads(post.text)['id']
+        res = self.url_open(
+            f'/api/order_bridge/orders/{order_id}',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        detail = json.loads(res.text)
+        lines = detail.get('lines') or []
+        self.assertTrue(lines)
+        self.assertIn(f'/web/image/product.product/{product.id}/image_512', lines[0].get('image_url') or '')
+
+    def test_products_list_includes_image_urls_and_public_image_loads(self):
+        png_b64 = (
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+        )
+        tmpl = self.env['product.template'].create({
+            'name': 'Producto con imagen OB',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 1.0,
+            'image_1920': png_b64,
+        })
+        product = tmpl.product_variant_id
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011444', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        res = self.url_open(
+            '/api/order_bridge/products',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        row = next((x for x in data['items'] if x['id'] == product.id), None)
+        self.assertTrue(row)
+        self.assertTrue(row.get('image_url'))
+        self.assertTrue(row.get('image_thumbnail_url'))
+        self.assertIn(f'/web/image/product.product/{product.id}/image_512', row['image_url'])
+        self.assertIn(f'/web/image/product.product/{product.id}/image_128', row['image_thumbnail_url'])
+        parsed = urlparse(row['image_url'])
+        path = parsed.path
+        if parsed.query:
+            path = f'{path}?{parsed.query}'
+        img_res = self.url_open(path, timeout=60)
+        self.assertEqual(img_res.status_code, 200, img_res.text)
+        self.assertIn('image', (img_res.headers.get('Content-Type') or '').lower())
 
     def test_products_invalid_category_id_returns_400(self):
         key = str(uuid.uuid4())

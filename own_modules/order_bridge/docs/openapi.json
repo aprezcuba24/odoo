@@ -643,6 +643,30 @@
             "title": "Id",
             "type": "integer"
           },
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
+          },
           "list_price": {
             "title": "List Price",
             "type": "number"
@@ -713,6 +737,30 @@
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
           },
           "list_price": {
             "title": "List Price",
@@ -1133,6 +1181,30 @@
       "SaleOrderLineOut": {
         "additionalProperties": false,
         "properties": {
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
+          },
           "name": {
             "title": "Name",
             "type": "string"

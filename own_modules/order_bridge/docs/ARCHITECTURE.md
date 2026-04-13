@@ -180,3 +180,6 @@ flowchart LR
 ---
 
 *Última alineación con el plan funcional acordado para el proyecto.*
+
+Actualizar el módulo
+python3 odoo-bin -d odoo1 -u order_bridge --stop-after-init

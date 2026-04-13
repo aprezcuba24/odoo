@@ -88,6 +88,8 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'uom_name': 'Units',
                 'barcode': None,
                 'category': {'id': 2, 'name': 'PC', 'parent_id': None},
+                'image_url': 'https://example.com/web/image/product.product/10/image_512',
+                'image_thumbnail_url': 'https://example.com/web/image/product.product/10/image_128',
             }],
             'limit': 80,
             'offset': 0,
@@ -101,6 +103,8 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'uom_name': None,
             'barcode': False,
             'category': {'id': 1, 'name': 'X', 'parent_id': 99},
+            'image_url': None,
+            'image_thumbnail_url': None,
             'description_sale': 'Long',
         })
         R.OrdersPageResponse.model_validate({
@@ -146,6 +150,8 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'price_subtotal': 10.0,
                 'qty_delivered': 0.0,
                 'qty_reserved': 0.0,
+                'image_url': None,
+                'image_thumbnail_url': None,
             }],
         })
         R.OrderCreatedResponse.model_validate({
