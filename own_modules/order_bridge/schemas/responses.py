@@ -107,6 +107,8 @@ class ProductListRow(BaseModel):
     uom_name: str | None = None
     barcode: str | None = None
     category: ProductCategoryRow | None = None
+    image_url: str | None = None
+    image_thumbnail_url: str | None = None
 
     @field_validator('default_code', 'uom_name', 'barcode', mode='before')
     @classmethod
@@ -222,6 +224,8 @@ class SaleOrderLineOut(BaseModel):
     price_subtotal: float
     qty_delivered: float
     qty_reserved: float
+    image_url: str | None = None
+    image_thumbnail_url: str | None = None
 
 
 class SaleOrderDetailResponse(SaleOrderSummary):
