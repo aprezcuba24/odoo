@@ -17,6 +17,38 @@ class InsufficientStockError(Exception):
         super().__init__('Stock insuficiente')
 
 
+def get_catalog_warehouse(env, catalog_company):
+    """Return ``(stock_module_installed, warehouse, precision)`` for the catalog company.
+
+    - If ``stock.warehouse`` is not in the registry: ``(False, None, 0)``.
+    - Otherwise: ``(True, warehouse_recordset, precision)`` where ``warehouse`` may be empty
+      if none is configured for the company.
+    """
+    env = env(su=True)
+    if 'stock.warehouse' not in env:
+        return False, None, 0
+    precision = env['decimal.precision'].precision_get('Product Unit')
+    warehouse = env['stock.warehouse'].search(
+        [('company_id', '=', catalog_company.id)],
+        limit=1,
+    )
+    return True, warehouse, precision
+
+
+def filter_available_products(products, stock_installed, warehouse, precision):
+    """Return products that are purchasable (services / non-storable pass; storables need ``free_qty`` > 0).
+
+    When stock is not installed or no warehouse exists, returns ``products`` unchanged.
+    """
+    if not stock_installed or not warehouse:
+        return products
+    products_wh = products.with_context(warehouse_id=warehouse.id)
+    return products_wh.filtered(
+        lambda p: not p.is_storable
+        or float_compare(p.free_qty, 0.0, precision_digits=precision) > 0,
+    )
+
+
 def validate_order_lines_stock(env, catalog_company, product_domain, lines):
     """Raise ``ValueError`` if storable products lack free quantity for the default warehouse.
 
@@ -28,12 +60,9 @@ def validate_order_lines_stock(env, catalog_company, product_domain, lines):
     and products.
     """
     env = env(su=True)
-    if 'stock.warehouse' not in env:
+    stock_installed, warehouse, precision = get_catalog_warehouse(env, catalog_company)
+    if not stock_installed:
         return
-    warehouse = env['stock.warehouse'].search(
-        [('company_id', '=', catalog_company.id)],
-        limit=1,
-    )
     if not warehouse:
         raise ValueError('No hay almacén configurado para la compañía del catálogo')
 
@@ -42,7 +71,6 @@ def validate_order_lines_stock(env, catalog_company, product_domain, lines):
         qty_by_product[line.product_id] += line.qty
 
     Product = env['product.product'].with_company(catalog_company)
-    precision = env['decimal.precision'].precision_get('Product Unit')
 
     insufficient: list[dict] = []
     for product_id, need in qty_by_product.items():

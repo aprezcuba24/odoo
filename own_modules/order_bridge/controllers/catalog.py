@@ -6,6 +6,7 @@ from odoo.http import request
 from ..schemas import ProductsListQuery
 from ..schemas.responses import SimpleErrorResponse
 from ..utils.decorators import api_access, api_json_response, api_validated_query
+from ..utils.order_stock import filter_available_products, get_catalog_warehouse
 from ..utils.serialization import (
     categories_list_response,
     product_to_detail_response,
@@ -29,15 +30,22 @@ class CatalogController(http.Controller):
     @http.route('/api/order_bridge/products', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
     @api_access
     @api_validated_query(ProductsListQuery)
-    def products(self, product_domain=None, q=None, **kwargs):
+    def products(self, product_domain=None, catalog_company=None, q=None, **kwargs):
         domain = list(product_domain)
         if q.category_id is not None:
             domain.append(('product_tmpl_id.categ_id', 'child_of', q.category_id))
-        Product = request.env['product.product'].sudo()
-        products = Product.search(domain, limit=q.limit, offset=q.offset, order='name, id')
-        total = Product.search_count(domain)
+        Product = request.env['product.product'].sudo().with_company(catalog_company)
+        all_products = Product.search(domain, order='name, id')
+        stock_installed, warehouse, precision = get_catalog_warehouse(
+            request.env, catalog_company
+        )
+        available = filter_available_products(
+            all_products, stock_installed, warehouse, precision
+        )
+        total = len(available)
+        page = available[q.offset : q.offset + q.limit]
         return api_json_response(
-            products_page_response(products, q.limit, q.offset, total),
+            products_page_response(page, q.limit, q.offset, total),
         )
 
     @http.route('/api/order_bridge/products/<int:product_id>', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)
