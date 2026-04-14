@@ -17,11 +17,15 @@ class SaleOrder(models.Model):
     order_bridge_device_id = fields.Many2one(
         'order_bridge.device', string='Dispositivo API', ondelete='set null'
     )
-    order_bridge_device_validated = fields.Boolean(
-        string='Dispositivo validado al pedido',
-        help='Instantánea al crear el pedido: si el dispositivo cliente estaba validado en ese momento.',
+    order_bridge_device_phone_validated = fields.Boolean(
+        related='order_bridge_device_id.phone_validated',
+        string='Teléfono del dispositivo validado',
+        help=(
+            'Indica si el dispositivo API vinculado a este pedido tiene el teléfono validado '
+            'por la tienda en este momento. Se actualiza al cambiar el dispositivo o su estado '
+            'de validación; es falso si no hay dispositivo asociado.'
+        ),
         readonly=True,
-        copy=False,
     )
     order_bridge_ref = fields.Char(string='Referencia tienda', copy=False, index=True)
     order_bridge_snapshot_address_id = fields.Many2one(
@@ -60,16 +64,6 @@ class SaleOrder(models.Model):
                 ref = seq.next_by_code('order_bridge.order.ref')
                 if ref:
                     vals['order_bridge_ref'] = ref
-            origin = vals.get('order_bridge_origin')
-            if origin == 'admin':
-                vals.setdefault('order_bridge_device_validated', True)
-            elif origin == 'app':
-                did = vals.get('order_bridge_device_id')
-                if did:
-                    dev = self.env['order_bridge.device'].browse(did)
-                    vals.setdefault('order_bridge_device_validated', dev.phone_validated)
-                else:
-                    vals.setdefault('order_bridge_device_validated', False)
         records = super().create(vals_list)
         PartnerAddress = self.env['order_bridge.partner_address'].sudo()
         Snapshot = self.env['order_bridge.order_address_snapshot'].sudo()

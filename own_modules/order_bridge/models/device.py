@@ -37,7 +37,14 @@ class OrderBridgeDevice(models.Model):
     device_key = fields.Char(required=True, index='btree', readonly=True)
     partner_id = fields.Many2one('res.partner', required=True, ondelete='cascade', index=True)
     phone = fields.Char(required=True, index=True)
-    phone_validated = fields.Boolean(default=False)
+    phone_validated = fields.Boolean(
+        string='Teléfono validado',
+        default=False,
+        help=(
+            'La tienda ha confirmado manualmente que el número de este dispositivo es correcto. '
+            'Hasta entonces el cliente puede pedir, pero el canal se considera no validado.'
+        ),
+    )
     active = fields.Boolean(default=True)
     registration_date = fields.Datetime(default=fields.Datetime.now, required=True)
     last_activity = fields.Datetime()

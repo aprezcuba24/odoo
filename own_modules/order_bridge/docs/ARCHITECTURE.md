@@ -55,7 +55,7 @@ Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referen
    Si se registra un nuevo `device_key` para el mismo teléfono normalizado, los dispositivos anteriores con ese teléfono se **desactivan**. El nuevo queda pendiente de validación de nuevo (**re-validación** por seguridad).
 
 4. **Pedidos antes de validar**
-   La API **permite crear pedidos** con dispositivo no validado; en `sale.order` queda almacenado si el dispositivo estaba validado o no (`order_bridge_device_validated`), para informes y filtros en backend.
+   La API **permite crear pedidos** con dispositivo no validado. En backend, el formulario y listados de `sale.order` muestran el estado **actual** de validación del dispositivo vinculado (`order_bridge_device_phone_validated`, relacionado con `order_bridge.device.phone_validated`), útil para informes y filtros; el JSON de la API expone el mismo criterio en `device_validated`.
 
 5. **Órdenes creadas por administrador**
    Origen `order_bridge_origin = 'admin'`, sin `order_bridge_device_id`. Visibles en el cliente junto a las del usuario (`partner_id` común), con referencia de puente cuando aplica.
@@ -87,7 +87,7 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 
 - **`res.company`**: `order_bridge_pos_config_id` → `pos.config` usado por la API para esa compañía.
 - **`res.partner`**: relación a dispositivos; campos calculados almacenados `order_bridge_registered`, `order_bridge_phone_validated`; contador de pedidos del puente (no almacenado).
-- **`sale.order`**: `order_bridge_origin` (`app` | `admin`), `order_bridge_device_id`, `order_bridge_device_validated` (snapshot al crear), `order_bridge_ref` (secuencia tipo `OB-00001`), `order_bridge_pos_config_id` (TPV aplicable al crear desde la API).
+- **`sale.order`**: `order_bridge_origin` (`app` | `admin`), `order_bridge_device_id`, `order_bridge_device_phone_validated` (lectura del `phone_validated` del dispositivo vinculado), `order_bridge_ref` (secuencia tipo `OB-00001`), `order_bridge_pos_config_id` (TPV aplicable al crear desde la API).
 
 ## API REST (prefijo `/api/order_bridge/`)
 
@@ -132,7 +132,7 @@ Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la re
 1. Lee `Authorization: Bearer <token>`.
 2. Busca `order_bridge.device` activo con ese `device_key`.
 3. Si no existe → 401.
-4. **No** bloquea si `phone_validated` es falso (solo afecta a flags en pedidos).
+4. **No** bloquea si `phone_validated` es falso (solo afecta a cómo se informa el estado en pedidos y API).
 5. Actualiza `last_activity` en el dispositivo.
 6. Inyecta dispositivo y partner en el controlador (vía `sudo()` acotado a datos del dispositivo).
 
@@ -168,7 +168,7 @@ flowchart LR
 ## Flujos resumidos
 
 1. **Alta**: Cliente genera `device_key` → POST `/register` con `phone`, `name`, `device_key` → partner + device; admin valida en backend → GET `/status` refleja `validated`.
-2. **Pedido**: POST `/orders` con líneas; se crea `sale.order` con `order_bridge_origin=app` y snapshot de validación del dispositivo.
+2. **Pedido**: POST `/orders` con líneas; se crea `sale.order` con `order_bridge_origin=app` y dispositivo vinculado; la validación mostrada en API y backend refleja el estado actual del dispositivo.
 3. **Cambio de dispositivo**: nuevo `device_key` + mismo teléfono → dispositivos previos con ese teléfono inactivos → nuevo pendiente de validación.
 
 ---

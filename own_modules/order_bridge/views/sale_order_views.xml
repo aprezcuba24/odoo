@@ -10,7 +10,7 @@
                     <field name="order_bridge_origin"/>
                     <field name="order_bridge_ref" readonly="1"/>
                     <field name="order_bridge_device_id" options="{'no_create': True}"/>
-                    <field name="order_bridge_device_validated" readonly="1"/>
+                    <field name="order_bridge_device_phone_validated" readonly="1"/>
                     <field name="order_bridge_snapshot_address_id" readonly="1" invisible="not order_bridge_snapshot_address_id" options="{'no_create': True}"/>
                 </group>
             </xpath>
@@ -25,7 +25,7 @@
             <xpath expr="//list" position="inside">
                 <field name="order_bridge_origin" optional="hide"/>
                 <field name="order_bridge_ref" optional="hide"/>
-                <field name="order_bridge_device_validated" optional="hide" string="Dispositivo OK"/>
+                <field name="order_bridge_device_phone_validated" optional="hide" string="Dispositivo OK"/>
             </xpath>
         </field>
     </record>
@@ -38,7 +38,7 @@
             <xpath expr="//list" position="inside">
                 <field name="order_bridge_origin" optional="hide"/>
                 <field name="order_bridge_ref" optional="hide"/>
-                <field name="order_bridge_device_validated" optional="hide" string="Dispositivo OK"/>
+                <field name="order_bridge_device_phone_validated" optional="hide" string="Dispositivo OK"/>
             </xpath>
         </field>
     </record>
