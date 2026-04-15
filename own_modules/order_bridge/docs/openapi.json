@@ -91,6 +91,125 @@
         "title": "AddressPatch",
         "type": "object"
       },
+      "BannerRow": {
+        "additionalProperties": false,
+        "description": "`GET /api/order_bridge/banners` \u2014 un banner publicitario del cat\u00e1logo.",
+        "properties": {
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          },
+          "bg_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Bg Color"
+          },
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Href"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "text_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text Color"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "BannerRow",
+        "type": "object"
+      },
+      "BannersListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BannerRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "BannersListResponse",
+        "type": "object"
+      },
       "CategoriesListResponse": {
         "additionalProperties": false,
         "properties": {
@@ -1506,12 +1625,30 @@
     }
   },
   "info": {
-    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/settings`, `/products`, `/products/{id}`).",
+    "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/settings`, `/banners`, `/products`, `/products/{id}`).",
     "title": "API Tienda Apk",
-    "version": "19.0.2.0.4"
+    "version": "19.0.2.0.10"
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/order_bridge/banners": {
+      "get": {
+        "operationId": "order_bridge_banners",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BannersListResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          }
+        },
+        "summary": "Banners publicitarios activos del cat\u00e1logo"
+      }
+    },
     "/api/order_bridge/categories": {
       "get": {
         "operationId": "order_bridge_categories",

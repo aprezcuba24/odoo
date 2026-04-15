@@ -364,6 +364,42 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(img_res.status_code, 200, img_res.text)
         self.assertIn('image', (img_res.headers.get('Content-Type') or '').lower())
 
+    def test_banners_list_empty_and_with_image_loads(self):
+        res_empty = self.url_open('/api/order_bridge/banners', timeout=60)
+        self.assertEqual(res_empty.status_code, 200, res_empty.text)
+        empty = json.loads(res_empty.text)
+        self.assertEqual(empty.get('total'), 0)
+        self.assertEqual(empty.get('items'), [])
+
+        png_b64 = (
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+        )
+        banner = self.env['order_bridge.banner'].create({
+            'title': 'Banner OB',
+            'company_id': self.env.company.id,
+            'image': png_b64,
+            'active': True,
+        })
+        res = self.url_open('/api/order_bridge/banners', timeout=60)
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        self.assertEqual(data.get('total'), 1)
+        items = data.get('items') or []
+        self.assertEqual(len(items), 1)
+        row = items[0]
+        self.assertEqual(row.get('title'), 'Banner OB')
+        self.assertTrue(row.get('image_url'))
+        self.assertTrue(row.get('image_thumbnail_url'))
+        self.assertIn(f'/web/image/order_bridge.banner/{banner.id}/image/512x0', row['image_url'])
+        self.assertIn(f'/web/image/order_bridge.banner/{banner.id}/image/128x128', row['image_thumbnail_url'])
+        parsed = urlparse(row['image_url'])
+        path = parsed.path
+        if parsed.query:
+            path = f'{path}?{parsed.query}'
+        img_res = self.url_open(path, timeout=60)
+        self.assertEqual(img_res.status_code, 200, img_res.text)
+        self.assertIn('image', (img_res.headers.get('Content-Type') or '').lower())
+
     def test_products_invalid_category_id_returns_400(self):
         key = str(uuid.uuid4())
         reg = self.url_open(

@@ -182,6 +182,34 @@ class MunicipalitiesListResponse(BaseModel):
     total: int
 
 
+class BannerRow(BaseModel):
+    """`GET /api/order_bridge/banners` — un banner publicitario del catálogo."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    id: int
+    title: str
+    subtitle: str | None = None
+    bg_color: str | None = None
+    text_color: str | None = None
+    href: str | None = None
+    image_url: str | None = None
+    image_thumbnail_url: str | None = None
+    active: bool = True
+
+    @field_validator('subtitle', 'bg_color', 'text_color', 'href', mode='before')
+    @classmethod
+    def banner_char_falsy(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
+
+class BannersListResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    items: list[BannerRow]
+    total: int
+
+
 DeliveryStatusLiteral = Literal['pending', 'started', 'partial', 'full']
 
 

@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 from odoo.http import request
 
 from ..schemas.responses import (
+    BannerRow,
+    BannersListResponse,
     CategoriesListResponse,
     DeliveryAddressOut,
     GeneralSettingsResponse,
@@ -94,6 +96,18 @@ def _order_bridge_public_base_url():
     return url_root or icp
 
 
+def _banner_image_urls(banner):
+    """Absolute URLs for ``/web/image`` (requires ``_can_return_content`` on ``order_bridge.banner``)."""
+    if not banner.image:
+        return None, None
+    base = _order_bridge_public_base_url()
+    bid = banner.id
+    return (
+        f'{base}/web/image/order_bridge.banner/{bid}/image/512x0',
+        f'{base}/web/image/order_bridge.banner/{bid}/image/128x128',
+    )
+
+
 def _product_image_urls(product):
     """Absolute URLs for ``/web/image`` (requires ``_can_return_content`` on ``product.product``).
 
@@ -118,6 +132,26 @@ def categories_list_response(categories):
 
 def general_settings_response(record):
     return GeneralSettingsResponse(shop_phone=record.shop_phone)
+
+
+def banners_list_response(banners):
+    rows = []
+    for b in banners:
+        image_url, thumb_url = _banner_image_urls(b)
+        rows.append(
+            BannerRow(
+                id=b.id,
+                title=b.title,
+                subtitle=b.subtitle,
+                bg_color=b.bg_color,
+                text_color=b.text_color,
+                href=b.href,
+                image_url=image_url,
+                image_thumbnail_url=thumb_url,
+                active=b.active,
+            ),
+        )
+    return BannersListResponse(items=rows, total=len(rows))
 
 
 def municipalities_list_response(municipalities):

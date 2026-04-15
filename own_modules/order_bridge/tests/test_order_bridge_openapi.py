@@ -197,3 +197,17 @@ class TestOrderBridgeOpenapi(TransactionCase):
         })
         R.GeneralSettingsResponse.model_validate({'shop_phone': '+34 900 000 000'})
         R.GeneralSettingsResponse.model_validate({'shop_phone': None})
+        R.BannersListResponse.model_validate({
+            'items': [{
+                'id': 1,
+                'title': 'Promo',
+                'subtitle': None,
+                'bg_color': '#FFFFFF',
+                'text_color': '#000000',
+                'href': 'https://example.com/p',
+                'image_url': 'https://example.com/web/image/order_bridge.banner/1/image/512x0',
+                'image_thumbnail_url': 'https://example.com/web/image/order_bridge.banner/1/image/128x128',
+                'active': True,
+            }],
+            'total': 1,
+        })
