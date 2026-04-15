@@ -34,6 +34,8 @@ class CatalogController(http.Controller):
         domain = list(product_domain)
         if q.category_id is not None:
             domain.append(('product_tmpl_id.categ_id', 'child_of', q.category_id))
+        if q.search:
+            domain.append(('name', 'ilike', q.search))
         Product = request.env['product.product'].sudo().with_company(catalog_company)
         all_products = Product.search(domain, order='name, id')
         stock_installed, warehouse, precision = get_catalog_warehouse(

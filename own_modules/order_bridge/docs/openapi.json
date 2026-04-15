@@ -1983,6 +1983,15 @@
               "exclusiveMinimum": 0,
               "type": "integer"
             }
+          },
+          {
+            "description": "B\u00fasqueda por nombre de producto (coincidencia parcial, sin distinci\u00f3n de may\u00fasculas)",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

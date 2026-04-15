@@ -47,6 +47,15 @@ class ProductsListQuery(BaseModel):
     limit: int = Field(default=80, ge=1, le=200)
     offset: int = Field(default=0, ge=0)
     category_id: int | None = Field(default=None, gt=0)
+    search: str | None = None
+
+    @field_validator('search')
+    @classmethod
+    def strip_search(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s or None
 
     @classmethod
     def from_request_params(cls, params: Any) -> ProductsListQuery:

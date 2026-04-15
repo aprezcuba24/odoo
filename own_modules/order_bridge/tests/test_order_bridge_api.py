@@ -400,6 +400,88 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(img_res.status_code, 200, img_res.text)
         self.assertIn('image', (img_res.headers.get('Content-Type') or '').lower())
 
+    def test_products_search_by_name_returns_matching_results(self):
+        self.env['product.template'].create({
+            'name': 'Arroz integral premium',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 2.5,
+        })
+        self.env['product.template'].create({
+            'name': 'Aceite de oliva virgen',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 5.0,
+        })
+        res = self.url_open('/api/order_bridge/products?search=arroz', timeout=60)
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        self.assertIn('items', data)
+        names = [item['name'] for item in data['items']]
+        self.assertTrue(
+            any('Arroz' in n or 'arroz' in n for n in names),
+            f'Expected a product with "arroz" in name, got: {names}',
+        )
+        self.assertFalse(
+            any('Aceite' in n for n in names),
+            f'Expected no "Aceite" product in results, got: {names}',
+        )
+
+    def test_products_search_case_insensitive(self):
+        self.env['product.template'].create({
+            'name': 'Leche entera UHT',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 1.2,
+        })
+        res = self.url_open('/api/order_bridge/products?search=LECHE', timeout=60)
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        names = [item['name'] for item in data['items']]
+        self.assertTrue(
+            any('Leche' in n or 'leche' in n or 'LECHE' in n for n in names),
+            f'Expected a product with "Leche" in name (case-insensitive), got: {names}',
+        )
+
+    def test_products_search_no_match_returns_empty(self):
+        res = self.url_open(
+            '/api/order_bridge/products?search=xyzproductoquenoexiste123', timeout=60
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        self.assertEqual(data.get('total'), 0)
+        self.assertEqual(data.get('items'), [])
+
+    def test_products_search_combined_with_category_id(self):
+        categ = self.env['product.category'].create({'name': 'Bebidas OB Test'})
+        self.env['product.template'].create({
+            'name': 'Agua mineral sin gas',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 0.8,
+            'categ_id': categ.id,
+        })
+        self.env['product.template'].create({
+            'name': 'Agua con gas',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 0.9,
+        })
+        res = self.url_open(
+            f'/api/order_bridge/products?search=agua&category_id={categ.id}', timeout=60
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        data = json.loads(res.text)
+        names = [item['name'] for item in data['items']]
+        self.assertTrue(
+            any('mineral' in n.lower() for n in names),
+            f'Expected "Agua mineral sin gas" in results, got: {names}',
+        )
+        self.assertFalse(
+            any('con gas' in n.lower() for n in names),
+            f'"Agua con gas" should not appear (wrong category), got: {names}',
+        )
+
     def test_products_invalid_category_id_returns_400(self):
         key = str(uuid.uuid4())
         reg = self.url_open(

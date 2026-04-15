@@ -225,6 +225,13 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                         'required': False,
                         'schema': {'type': 'integer', 'exclusiveMinimum': 0},
                     },
+                    {
+                        'name': 'search',
+                        'in': 'query',
+                        'required': False,
+                        'description': 'Búsqueda por nombre de producto (coincidencia parcial, sin distinción de mayúsculas)',
+                        'schema': {'type': 'string'},
+                    },
                 ],
                 'responses': {
                     '200': _ok('ProductsPageResponse'),
