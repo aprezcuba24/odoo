@@ -218,6 +218,7 @@ class TestOrderBridgeApi(HttpCase):
         self.assertIn('effective_date', created)
         self.assertEqual(created.get('delivery_status'), 'pending')
         self.assertIsNone(created.get('effective_date'))
+        self.assertEqual(created.get('store_state'), 'reviewing')
 
         bad = self.url_open(
             '/api/order_bridge/orders',
@@ -282,6 +283,7 @@ class TestOrderBridgeApi(HttpCase):
         self.assertIn('delivery_status', row)
         self.assertIn('effective_date', row)
         self.assertEqual(row.get('delivery_status'), 'pending')
+        self.assertEqual(row.get('store_state'), 'reviewing')
 
     def test_order_detail_includes_line_product_images(self):
         png_b64 = (

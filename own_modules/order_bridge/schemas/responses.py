@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from own_modules.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID
+
 
 def _odoo_falsy_str(v: Any) -> str | None:
     if v is None or v is False:
@@ -228,11 +230,17 @@ class SaleOrderSummary(BaseModel):
     delivery_address: DeliveryAddressOut | None = None
     delivery_status: DeliveryStatusLiteral | None = None
     effective_date: str | None = None
+    store_state: STORE_STATE_VALID
 
     @field_validator('order_ref', 'currency', mode='before')
     @classmethod
     def falsy_to_none(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
+
+    @field_validator('store_state', mode='before')
+    @classmethod
+    def store_state_str(cls, v: Any) -> str:
+        return str(v) if v is not None else DEFAULT_STORE_STATE
 
     @field_validator('delivery_status', mode='before')
     @classmethod
@@ -279,11 +287,17 @@ class OrderCreatedResponse(BaseModel):
     delivery_address: DeliveryAddressOut | None = None
     delivery_status: DeliveryStatusLiteral | None = None
     effective_date: str | None = None
+    store_state: STORE_STATE_VALID
 
     @field_validator('order_ref', mode='before')
     @classmethod
     def order_ref_falsy(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
+
+    @field_validator('store_state', mode='before')
+    @classmethod
+    def created_store_state_str(cls, v: Any) -> str:
+        return str(v) if v is not None else DEFAULT_STORE_STATE
 
     @field_validator('delivery_status', mode='before')
     @classmethod

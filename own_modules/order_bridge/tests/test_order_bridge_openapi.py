@@ -119,6 +119,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'currency': 'USD',
                 'device_validated': True,
                 'delivery_address': None,
+                'store_state': 'reviewing',
             }],
             'limit': 50,
             'offset': 0,
@@ -142,6 +143,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
                 'neighborhood_name': 'n',
                 'state': 'st',
             },
+            'store_state': 'negotiating',
             'lines': [{
                 'product_id': 1,
                 'name': 'Prod',
@@ -161,6 +163,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'state': 'draft',
             'device_validated': False,
             'delivery_address': None,
+            'store_state': 'reviewing',
         })
         R.OrderCancelResponse.model_validate({'id': 1, 'state': 'cancel'})
         R.ValidationErrorResponse.model_validate({

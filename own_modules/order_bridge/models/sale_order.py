@@ -1,10 +1,15 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from own_modules.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID_CHOICES
+from own_modules.order_bridge.utils.listerners import order_bridge_store_state_changed
+from own_modules.order_bridge.utils.mixins import DispachMixin
 
-
-class SaleOrder(models.Model):
+class SaleOrder(DispachMixin, models.Model):
     _inherit = 'sale.order'
+    _LISTENERS = [
+        (order_bridge_store_state_changed, 'order_bridge_store_state_changed'),
+    ]
 
     order_bridge_origin = fields.Selection(
         selection=[
@@ -35,6 +40,13 @@ class SaleOrder(models.Model):
         copy=False,
         ondelete='set null',
     )
+    order_bridge_store_state = fields.Selection(
+        selection=STORE_STATE_VALID_CHOICES,
+        string='Estado tienda',
+        default=DEFAULT_STORE_STATE,
+        tracking=True,
+        index=True,
+    )
 
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""
@@ -52,8 +64,11 @@ class SaleOrder(models.Model):
             order.action_confirm()
 
     def write(self, vals):
+        previous_by_id = {o.id: self.read()[0] for o in self}
         res = super().write(vals)
-        self._order_bridge_try_confirm()
+        for order in self:
+            old = previous_by_id.get(order.id)
+            self.on_event('order_bridge_store_state_changed', old, order)
         return res
 
     @api.model_create_multi

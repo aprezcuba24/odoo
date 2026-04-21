@@ -587,13 +587,24 @@
           "state": {
             "title": "State",
             "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered"
+            ],
+            "title": "Store State",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "name",
           "state",
-          "device_validated"
+          "device_validated",
+          "store_state"
         ],
         "title": "OrderCreatedResponse",
         "type": "object"
@@ -1283,6 +1294,16 @@
           "state": {
             "title": "State",
             "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered"
+            ],
+            "title": "Store State",
+            "type": "string"
           }
         },
         "required": [
@@ -1292,6 +1313,7 @@
           "state",
           "amount_total",
           "device_validated",
+          "store_state",
           "lines"
         ],
         "title": "SaleOrderDetailResponse",
@@ -1468,6 +1490,16 @@
           "state": {
             "title": "State",
             "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered"
+            ],
+            "title": "Store State",
+            "type": "string"
           }
         },
         "required": [
@@ -1476,7 +1508,8 @@
           "origin",
           "state",
           "amount_total",
-          "device_validated"
+          "device_validated",
+          "store_state"
         ],
         "title": "SaleOrderSummary",
         "type": "object"

@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//group[@name='sale_header']" position="after">
                 <group name="order_bridge_info" string="Tienda Apk" groups="sales_team.group_sale_salesman">
+                    <field name="order_bridge_store_state" invisible="not order_bridge_origin"/>
                     <field name="order_bridge_origin"/>
                     <field name="order_bridge_ref" readonly="1"/>
                     <field name="order_bridge_device_id" options="{'no_create': True}"/>
@@ -26,6 +27,7 @@
                 <field name="order_bridge_origin" optional="hide"/>
                 <field name="order_bridge_ref" optional="hide"/>
                 <field name="order_bridge_device_phone_validated" optional="hide" string="Dispositivo OK"/>
+                <field name="order_bridge_store_state" optional="hide"/>
             </xpath>
         </field>
     </record>
@@ -39,6 +41,7 @@
                 <field name="order_bridge_origin" optional="hide"/>
                 <field name="order_bridge_ref" optional="hide"/>
                 <field name="order_bridge_device_phone_validated" optional="hide" string="Dispositivo OK"/>
+                <field name="order_bridge_store_state" optional="hide"/>
             </xpath>
         </field>
     </record>

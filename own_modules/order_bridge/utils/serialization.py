@@ -318,6 +318,7 @@ def sale_order_to_summary(order):
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
         delivery_status=delivery_status,
         effective_date=effective_date,
+        store_state=order.order_bridge_store_state,
     )
 
 
@@ -341,6 +342,7 @@ def sale_order_to_created_response(order):
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
         delivery_status=delivery_status,
         effective_date=effective_date,
+        store_state=order.order_bridge_store_state or 'reviewing',
     )
 
 
