@@ -1,7 +1,16 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, api, fields, models
-from odoo.addons.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID_CHOICES
+from odoo.exceptions import UserError
+from odoo.addons.order_bridge.utils.constant import (
+    DEFAULT_STORE_STATE,
+    STATE_CANCELED,
+    STATE_DELIVERED,
+    STATE_NEGOTIATING,
+    STATE_READY_FOR_DELIVERY,
+    STORE_STATE_VALID_CHOICES,
+    ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
+)
 from odoo.addons.order_bridge.utils.listerners import order_bridge_store_state_changed
 
 
@@ -64,7 +73,50 @@ class SaleOrder(models.Model):
                 continue
             order.action_confirm()
 
+    def _order_bridge_check_store_state_transition(self, old_ss, new_ss):
+        self.ensure_one()
+        if old_ss == new_ss:
+            return
+        if self.order_bridge_origin not in ('app', 'admin'):
+            return
+        allowed = ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS.get(old_ss)
+        if not allowed or new_ss not in allowed:
+            raise UserError(
+                _(
+                    'No se puede cambiar el estado tienda de %(old)s a %(new)s en el pedido %(name)s.',
+                    old=dict(self._fields['order_bridge_store_state'].selection).get(
+                        old_ss, old_ss or ''
+                    ),
+                    new=dict(self._fields['order_bridge_store_state'].selection).get(
+                        new_ss, new_ss or ''
+                    ),
+                    name=self.display_name,
+                )
+            )
+
+    def action_order_bridge_negotiate(self):
+        self.write({'order_bridge_store_state': STATE_NEGOTIATING})
+        return True
+
+    def action_order_bridge_ready_for_delivery(self):
+        self.write({'order_bridge_store_state': STATE_READY_FOR_DELIVERY})
+        return True
+
+    def action_order_bridge_delivered(self):
+        self.write({'order_bridge_store_state': STATE_DELIVERED})
+        return True
+
+    def action_order_bridge_cancel_store(self):
+        self.write({'order_bridge_store_state': STATE_CANCELED})
+        return True
+
     def write(self, vals):
+        if 'order_bridge_store_state' in vals:
+            new_ss = vals['order_bridge_store_state']
+            for order in self:
+                order._order_bridge_check_store_state_transition(
+                    order.order_bridge_store_state, new_ss
+                )
         previous_by_id = {o.id: o.read()[0] for o in self}
         res = super().write(vals)
         for order in self:

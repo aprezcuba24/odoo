@@ -5,6 +5,72 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//header/button[@id='create_invoice']" position="attributes">
+                <attribute name="invisible">invoice_status != 'to invoice' and not order_bridge_origin</attribute>
+                <attribute name="string">Crear factura</attribute>
+            </xpath>
+            <xpath expr="//header/button[@id='create_invoice_percentage']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or invoice_status != 'no' or state != 'sale'</attribute>
+                <attribute name="string">Crear factura</attribute>
+            </xpath>
+            <xpath expr="//header/button[@id='quotation_send_primary']" position="attributes">
+                <attribute name="invisible">state != 'draft' and not order_bridge_origin</attribute>
+                <attribute name="string">Enviar</attribute>
+            </xpath>
+            <xpath expr="//header/button[@id='quotation_send']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state not in ('sent', 'sale')</attribute>
+                <attribute name="string">Enviar</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_preview_sale_order']" position="attributes">
+                <attribute name="string">Vista previa</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_cancel']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state not in ('draft', 'sent', 'sale') or not id or locked</attribute>
+            </xpath>
+            <xpath expr="//header/field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="invisible">order_bridge_origin</attribute>
+            </xpath>
+            <xpath expr="//header/field[@name='state']" position="before">
+                <button
+                    name="action_order_bridge_negotiate"
+                    string="Negociar"
+                    type="object"
+                    class="btn-secondary"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin or order_bridge_store_state != 'reviewing'"
+                />
+                <button
+                    name="action_order_bridge_ready_for_delivery"
+                    string="Listo para la entrega"
+                    type="object"
+                    class="btn-secondary"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin or order_bridge_store_state not in ('reviewing', 'negotiating')"
+                />
+                <button
+                    name="action_order_bridge_delivered"
+                    string="Entregado"
+                    type="object"
+                    class="btn-secondary"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin or order_bridge_store_state != 'ready_for_delivery'"
+                />
+                <button
+                    name="action_order_bridge_cancel_store"
+                    string="Cancelar"
+                    type="object"
+                    class="btn-danger"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin or order_bridge_store_state not in ('reviewing', 'negotiating', 'ready_for_delivery', 'delivered')"
+                />
+                <field
+                    name="order_bridge_store_state"
+                    widget="statusbar"
+                    statusbar_visible="reviewing,negotiating,ready_for_delivery,delivered,canceled"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin"
+                />
+            </xpath>
             <xpath expr="//group[@name='sale_header']" position="after">
                 <group name="order_bridge_info" string="Tienda Apk" groups="sales_team.group_sale_salesman">
                     <field name="order_bridge_store_state" invisible="not order_bridge_origin"/>

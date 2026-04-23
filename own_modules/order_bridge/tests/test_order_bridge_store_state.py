@@ -8,6 +8,11 @@ from odoo.tools.float_utils import float_is_zero
 
 @tagged('post_install', '-at_install')
 class TestOrderBridgeStoreState(TransactionCase):
+    def _ob_goto_delivered(self, order):
+        """Estado tienda: reviewing → ready_for_delivery → delivered (transiciones válidas)."""
+        order.write({'order_bridge_store_state': 'ready_for_delivery'})
+        order.write({'order_bridge_store_state': 'delivered'})
+
     def _ob_create_storable_order(self, qty=2.0, device_key='store-state-ob-temp'):
         company = self.env.company
         partner = self.env['res.partner'].create({
@@ -82,7 +87,7 @@ class TestOrderBridgeStoreState(TransactionCase):
         self.assertTrue(pickings)
         self.assertTrue(all(p.state != 'done' for p in pickings))
 
-        order.order_bridge_store_state = 'delivered'
+        self._ob_goto_delivered(order)
 
         for p in pickings:
             self.assertEqual(p.state, 'done')
@@ -102,7 +107,7 @@ class TestOrderBridgeStoreState(TransactionCase):
 
     def test_canceled_rejected_when_delivered_storable(self):
         order, _product = self._ob_create_storable_order(device_key='store-state-canceled-reject')
-        order.order_bridge_store_state = 'delivered'
+        self._ob_goto_delivered(order)
         line = order.order_line.filtered(lambda l: l.product_id and l.product_id.is_storable)[:1]
         self.assertTrue(line)
         self.assertGreater(line.qty_delivered, 0.0, 'La entrega validada debe dejar cantidad entregada neta > 0')
@@ -114,7 +119,7 @@ class TestOrderBridgeStoreState(TransactionCase):
 
     def test_canceled_after_full_return(self):
         order, _product = self._ob_create_storable_order(device_key='store-state-canceled-return')
-        order.order_bridge_store_state = 'delivered'
+        self._ob_goto_delivered(order)
         outgoing = order.picking_ids.filtered(
             lambda p: p.picking_type_id.code == 'outgoing' and p.state == 'done',
         )[:1]
@@ -144,4 +149,27 @@ class TestOrderBridgeStoreState(TransactionCase):
         )
 
         order.write({'order_bridge_store_state': 'canceled'})
+        self.assertEqual(order.state, 'cancel')
+
+    def test_invalid_store_transition_raises(self):
+        order, _product = self._ob_create_storable_order(device_key='store-state-invalid-tr')
+        with self.assertRaises(UserError):
+            order.write({'order_bridge_store_state': 'delivered'})
+
+    def test_action_order_bridge_negotiate(self):
+        order, _product = self._ob_create_storable_order(device_key='store-state-act-neg')
+        order.action_order_bridge_negotiate()
+        self.assertEqual(order.order_bridge_store_state, 'negotiating')
+
+    def test_action_order_bridge_ready_then_delivered(self):
+        order, _product = self._ob_create_storable_order(device_key='store-state-act-del')
+        order.action_order_bridge_ready_for_delivery()
+        self.assertEqual(order.order_bridge_store_state, 'ready_for_delivery')
+        order.action_order_bridge_delivered()
+        self.assertEqual(order.order_bridge_store_state, 'delivered')
+
+    def test_action_order_bridge_cancel_store(self):
+        order, _product = self._ob_create_storable_order(device_key='store-state-act-can')
+        order.action_order_bridge_cancel_store()
+        self.assertEqual(order.order_bridge_store_state, 'canceled')
         self.assertEqual(order.state, 'cancel')
