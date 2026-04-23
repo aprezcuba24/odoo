@@ -1,12 +1,13 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, api, fields, models
-from own_modules.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID_CHOICES
-from own_modules.order_bridge.utils.listerners import order_bridge_store_state_changed
-from own_modules.order_bridge.utils.mixins import DispachMixin
+from odoo.addons.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID_CHOICES
+from odoo.addons.order_bridge.utils.listerners import order_bridge_store_state_changed
 
-class SaleOrder(DispachMixin, models.Model):
-    _inherit = 'sale.order'
+
+class SaleOrder(models.Model):
+    _name = 'sale.order'
+    _inherit = ['sale.order', 'order_bridge.dispatch.mixin']
     _LISTENERS = [
         (order_bridge_store_state_changed, 'order_bridge_store_state_changed'),
     ]
@@ -64,11 +65,11 @@ class SaleOrder(DispachMixin, models.Model):
             order.action_confirm()
 
     def write(self, vals):
-        previous_by_id = {o.id: self.read()[0] for o in self}
+        previous_by_id = {o.id: o.read()[0] for o in self}
         res = super().write(vals)
         for order in self:
             old = previous_by_id.get(order.id)
-            self.on_event('order_bridge_store_state_changed', old, order)
+            order.on_event('order_bridge_store_state_changed', old, order)
         return res
 
     @api.model_create_multi

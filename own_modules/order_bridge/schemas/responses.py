@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from own_modules.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID
+from odoo.addons.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID
 
 
 def _odoo_falsy_str(v: Any) -> str | None:

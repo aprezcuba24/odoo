@@ -2,6 +2,7 @@
 
 from . import banner
 from . import device
+from . import dispatch_mixin
 from . import general_settings
 from . import municipality
 from . import partner_address
