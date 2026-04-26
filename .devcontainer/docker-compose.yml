@@ -25,6 +25,21 @@ services:
     networks:
       - odoo-network
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: odoo-caddy
+    ports:
+      - "9443:443"
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    networks:
+      - odoo-network
+
   postgres:
     image: postgres:16-alpine
     container_name: odoo-postgres
@@ -47,6 +62,8 @@ services:
 
 volumes:
   postgres-data:
+  caddy-data:
+  caddy-config:
 
 networks:
   odoo-network:

@@ -164,3 +164,23 @@ Then hard-refresh the browser (`Ctrl+Shift+R`). If problems persist, run `python
 ```
 python3 odoo-bin --dev=all -d odoo
 ```
+
+### HTTPS in development (optional)
+
+The devcontainer includes a **Caddy** service (`.devcontainer/docker-compose.yml`) that terminates TLS on port 443 and proxies to Odoo on port 8069. Use this when you need secure cookies, passkeys, or any API that requires `https://`.
+
+**One-time setup** (run inside the devcontainer after starting Odoo at least once):
+
+```bash
+bash dev-https-setup.sh odoo1        # export CA cert + set web.base.url
+```
+
+The script prints OS-specific instructions for trusting Caddy's root CA in your browser.
+
+**Start Odoo with proxy mode** so Werkzeug respects `X-Forwarded-Proto`:
+
+```bash
+python3 odoo-bin --dev=all -d odoo1 --proxy-mode
+```
+
+Then open <https://localhost>. Without `--proxy-mode`, Odoo ignores the `X-Forwarded-*` headers and generates `http://` links even though the browser sees `https://`.

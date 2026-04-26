@@ -16,7 +16,8 @@
 	// Start both services (app and postgres) when the devcontainer is created
 	"runServices": [
 		"app",
-		"postgres"
+		"postgres",
+		"caddy"
 	],
 	// Keep containers running after VS Code shuts down
 	"shutdownAction": "stopCompose",
