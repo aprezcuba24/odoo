@@ -5,5 +5,6 @@ from . import banners
 from . import catalog
 from . import municipalities
 from . import openapi
+from . import push
 from . import orders
 from . import settings

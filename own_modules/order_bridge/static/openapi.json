@@ -1117,6 +1117,82 @@
         "title": "ProfileResponse",
         "type": "object"
       },
+      "PushTokenBody": {
+        "additionalProperties": false,
+        "properties": {
+          "fcm_token": {
+            "minLength": 1,
+            "title": "Fcm Token",
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "subscribe_topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subscribe Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fcm_token",
+          "platform"
+        ],
+        "title": "PushTokenBody",
+        "type": "object"
+      },
+      "PushTopicsOkResponse": {
+        "additionalProperties": false,
+        "description": "Respuestas 200 de ``POST /push/token`` y ``PATCH /push/topics``.",
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "subscribed_topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subscribed Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "subscribed_topics"
+        ],
+        "title": "PushTopicsOkResponse",
+        "type": "object"
+      },
+      "PushTopicsPatchBody": {
+        "additionalProperties": false,
+        "properties": {
+          "subscribe_topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subscribe Topics",
+            "type": "array"
+          },
+          "unsubscribe_topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unsubscribe Topics",
+            "type": "array"
+          }
+        },
+        "title": "PushTopicsPatchBody",
+        "type": "object"
+      },
       "RegisterBody": {
         "properties": {
           "device_info": {
@@ -1663,7 +1739,7 @@
   "info": {
     "description": "API REST JSON para clientes externos bajo `/api/order_bridge/`. Autenticaci\u00f3n con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET p\u00fablicas del cat\u00e1logo (`/categories`, `/municipalities`, `/settings`, `/banners`, `/products`, `/products/{id}`).",
     "title": "API Tienda Apk",
-    "version": "19.0.2.0.10"
+    "version": "19.0.2.0.17"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2247,6 +2323,146 @@
           }
         ],
         "summary": "Sustituir perfil (direcci\u00f3n completa)"
+      }
+    },
+    "/api/order_bridge/push/token": {
+      "post": {
+        "operationId": "order_bridge_push_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTopicsOkResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SimpleErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "JSON no v\u00e1lido o error de validaci\u00f3n"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                }
+              }
+            },
+            "description": "FCM no configurado (credenciales)"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Registrar o actualizar token FCM y suscribir topics"
+      }
+    },
+    "/api/order_bridge/push/topics": {
+      "patch": {
+        "operationId": "order_bridge_push_topics",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTopicsPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTopicsOkResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MessageErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Error de validaci\u00f3n o token FCM no registrado previamente"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorResponse"
+                }
+              }
+            },
+            "description": "FCM no configurado (credenciales)"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Cambiar suscripciones a topics FCM (requiere token previo v\u00eda POST /push/token)"
       }
     },
     "/api/order_bridge/register": {

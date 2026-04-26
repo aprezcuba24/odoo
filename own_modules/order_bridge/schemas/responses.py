@@ -374,6 +374,15 @@ class ConfigurationErrorResponse(BaseModel):
     message: str
 
 
+class PushTopicsOkResponse(BaseModel):
+    """Respuestas 200 de ``POST /push/token`` y ``PATCH /push/topics``."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    status: Literal['ok'] = 'ok'
+    subscribed_topics: list[str]
+
+
 class MessageErrorResponse(BaseModel):
     """e.g. forbidden with a message."""
 

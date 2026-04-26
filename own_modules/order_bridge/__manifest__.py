@@ -2,7 +2,7 @@
 
 {
     'name': 'Tienda Apk',
-    'version': '19.0.2.0.16',
+    'version': '19.0.2.0.17',
     'category': 'Ventas/Ventas',
     'summary': 'API REST para aplicaciones externas: catálogo por marca en producto, registro de dispositivo por teléfono y validación en Tienda Apk.',
     'description': """
@@ -29,6 +29,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
 **Depende de:** ventas (sale), ventas e inventario (sale_stock), producto (product), validación de teléfono (phone_validation).
     """,
     'depends': ['sale', 'sale_stock', 'product', 'phone_validation'],
+    'external_dependencies': {'python': ['firebase_admin']},
     'data': [
         'security/order_bridge_security.xml',
         'security/ir.model.access.csv',

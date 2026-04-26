@@ -2,9 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
+import re
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+
+# Nombres de topic FCM: letras, números y ``-_.~%`` (sin espacios).
+_FCM_TOPIC_RE = re.compile(r'^[a-zA-Z0-9\-_.~%]+$')
+
+
+def _valid_fcm_topic(name: str) -> str:
+    if not _FCM_TOPIC_RE.match(name):
+        raise ValueError(
+            'Cada topic debe contener solo letras, números y los caracteres -_.~%'
+        )
+    return name
 
 
 class RegisterBody(BaseModel):
@@ -119,3 +131,40 @@ class OrderCreateBody(BaseModel):
 
         order_stock.validate_order_lines_stock(env, catalog_company, product_domain, self.lines)
         return self
+
+
+class PushTokenBody(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    fcm_token: str = Field(...)
+    platform: Literal['android', 'ios']
+    subscribe_topics: list[str] = Field(default_factory=list)
+
+    @field_validator('fcm_token')
+    @classmethod
+    def fcm_token_not_empty(cls, v: str) -> str:
+        s = (v or '').strip()
+        if not s:
+            raise ValueError('El fcm_token no puede estar vacío')
+        return s
+
+    @field_validator('subscribe_topics')
+    @classmethod
+    def validate_subscribe_topics(cls, v: list[str]) -> list[str]:
+        for t in v:
+            _valid_fcm_topic(t)
+        return v
+
+
+class PushTopicsPatchBody(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    subscribe_topics: list[str] = Field(default_factory=list)
+    unsubscribe_topics: list[str] = Field(default_factory=list)
+
+    @field_validator('subscribe_topics', 'unsubscribe_topics')
+    @classmethod
+    def validate_topic_strings(cls, v: list[str]) -> list[str]:
+        for t in v:
+            _valid_fcm_topic(t)
+        return v

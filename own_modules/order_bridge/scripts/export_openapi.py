@@ -14,8 +14,25 @@ from typing import Any
 from pydantic import BaseModel
 
 
+def _ensure_repo_and_addons_on_path():
+    """Permite importar ``odoo.addons.order_bridge`` al generar la spec fuera de odoo-bin."""
+    repo = Path(__file__).resolve().parent.parent.parent.parent
+    rs = str(repo)
+    if rs not in sys.path:
+        sys.path.insert(0, rs)
+    import odoo.addons  # noqa: PLC0415
+
+    paths = list(odoo.addons.__path__)
+    for rel in ('own_modules', 'addons'):
+        p = str(repo / rel)
+        if p not in paths:
+            paths.append(p)
+    odoo.addons.__path__ = paths  # type: ignore[misc]
+
+
 def load_order_bridge_schemas():
-    """Import ``order_bridge.schemas`` without loading ``order_bridge`` package (avoids Odoo)."""
+    """Import ``order_bridge.schemas`` (requiere Odoo en path para ``responses``)."""
+    _ensure_repo_and_addons_on_path()
     bridge_root = Path(__file__).resolve().parent.parent
     schema_dir = bridge_root / 'schemas'
     pkg_name = 'order_bridge_schemas_export'
@@ -102,6 +119,21 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         ),
     }
     not_found = {'404': _ok('SimpleErrorResponse', 'Recurso no encontrado')}
+    config_503 = {
+        '503': _ok('ConfigurationErrorResponse', 'FCM no configurado en el servidor (credenciales)'),
+    }
+    push_token_400 = {
+        '400': _one_of(
+            ['ValidationErrorResponse', 'MessageErrorResponse'],
+            'Validación o token vacío',
+        ),
+    }
+    push_topics_400 = {
+        '400': _one_of(
+            ['ValidationErrorResponse', 'MessageErrorResponse'],
+            'Validación o sin token FCM registrado (usar POST /push/token antes)',
+        ),
+    }
 
     paths: dict[str, Any] = {
         '/api/order_bridge/register': {
@@ -163,6 +195,43 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                     '200': _ok('ProfileResponse'),
                     **unauthorized,
                     **val_400_body,
+                },
+            },
+        },
+        '/api/order_bridge/push/token': {
+            'post': {
+                'summary': 'Registrar o actualizar token FCM y suscribir topics',
+                'operationId': 'order_bridge_push_token',
+                'security': [{'deviceBearer': []}],
+                'requestBody': {
+                    'required': True,
+                    'content': {'application/json': {'schema': _ref('PushTokenBody')}},
+                },
+                'responses': {
+                    '200': _ok('PushTopicsOkResponse'),
+                    **unauthorized,
+                    **val_400_body,
+                    '503': _ok('ConfigurationErrorResponse', 'FCM no configurado (credenciales)'),
+                },
+            },
+        },
+        '/api/order_bridge/push/topics': {
+            'patch': {
+                'summary': 'Cambiar suscripciones a topics FCM (requiere token previo vía POST /push/token)',
+                'operationId': 'order_bridge_push_topics',
+                'security': [{'deviceBearer': []}],
+                'requestBody': {
+                    'required': True,
+                    'content': {'application/json': {'schema': _ref('PushTopicsPatchBody')}},
+                },
+                'responses': {
+                    '200': _ok('PushTopicsOkResponse'),
+                    **unauthorized,
+                    '400': _one_of(
+                        ['ValidationErrorResponse', 'MessageErrorResponse'],
+                        'Error de validación o token FCM no registrado previamente',
+                    ),
+                    '503': _ok('ConfigurationErrorResponse', 'FCM no configurado (credenciales)'),
                 },
             },
         },
@@ -345,7 +414,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         'openapi': '3.1.0',
         'info': {
             'title': 'API Tienda Apk',
-            'version': '19.0.2.0.10',
+            'version': '19.0.2.0.17',
             'description': 'API REST JSON para clientes externos bajo `/api/order_bridge/`. '
             'Autenticación con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET públicas del catálogo '
             '(`/categories`, `/municipalities`, `/settings`, `/banners`, `/products`, `/products/{id}`).',

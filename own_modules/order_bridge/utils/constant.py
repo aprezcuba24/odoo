@@ -1,5 +1,7 @@
 from typing import Literal
 
+# Topic fijo usado por la app odoo-shop para difusiones a todos los usuarios.
+FCM_TOPIC_ALL_USERS = 'com_culabs_odooshop_all'
 
 STATE_REVIEWING = 'reviewing'
 STATE_NEGOTIATING = 'negotiating'

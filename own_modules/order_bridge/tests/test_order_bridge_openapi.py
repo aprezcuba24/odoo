@@ -214,3 +214,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
             }],
             'total': 1,
         })
+        R.PushTopicsOkResponse.model_validate({
+            'status': 'ok',
+            'subscribed_topics': ['com_culabs_odooshop_all'],
+        })
