@@ -10,6 +10,10 @@ services:
       - ..:/app:cached
     ports:
       - "8069:8069"
+    # Inyecta variables de /app/.env (p. ej. ORDER_BRIDGE_FCM_*) hacia el entorno del contenedor; Odoo lee os.environ, no lee .env directamente.
+    env_file:
+      - path: ../.env
+        required: false
     environment:
       - PGHOST=postgres
       - PGUSER=odoo

@@ -130,7 +130,8 @@ def send_notification_multicast(
     if str_data:
         mm_kwargs['data'] = str_data
     multicast = messaging.MulticastMessage(**mm_kwargs)
-    return list(messaging.send_each_for_multicast(multicast))
+    batch_resp = messaging.send_each_for_multicast(multicast)
+    return list(batch_resp.responses)
 
 
 def iter_token_batches(tokens: list[str], batch_size: int = 500) -> Iterator[list[str]]:

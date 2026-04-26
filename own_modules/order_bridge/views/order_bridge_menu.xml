@@ -70,6 +70,14 @@
         groups="sales_team.group_sale_salesman"/>
 
     <menuitem
+        id="menu_order_bridge_fcm_send"
+        name="Enviar notificación push"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_fcm_send_wizard"
+        sequence="15"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
         id="menu_order_bridge_orders"
         name="Pedidos Tienda Apk"
         parent="menu_order_bridge_root"

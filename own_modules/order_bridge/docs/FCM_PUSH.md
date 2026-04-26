@@ -49,6 +49,16 @@ Especificación OpenAPI generada: `docs/openapi.json` y `static/openapi.json` en
 
 Requieren un usuario con permisos de **vendedor** o **gestor** de Order Bridge (según implementación; ver el modelo en código). No hay rutas HTTP públicas para el envío.
 
+### Asistente en la interfaz de Odoo
+
+Usuarios con permisos adecuados (vendedor / gestor Tienda Apk) pueden enviar notificaciones desde el backend con el asistente transitorio **Enviar notificación push** (`order_bridge.fcm.send.wizard`):
+
+- **Ventas → Tienda Apk → Enviar notificación push** — elige el modo (un contacto, varios contactos o un topic FCM) y rellena título y mensaje; opcionalmente un objeto JSON de datos.
+- **Contactos (lista) → Acción → Enviar notificación push a contactos** — rellena la selección múltiple con los contactos activos.
+- **Ficha de contacto → pestaña Tienda Apk → Enviar notificación push** — abre el asistente con ese contacto como destino único.
+
+El asistente llama a los mismos métodos de `order_bridge.fcm` descritos arriba; no añade credenciales ni rutas API nuevas.
+
 ## Diagrama de flujo (ciclo de vida)
 
 ```mermaid

@@ -2,7 +2,7 @@
 
 {
     'name': 'Tienda Apk',
-    'version': '19.0.2.0.17',
+    'version': '19.0.2.0.18',
     'category': 'Ventas/Ventas',
     'summary': 'API REST para aplicaciones externas: catálogo por marca en producto, registro de dispositivo por teléfono y validación en Tienda Apk.',
     'description': """
@@ -43,6 +43,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'views/res_partner_search_order_bridge.xml',
         'views/product_template_views.xml',
         'views/sale_order_views.xml',
+        'views/fcm_send_wizard_views.xml',
         'views/order_bridge_menu.xml',
     ],
     'license': 'LGPL-3',

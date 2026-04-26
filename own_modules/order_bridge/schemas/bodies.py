@@ -2,21 +2,13 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
-# Nombres de topic FCM: letras, números y ``-_.~%`` (sin espacios).
-_FCM_TOPIC_RE = re.compile(r'^[a-zA-Z0-9\-_.~%]+$')
-
-
-def _valid_fcm_topic(name: str) -> str:
-    if not _FCM_TOPIC_RE.match(name):
-        raise ValueError(
-            'Cada topic debe contener solo letras, números y los caracteres -_.~%'
-        )
-    return name
+from odoo.addons.order_bridge.utils.fcm_topic import (
+    validate_fcm_topic_string as _valid_fcm_topic,
+)
 
 
 class RegisterBody(BaseModel):

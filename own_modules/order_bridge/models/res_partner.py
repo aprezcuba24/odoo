@@ -87,3 +87,17 @@ class ResPartner(models.Model):
             'view_mode': 'list,form',
             'domain': [('partner_id', '=', self.id), ('order_bridge_origin', '!=', False)],
         }
+
+    def action_order_bridge_fcm_send_wizard(self):
+        self.ensure_one()
+        return {
+            'name': _('Enviar notificación push'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'order_bridge.fcm.send.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_target_mode': 'single_partner',
+                'default_partner_id': self.id,
+            },
+        }

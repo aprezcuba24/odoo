@@ -1121,7 +1121,6 @@
         "additionalProperties": false,
         "properties": {
           "fcm_token": {
-            "minLength": 1,
             "title": "Fcm Token",
             "type": "string"
           },
