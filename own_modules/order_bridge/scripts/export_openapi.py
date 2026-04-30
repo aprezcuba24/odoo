@@ -414,7 +414,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         'openapi': '3.1.0',
         'info': {
             'title': 'API Tienda Apk',
-            'version': '19.0.2.0.17',
+            'version': '19.0.1.0.0',
             'description': 'API REST JSON para clientes externos bajo `/api/order_bridge/`. '
             'Autenticación con clave de dispositivo (Bearer), salvo `POST /register` y las peticiones GET públicas del catálogo '
             '(`/categories`, `/municipalities`, `/settings`, `/banners`, `/products`, `/products/{id}`).',
