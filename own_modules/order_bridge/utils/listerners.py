@@ -34,7 +34,7 @@ def _order_bridge_handle_delivered_transition(order, old_ss, new_ss):
                 move.quantity = move.product_uom_qty
             elif float_compare(move.quantity, move.product_uom_qty, precision_rounding=rounding) < 0:
                 move.quantity = move.product_uom_qty
-        res = picking.with_context(skip_backorder=True).button_validate()
+        res = picking.with_context(skip_backorder=True, skip_sms=True).button_validate()
         if res is not True:
             raise UserError(
                 _(
