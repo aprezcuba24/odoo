@@ -28,7 +28,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
 
 **Depende de:** ventas (sale), ventas e inventario (sale_stock), producto (product), validación de teléfono (phone_validation).
     """,
-    'depends': ['sale', 'sale_stock', 'product', 'phone_validation'],
+    'depends': ['sale', 'sale_management', 'sale_stock', 'product', 'phone_validation'],
     'external_dependencies': {'python': ['firebase_admin']},
     'data': [
         'security/order_bridge_security.xml',
