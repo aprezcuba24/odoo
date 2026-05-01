@@ -248,8 +248,13 @@ else
     fi
 fi
 
-configure_attachment_storage
-migrate_attachments_to_db
+ATTACHMENT_STORAGE_MODE="${ODOO_ATTACHMENT_STORAGE:-db}"
+if [ "$ATTACHMENT_STORAGE_MODE" = "s3" ]; then
+    print_info "ODOO_ATTACHMENT_STORAGE=s3 detectado: no se fuerza ir_attachment.location=db ni se ejecuta force_storage()."
+else
+    configure_attachment_storage
+    migrate_attachments_to_db
+fi
 
 print_info "Base de datos lista. Iniciando Gunicorn..."
 

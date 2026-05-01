@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="attachment_s3_res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.attachment.s3</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <setting id="document_layout_setting" position="after">
+                <setting id="attachment_s3_storage_setting"
+                         string="S3 Attachment Storage"
+                         help="Store binary ir.attachment content in S3 or S3-compatible storage."
+                         documentation="https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html"
+                         groups="base.group_system">
+                    <field name="attachment_s3_enabled"/>
+                    <div class="content-group" invisible="not attachment_s3_enabled">
+                        <div class="row mt16">
+                            <label for="attachment_s3_bucket" class="col-lg-4"/>
+                            <field name="attachment_s3_bucket" class="col-lg-8"/>
+                        </div>
+                        <div class="row mt16">
+                            <label for="attachment_s3_region" class="col-lg-4"/>
+                            <field name="attachment_s3_region" class="col-lg-8" placeholder="e.g. eu-west-1"/>
+                        </div>
+                        <div class="row mt16">
+                            <label for="attachment_s3_endpoint_url" class="col-lg-4"/>
+                            <field name="attachment_s3_endpoint_url" class="col-lg-8" placeholder="Optional for AWS; required for MinIO/Spaces"/>
+                        </div>
+                        <div class="row mt16">
+                            <label for="attachment_s3_key_prefix" class="col-lg-4"/>
+                            <field name="attachment_s3_key_prefix" class="col-lg-8" placeholder="Optional, e.g. production/"/>
+                        </div>
+                        <div class="row mt16">
+                            <label for="attachment_s3_access_key_id" class="col-lg-4"/>
+                            <field name="attachment_s3_access_key_id" class="col-lg-8" password="True"/>
+                        </div>
+                        <div class="row mt16">
+                            <label for="attachment_s3_secret_access_key" class="col-lg-4"/>
+                            <field name="attachment_s3_secret_access_key" class="col-lg-8" password="True"/>
+                        </div>
+                        <div class="mt16 text-muted">
+                            In production, prefer environment variables (AWS_*/ODOO_S3_BUCKET). Environment values override these fields.
+                        </div>
+                    </div>
+                </setting>
+            </setting>
+        </field>
+    </record>
+</odoo>
