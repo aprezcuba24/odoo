@@ -14,6 +14,10 @@ cryptography==3.4.8; python_version < '3.12'  # incompatibility between pyopenss
 cryptography==42.0.8 ; python_version >= '3.12'  # (Noble) min 41.0.7, pinning 42.0.8 for security fixes
 docutils==0.17 ; python_version < '3.11'  # (Jammy)
 docutils==0.20.1 ; python_version >= '3.11'
+fsspec>=2025.3.0  # OCA fs_storage + fs_attachment (filesystem backends)
+python-slugify>=8.0.0  # OCA fs_attachment (external_dependencies: python_slugify)
+s3fs>=2024.6.0  # registers protocol "s3" in fs_storage dropdown (needs restart)
+packaging>=23.0  # Odoo parses external_dependencies (e.g. fsspec>=...) via packaging.requirements
 firebase-admin>=6.5.0  # FCM (order_bridge push notifications)
 freezegun==1.1.0 ; python_version < '3.11'  # (Jammy)
 freezegun==1.2.1 ; python_version >= '3.11' and python_version < '3.13'

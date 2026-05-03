@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Odoo addons path: core + community + this repo's custom addons (override with ODOO_ADDONS_PATH).
 if [ -z "${ODOO_ADDONS_PATH:-}" ]; then
-    export ODOO_ADDONS_PATH="${SCRIPT_DIR}/odoo/addons,${SCRIPT_DIR}/addons,${SCRIPT_DIR}/own_modules"
+    export ODOO_ADDONS_PATH="${SCRIPT_DIR}/odoo/addons,${SCRIPT_DIR}/addons,${SCRIPT_DIR}/own_modules,${SCRIPT_DIR}/oca"
 fi
 
 # Colores para output
@@ -245,6 +245,26 @@ else
     if ! init_database; then
         print_error "Error al inicializar la base de datos. Abortando."
         exit 1
+    fi
+fi
+
+# Módulos opcionales (coma-separados), p. ej. fs_attachment para adjuntos en S3 (OCA).
+if [ -n "${ODOO_EXTRA_INIT_MODULES:-}" ]; then
+    print_info "Instalación opcional de módulos (ODOO_EXTRA_INIT_MODULES=${ODOO_EXTRA_INIT_MODULES})..."
+    if "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${PGDATABASE}" -i "${ODOO_EXTRA_INIT_MODULES}" --stop-after-init --no-http; then
+        print_info "Módulos extra procesados."
+    else
+        print_warn "Fallo al ejecutar -i ODOO_EXTRA_INIT_MODULES; revisa logs."
+    fi
+fi
+
+# Provisionar fs.storage S3 + enlace ir.model para banners (requiere fs_attachment y order_bridge instalados).
+if [ -n "${ORDER_BRIDGE_BANNER_S3_BUCKET:-}" ]; then
+    print_info "Sincronizando fs.storage S3 para banners (ORDER_BRIDGE_BANNER_S3_BUCKET)..."
+    if printf '%s\n' "from odoo.addons.order_bridge import hooks as obhooks" "obhooks.provision_banner_fs_storage(env)" | "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${PGDATABASE}" shell --no-http; then
+        print_info "Provision banners S3 completada."
+    else
+        print_warn "Provision banners S3 falló; revisa credenciales y que fs_attachment esté instalado."
     fi
 fi
 

@@ -49,4 +49,5 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
     'license': 'LGPL-3',
     'installable': True,
     'application': True,
+    'post_init_hook': 'post_init_hook',
 }
