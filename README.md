@@ -16,6 +16,7 @@ Odoo only sees modules that sit on the **addons path**. For this project that me
 | `odoo/addons` | Odoo core addons |
 | `addons` | Standard/community addons shipped in this repo |
 | `own_modules` | Your custom modules (e.g. `order_bridge`) |
+| `oca` | OCA addons vendored here (e.g. `server_environment`, `fs_storage`, `fs_attachment` for Odoo 19) |
 
 **Ways to configure it**
 
@@ -23,15 +24,15 @@ Odoo only sees modules that sit on the **addons path**. For this project that me
    Set `ODOO_ADDONS_PATH` to a comma-separated list of directories (no spaces). Example:
 
    ```bash
-   ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules
+   ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules,/app/oca
    ```
 
-   In the production Docker image, [`docker-entrypoint.sh`](docker-entrypoint.sh) sets this by default if `ODOO_ADDONS_PATH` is unset, so `own_modules` is included without extra configuration.
+   In the production Docker image, [`docker-entrypoint.sh`](docker-entrypoint.sh) sets this by default if `ODOO_ADDONS_PATH` is unset, so `own_modules` and `oca` are included without extra configuration.
 
 2. **CLI (local runs without env)**
 
    ```bash
-   python3 odoo-bin --addons-path=odoo/addons,addons,own_modules …
+   python3 odoo-bin --addons-path=odoo/addons,addons,own_modules,oca …
    ```
 
 After changing paths or adding modules, install or upgrade the app from **Apps** in Odoo, or use `-i` / `-u` on the CLI (see below).
@@ -107,7 +108,7 @@ docker compose -f .devcontainer/docker-compose.yml start app
 With dependencies installed and working directory at the repo root:
 
 ```bash
-export ODOO_ADDONS_PATH=odoo/addons,addons,own_modules
+export ODOO_ADDONS_PATH=odoo/addons,addons,own_modules,oca
 python3 odoo-bin --dev=all --db_host=HOST --db_port=5432 -r USER -w PASSWORD -d DATABASE
 ```
 

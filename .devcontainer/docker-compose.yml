@@ -22,7 +22,7 @@ services:
       - PGPORT=5432
       # Writable on the bind mount (container user odoo). Named volume /var/lib/odoo is often root:root and breaks asset bundles + filestore.
       - ODOO_DATA_DIR=/app/.odoo_data
-      - ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules
+      - ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules,/app/oca
     depends_on:
       - postgres
     command: sleep infinity
