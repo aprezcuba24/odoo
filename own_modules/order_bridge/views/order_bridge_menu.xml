@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_order_bridge_sale_orders" model="ir.actions.act_window">
+        <field name="name">Pedidos de venta (Tienda Apk)</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,kanban,form,calendar,graph,pivot</field>
+        <field name="domain">[('order_bridge_origin', '!=', False)]</field>
+        <field name="context">{}</field>
+        <field name="search_view_id" ref="sale.view_sales_order_filter"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aún no hay pedidos desde la tienda.</p>
+            <p>Los pedidos creados desde la API externa o marcados como administrador aparecen aquí.</p>
+        </field>
+    </record>
+
+    <record id="action_order_bridge_partners" model="ir.actions.act_window">
+        <field name="name">Clientes Tienda Apk</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('order_bridge_registered', '=', True)]</field>
+        <field name="context">{'default_customer_rank': 1}</field>
+        <field name="search_view_id" ref="view_res_partner_filter_order_bridge"/>
+    </record>
+
+    <menuitem
+        id="menu_order_bridge_root"
+        name="Tienda Apk"
+        parent="sale.sale_menu_root"
+        sequence="26"
+        groups="sales_team.group_sale_salesman,base.group_system"/>
+
+    <menuitem
+        id="menu_order_bridge_general_settings"
+        name="Datos generales"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_general_settings"
+        sequence="3"
+        groups="order_bridge.group_order_bridge_manager,base.group_system"/>
+
+    <menuitem
+        id="menu_order_bridge_banners"
+        name="Banners publicitarios"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_banner"
+        sequence="4"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_municipalities"
+        name="Municipios"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_municipality"
+        sequence="5"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_neighborhoods"
+        name="Barrios"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_neighborhood"
+        sequence="6"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_devices"
+        name="Dispositivos"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_device"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_fcm_send"
+        name="Enviar notificación push"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_fcm_send_wizard"
+        sequence="15"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_orders"
+        name="Pedidos Tienda Apk"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_sale_orders"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_customers"
+        name="Clientes Tienda Apk"
+        parent="menu_order_bridge_root"
+        action="action_order_bridge_partners"
+        sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+</odoo>

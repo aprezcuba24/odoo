@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_order_bridge" model="ir.ui.view">
+        <field name="name">res.partner.form.order.bridge</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <field name="order_bridge_order_count" invisible="1"/>
+            </xpath>
+            <div name="button_box" position="inside">
+                <button
+                    name="action_open_order_bridge_orders"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-plug"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="order_bridge_order_count == 0">
+                    <field name="order_bridge_order_count" widget="statinfo" string="Pedidos Tienda Apk"/>
+                </button>
+            </div>
+            <notebook position="inside">
+                <page string="Tienda Apk" name="order_bridge_page" groups="sales_team.group_sale_salesman">
+                    <group>
+                        <field name="order_bridge_registered" readonly="1"/>
+                        <field name="order_bridge_phone_validated" readonly="1"/>
+                        <button name="action_open_order_bridge_devices" type="object" string="Abrir dispositivos" class="btn-link" colspan="2"/>
+                        <button
+                            name="action_order_bridge_fcm_send_wizard"
+                            type="object"
+                            string="Enviar notificación push"
+                            class="btn-secondary"
+                            colspan="2"
+                        />
+                    </group>
+                    <field name="order_bridge_device_ids" nolabel="1">
+                        <list create="false" delete="false" edit="false">
+                            <field name="active" widget="boolean"/>
+                            <field name="phone"/>
+                            <field name="phone_validated" widget="boolean"/>
+                            <field name="device_key" optional="hide"/>
+                            <field name="registration_date"/>
+                            <field name="last_activity"/>
+                            <field name="device_info"/>
+                        </list>
+                    </field>
+                    <separator string="Dirección de entrega Tienda Apk"/>
+                    <field name="order_bridge_partner_address_ids" nolabel="1">
+                        <list editable="bottom" create="1" delete="1">
+                            <field name="street"/>
+                            <field name="municipality_id"/>
+                            <field name="neighborhood_id"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>

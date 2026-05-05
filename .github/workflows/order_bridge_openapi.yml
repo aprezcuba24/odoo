@@ -1,0 +1,24 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+name: Order bridge OpenAPI drift check
+
+on:
+  pull_request:
+    paths:
+      - 'own_modules/order_bridge/**'
+
+jobs:
+  openapi-fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pydantic
+        run: pip install "pydantic>=2.7,<3"
+      - name: Regenerate OpenAPI spec
+        run: python3 own_modules/order_bridge/scripts/export_openapi.py
+      - name: Fail if openapi.json was not committed
+        run: |
+          git diff --exit-code own_modules/order_bridge/docs/openapi.json
+          git diff --exit-code own_modules/order_bridge/static/openapi.json

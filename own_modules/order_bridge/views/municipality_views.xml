@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_bridge_municipality_tree" model="ir.ui.view">
+        <field name="name">order_bridge.municipality.list</field>
+        <field name="model">order_bridge.municipality</field>
+        <field name="arch" type="xml">
+            <list string="Municipios">
+                <field name="name"/>
+                <field name="description" optional="hide"/>
+                <field name="active" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_municipality_form" model="ir.ui.view">
+        <field name="name">order_bridge.municipality.form</field>
+        <field name="model">order_bridge.municipality</field>
+        <field name="arch" type="xml">
+            <form string="Municipio">
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="description"/>
+                        <field name="active"/>
+                    </group>
+                    <notebook>
+                        <page string="Barrios" name="neighborhoods">
+                            <field name="neighborhood_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="description" optional="hide"/>
+                                    <field name="active" widget="boolean"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_municipality_search" model="ir.ui.view">
+        <field name="name">order_bridge.municipality.search</field>
+        <field name="model">order_bridge.municipality</field>
+        <field name="arch" type="xml">
+            <search string="Municipios">
+                <field name="name"/>
+                <filter name="active" string="Activos" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Archivados" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_order_bridge_municipality" model="ir.actions.act_window">
+        <field name="name">Municipios</field>
+        <field name="res_model">order_bridge.municipality</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_order_bridge_municipality_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Defina los municipios para direcciones Tienda Apk.</p>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_neighborhood_tree" model="ir.ui.view">
+        <field name="name">order_bridge.neighborhood.list</field>
+        <field name="model">order_bridge.neighborhood</field>
+        <field name="arch" type="xml">
+            <list string="Barrios">
+                <field name="name"/>
+                <field name="municipality_id"/>
+                <field name="description" optional="hide"/>
+                <field name="active" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_neighborhood_form" model="ir.ui.view">
+        <field name="name">order_bridge.neighborhood.form</field>
+        <field name="model">order_bridge.neighborhood</field>
+        <field name="arch" type="xml">
+            <form string="Barrio">
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="municipality_id"/>
+                        <field name="description"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_neighborhood_search" model="ir.ui.view">
+        <field name="name">order_bridge.neighborhood.search</field>
+        <field name="model">order_bridge.neighborhood</field>
+        <field name="arch" type="xml">
+            <search string="Barrios">
+                <field name="name"/>
+                <field name="municipality_id"/>
+                <filter name="active" string="Activos" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Archivados" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_order_bridge_neighborhood" model="ir.actions.act_window">
+        <field name="name">Barrios</field>
+        <field name="res_model">order_bridge.neighborhood</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_order_bridge_neighborhood_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Defina los barrios vinculados a un municipio.</p>
+        </field>
+    </record>
+</odoo>

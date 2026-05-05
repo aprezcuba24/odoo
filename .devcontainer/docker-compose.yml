@@ -8,18 +8,39 @@ services:
     container_name: odoo-app
     volumes:
       - ..:/app:cached
-      - odoo-data:/var/lib/odoo
     ports:
       - "8069:8069"
+    # Inyecta variables de /app/.env (p. ej. ORDER_BRIDGE_FCM_*) hacia el entorno del contenedor; Odoo lee os.environ, no lee .env directamente.
+    env_file:
+      - path: ../.env
+        required: false
     environment:
       - PGHOST=postgres
       - PGUSER=odoo
       - PGPASSWORD=odoo
       - PGDATABASE=odoo
       - PGPORT=5432
+      # Writable on the bind mount (container user odoo). Named volume /var/lib/odoo is often root:root and breaks asset bundles + filestore.
+      - ODOO_DATA_DIR=/app/.odoo_data
+      - ODOO_ADDONS_PATH=/app/odoo/addons,/app/addons,/app/own_modules,/app/oca
     depends_on:
       - postgres
-    command: python3 odoo-bin --dev=all
+    command: sleep infinity
+    networks:
+      - odoo-network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: odoo-caddy
+    ports:
+      - "9443:443"
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
     networks:
       - odoo-network
 
@@ -44,8 +65,9 @@ services:
       retries: 5
 
 volumes:
-  odoo-data:
   postgres-data:
+  caddy-data:
+  caddy-config:
 
 networks:
   odoo-network:

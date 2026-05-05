@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "pydantic": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "computedHash": "49c65015e4af62e69fa6a0df70fc04e74378244b7c7e003a1c033b946ccf50fc"
+    }
+  }
+}

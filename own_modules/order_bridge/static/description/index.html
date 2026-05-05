@@ -1,0 +1,88 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Tienda Apk</h2>
+        <h3 class="oe_slogan">API REST para clientes externos: registro de dispositivos, catálogo de productos y pedidos de venta.</h3>
+        <div class="oe_span12">
+            <p>
+                Expone puntos finales JSON bajo <code>/api/order_bridge/</code> para apps móviles, quioscos u integraciones.
+                Los clientes se autentican con una <strong>clave de dispositivo</strong> (token Bearer), no con usuarios de Odoo.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Qué debe configurar</h2>
+        <div class="oe_span12">
+            <ol class="oe_mt16">
+                <li>
+                    <strong>Productos del catálogo</strong> — en cada plantilla de producto, active <em>Visible en Tienda Apk</em>
+                    (junto a las mismas opciones que <em>Se puede vender</em>). Solo los productos activos, vendibles y con esta marca
+                    (y que cumplan las reglas de empresa) aparecen en <code>/categories</code> y <code>/products</code> y pueden
+                    añadirse a pedidos por API.
+                </li>
+                <li>
+                    <strong>Validar dispositivos en el backend</strong> — tras <code>POST /api/order_bridge/register</code>
+                    con teléfono y clave de dispositivo, el personal abre <em>Ventas → Tienda Apk → Dispositivos</em> (o la pestaña
+                    <em>Tienda Apk</em> del contacto) y valida el teléfono cuando corresponda. Los pedidos pueden crearse antes de la
+                    validación; quedan marcados en el pedido de venta para revisión.
+                </li>
+                <li>
+                    <strong>Inventario y descuento de stock</strong> — para que un producto descuente existencias como en ventas
+                    con inventario: tipo <strong>Bienes</strong>, opción <strong>Rastrear inventario</strong> activada en la plantilla
+                    (requiere la aplicación <em>Inventario</em>), y al menos un almacén en la compañía del catálogo. Los pedidos API
+                    se confirman automáticamente; la cantidad a mano baja al validar la entrega (albarán en estado hecho), como en Odoo
+                    estándar. Los servicios y los bienes sin <em>Rastrear inventario</em> no mueven stock físico.
+                </li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Dónde gestionar dispositivos en Odoo</h2>
+        <div class="oe_span12">
+            <p>
+                Este módulo <strong>depende de la aplicación Ventas</strong> (<code>sale</code>): Ventas se instala automáticamente
+                con Tienda Apk y <strong>debe permanecer instalada</strong>. Los menús de dispositivos, pedidos y clientes de la tienda
+                están bajo <strong>Ventas</strong>: <em>Ventas → Tienda Apk</em>
+                (<em>Dispositivos</em>, <em>Pedidos Tienda Apk</em>, <em>Clientes Tienda Apk</em>).
+            </p>
+            <p class="oe_mt16">
+                Solo los usuarios con acceso de <strong>comercial</strong> (o un grupo de seguridad que lo incluya) ven esos menús
+                y la pestaña <em>Tienda Apk</em> en contactos. Desde un contacto puede usar
+                <em>Abrir dispositivos</em> para filtrar la lista por ese cliente. Los pedidos de venta muestran el dispositivo API
+                vinculado y la instantánea de validación en el formulario cuando aplica.
+            </p>
+            <p class="oe_mt16 text-muted small">
+                Las aplicaciones externas usan la API REST y las claves de dispositivo; no usan estos menús del backend.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Dependencias y vista general de la API</h2>
+        <div class="oe_span12">
+            <p>
+                Requiere <strong>Ventas</strong>, <strong>Productos</strong> y
+                <strong>Validación de teléfono</strong> (para números normalizados).
+            </p>
+            <p class="oe_mt16"><strong>Rutas principales</strong> (todas bajo la URL base de Odoo):</p>
+            <ul>
+                <li><code>POST /api/order_bridge/register</code> — registrar dispositivo (sin autenticación)</li>
+                <li><code>GET /api/order_bridge/status</code> — estado del dispositivo (Bearer)</li>
+                <li><code>GET /api/order_bridge/categories</code>, <code>GET /api/order_bridge/products</code> — catálogo (Bearer)</li>
+                <li><code>GET|POST /api/order_bridge/orders</code>, <code>GET /api/order_bridge/orders/&lt;id&gt;</code>,
+                    <code>POST /api/order_bridge/orders/&lt;id&gt;/cancel</code> — pedidos (Bearer)</li>
+                <li><code>GET|PUT|PATCH /api/order_bridge/profile</code> — perfil (Bearer)</li>
+            </ul>
+            <p class="oe_mt16 text-muted small">
+                Use <em>Actualizar lista de aplicaciones</em> tras actualizar este módulo para ver la descripción más reciente en Aplicaciones.
+            </p>
+        </div>
+    </div>
+</section>

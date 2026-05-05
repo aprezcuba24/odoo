@@ -1,0 +1,44 @@
+# Translation of Odoo Server.
+# This file contains Spanish translations for order_bridge (source strings are already in Spanish).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#. module: order_bridge
+#: model:ir.model,name:order_bridge.model_order_bridge_fcm_send_wizard
+msgid "Enviar notificación push FCM"
+msgstr "Enviar notificación push FCM"
+
+#. module: order_bridge
+#: model:ir.actions.act_window,name:order_bridge.action_order_bridge_fcm_send_wizard
+#: model:ir.ui.menu,name:order_bridge.menu_order_bridge_fcm_send
+msgid "Enviar notificación push"
+msgstr "Enviar notificación push"
+
+#. module: order_bridge
+#: model_terms:ir.ui.view,arch_db:order_bridge.view_order_bridge_fcm_send_wizard_form
+msgid "Enviar notificación push FCM"
+msgstr "Enviar notificación push FCM"
+
+#. module: order_bridge
+#: model_terms:ir.ui.view,arch_db:order_bridge.view_order_bridge_fcm_send_wizard_form
+msgid "Enviar"
+msgstr "Enviar"
+
+#. module: order_bridge
+#: model_terms:ir.ui.view,arch_db:order_bridge.view_order_bridge_fcm_send_wizard_form
+msgid "Cancelar"
+msgstr "Cancelar"
+
+#. module: order_bridge
+#: model:ir.actions.act_window,name:order_bridge.action_order_bridge_fcm_send_wizard_from_partners
+msgid "Enviar notificación push a contactos"
+msgstr "Enviar notificación push a contactos"
+
+#. module: order_bridge
+#: model_terms:ir.ui.view,arch_db:order_bridge.view_partner_form_order_bridge
+msgid "Enviar notificación push"
+msgstr "Enviar notificación push"

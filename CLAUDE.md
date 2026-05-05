@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Odoo 19.0 — a Python ERP/business-apps framework — deployed as a Docker container on [Seenode](https://seenode.com), a modern PaaS with managed PostgreSQL. The deployment uses Gunicorn with gevent workers for WebSocket support. The Odoo core lives in `odoo/` and standard addons in `addons/`. Custom deployment logic is in the root-level Docker files.
+Odoo 19.0 — a Python ERP/business-apps framework — deployed as a Docker container on [Render](https://render.com/), a PaaS with managed PostgreSQL ([Render Postgres](https://render.com/docs/databases)). The deployment uses Gunicorn with gevent workers for WebSocket support. The Odoo core lives in `odoo/` and standard addons in `addons/`. Custom deployment logic is in the root-level Docker files.
 
 ## Development
 
@@ -42,21 +42,21 @@ Configuration is in `ruff.toml`. Import order follows Odoo conventions: `future 
 
 ## Production deployment
 
-This project is configured for deployment on [Seenode](https://seenode.com), a PaaS similar to Render. See `SEENODE_DEPLOYMENT.md` for detailed deployment instructions.
+This project is configured for deployment on [Render](https://render.com/) as a **Docker** web service. See the **Deploy on Render (Docker)** section in `README.md` and [Render documentation](https://render.com/docs) for platform details.
 
 ### Quick deploy
 
-1. Push code to GitHub
-2. Go to https://cloud.seenode.com
-3. Create a managed PostgreSQL database
-4. Create Web Service, connect your repo
-5. Set port to `8069` and add environment variables
+1. Push code to GitHub (or another Git provider Render supports)
+2. Open [Render Dashboard](https://dashboard.render.com)
+3. Create **Render Postgres** (or any reachable PostgreSQL) and copy the **Internal Database URL** (or external URL if the web service is not on Render’s private network)
+4. Create a **Web Service**, choose **Docker**, connect the repo, set **port `8069`**
+5. Add the environment variables below
 6. Deploy
 
 ### Environment variables
 
 Required:
-- `DATABASE_URL`: Full PostgreSQL connection string from Seenode database dashboard
+- `DATABASE_URL`: Full PostgreSQL connection string (from Render Postgres or your provider)
 - `DB_PASSWORD_ADMIN`: Master password for Odoo database management
 - `DB_LANGUAGE`: Default language (e.g., `es_ES`)
 - `DB_USERNAME`: Default admin username (e.g., `admin`)
@@ -72,13 +72,14 @@ Optional (deploy / Gunicorn):
 
 | File | Purpose |
 |------|---------|
-| `Dockerfile` | Production Docker image. Builds Python 3.12 slim image with wkhtmltopdf, installs dependencies, creates `odoo` user. Used by Seenode to build the container. |
+| `Dockerfile` | Production Docker image. Builds Python 3.12 slim image with wkhtmltopdf, installs dependencies, creates `odoo` user. Used by Render to build the container. |
 | `docker-entrypoint.sh` | Entry point script. Checks if database is initialized (queries `ir_module_module`), runs `odoo-bin db init` on first run or `odoo-bin -u base` on subsequent deploys, then `exec`s Gunicorn. |
 | `odoo-wsgi.py` | WSGI application. Parses `DATABASE_URL` into Odoo config, sets `gevent_port = http_port` (required for WebSocket auth), wraps `odoo.http.root` with `WebSocketMiddleware`. |
 | `gunicorn.conf.py` | Gunicorn configuration. All settings read from env vars. Uses `GeventWorkerWithSocket` worker class by default. Sets `preload_app=False` (required with gevent + WebSockets). Uses `/tmp` for pidfile and worker temp for PaaS compatibility. |
 | `gunicorn_gevent_handler.py` | Custom gevent Gunicorn worker (`GeventWorkerWithSocket`) and handler (`GeventWSGIHandler`). Injects the raw TCP socket into `environ['socket']` so Odoo can take over the connection for WebSocket upgrades. Suppresses expected `EBADF` errors after upgrade. |
-| `.env.example` | Environment variable templates with Seenode-specific examples. |
-| `SEENODE_DEPLOYMENT.md` | Step-by-step deployment guide for Seenode. |
+| `.env.example` | Environment variable templates (including values useful for local dev and Render). |
+| `README.md` | Includes **Deploy on Render (Docker)** steps and `ODOO_ADDONS_PATH` notes. |
+| `SEENODE_DEPLOYMENT.md` | Legacy step-by-step guide for Seenode; Render flow is documented in `README.md`. |
 
 ## WebSocket notes
 
@@ -86,15 +87,14 @@ Odoo's WebSocket endpoint (`/websocket`) requires:
 1. Gunicorn worker class must be `gevent` (specifically `GeventWorkerWithSocket` here).
 2. `gevent_port` in Odoo config must equal the HTTP port (set in `odoo-wsgi.py`).
 3. `preload_app` must be `False`.
-4. Seenode's load balancer forwards WebSocket headers automatically.
+4. Render’s edge/proxy supports WebSockets for web services (see [WebSocket connections](https://render.com/docs/websocket)).
 
 The custom handler in `gunicorn_gevent_handler.py` exists specifically to solve the socket-handoff problem: after Odoo responds `101 Switching Protocols`, it takes over the raw socket. Gunicorn then sees `EBADF` when it tries to read the next request — this is expected and suppressed.
 
 ## Notes
 
-- **RAM**: Prefer **≥1GB** for the web service on PaaS. `512MB` commonly hits OOM during deploy (`-u base`) or when browsing with multiple workers. See `SEENODE_DEPLOYMENT.md` (Memory requirements, troubleshooting).
-- **No persistent volumes**: Seenode does not currently offer persistent disks. Configure attachment storage to use the database (default) or external S3-compatible storage.
-- **Zero-downtime deploys**: Seenode keeps the old instance running while the new one starts and passes health checks.
+- **Filestore / disks**: By default the service filesystem is ephemeral. Use database attachment storage (default), [Render disks](https://render.com/docs/disks), or external S3-compatible storage for a durable filestore.
+- **Deploys**: Render performs rolling deploys so a new instance can become healthy before traffic moves over (plan and service type affect exact behavior; see Render docs).
 - **Database upgrades**: Every deploy runs `odoo-bin -u base` to update the database schema. This takes 2-3 minutes on subsequent deploys.
-- **Health checks**: The Dockerfile includes a healthcheck on `/web/health`. Seenode uses this to determine deployment health.
-- **Logs**: All logs go to stdout/stderr and are visible in the Seenode dashboard. No file-based logging in production.
+- **Health checks**: The Dockerfile includes a healthcheck on `/web/health`. Configure a matching HTTP health check path in the Render service if you rely on it for deploy gates.
+- **Logs**: All logs go to stdout/stderr and appear in the Render dashboard. No file-based logging in production.
