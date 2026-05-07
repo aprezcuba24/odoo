@@ -103,13 +103,51 @@ def post_fork(server, worker):
     """Hook llamado después de hacer fork del worker"""
     pass
 
+def _patch_fsspec_sync_for_gevent():
+    """fsspec/gevent: drop sync()'s false-positive running-loop check.
+
+    Under monkey.patch_all() fsspec's IO loop runs in a greenlet on the same
+    OS thread as the calling greenlet, so asyncio (per-OS-thread, C level)
+    reports it as the running loop. The calling greenlet is not actually
+    inside the loop's iteration; threading.Event.wait() is gevent-patched and
+    yields cooperatively, so the IO-loop greenlet processes the submitted
+    coroutine and signals back. See fsspec/filesystem_spec#1701.
+    """
+    import asyncio
+    import threading
+    import fsspec.asyn as _asyn
+
+    def sync_no_running_loop_check(loop, func, *args, timeout=None, **kwargs):
+        timeout = timeout if timeout else None
+        if loop is None or loop.is_closed():
+            raise RuntimeError("Loop is not running")
+        coro = func(*args, **kwargs)
+        result = [None]
+        event = threading.Event()
+        asyncio.run_coroutine_threadsafe(
+            _asyn._runner(event, coro, result, timeout), loop
+        )
+        while True:
+            if event.wait(1):
+                break
+            if timeout is not None:
+                timeout -= 1
+                if timeout < 0:
+                    raise _asyn.FSTimeoutError
+        rr = result[0]
+        if isinstance(rr, asyncio.TimeoutError):
+            raise _asyn.FSTimeoutError from rr
+        if isinstance(rr, BaseException):
+            raise rr
+        return rr
+
+    _asyn.sync = sync_no_running_loop_check
+
+
 def post_worker_init(worker):
     """Hook llamado después de que el worker inicializa la aplicación"""
-    # Asegurar que gevent esté correctamente configurado
-    if worker.cfg.worker_class == 'gevent':
-        import gevent
-        import gevent.monkey
-        # El monkey patching ya debería estar hecho por Gunicorn, pero verificamos
+    if issubclass(worker.__class__, __import__("gunicorn.workers.ggevent", fromlist=["GeventWorker"]).GeventWorker):
+        _patch_fsspec_sync_for_gevent()
 
 def worker_abort(worker):
     """Hook llamado cuando un worker recibe SIGABRT"""

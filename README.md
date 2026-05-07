@@ -55,11 +55,13 @@ Render’s platform overview and docs: [render.com](https://render.com/) and [Re
 ### Dev Container (recommended)
 
 1. Open the repo in VS Code / Cursor and **Reopen in Container** (uses [`.devcontainer/docker-compose.yml`](.devcontainer/docker-compose.yml)).
-2. The app container sets `ODOO_ADDONS_PATH` and **`ODOO_DATA_DIR=/app/.odoo_data`** (writable filestore on the bind mount). The service runs:
+2. The app container sets `ODOO_ADDONS_PATH`, **`ODOO_DATA_DIR=/app/.odoo_data`** (writable filestore on the bind mount), and **`ODOO_LIMIT_TIME_REAL=0`** so asset-bundle requests are not aborted after 120s (needed when attachments go to remote storage via `fs_attachment`). The service runs:
 
    ```bash
    python3 odoo-bin --dev=all -d odoo
    ```
+
+   Outside this compose stack, pass `--limit-time-real=0` (or export `ODOO_LIMIT_TIME_REAL=0`) if the web UI hangs on load while logs show “virtual real time limit … reached” on `/web/assets/...`.
 
 3. Open `http://localhost:8069`. Create the database **`odoo`** once (manager UI or `odoo-bin db … init odoo`) if it does not exist. Postgres user/password in compose: `odoo` / `odoo`.
 

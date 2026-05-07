@@ -10,11 +10,13 @@ Odoo 19.0 — a Python ERP/business-apps framework — deployed as a Docker cont
 
 ### Local (devcontainer)
 
-Open in VS Code and reopen in container. This spins up an Odoo app container + a local PostgreSQL 16 container (defined in `.devcontainer/docker-compose.yml`). Odoo runs directly (no Gunicorn):
+Open in VS Code and reopen in container. This spins up an Odoo app container + a local PostgreSQL 16 container (defined in `.devcontainer/docker-compose.yml`). Compose sets `ODOO_LIMIT_TIME_REAL=0` so slow asset generation + `fs_attachment` S3 uploads are not killed by Odoo’s default 120s per-request limit (which otherwise reloads the server and blanks the UI). Odoo runs directly (no Gunicorn):
 
 ```bash
 python3 odoo-bin --dev=all
 ```
+
+If running Odoo without that env, use `python3 odoo-bin --dev=all --limit-time-real=0` when remote attachment storage causes long `/web/assets/...` requests.
 
 The devcontainer mounts the repo as a volume so edits are live.
 
