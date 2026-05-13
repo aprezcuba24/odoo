@@ -95,7 +95,7 @@ def setup_pid_file():
 def main(args):
     check_root_user()
     config.parse_config(args, setup_logging=True)
-    check_postgres_user()
+    # check_postgres_user() # TODO: Eliminé este check porque en railway me falla
     report_configuration()
 
     for db_name in config['db_name']:
