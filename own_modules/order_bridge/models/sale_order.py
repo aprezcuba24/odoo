@@ -1,7 +1,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import logging
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools.float_utils import float_compare
+
+from odoo.addons.order_bridge.utils import order_stock
 from odoo.addons.order_bridge.utils.constant import (
     DEFAULT_STORE_STATE,
     STATE_CANCELED,
@@ -12,6 +17,8 @@ from odoo.addons.order_bridge.utils.constant import (
     ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
 )
 from odoo.addons.order_bridge.utils.listerners import order_bridge_store_state_changed
+
+_logger = logging.getLogger(__name__)
 
 
 class SaleOrder(models.Model):
@@ -58,20 +65,57 @@ class SaleOrder(models.Model):
         index=True,
     )
 
+    def _order_bridge_reserve_stock_moves(self):
+        """Reserve stock moves greedily from sublocations (highest free quantity first)."""
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
+        Location = self.env['stock.location']
+        for order in self:
+            warehouse = order.warehouse_id
+            if not warehouse:
+                continue
+            stock_locs = Location.search([('id', 'child_of', warehouse.view_location_id.id)])
+            moves = order.picking_ids.move_ids.filtered(
+                lambda m: m.state in ('confirmed', 'partially_available', 'waiting')
+                and m.product_id.is_storable
+                and m.location_id in stock_locs,
+            )
+            for move in moves:
+                if move.move_line_ids:
+                    move._do_unreserve()
+                remaining = move.product_qty - move.quantity
+                for location, free_qty in order_stock.warehouse_locations_by_free_qty(
+                    self.env, move.product_id, warehouse,
+                ):
+                    if float_compare(remaining, 0.0, precision_digits=precision) <= 0:
+                        break
+                    taken = move._update_reserved_quantity(
+                        min(remaining, free_qty), location, strict=True,
+                    )
+                    remaining -= taken
+                if float_compare(remaining, 0.0, precision_digits=precision) > 0:
+                    _logger.warning(
+                        'order_bridge: reserva incompleta move=%s producto=%s falta=%.2f',
+                        move.id,
+                        move.product_id.display_name,
+                        remaining,
+                    )
+
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""
-        bridge = self.filtered(
-            lambda o: o.order_bridge_origin in ('app', 'admin')
-            and o.state in ('draft', 'sent')
-            and not o.locked
+        self.ensure_one()
+        if (
+            self.order_bridge_origin not in ('app', 'admin')
+            or self.state not in ('draft', 'sent')
+            or self.locked
+        ):
+            return
+        lines = self.order_line.filtered(
+            lambda l: not l.display_type and not l.is_downpayment and l.product_id
         )
-        for order in bridge:
-            lines = order.order_line.filtered(
-                lambda l: not l.display_type and not l.is_downpayment and l.product_id
-            )
-            if not lines:
-                continue
-            order.action_confirm()
+        if not lines:
+            return
+        self.action_confirm()
+        self._order_bridge_reserve_stock_moves()
 
     def _order_bridge_check_store_state_transition(self, old_ss, new_ss):
         self.ensure_one()
@@ -136,24 +180,19 @@ class SaleOrder(models.Model):
         PartnerAddress = self.env['order_bridge.partner_address'].sudo()
         Snapshot = self.env['order_bridge.order_address_snapshot'].sudo()
         for order, vals in zip(records, vals_list):
-            if vals.get('order_bridge_origin') != 'app':
-                continue
             pid = vals.get('partner_id')
             if pid:
                 if isinstance(pid, (list, tuple)):
                     pid = pid[0]
-            else:
-                continue
-            addr = PartnerAddress.search([('partner_id', '=', pid)], limit=1)
-            if not addr:
-                continue
-            snap = Snapshot.create({
-                'sale_order_id': order.id,
-                'street': addr.street or '',
-                'neighborhood_id': addr.neighborhood_id.id if addr.neighborhood_id else False,
-                'municipality_id': addr.municipality_id.id if addr.municipality_id else False,
-                'state': addr.state or '',
-            })
-            order.write({'order_bridge_snapshot_address_id': snap.id})
-        records._order_bridge_try_confirm()
+                addr = PartnerAddress.search([('partner_id', '=', pid)], limit=1)
+                if addr:
+                    snap = Snapshot.create({
+                        'sale_order_id': order.id,
+                        'street': addr.street or '',
+                        'neighborhood_id': addr.neighborhood_id.id if addr.neighborhood_id else False,
+                        'municipality_id': addr.municipality_id.id if addr.municipality_id else False,
+                        'state': addr.state or '',
+                    })
+                    order.write({'order_bridge_snapshot_address_id': snap.id})
+            order._order_bridge_try_confirm()
         return records

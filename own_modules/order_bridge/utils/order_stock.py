@@ -17,6 +17,17 @@ class InsufficientStockError(Exception):
         super().__init__('Stock insuficiente')
 
 
+def get_order_bridge_warehouse(env, catalog_company):
+    """Default warehouse that ``sale.order`` would use for this company."""
+    env = env(su=True)
+    so = env['sale.order'].with_company(catalog_company).new({
+        'company_id': catalog_company.id,
+    })
+    return so.warehouse_id or env['stock.warehouse'].search(
+        [('company_id', '=', catalog_company.id)], limit=1,
+    )
+
+
 def get_catalog_warehouse(env, catalog_company):
     """Return ``(stock_module_installed, warehouse, precision)`` for the catalog company.
 
@@ -28,10 +39,7 @@ def get_catalog_warehouse(env, catalog_company):
     if 'stock.warehouse' not in env:
         return False, None, 0
     precision = env['decimal.precision'].precision_get('Product Unit')
-    warehouse = env['stock.warehouse'].search(
-        [('company_id', '=', catalog_company.id)],
-        limit=1,
-    )
+    warehouse = get_order_bridge_warehouse(env, catalog_company)
     return True, warehouse, precision
 
 
@@ -88,3 +96,27 @@ def validate_order_lines_stock(env, catalog_company, product_domain, lines):
             })
     if insufficient:
         raise InsufficientStockError(insufficient)
+
+
+def warehouse_locations_by_free_qty(env, product, warehouse):
+    """Return ``[(location, free_qty), ...]`` under the warehouse stock tree, highest free first."""
+    env = env(su=True)
+    precision = env['decimal.precision'].precision_get('Product Unit')
+    locs = env['stock.location'].search([
+        ('id', 'child_of', warehouse.view_location_id.id),
+        ('usage', '=', 'internal'),
+    ])
+    if not locs:
+        return []
+    rows = env['stock.quant']._read_group(
+        [('product_id', '=', product.id), ('location_id', 'in', locs.ids)],
+        groupby=['location_id'],
+        aggregates=['quantity:sum', 'reserved_quantity:sum'],
+    )
+    free = [
+        (loc, qty - reserved)
+        for loc, qty, reserved in rows
+        if float_compare(qty - reserved, 0.0, precision_digits=precision) > 0
+    ]
+    free.sort(key=lambda item: item[1], reverse=True)
+    return free

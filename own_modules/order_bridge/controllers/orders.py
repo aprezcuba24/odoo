@@ -16,6 +16,7 @@ from ..utils.decorators import (
     catalog_context_for_partner,
     order_create_body_validation_context,
 )
+from ..utils.order_stock import get_order_bridge_warehouse
 from ..utils.serialization import (
     order_cancel_response,
     orders_page_response,
@@ -53,14 +54,18 @@ class OrdersController(http.Controller):
         line_cmds, line_error = self._build_line_commands(body.lines, product_domain)
         if line_error:
             return line_error
+        order_vals = {
+            'partner_id': partner.id,
+            'company_id': _catalog_company.id,
+            'order_bridge_origin': 'app',
+            'order_bridge_device_id': api_device.id,
+            'order_line': line_cmds,
+        }
+        warehouse = get_order_bridge_warehouse(request.env, _catalog_company)
+        if warehouse:
+            order_vals['warehouse_id'] = warehouse.id
         try:
-            order = request.env['sale.order'].sudo().create({
-                'partner_id': partner.id,
-                'company_id': _catalog_company.id,
-                'order_bridge_origin': 'app',
-                'order_bridge_device_id': api_device.id,
-                'order_line': line_cmds,
-            })
+            order = request.env['sale.order'].sudo().create(order_vals)
         except UserError as e:
             return api_json_response(
                 MessageErrorResponse(error='validation', message=str(e)),

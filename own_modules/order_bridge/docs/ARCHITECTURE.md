@@ -71,11 +71,18 @@ El módulo depende de **sale_stock**. Al crear un pedido por API, `sale.order` s
 
 - **Tipo:** `consu` en la plantilla (**Bienes** en la UI). No aplica a **Servicio** ni **Combo** (Odoo fuerza `is_storable` a falso si el tipo no es bienes).
 - **Rastrear inventario** (`is_storable` / *Track Inventory*): debe estar activo en `product.template` para que el producto sea tratado como inventariable. Si está desactivado, no se exige stock libre en la validación Pydantic (`validate_order_lines_stock` omite esas líneas) y no se generan movimientos de stock como producto almacenable.
-- **Almacén:** debe existir al menos un `stock.warehouse` para la compañía del catálogo; si no, la API responde error al validar el pedido.
+- **Almacén:** debe existir al menos un `stock.warehouse` para la compañía del catálogo; si no, la API responde error al validar el pedido. La validación y la creación del pedido usan el mismo almacén (`get_order_bridge_warehouse`, alineado con el `warehouse_id` por defecto de `sale.order`).
+
+**Validación agregada vs reserva multi-ubicación**
+
+- La validación Pydantic (`validate_order_lines_stock`) consulta `free_qty` con `warehouse_id` en contexto: suma el stock libre en **todas** las sububicaciones internas del almacén (árbol bajo `view_location_id`).
+- Tras `action_confirm`, `_order_bridge_reserve_stock_moves` reserva de forma **greedy** en los movimientos cuyo origen está en ese árbol de stock (incluye albarán **PICK** con entrega en 2 pasos, no solo **OUT** en 1 paso): lista sububicaciones con stock libre, las ordena de **mayor a menor** cantidad disponible y llama a `stock.move._update_reserved_quantity` por ubicación hasta cubrir la línea.
+- El `free_qty` que ve el **siguiente** pedido API baja cuando los `stock.quant` tienen `reserved_quantity` tras esa reserva, no solo por el estado `sale` del pedido.
+- Si el stock está fuera del árbol `view_location_id` del almacén, ni la validación ni la reserva lo consideran (revisar jerarquía de ubicaciones en Inventario).
 
 **Momento en que “baja” la cantidad a mano**
 
-- Tras la confirmación, `sale_stock` crea las entregas; la **cantidad física disponible** suele reducirse cuando el **albarán de salida se valida** (estado hecho), no solo al confirmar el pedido (puede haber reserva intermedia según configuración de la ruta y reglas de almacén).
+- Tras confirmar y asignar, la cantidad **libre** (`free_qty`) ya refleja la reserva en quants. La cantidad **física** (`quantity` en ubicación) baja cuando el albarán de salida se valida (estado hecho).
 
 ## Modelos de datos
 
