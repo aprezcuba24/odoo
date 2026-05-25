@@ -236,6 +236,169 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(products[0].get('product_id'), product.id)
         self.assertEqual(products[0].get('available_qty'), 0.0)
 
+    def test_orders_post_storable_two_sublocations_reserves_and_lowers_free_qty(self):
+        """Stock split across two internal locations: validate aggregate, reserve on confirm."""
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011226', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        tmpl = self.env['product.template'].create({
+            'name': 'Storable OB two sublocs',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'is_storable': True,
+            'list_price': 10.0,
+        })
+        product = tmpl.product_variant_id
+        wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        self.assertTrue(wh)
+        Location = self.env['stock.location']
+        subloc_a = Location.create({
+            'name': 'OB Shelf A',
+            'location_id': wh.lot_stock_id.id,
+            'usage': 'internal',
+        })
+        subloc_b = Location.create({
+            'name': 'OB Shelf B',
+            'location_id': wh.lot_stock_id.id,
+            'usage': 'internal',
+        })
+        Quant = self.env['stock.quant'].with_context(inventory_mode=True)
+        Quant.create({
+            'product_id': product.id,
+            'location_id': subloc_a.id,
+            'inventory_quantity': 3.0,
+        }).action_apply_inventory()
+        Quant.create({
+            'product_id': product.id,
+            'location_id': subloc_b.id,
+            'inventory_quantity': 7.0,
+        }).action_apply_inventory()
+
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
+        free_before = product.with_context(warehouse_id=wh.id).free_qty
+        self.assertEqual(free_before, 10.0)
+
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        ok = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': product.id, 'qty': 8}]}),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(ok.status_code, 200, ok.text)
+        created = json.loads(ok.text)
+        self.assertEqual(created.get('state'), 'sale')
+
+        order = self.env['sale.order'].browse(created['id'])
+        self.assertEqual(order.warehouse_id, wh)
+        stock_locs = Location.search([('id', 'child_of', wh.view_location_id.id)])
+        stock_moves = order.picking_ids.move_ids.filtered(
+            lambda m: m.product_id == product and m.location_id in stock_locs,
+        )
+        self.assertTrue(stock_moves)
+        move_lines = stock_moves.move_line_ids
+        self.assertTrue(move_lines)
+        reserved_qty = sum(move_lines.mapped('quantity'))
+        self.assertAlmostEqual(reserved_qty, 8.0, places=precision)
+        reserved_locations = move_lines.location_id
+        self.assertGreaterEqual(len(reserved_locations), 2)
+        self.assertIn(subloc_a, reserved_locations)
+        self.assertIn(subloc_b, reserved_locations)
+
+        free_after = product.with_context(warehouse_id=wh.id).free_qty
+        self.assertAlmostEqual(free_after, 2.0, places=precision)
+
+        bad = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': product.id, 'qty': 3}]}),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(bad.status_code, 400, bad.text)
+        payload = json.loads(bad.text)
+        self.assertEqual(payload.get('error'), 'insufficient_stock')
+        self.assertEqual(payload['products'][0]['product_id'], product.id)
+        self.assertAlmostEqual(payload['products'][0]['available_qty'], 2.0, places=precision)
+
+    def test_orders_post_storable_two_sublocations_pick_ship_warehouse(self):
+        """With pick+ship, reservation runs on PICK (internal), not only outgoing."""
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011227', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        self.assertTrue(wh)
+        original_steps = wh.delivery_steps
+        if original_steps != 'pick_ship':
+            wh.delivery_steps = 'pick_ship'
+
+        tmpl = self.env['product.template'].create({
+            'name': 'Storable OB pick ship sublocs',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'is_storable': True,
+            'list_price': 10.0,
+        })
+        product = tmpl.product_variant_id
+        Location = self.env['stock.location']
+        subloc_a = Location.create({
+            'name': 'OB Pick Shelf A',
+            'location_id': wh.lot_stock_id.id,
+            'usage': 'internal',
+        })
+        subloc_b = Location.create({
+            'name': 'OB Pick Shelf B',
+            'location_id': wh.lot_stock_id.id,
+            'usage': 'internal',
+        })
+        Quant = self.env['stock.quant'].with_context(inventory_mode=True)
+        Quant.create({
+            'product_id': product.id,
+            'location_id': subloc_a.id,
+            'inventory_quantity': 3.0,
+        }).action_apply_inventory()
+        Quant.create({
+            'product_id': product.id,
+            'location_id': subloc_b.id,
+            'inventory_quantity': 7.0,
+        }).action_apply_inventory()
+
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        ok = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({'lines': [{'product_id': product.id, 'qty': 8}]}),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(ok.status_code, 200, ok.text)
+        order = self.env['sale.order'].browse(json.loads(ok.text)['id'])
+        pick_picking = order.picking_ids.filtered(
+            lambda p: p.picking_type_id == wh.pick_type_id,
+        )
+        self.assertTrue(pick_picking)
+        pick_moves = pick_picking.move_ids.filtered(lambda m: m.product_id == product)
+        self.assertTrue(pick_moves)
+        self.assertGreater(sum(pick_moves.move_line_ids.mapped('quantity')), 0.0)
+        self.assertAlmostEqual(
+            product.with_context(warehouse_id=wh.id).free_qty,
+            2.0,
+            places=precision,
+        )
+
+        if original_steps != 'pick_ship':
+            wh.delivery_steps = original_steps
+
     def test_orders_get_list_includes_delivery_fields(self):
         key = str(uuid.uuid4())
         self.url_open(
