@@ -11,6 +11,17 @@
                     <label for="order_bridge_visible"/>
                 </span>
             </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Tienda Apk" name="order_bridge_store_tab" groups="sales_team.group_sale_salesman">
+                    <separator string="Enlaces en la tienda"/>
+                    <field name="product_variant_ids" nolabel="1" colspan="2">
+                        <list create="false" delete="false" edit="false" no_open="1">
+                            <field name="display_name" string="Variante"/>
+                            <field name="order_bridge_store_link" string="Enlace en la tienda"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
         </field>
     </record>
 

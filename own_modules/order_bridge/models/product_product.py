@@ -1,10 +1,19 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import models
+from odoo import fields, models
 
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
+
+    order_bridge_store_link = fields.Char(
+        string='Enlace Tienda Apk',
+        compute='_compute_order_bridge_store_link',
+    )
+
+    def _compute_order_bridge_store_link(self):
+        for product in self:
+            product.order_bridge_store_link = f'/product/{product.id}' if product.id else False
 
     def _can_return_content(self, field_name=None, access_token=None):
         """Allow public ``/web/image`` for Tienda Apk catalog or lines of pedidos API."""
