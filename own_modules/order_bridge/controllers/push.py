@@ -74,9 +74,17 @@ class PushController(http.Controller):
     @api_validated_json_body(PushTopicsPatchBody)
     def push_topics(self, body=None, api_device=None, api_partner=None, **kwargs):
         _ = api_partner
-        rec = request.env['order_bridge.push_token'].search(
+        rec = request.env['order_bridge.push_token'].sudo().search(
             [('device_id', '=', api_device.id)], limit=1
         )
+        if not rec:
+            return api_json_response(
+                MessageErrorResponse(
+                    error='validation',
+                    message='No hay token FCM registrado para este dispositivo; use POST /push/token antes.',
+                ),
+                400,
+            )
         fcm = rec.fcm_token
         try:
             fcm_client.ensure_firebase_app()

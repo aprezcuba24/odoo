@@ -137,6 +137,58 @@ Configuration: [`ruff.toml`](ruff.toml).
 
 ---
 
+## Tests (`order_bridge`)
+
+Start the dev server first (e.g. `python3 odoo-bin --dev=all -d odoo` on port **8069**). Then run tests in **another terminal** so logs stay separate:
+
+[`own_modules/order_bridge/scripts/run_tests.sh`](own_modules/order_bridge/scripts/run_tests.sh)
+
+The script uses `odoo-bin shell` and Odoo’s `run_tests()` helper. It does **not** run `-u order_bridge` or bind to port 8069; the test harness uses **8070** by default. By default it only prints a **summary** (`passed` / `failed` / `total`); Odoo logs go to a temp file (shown on failure). Use `--verbose` for full Odoo output on screen.
+
+```bash
+# All order_bridge tests
+./own_modules/order_bridge/scripts/run_tests.sh
+
+# Order-created listener only
+./own_modules/order_bridge/scripts/run_tests.sh listener
+
+# Other shortcuts
+./own_modules/order_bridge/scripts/run_tests.sh store   # store state transitions
+./own_modules/order_bridge/scripts/run_tests.sh api     # HTTP API (HttpCase on port 8070)
+```
+
+Options:
+
+```bash
+./own_modules/order_bridge/scripts/run_tests.sh listener --db odoo
+./own_modules/order_bridge/scripts/run_tests.sh --tags '/order_bridge:TestOrderBridgeOrderCreatedListener'
+./own_modules/order_bridge/scripts/run_tests.sh --help
+./own_modules/order_bridge/scripts/run_tests.sh listener --verbose
+```
+
+Defaults (devcontainer):
+
+| Setting | Value |
+|---------|--------|
+| Database | `odoo` (override with `--db` or `ODOO_DB`) |
+| Test HTTP port | `8070` (harness only; dev server stays on 8069; override with `--http-port` or `ODOO_TEST_HTTP_PORT`) |
+| Log output | summary only (`--verbose` for full Odoo logs on screen) |
+| Module update | none — upgrade `order_bridge` on the running server after schema changes |
+| Addons path | `odoo/addons,addons,own_modules,oca` (override with `ODOO_ADDONS_PATH`) |
+
+Equivalent manual command:
+
+```bash
+python3 odoo-bin shell -d odoo --http-port 8070 \
+  --addons-path=odoo/addons,addons,own_modules,oca <<'PY'
+from odoo.tests.shell import run_tests
+report = run_tests(env, '/order_bridge:TestOrderBridgeOrderCreatedListener', modules=['order_bridge'])
+raise SystemExit(0 if report.wasSuccessful() else 1)
+PY
+```
+
+---
+
 ## Troubleshooting: broken CSS/JS (assets) locally
 
 **1. Writable data directory**

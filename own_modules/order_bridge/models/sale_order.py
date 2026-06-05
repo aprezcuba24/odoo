@@ -16,7 +16,8 @@ from odoo.addons.order_bridge.utils.constant import (
     STORE_STATE_VALID_CHOICES,
     ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
 )
-from odoo.addons.order_bridge.utils.listerners import order_bridge_store_state_changed
+from odoo.addons.order_bridge.listeners.order_created_listener import order_bridge_order_created
+from odoo.addons.order_bridge.listeners.store_state_listener import order_bridge_store_state_changed
 
 _logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class SaleOrder(models.Model):
     _inherit = ['sale.order', 'order_bridge.dispatch.mixin']
     _LISTENERS = [
         (order_bridge_store_state_changed, 'order_bridge_store_state_changed'),
+        (order_bridge_order_created, 'order_bridge_order_created'),
     ]
 
     order_bridge_origin = fields.Selection(
@@ -195,4 +197,6 @@ class SaleOrder(models.Model):
                     })
                     order.write({'order_bridge_snapshot_address_id': snap.id})
             order._order_bridge_try_confirm()
+            if order.order_bridge_origin == 'app':
+                order.on_event('order_bridge_order_created', None, order)
         return records
