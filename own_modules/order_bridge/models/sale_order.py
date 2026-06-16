@@ -2,8 +2,9 @@
 
 import logging
 
-from odoo import _, api, fields, models
+from odoo import SUPERUSER_ID, _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.modules.registry import Registry
 from odoo.tools.float_utils import float_compare
 
 from odoo.addons.order_bridge.utils import order_stock
@@ -52,6 +53,12 @@ class SaleOrder(models.Model):
         readonly=True,
     )
     order_bridge_ref = fields.Char(string='Referencia tienda', copy=False, index=True)
+    order_bridge_client_order_id = fields.Char(
+        string='Id. pedido cliente',
+        copy=False,
+        index=True,
+        help='Clave de idempotencia enviada por la app móvil al crear el pedido.',
+    )
     order_bridge_snapshot_address_id = fields.Many2one(
         'order_bridge.order_address_snapshot',
         string='Instantánea de dirección de entrega',
@@ -66,6 +73,38 @@ class SaleOrder(models.Model):
         tracking=True,
         index=True,
     )
+
+    _sql_constraints = [
+        (
+            'order_bridge_client_order_id_device_unique',
+            'unique(order_bridge_device_id, order_bridge_client_order_id)',
+            'Ya existe un pedido con el mismo identificador de cliente para este dispositivo.',
+        ),
+    ]
+
+    @api.model
+    def order_bridge_find_idempotent(self, device, body):
+        """Return existing order for device + body.client_order_id, or empty recordset."""
+        client_order_id = getattr(body, 'client_order_id', None)
+        if not client_order_id:
+            return self.browse()
+        return self.search([
+            ('order_bridge_device_id', '=', device.id),
+            ('order_bridge_client_order_id', '=', client_order_id),
+        ], limit=1)
+
+    def _order_bridge_schedule_order_created_notification(self):
+        """Send Telegram after commit so rolled-back orders do not notify."""
+        self.ensure_one()
+        order_id = self.id
+        dbname = self.env.cr.dbname
+
+        @self.env.cr.postcommit.add
+        def _send_order_created_telegram():
+            with Registry(dbname).cursor() as cr:
+                order = api.Environment(cr, SUPERUSER_ID, {})['sale.order'].browse(order_id).exists()
+                if order:
+                    order.on_event('order_bridge_order_created', None, order)
 
     def _order_bridge_reserve_stock_moves(self):
         """Reserve stock moves greedily from sublocations (highest free quantity first)."""
@@ -198,5 +237,5 @@ class SaleOrder(models.Model):
                     order.write({'order_bridge_snapshot_address_id': snap.id})
             order._order_bridge_try_confirm()
             if order.order_bridge_origin == 'app':
-                order.on_event('order_bridge_order_created', None, order)
+                order._order_bridge_schedule_order_created_notification()
         return records

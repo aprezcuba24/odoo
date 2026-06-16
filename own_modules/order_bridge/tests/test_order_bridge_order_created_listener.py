@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from odoo.addons.order_bridge.models import sale_order as sale_order_module
 from odoo.fields import Command
@@ -9,16 +9,6 @@ from odoo.tests.common import TransactionCase, tagged
 
 @tagged('post_install', '-at_install')
 class TestOrderBridgeOrderCreatedListener(TransactionCase):
-    def _patch_order_created_listener(self):
-        mock_listener = MagicMock()
-        SaleOrder = sale_order_module.SaleOrder
-        original = SaleOrder._LISTENERS
-        SaleOrder._LISTENERS = [
-            (mock_listener, 'order_bridge_order_created'),
-            *[(fn, name) for fn, name in original if name != 'order_bridge_order_created'],
-        ]
-        return mock_listener, original, SaleOrder
-
     def _create_app_order(self):
         partner = self.env['res.partner'].create({'name': 'Test', 'phone': '+52999001122'})
         device = self.env['order_bridge.device'].create({
@@ -38,35 +28,59 @@ class TestOrderBridgeOrderCreatedListener(TransactionCase):
             'order_line': [Command.create({'product_id': product.id, 'product_uom_qty': 1.0})],
         })
 
-    def test_order_created_listener_called_for_app_origin(self):
-        mock_listener, original, SaleOrder = self._patch_order_created_listener()
-        try:
-            order = self._create_app_order()
-            mock_listener.assert_called_once()
-            call_order, old_entity, new_entity = mock_listener.call_args[0]
-            self.assertEqual(call_order, order)
-            self.assertIsNone(old_entity)
-            self.assertEqual(new_entity, order)
-        finally:
-            SaleOrder._LISTENERS = original
+    @patch.object(
+        sale_order_module.SaleOrder,
+        '_order_bridge_schedule_order_created_notification',
+    )
+    def test_create_schedules_notification_for_app_origin(self, mock_schedule):
+        self._create_app_order()
+        mock_schedule.assert_called_once()
 
-    def test_order_created_listener_not_called_for_admin_origin(self):
-        mock_listener, original, SaleOrder = self._patch_order_created_listener()
-        try:
-            partner = self.env['res.partner'].create({'name': 'Admin test'})
-            self.env['sale.order'].create({
-                'partner_id': partner.id,
-                'order_bridge_origin': 'admin',
-            })
-            mock_listener.assert_not_called()
-        finally:
-            SaleOrder._LISTENERS = original
+    @patch.object(
+        sale_order_module.SaleOrder,
+        '_order_bridge_schedule_order_created_notification',
+    )
+    def test_create_does_not_schedule_for_admin_origin(self, mock_schedule):
+        partner = self.env['res.partner'].create({'name': 'Admin test'})
+        self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'order_bridge_origin': 'admin',
+        })
+        mock_schedule.assert_not_called()
 
-    def test_order_created_listener_not_called_without_bridge_origin(self):
-        mock_listener, original, SaleOrder = self._patch_order_created_listener()
-        try:
-            partner = self.env['res.partner'].create({'name': 'Std sale test'})
-            self.env['sale.order'].create({'partner_id': partner.id})
-            mock_listener.assert_not_called()
-        finally:
-            SaleOrder._LISTENERS = original
+    @patch.object(
+        sale_order_module.SaleOrder,
+        '_order_bridge_schedule_order_created_notification',
+    )
+    def test_create_does_not_schedule_without_bridge_origin(self, mock_schedule):
+        partner = self.env['res.partner'].create({'name': 'Std sale test'})
+        self.env['sale.order'].create({'partner_id': partner.id})
+        mock_schedule.assert_not_called()
+
+    def test_schedule_registers_postcommit_callback(self):
+        order = self._create_app_order()
+        before = len(self.env.cr.postcommit._funcs)
+        order._order_bridge_schedule_order_created_notification()
+        self.assertEqual(len(self.env.cr.postcommit._funcs), before + 1)
+
+    @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
+    @patch('odoo.addons.order_bridge.models.sale_order.api.Environment')
+    @patch('odoo.addons.order_bridge.models.sale_order.Registry')
+    def test_schedule_postcommit_callback_dispatches_event(
+        self, mock_registry, mock_environment, mock_send,
+    ):
+        order = self._create_app_order()
+        before = len(self.env.cr.postcommit._funcs)
+        order._order_bridge_schedule_order_created_notification()
+        self.assertEqual(len(self.env.cr.postcommit._funcs), before + 1)
+        callback = self.env.cr.postcommit._funcs[-1]
+
+        mock_cr = MagicMock()
+        mock_registry.return_value.cursor.return_value.__enter__.return_value = mock_cr
+        mock_registry.return_value.cursor.return_value.__exit__.return_value = False
+        mock_env = self.env
+        mock_environment.return_value = mock_env
+
+        callback()
+        mock_send.assert_called_once()
+        self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.order_bridge_ref)

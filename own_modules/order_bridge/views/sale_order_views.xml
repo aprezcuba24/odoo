@@ -76,6 +76,7 @@
                     <field name="order_bridge_store_state" invisible="not order_bridge_origin"/>
                     <field name="order_bridge_origin"/>
                     <field name="order_bridge_ref" readonly="1"/>
+                    <field name="order_bridge_client_order_id" readonly="1" optional="hide"/>
                     <field name="order_bridge_device_id" options="{'no_create': True}"/>
                     <field name="order_bridge_device_phone_validated" readonly="1"/>
                     <field name="order_bridge_snapshot_address_id" readonly="1" invisible="not order_bridge_snapshot_address_id" options="{'no_create': True}"/>

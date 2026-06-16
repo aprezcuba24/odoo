@@ -94,7 +94,7 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 
 - **`res.company`**: `order_bridge_pos_config_id` → `pos.config` usado por la API para esa compañía.
 - **`res.partner`**: relación a dispositivos; campos calculados almacenados `order_bridge_registered`, `order_bridge_phone_validated`; contador de pedidos del puente (no almacenado).
-- **`sale.order`**: `order_bridge_origin` (`app` | `admin`), `order_bridge_device_id`, `order_bridge_device_phone_validated` (lectura del `phone_validated` del dispositivo vinculado), `order_bridge_ref` (secuencia tipo `OB-00001`), `order_bridge_pos_config_id` (TPV aplicable al crear desde la API).
+- **`sale.order`**: `order_bridge_origin` (`app` | `admin`), `order_bridge_device_id`, `order_bridge_device_phone_validated` (lectura del `phone_validated` del dispositivo vinculado), `order_bridge_ref` (secuencia tipo `OB-00001`), `order_bridge_client_order_id` (idempotencia API), `order_bridge_pos_config_id` (TPV aplicable al crear desde la API).
 
 ## API REST (prefijo `/api/order_bridge/`)
 
@@ -110,6 +110,8 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 | GET | `/orders`, `/orders/<id>` | Bearer |
 | POST | `/orders/<id>/cancel` | Bearer |
 | GET | `/profile` | Bearer |
+
+El cuerpo de creación acepta `client_order_id` (clave de idempotencia, p. ej. UUID v4 generado por la app). Reutilizar el mismo valor en reintentos de red del mismo checkout; el backend devuelve la orden existente sin duplicar. Las creaciones del mismo dispositivo se serializan con un lock transaccional para evitar carreras de stock.
 
 Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la referencia legible se expone como `order_ref` y el origen como `origin`.
 
@@ -175,7 +177,7 @@ flowchart LR
 ## Flujos resumidos
 
 1. **Alta**: Cliente genera `device_key` → POST `/register` con `phone`, `name`, `device_key` → partner + device; admin valida en backend → GET `/status` refleja `validated`.
-2. **Pedido**: POST `/orders` con líneas; se crea `sale.order` con `order_bridge_origin=app` y dispositivo vinculado; la validación mostrada en API y backend refleja el estado actual del dispositivo.
+2. **Pedido**: POST `/orders` con líneas y `client_order_id` (UUID por checkout); se crea `sale.order` con `order_bridge_origin=app` y dispositivo vinculado; la validación mostrada en API y backend refleja el estado actual del dispositivo. Reintentos con el mismo `client_order_id` son idempotentes. Telegram se envía solo tras commit de la transacción HTTP.
 3. **Cambio de dispositivo**: nuevo `device_key` + mismo teléfono → dispositivos previos con ese teléfono inactivos → nuevo pendiente de validación.
 
 ---

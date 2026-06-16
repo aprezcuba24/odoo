@@ -120,8 +120,11 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
     )
     @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
     def test_listener_sends_telegram_for_app_order(self, mock_send):
+        from odoo.addons.order_bridge.listeners.order_created_listener import order_bridge_order_created
+
         mock_send.return_value = True
         order = self._create_order_with_snapshot()
+        order_bridge_order_created(order, None, order)
         mock_send.assert_called_once()
         text = mock_send.call_args[0][0]
         self.assertIn(order.order_bridge_ref, text)
