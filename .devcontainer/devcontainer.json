@@ -21,8 +21,10 @@
 	],
 	// Keep containers running after VS Code shuts down
 	"shutdownAction": "stopCompose",
-	// Run commands after the container is created
-	"postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
+	// docker-compose already uses `sleep infinity`; don't let the CLI replace the command
+	"overrideCommand": false,
+	// Dependencies are installed in the Dockerfile; only re-sync when requirements.txt changes
+	"postCreateCommand": "pip install -r requirements.txt",
 	// Connect as the non-root user created in the Dockerfile
 	"remoteUser": "odoo",
 	// Add the IDs of extensions you want installed when the container is created in the array below.
