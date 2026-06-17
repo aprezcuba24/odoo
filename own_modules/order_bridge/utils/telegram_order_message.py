@@ -37,7 +37,7 @@ def _order_phone(order) -> str:
 
 def format_order_created_message(order) -> str:
     """Construye el texto del mensaje con etiquetas en negrita (*...*)."""
-    ref = escape_markdown(order.order_bridge_ref or order.name or '')
+    ref = escape_markdown(order.name or '')
     client = escape_markdown(order.partner_id.name or '')
     phone = escape_markdown(_order_phone(order))
     address = escape_markdown(_delivery_address_text(order))

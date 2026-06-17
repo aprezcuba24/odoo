@@ -8,4 +8,4 @@ def order_bridge_order_created(order, old_entity, new_entity):
     if order.order_bridge_origin != 'app':
         return
     text = format_order_created_message(order)
-    send_message(text, order_ref=order.order_bridge_ref)
+    send_message(text, order_ref=order.name)

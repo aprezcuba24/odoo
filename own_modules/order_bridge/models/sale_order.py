@@ -236,6 +236,5 @@ class SaleOrder(models.Model):
                     })
                     order.write({'order_bridge_snapshot_address_id': snap.id})
             order._order_bridge_try_confirm()
-            if order.order_bridge_origin == 'app':
-                order._order_bridge_schedule_order_created_notification()
+            order._order_bridge_schedule_order_created_notification()
         return records

@@ -220,6 +220,11 @@ Then hard-refresh the browser (`Ctrl+Shift+R`). If problems persist, run `python
 python3 odoo-bin --dev=all -d odoo
 ```
 
+## Update the database
+```
+python3 odoo-bin -d odoo1 -u order_bridge --stop-after-init --no-http
+```
+
 ### HTTPS in development (optional)
 
 The devcontainer includes a **Caddy** service (`.devcontainer/docker-compose.yml`) that terminates TLS on port 443 and proxies to Odoo on port 8069. Use this when you need secure cookies, passkeys, or any API that requires `https://`.
