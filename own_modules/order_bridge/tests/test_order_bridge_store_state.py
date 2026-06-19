@@ -5,6 +5,13 @@ from odoo.fields import Command
 from odoo.tests.common import TransactionCase, tagged
 from odoo.tools.float_utils import float_is_zero
 
+from odoo.addons.order_bridge.utils.constant import (
+    STORE_STATE_COLOR,
+    STORE_STATE_VALID_CHOICES,
+    store_state_badge_decoration,
+    store_state_btn_class,
+)
+
 
 @tagged('post_install', '-at_install')
 class TestOrderBridgeStoreState(TransactionCase):
@@ -173,3 +180,12 @@ class TestOrderBridgeStoreState(TransactionCase):
         order.action_order_bridge_cancel_store()
         self.assertEqual(order.order_bridge_store_state, 'canceled')
         self.assertEqual(order.state, 'cancel')
+
+    def test_store_state_color_covers_all_choices(self):
+        for state, _label in STORE_STATE_VALID_CHOICES:
+            self.assertIn(state, STORE_STATE_COLOR)
+            self.assertTrue(store_state_btn_class(state).startswith('btn-'))
+            self.assertIn(
+                store_state_badge_decoration(state),
+                ('muted', 'warning', 'info', 'success', 'danger'),
+            )
