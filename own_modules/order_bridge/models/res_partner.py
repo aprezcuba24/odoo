@@ -58,14 +58,19 @@ class ResPartner(models.Model):
             partner.order_bridge_registered = bool(active_devices)
             partner.order_bridge_phone_validated = bool(active_devices.filtered('phone_validated'))
 
-    @api.depends('order_bridge_device_ids')
+    def _order_bridge_store_order_domain(self):
+        self.ensure_one()
+        return [
+            ('partner_id', '=', self.id),
+            ('order_bridge_origin', 'in', ('app', 'admin')),
+        ]
+
     def _compute_order_bridge_order_count(self):
         SaleOrder = self.env['sale.order'].sudo()
         for partner in self:
-            partner.order_bridge_order_count = SaleOrder.search_count([
-                ('partner_id', '=', partner.id),
-                ('order_bridge_origin', '!=', False),
-            ])
+            partner.order_bridge_order_count = SaleOrder.search_count(
+                partner._order_bridge_store_order_domain(),
+            )
 
     def action_open_order_bridge_devices(self):
         self.ensure_one()
@@ -85,7 +90,8 @@ class ResPartner(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'sale.order',
             'view_mode': 'list,form',
-            'domain': [('partner_id', '=', self.id), ('order_bridge_origin', '!=', False)],
+            'view_id': self.env.ref('order_bridge.view_order_tree_order_bridge_store').id,
+            'domain': self._order_bridge_store_order_domain(),
         }
 
     def action_order_bridge_fcm_send_wizard(self):
