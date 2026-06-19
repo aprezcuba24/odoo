@@ -49,6 +49,7 @@ class OrderBridgeDevice(models.Model):
     registration_date = fields.Datetime(default=fields.Datetime.now, required=True)
     last_activity = fields.Datetime()
     device_info = fields.Char(string='Información del dispositivo')
+    apk_version = fields.Char(string='Versión APK')
 
     _sql_constraints = [
         ('device_key_unique', 'unique(device_key)', 'La clave del dispositivo debe ser única.'),
@@ -59,6 +60,19 @@ class OrderBridgeDevice(models.Model):
 
     def action_revoke_validation(self):
         self.write({'phone_validated': False})
+
+    @api.model
+    def order_bridge_sync_apk_version(self, device_key, apk_version):
+        """Persist X-App-Version when it changes for the given device_key."""
+        if not device_key or not apk_version:
+            return
+        device_key = str(device_key).strip()
+        apk_version = str(apk_version).strip()
+        if not device_key or not apk_version:
+            return
+        device = self.sudo().search([('device_key', '=', device_key)], limit=1)
+        if device and device.apk_version != apk_version:
+            device.write({'apk_version': apk_version})
 
     def _deactivate_other_devices_for_phone(self, normalized_phone, keep_key=None):
         """One phone = one active device. Deactivate others with same normalized phone."""

@@ -37,6 +37,60 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(res2.status_code, 200, res2.text)
         self.assertFalse(json.loads(res2.text).get('validated'))
 
+    def test_apk_version_sync_on_register_status_and_optional_bearer_routes(self):
+        key = str(uuid.uuid4())
+        res = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60022233', 'device_key': key}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '2.1.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        device = self.env['order_bridge.device'].search([('device_key', '=', key)], limit=1)
+        self.assertEqual(device.apk_version, '2.1.0')
+
+        res_status = self.url_open(
+            '/api/order_bridge/status',
+            headers={
+                'Authorization': f'Bearer {key}',
+                'X-App-Version': '2.2.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_status.status_code, 200, res_status.text)
+        device.invalidate_recordset(['apk_version'])
+        self.assertEqual(device.apk_version, '2.2.0')
+
+        self.env['product.template'].create({
+            'name': 'Producto apk version test',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 1.0,
+        })
+        res_products = self.url_open(
+            '/api/order_bridge/products',
+            headers={
+                'Authorization': f'Bearer {key}',
+                'X-App-Version': '2.3.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_products.status_code, 200, res_products.text)
+        device.invalidate_recordset(['apk_version'])
+        self.assertEqual(device.apk_version, '2.3.0')
+
+        res_no_header = self.url_open(
+            '/api/order_bridge/status',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(res_no_header.status_code, 200, res_no_header.text)
+        device.invalidate_recordset(['apk_version'])
+        self.assertEqual(device.apk_version, '2.3.0')
+
     def test_profile_put_get_and_patch(self):
         key = str(uuid.uuid4())
         self.url_open(

@@ -26,7 +26,7 @@ _LAST_ACTIVITY_WRITE_INTERVAL = timedelta(seconds=60)
 
 CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
-    ('Access-Control-Allow-Headers', 'Authorization, Content-Type'),
+    ('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-App-Version'),
     ('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS'),
     ('Access-Control-Max-Age', '86400'),
 ]
