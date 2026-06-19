@@ -40,22 +40,22 @@ class TestOrderBridgeOrderCreatedListener(TransactionCase):
         sale_order_module.SaleOrder,
         '_order_bridge_schedule_order_created_notification',
     )
-    def test_create_does_not_schedule_for_admin_origin(self, mock_schedule):
+    def test_create_schedules_notification_for_admin_origin(self, mock_schedule):
         partner = self.env['res.partner'].create({'name': 'Admin test'})
         self.env['sale.order'].create({
             'partner_id': partner.id,
             'order_bridge_origin': 'admin',
         })
-        mock_schedule.assert_not_called()
+        mock_schedule.assert_called_once()
 
     @patch.object(
         sale_order_module.SaleOrder,
         '_order_bridge_schedule_order_created_notification',
     )
-    def test_create_does_not_schedule_without_bridge_origin(self, mock_schedule):
+    def test_create_schedules_notification_without_bridge_origin(self, mock_schedule):
         partner = self.env['res.partner'].create({'name': 'Std sale test'})
         self.env['sale.order'].create({'partner_id': partner.id})
-        mock_schedule.assert_not_called()
+        mock_schedule.assert_called_once()
 
     def test_schedule_registers_postcommit_callback(self):
         order = self._create_app_order()
@@ -83,4 +83,4 @@ class TestOrderBridgeOrderCreatedListener(TransactionCase):
 
         callback()
         mock_send.assert_called_once()
-        self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.order_bridge_ref)
+        self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.name)
