@@ -38,6 +38,7 @@ class SaleOrder(models.Model):
         ],
         string='Origen Tienda Apk',
         index=True,
+        readonly=True,
     )
     order_bridge_device_id = fields.Many2one(
         'order_bridge.device', string='Dispositivo API', ondelete='set null'
