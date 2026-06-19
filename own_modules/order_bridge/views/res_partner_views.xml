@@ -42,6 +42,7 @@
                             <field name="registration_date"/>
                             <field name="last_activity"/>
                             <field name="device_info"/>
+                            <field name="apk_version" optional="hide"/>
                         </list>
                     </field>
                     <separator string="Dirección de entrega Tienda Apk"/>

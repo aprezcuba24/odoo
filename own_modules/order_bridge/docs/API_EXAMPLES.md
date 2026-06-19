@@ -50,10 +50,11 @@ curl -sS "$BASE/api/order_bridge/orders?limit=20&offset=0" -H "Authorization: Be
 curl -sS "$BASE/api/order_bridge/orders?state=draft" -H "Authorization: Bearer $KEY"
 
 # Crear pedido (qty > 0; alternativa: product_uom_qty en cada línea)
+# client_order_id: UUID v4 por checkout; reutilizar en reintentos del mismo pedido
 curl -sS -X POST "$BASE/api/order_bridge/orders" \
   -H "Authorization: Bearer $KEY" \
   -H 'Content-Type: application/json' \
-  -d '{"lines":[{"product_id":123,"qty":1}]}'
+  -d '{"client_order_id":"550e8400-e29b-41d4-a716-446655440000","lines":[{"product_id":123,"qty":1}]}'
 
 # Detalle de un pedido (incluye líneas)
 curl -sS "$BASE/api/order_bridge/orders/456" -H "Authorization: Bearer $KEY"

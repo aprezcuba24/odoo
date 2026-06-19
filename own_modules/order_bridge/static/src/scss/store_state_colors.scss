@@ -1,0 +1,22 @@
+// Colores del statusbar de order_bridge_store_state (paso activo).
+// Mapeo canónico: utils/constant.py → STORE_STATE_COLOR
+
+.o_field_statusbar[name="order_bridge_store_state"] {
+    > .o_statusbar_status {
+        $store-state-colors: (
+            "reviewing": $secondary,
+            "negotiating": $warning,
+            "ready_for_delivery": $info,
+            "delivered": $success,
+            "canceled": $danger,
+        );
+
+        @each $state, $color in $store-state-colors {
+            > .o_arrow_button[data-value="#{$state}"].o_arrow_button_current {
+                color: color-contrast($color);
+                --o-statusbar-background-active: #{$color};
+                --o-statusbar-border-active: #{$color};
+            }
+        }
+    }
+}

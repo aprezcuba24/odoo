@@ -72,7 +72,7 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
         text = format_order_created_message(order)
         self.assertIn('*🛒 Nueva orden*', text)
         self.assertIn('*Orden de compra:*', text)
-        self.assertIn(order.order_bridge_ref, text)
+        self.assertIn(order.name, text)
         self.assertIn('*Cliente:* Yiselis Cruz', text)
         self.assertIn('*Teléfono:* +5355512345', text)
         self.assertIn('Altahabana. Boyeros', text)
@@ -120,12 +120,15 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
     )
     @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
     def test_listener_sends_telegram_for_app_order(self, mock_send):
+        from odoo.addons.order_bridge.listeners.order_created_listener import order_bridge_order_created
+
         mock_send.return_value = True
         order = self._create_order_with_snapshot()
+        order_bridge_order_created(order, None, order)
         mock_send.assert_called_once()
         text = mock_send.call_args[0][0]
-        self.assertIn(order.order_bridge_ref, text)
-        self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.order_bridge_ref)
+        self.assertIn(order.name, text)
+        self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.name)
 
     @patch.dict(os.environ, {}, clear=True)
     @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
@@ -141,6 +144,7 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
         order = MagicMock()
         order.order_bridge_origin = 'app'
         order.order_bridge_ref = 'O-MOCK'
+        order.name = 'S-MOCK'
         with patch.object(listener_module, 'send_message', return_value=True) as mock_send:
             with patch.object(
                 listener_module,
@@ -149,4 +153,4 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
             ) as mock_format:
                 listener_module.order_bridge_order_created(order, None, order)
         mock_format.assert_called_once_with(order)
-        mock_send.assert_called_once_with('msg', order_ref='O-MOCK')
+        mock_send.assert_called_once_with('msg', order_ref='S-MOCK')

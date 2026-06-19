@@ -501,6 +501,21 @@
       "OrderCreateBody": {
         "additionalProperties": false,
         "properties": {
+          "client_order_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Clave de idempotencia generada por la app (p. ej. UUID v4). Reutilizar el mismo valor en reintentos del mismo checkout.",
+            "title": "Client Order Id"
+          },
           "lines": {
             "items": {
               "$ref": "#/components/schemas/OrderLineIn"

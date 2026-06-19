@@ -37,6 +37,60 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(res2.status_code, 200, res2.text)
         self.assertFalse(json.loads(res2.text).get('validated'))
 
+    def test_apk_version_sync_on_register_status_and_optional_bearer_routes(self):
+        key = str(uuid.uuid4())
+        res = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60022233', 'device_key': key}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '2.1.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        device = self.env['order_bridge.device'].search([('device_key', '=', key)], limit=1)
+        self.assertEqual(device.apk_version, '2.1.0')
+
+        res_status = self.url_open(
+            '/api/order_bridge/status',
+            headers={
+                'Authorization': f'Bearer {key}',
+                'X-App-Version': '2.2.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_status.status_code, 200, res_status.text)
+        device.invalidate_recordset(['apk_version'])
+        self.assertEqual(device.apk_version, '2.2.0')
+
+        self.env['product.template'].create({
+            'name': 'Producto apk version test',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 1.0,
+        })
+        res_products = self.url_open(
+            '/api/order_bridge/products',
+            headers={
+                'Authorization': f'Bearer {key}',
+                'X-App-Version': '2.3.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_products.status_code, 200, res_products.text)
+        device.invalidate_recordset(['apk_version'])
+        self.assertEqual(device.apk_version, '2.3.0')
+
+        res_no_header = self.url_open(
+            '/api/order_bridge/status',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(res_no_header.status_code, 200, res_no_header.text)
+        device.invalidate_recordset(['apk_version'])
+        self.assertEqual(device.apk_version, '2.3.0')
+
     def test_profile_put_get_and_patch(self):
         key = str(uuid.uuid4())
         self.url_open(
@@ -235,6 +289,108 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].get('product_id'), product.id)
         self.assertEqual(products[0].get('available_qty'), 0.0)
+
+    def test_orders_post_idempotent_with_client_order_id(self):
+        key = str(uuid.uuid4())
+        client_order_id = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011225', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        tmpl = self.env['product.template'].create({
+            'name': 'Idempotent OB test',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'list_price': 5.0,
+        })
+        product = tmpl.product_variant_id
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        body = json.dumps({
+            'client_order_id': client_order_id,
+            'lines': [{'product_id': product.id, 'qty': 1}],
+        })
+        first = self.url_open(
+            '/api/order_bridge/orders',
+            data=body,
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        second = self.url_open(
+            '/api/order_bridge/orders',
+            data=body,
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(second.status_code, 200, second.text)
+        created_first = json.loads(first.text)
+        created_second = json.loads(second.text)
+        self.assertEqual(created_first.get('id'), created_second.get('id'))
+        self.assertEqual(created_first.get('order_ref'), created_second.get('order_ref'))
+        count = self.env['sale.order'].search_count([
+            ('order_bridge_device_id.device_key', '=', key),
+            ('order_bridge_client_order_id', '=', client_order_id),
+        ])
+        self.assertEqual(count, 1)
+
+    def test_orders_post_second_different_client_order_id_fails_when_stock_exhausted(self):
+        key = str(uuid.uuid4())
+        self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': '60011227', 'device_key': key}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        tmpl = self.env['product.template'].create({
+            'name': 'Second client_order_id OB stock test',
+            'sale_ok': True,
+            'order_bridge_visible': True,
+            'is_storable': True,
+            'list_price': 10.0,
+        })
+        product = tmpl.product_variant_id
+        wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        self.assertTrue(wh)
+        self.env['stock.quant'].with_context(inventory_mode=True).create({
+            'product_id': product.id,
+            'location_id': wh.lot_stock_id.id,
+            'inventory_quantity': 1.0,
+        }).action_apply_inventory()
+
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        first = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({
+                'client_order_id': str(uuid.uuid4()),
+                'lines': [{'product_id': product.id, 'qty': 1}],
+            }),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        second = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({
+                'client_order_id': str(uuid.uuid4()),
+                'lines': [{'product_id': product.id, 'qty': 1}],
+            }),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(second.status_code, 400, second.text)
+        payload = json.loads(second.text)
+        self.assertEqual(payload.get('error'), 'insufficient_stock')
+        order_count = self.env['sale.order'].search_count([
+            ('order_bridge_device_id.device_key', '=', key),
+            ('order_bridge_origin', '=', 'app'),
+        ])
+        self.assertEqual(order_count, 1)
 
     def test_orders_post_storable_two_sublocations_reserves_and_lowers_free_qty(self):
         """Stock split across two internal locations: validate aggregate, reserve on confirm."""

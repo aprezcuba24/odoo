@@ -5,6 +5,7 @@ import json
 import logging
 from datetime import timedelta
 
+from psycopg2 import IntegrityError
 from pydantic import BaseModel, ValidationError
 
 from odoo import fields
@@ -25,7 +26,7 @@ _LAST_ACTIVITY_WRITE_INTERVAL = timedelta(seconds=60)
 
 CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
-    ('Access-Control-Allow-Headers', 'Authorization, Content-Type'),
+    ('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-App-Version'),
     ('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS'),
     ('Access-Control-Max-Age', '86400'),
 ]
@@ -242,6 +243,44 @@ def api_validated_json_body(model_cls, *, kwarg_name='body', validation_context=
                 return api_json_response(ValidationErrorResponse.model_validate(err), 400)
             kwargs[kwarg_name] = parsed
             return endpoint(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def _idempotent_short_circuit(kwargs, *, lookup, to_response, is_found):
+    existing = lookup(**kwargs)
+    if is_found(existing):
+        return api_json_response(to_response(existing))
+    return None
+
+
+def api_idempotent(*, lookup, to_response, is_found=bool):
+    """Idempotency middleware: short-circuit on entry and recover after IntegrityError.
+
+    ``lookup`` receives handler ``kwargs`` and returns an existing resource or empty
+    value. ``to_response`` serializes it for the JSON response. ``is_found`` tests
+    whether ``lookup`` found a resource (default: ``bool``, works for Odoo recordsets).
+    """
+
+    def decorator(endpoint):
+        @functools.wraps(endpoint)
+        def wrapper(self, *args, **kwargs):
+            early = _idempotent_short_circuit(
+                kwargs, lookup=lookup, to_response=to_response, is_found=is_found,
+            )
+            if early is not None:
+                return early
+            try:
+                return endpoint(self, *args, **kwargs)
+            except IntegrityError:
+                recovery = _idempotent_short_circuit(
+                    kwargs, lookup=lookup, to_response=to_response, is_found=is_found,
+                )
+                if recovery is not None:
+                    return recovery
+                raise
 
         return wrapper
 

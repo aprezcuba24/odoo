@@ -36,6 +36,10 @@ class DeviceAuthController(http.Controller):
             )
         device = result['device']
         partner = result['partner']
+        request.env['order_bridge.device'].order_bridge_sync_apk_version(
+            body.device_key,
+            request.httprequest.headers.get('X-App-Version'),
+        )
         return api_json_response(RegisterOkResponse(
             status='ok',
             created=result['created'],

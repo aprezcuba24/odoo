@@ -106,7 +106,26 @@ class OrderLineIn(BaseModel):
 class OrderCreateBody(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
+    client_order_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=64,
+        description=(
+            'Clave de idempotencia generada por la app (p. ej. UUID v4). '
+            'Reutilizar el mismo valor en reintentos del mismo checkout.'
+        ),
+    )
     lines: list[OrderLineIn] = Field(..., min_length=1)
+
+    @field_validator('client_order_id')
+    @classmethod
+    def client_order_id_not_blank(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        s = str(v).strip()
+        if not s:
+            raise ValueError('client_order_id no puede estar vacío')
+        return s
 
     @model_validator(mode='after')
     def check_stock(self, info: ValidationInfo) -> OrderCreateBody:
