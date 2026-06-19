@@ -22,7 +22,5 @@ class TestResPartnerOrderBridgeOrders(TransactionCase):
         self.assertIn(store_order, matched)
         self.assertNotIn(normal_order, matched)
 
-        self.assertEqual(
-            action['view_id'],
-            self.env.ref('order_bridge.view_order_tree_order_bridge_store').id,
-        )
+        list_view = self.env.ref('order_bridge.view_order_tree_order_bridge_store')
+        self.assertEqual(action['views'], [(list_view.id, 'list'), (False, 'form')])

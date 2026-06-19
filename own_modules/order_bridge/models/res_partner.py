@@ -85,12 +85,12 @@ class ResPartner(models.Model):
 
     def action_open_order_bridge_orders(self):
         self.ensure_one()
+        list_view = self.env.ref('order_bridge.view_order_tree_order_bridge_store')
         return {
             'name': _('Pedidos Tienda Apk'),
             'type': 'ir.actions.act_window',
             'res_model': 'sale.order',
-            'view_mode': 'list,form',
-            'view_id': self.env.ref('order_bridge.view_order_tree_order_bridge_store').id,
+            'views': [(list_view.id, 'list'), (False, 'form')],
             'domain': self._order_bridge_store_order_domain(),
         }
 
