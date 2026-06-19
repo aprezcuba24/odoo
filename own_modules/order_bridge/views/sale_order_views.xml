@@ -31,6 +31,7 @@
                 <attribute name="invisible">order_bridge_origin</attribute>
             </xpath>
             <xpath expr="//header/field[@name='state']" position="before">
+                <field name="order_bridge_origin" invisible="1"/>
                 <button
                     name="action_order_bridge_negotiate"
                     string="Negociar"
@@ -72,9 +73,13 @@
                 />
             </xpath>
             <xpath expr="//group[@name='sale_header']" position="after">
-                <group name="order_bridge_info" string="Tienda Apk" groups="sales_team.group_sale_salesman">
-                    <field name="order_bridge_store_state" invisible="not order_bridge_origin"/>
-                    <field name="order_bridge_origin" invisible="1"/>
+                <group
+                    name="order_bridge_info"
+                    string="Tienda Apk"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin"
+                >
+                    <field name="order_bridge_store_state"/>
                     <div invisible="order_bridge_origin != 'app'" colspan="2" class="text-muted">
                         Compra realizada desde la APK.
                     </div>
@@ -88,30 +93,17 @@
         </field>
     </record>
 
-    <record id="view_order_tree_order_bridge" model="ir.ui.view">
-        <field name="name">sale.order.list.order.bridge</field>
+    <record id="view_order_tree_order_bridge_store" model="ir.ui.view">
+        <field name="name">sale.order.list.order.bridge.store</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="mode">primary</field>
         <field name="arch" type="xml">
             <xpath expr="//list" position="inside">
-                <field name="order_bridge_origin" optional="hide"/>
-                <field name="order_bridge_ref" optional="hide"/>
-                <field name="order_bridge_device_phone_validated" optional="hide" string="Dispositivo OK"/>
-                <field name="order_bridge_store_state" optional="hide"/>
-            </xpath>
-        </field>
-    </record>
-
-    <record id="view_quotation_tree_order_bridge" model="ir.ui.view">
-        <field name="name">sale.order.quotation.list.order.bridge</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_quotation_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//list" position="inside">
-                <field name="order_bridge_origin" optional="hide"/>
-                <field name="order_bridge_ref" optional="hide"/>
-                <field name="order_bridge_device_phone_validated" optional="hide" string="Dispositivo OK"/>
-                <field name="order_bridge_store_state" optional="hide"/>
+                <field name="order_bridge_origin"/>
+                <field name="order_bridge_ref"/>
+                <field name="order_bridge_device_phone_validated" string="Dispositivo OK"/>
+                <field name="order_bridge_store_state"/>
             </xpath>
         </field>
     </record>
