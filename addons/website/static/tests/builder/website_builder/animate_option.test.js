@@ -1,6 +1,6 @@
 import { expandToolbar } from "@html_editor/../tests/_helpers/toolbar";
-import { describe, expect, test } from "@odoo/hoot";
-import { queryFirst, queryOne, waitFor } from "@odoo/hoot-dom";
+import { describe, expect, test, waitFor } from "@odoo/hoot";
+import { queryFirst, queryOne } from "@odoo/hoot-dom";
 import { contains, onRpc } from "@web/../tests/web_test_helpers";
 import {
     defineWebsiteModels,
@@ -8,6 +8,7 @@ import {
 } from "@website/../tests/builder/website_helpers";
 import { setSelection, thirdClick } from "@html_editor/../tests/_helpers/selection";
 import { advanceTime } from "@odoo/hoot-mock";
+import { onRpcImg } from "../image_test_helpers";
 
 defineWebsiteModels();
 
@@ -24,14 +25,13 @@ const styleContent = `
 `;
 
 test("visibility of animation animation=none", async () => {
-    await setupWebsiteBuilder(`
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
         <div class="test-options-target">
             ${testImg}
         </div>
     `);
     await contains(":iframe .test-options-target img").click();
-
-    await waitFor(".options-container");
+    await waitSidebarUpdated();
     expect(".options-container [data-label='Effect']").not.toBeVisible();
     expect(".options-container [data-label='Direction']").not.toHaveCount();
     expect(".options-container [data-label='Trigger']").not.toBeVisible();
@@ -50,6 +50,7 @@ describe("onAppearance", () => {
             { styleContent }
         );
         await contains(":iframe .test-options-target img").click();
+        await waitSidebarUpdated();
 
         await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
         await contains(".o-dropdown--menu [data-action-value='onAppearance']").click();
@@ -78,6 +79,7 @@ describe("onAppearance", () => {
             { styleContent }
         );
         await contains(":iframe .test-options-target img").click();
+        await waitSidebarUpdated();
 
         await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
         await contains(".o-dropdown--menu [data-action-value='onAppearance']").click();
@@ -106,6 +108,7 @@ describe("onAppearance", () => {
             { styleContent }
         );
         await contains(":iframe .test-options-target img").click();
+        await waitSidebarUpdated();
 
         await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
         await contains(".o-dropdown--menu [data-action-value='onAppearance']").click();
@@ -123,6 +126,10 @@ describe("onAppearance", () => {
         expect(".options-container [data-label='Scroll Zone']").not.toHaveCount();
         expect(".options-container [data-label='Start After'] input").toHaveValue("0");
         expect(".options-container [data-label='Duration'] input").toHaveValue("1");
+        await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
+        await contains(".o-dropdown--menu [data-action-value='onScroll']").click();
+        await waitSidebarUpdated();
+        expect(".options-container [data-label='Intensity']").toHaveCount(1);
     });
     test("visibility of animation animation=onAppearance effect=flash", async () => {
         const { waitSidebarUpdated } = await setupWebsiteBuilder(
@@ -134,6 +141,7 @@ describe("onAppearance", () => {
             { styleContent }
         );
         await contains(":iframe .test-options-target img").click();
+        await waitSidebarUpdated();
 
         await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
         await contains(".o-dropdown--menu [data-action-value='onAppearance']").click();
@@ -160,6 +168,7 @@ test("visibility of animation animation=onScroll", async () => {
         </div>
     `);
     await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
 
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     await contains(".o-dropdown--menu [data-action-value='onScroll']").click();
@@ -186,6 +195,7 @@ test("animation=onScroll should not be visible when the animation is limited", a
         { styleContent }
     );
     await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
 
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     await contains(".o-dropdown--menu [data-action-value='onAppearance']").click();
@@ -233,6 +243,7 @@ test("visibility of animation animation=onHover", async () => {
         </div>
     `);
     await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
 
     // NOTE: we use waitSidebarUpdated because setting the hover effect may
     // take some time (and setting "On Hover" sets a default)
@@ -269,29 +280,30 @@ test("visibility of animation animation=onHover", async () => {
     expectOnHoverOptions({ Effect: "Mirror Blur", Intensity: 1 });
 });
 test("animation=onHover should not be visible when the image is a device shape", async () => {
-    await setupWebsiteBuilder(`
+    onRpcImg("/html_builder/static/image_shapes/devices/iphone_front_portrait.svg");
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
         <div class="test-options-target">
             <img data-shape="html_builder/devices/iphone_front_portrait" src='${base64Img}'>
         </div>
     `);
     await contains(":iframe .test-options-target img").click();
-
+    await waitSidebarUpdated();
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     expect(".o-dropdown--menu [data-action-value='onHover']").not.toHaveCount();
 });
 test("animation=onHover should not be visible when the image has a wrong mimetype", async () => {
-    await setupWebsiteBuilder(`
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
         <div class="test-options-target">
             <img data-attachment-id="1" data-original-id="1" data-mimetype="foo/bar" src='${base64Img}'>
         </div>
     `);
     await contains(":iframe .test-options-target img").click();
-
+    await waitSidebarUpdated();
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     expect(".o-dropdown--menu [data-action-value='onHover']").not.toHaveCount();
 });
 test("animation=onHover should not be visible when the image has a cors protected image", async () => {
-    await setupWebsiteBuilder(`
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
         <div class="test-options-target">
             <img data-attachment-id="1" data-original-id="1" src='/web/image/0-redirect/foo.jpg'>
         </div>
@@ -324,30 +336,28 @@ test("animation=onHover should not be visible when the image has a cors protecte
         { pure: true }
     );
     await contains(":iframe .test-options-target img").click();
-
+    await waitSidebarUpdated();
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     expect.verifySteps(["/web/image/0-redirect/foo.jpg"]);
     expect(".o-dropdown--menu [data-action-value='onHover']").not.toHaveCount();
 });
 
 test("image should not be lazy onAppearance", async () => {
-    await setupWebsiteBuilder(`
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
         <div class="test-options-target">
             ${testImg}
         </div>
     `);
     await contains(":iframe .test-options-target img").click();
-
+    await waitSidebarUpdated();
     expect(":iframe .test-options-target img").toHaveProperty("loading", "auto");
 
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     await contains(".o-dropdown--menu [data-action-value='onAppearance']").click();
-
     expect(":iframe .test-options-target img").toHaveProperty("loading", "eager");
 
     await contains(".options-container [data-label='Animation'] .dropdown-toggle").click();
     await contains(".o-dropdown--menu [data-action-value='']").click();
-
     expect(":iframe .test-options-target img").toHaveProperty("loading", "auto");
 });
 
@@ -359,9 +369,9 @@ test("should not show the animation options if the image has a parent [data-oe-t
     `);
     const editor = getEditor();
     await contains(":iframe .test-options-target img").click();
-
-    await waitFor(".options-container");
+    await waitSidebarUpdated();
     expect(".options-container [data-label='Animation'] .dropdown-toggle").toBeVisible();
+
     const optionTarget = queryFirst(":iframe .test-options-target");
     optionTarget.setAttribute("data-oe-type", "image");
     editor.shared.history.addStep();
@@ -377,12 +387,12 @@ test("should not show the animation options if the image has is [data-oe-xpath]"
     `);
     const editor = getEditor();
     await contains(":iframe .test-options-target img").click();
-
-    await waitFor(".options-container");
+    await waitSidebarUpdated();
     expect(".options-container [data-label='Animation'] .dropdown-toggle").toBeVisible();
     const optionTarget = queryFirst(":iframe .test-options-target img");
     optionTarget.setAttribute("data-oe-xpath", "/foo/bar");
     editor.shared.history.addStep();
+
     await waitSidebarUpdated();
     expect(".options-container [data-label='Animation'] .dropdown-toggle").not.toHaveCount();
 });

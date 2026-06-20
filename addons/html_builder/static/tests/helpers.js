@@ -10,7 +10,7 @@ import { LocalOverlayContainer } from "@html_editor/local_overlay_container";
 import { Plugin } from "@html_editor/plugin";
 import { withSequence } from "@html_editor/utils/resource";
 import { defineMailModels } from "@mail/../tests/mail_test_helpers";
-import { after } from "@odoo/hoot";
+import { after, queryFirst } from "@odoo/hoot";
 import { animationFrame, waitForNone, queryOne, waitFor, advanceTime, tick } from "@odoo/hoot-dom";
 import { Component, onMounted, useRef, useState, useSubEnv, xml } from "@odoo/owl";
 import {
@@ -18,6 +18,7 @@ import {
     defineModels,
     models,
     mountWithCleanup,
+    onRpc,
     patchWithCleanup,
     waitUntilIdle,
 } from "@web/../tests/web_test_helpers";
@@ -25,6 +26,7 @@ import { loadBundle } from "@web/core/assets";
 import { isBrowserFirefox } from "@web/core/browser/feature_detection";
 import { registry } from "@web/core/registry";
 import { uniqueId } from "@web/core/utils/functions";
+import { delay } from "@web/core/utils/concurrency";
 
 export function patchWithCleanupImg() {
     const defaultImg =
@@ -126,7 +128,11 @@ class BuilderContainer extends Component {
         });
         this.iframeLoaded = new Promise((resolve) => {
             onMounted(async () => {
-                if (isBrowserFirefox()) {
+                // Fix for Firefox < 148.
+                if (
+                    isBrowserFirefox() &&
+                    !(this.iframeRef.el?.contentDocument.readyState === "complete")
+                ) {
                     await originalIframeLoaded;
                 }
 
@@ -526,7 +532,7 @@ export async function confirmAddSnippet(snippetName) {
 }
 
 export const dummyBase64Img =
-    "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA\n        AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO\n            9TXL0Y4OHwAAAABJRU5ErkJggg==";
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
 
 export const exampleContent = '<h1 class="title">Hello</h1>';
 
@@ -559,4 +565,27 @@ export async function setupHTMLBuilderWithDummySnippet(content) {
     };
 
     return await setupHTMLBuilder(content || "", snippetsStructure);
+}
+
+export async function editBuilderRangeValue(selector, newValue) {
+    const input = queryFirst(selector);
+    input.value = newValue;
+    input.dispatchEvent(new Event("input"));
+    await delay();
+    input.dispatchEvent(new Event("change"));
+    await delay();
+}
+export const dummyCORSSrc = "/web/image/0-redirect/foo.jpg";
+
+export function setupCORSProtectedImg() {
+    onRpc("/html_editor/get_image_info", () => ({
+        original: {
+            id: 1,
+            image_src: dummyCORSSrc,
+            mimetype: "image/jpeg",
+        },
+    }));
+    onRpc(dummyCORSSrc, () => {
+        throw new Error("simulated cors error");
+    });
 }

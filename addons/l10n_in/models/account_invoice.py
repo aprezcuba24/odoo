@@ -157,8 +157,8 @@ class AccountMove(models.Model):
 
     @api.depends('l10n_in_state_id', 'l10n_in_gst_treatment')
     def _compute_fiscal_position_id(self):
-
-        foreign_state = self.env['res.country.state'].search([('code', '!=', 'IN')], limit=1)
+        foreign_country = self.env['res.country'].new({'name': 'Not India', 'code': '!!'})
+        foreign_state = self.env['res.country.state'].new({'country_id': foreign_country})
 
         def _get_fiscal_state(move):
             """
@@ -403,8 +403,8 @@ class AccountMove(models.Model):
             for tax in line.tax_ids:
                 if tax.l10n_in_tax_type == 'tcs':
                     max_tax = max(
-                        tax.l10n_in_section_id.l10n_in_section_tax_ids,
-                        key=lambda t: t.amount
+                        tax.l10n_in_section_id.with_context(active_test=False).l10n_in_section_tax_ids,
+                        key=lambda t: abs(t.amount),
                     )
                     updated_tax_ids.append(max_tax.id)
                 else:
@@ -420,7 +420,10 @@ class AccountMove(models.Model):
                 for tax in line.tax_ids:
                     if (
                         tax.l10n_in_tax_type == 'tcs'
-                        and tax.amount != max(tax.l10n_in_section_id.l10n_in_section_tax_ids, key=lambda t: abs(t.amount)).amount
+                        and tax.amount != max(
+                            tax.l10n_in_section_id.with_context(active_test=False).l10n_in_section_tax_ids,
+                            key=lambda t: abs(t.amount),
+                        ).amount
                     ):
                         lines |= line._origin
             return lines
@@ -721,6 +724,8 @@ class AccountMove(models.Model):
 
     def _get_sync_stack(self, container):
         stack, update_containers = super()._get_sync_stack(container)
+        if all(move.country_code != 'IN' for move in self):
+            return stack, update_containers
         _tax_container, invoice_container, misc_container = update_containers()
         moves = invoice_container['records'] + misc_container['records']
         stack.append((9, self._sync_l10n_in_gstr_section(moves)))
@@ -732,3 +737,22 @@ class AccountMove(models.Model):
         tax_tags_dict = self.env['account.move.line']._get_l10n_in_tax_tag_ids()
         # we set the section on the invoice lines
         moves.line_ids._set_l10n_in_gstr_section(tax_tags_dict)
+
+    def _get_l10n_in_invoice_label(self):
+        self.ensure_one()
+        exempt_types = {'exempt', 'nil_rated', 'non_gst'}
+        if self.country_code != 'IN' or not self.is_sale_document(include_receipts=False):
+            return
+        gst_treatment = self.l10n_in_gst_treatment
+        company = self.company_id
+        tax_types = set(self.invoice_line_ids.tax_ids.mapped('l10n_in_tax_type'))
+        if company.l10n_in_is_gst_registered and tax_types:
+            if gst_treatment in ['overseas', 'special_economic_zone']:
+                return 'Tax Invoice'
+            elif tax_types.issubset(exempt_types):
+                return 'Bill of Supply'
+            elif tax_types.isdisjoint(exempt_types):
+                return 'Tax Invoice'
+            elif gst_treatment in ['unregistered', 'consumer']:
+                return 'Invoice-cum-Bill of Supply'
+        return 'Invoice'

@@ -74,6 +74,17 @@ export class Message extends Record {
             );
         },
     });
+    /** attachments not already clearly visible in the body, unlike inlined images */
+    extra_body_attachment_ids = fields.Attr("ir.attachment", {
+        compute() {
+            const parsedBody = createDocumentFragmentFromContent(this.body);
+            const inlinedImageAttachmentIds = [
+                ...parsedBody.querySelectorAll("img[data-attachment-id]"),
+            ].map((img) => parseInt(img.dataset.attachmentId));
+
+            return this.attachment_ids.filter((a) => !inlinedImageAttachmentIds.includes(a.id));
+        },
+    });
     hasLink = fields.Attr(false, {
         compute() {
             if (this.isBodyEmpty) {
@@ -321,7 +332,7 @@ export class Message extends Record {
     }
 
     get hasTextContent() {
-        return !this.isBodyEmpty || this.edited;
+        return !this.isBodyEmpty || this.subject || this.edited;
     }
 
     isEmpty = fields.Attr(false, {
@@ -341,7 +352,8 @@ export class Message extends Record {
             this.isBodyEmpty &&
             this.attachment_ids.length === 0 &&
             this.trackingValues.length === 0 &&
-            !this.subtype_id?.description
+            !this.subtype_id?.description &&
+            !this.subject
         );
     }
 
@@ -371,7 +383,7 @@ export class Message extends Record {
         if (this.author) {
             return this.getPersonaName(this.author);
         }
-        return this.email_from;
+        return this.email_from || _t("Unnamed");
     }
 
     get notificationHidden() {
@@ -431,7 +443,6 @@ export class Message extends Record {
         return Boolean(
             !this.is_transient &&
                 !this.isPending &&
-                this.thread &&
                 this.store.self_partner?.main_user_id?.share === false &&
                 this.persistent
         );
@@ -493,7 +504,8 @@ export class Message extends Record {
             !this.is_transient &&
                 !this.isPending &&
                 this.thread?.can_react &&
-                !this.thread.isTransient
+                !this.thread.isTransient &&
+                this.thread.has_mail_thread
         );
     }
 
@@ -540,12 +552,11 @@ export class Message extends Record {
         attachments = [],
         { mentionedChannels = [], mentionedPartners = [], mentionedRoles = [] } = {}
     ) {
-        const bodyEl = createElementWithContent("div", this.body);
-        bodyEl.querySelector("span.o-mail-Message-edited")?.remove();
-        if (
-            createElementWithContent("div", body).innerHTML === bodyEl.innerHTML &&
-            attachments.length === 0
-        ) {
+        const messageBodyEl = createElementWithContent("div", this.body);
+        const updatedBodyEl = createElementWithContent("div", body);
+        messageBodyEl.querySelector("span.o-mail-Message-edited")?.remove();
+        updatedBodyEl.querySelector("span.o-mail-Message-edited")?.remove();
+        if (updatedBodyEl.innerHTML === messageBodyEl.innerHTML && attachments.length === 0) {
             return;
         }
         const validMentions = this.store.getMentionsFromText(body, {
@@ -591,6 +602,9 @@ export class Message extends Record {
                 )
             )
         ).filter((channel) => channel?.exists());
+        const validRoles = Array.from(
+            doc.querySelectorAll(".o-discuss-mention[data-oe-model='res.role']")
+        ).map((el) => this.store["res.role"].get(el.dataset.oeId));
         const text = convertBrToLineBreak(this.body);
         if (thread?.messageInEdition) {
             thread.messageInEdition.composer = undefined;
@@ -599,6 +613,7 @@ export class Message extends Record {
             composerHtml: getNonEditableMentions(this.body),
             mentionedChannels: validChannels,
             mentionedPartners: this.partner_ids,
+            mentionedRoles: validRoles,
             selection: {
                 start: text.length,
                 end: text.length,
@@ -623,7 +638,12 @@ export class Message extends Record {
      * @returns {string}
      */
     getPersonaName(persona) {
-        return this.thread?.getPersonaName(persona) || persona?.displayName || persona?.name;
+        return (
+            this.thread?.getPersonaName(persona) ||
+            persona?.displayName ||
+            persona?.name ||
+            _t("Unnamed")
+        );
     }
 
     async onClickToggleTranslation() {
@@ -672,6 +692,7 @@ export class Message extends Record {
             attachment_ids: [],
             attachment_tokens: [],
             body: "",
+            subject: "",
             partner_ids: [],
         };
     }

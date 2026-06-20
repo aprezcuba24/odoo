@@ -9,7 +9,7 @@ from odoo import SUPERUSER_ID, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Command, Domain
 from odoo.http import request
-from odoo.tools import float_is_zero
+from odoo.tools import float_is_zero, str2bool
 
 from odoo.addons.website_sale.models.website import (
     FISCAL_POSITION_SESSION_CACHE_KEY,
@@ -271,10 +271,20 @@ class SaleOrder(models.Model):
     def _needs_customer_address(self):
         """Return whether we need the address details of the customer (country, street, ...).
 
-        If an order only has services, unless the customer wants an invoice, their checkout can
-        be sped up by allowing them to only provide their name, email and phone numbers.
+        Orders with physical goods always require full customer address.
+        Orders without goods (services only) require customer address by default to correctly
+        determine fiscal position, taxes, pricelists (if based on country and geoip cannot be
+        trusted).
+
+        A dedicated system parameter can be set to False/0 to speed up the checkout process
+        and skip the address requirement for services.
         """
-        return not self.only_services
+        return not self.only_services or str2bool(
+            self
+            .env["ir.config_parameter"]
+            .sudo()
+            .get_param("website_sale.require_billing_details_for_services", "True")
+        )
 
     def _update_address(self, partner_id, fnames=None):
         if not fnames:
@@ -336,8 +346,16 @@ class SaleOrder(models.Model):
         self.ensure_one()
         self = self.with_company(self.company_id)
 
-        if not uom_id:
-            uom_id = self.env['product.product'].browse(product_id).uom_id.id  # type: ignore
+        product = self.env['product.product'].browse(product_id)
+        if not uom_id or not product.product_tmpl_id._has_multiple_uoms():
+            # Fall back on product uom if uom is not specified or if multi-uom is not
+            # allowed/supported for that product.
+            uom_id = product.uom_id.id  # type: ignore
+        elif uom_id not in product.product_tmpl_id._get_available_uoms().ids:
+            raise ValidationError(
+                _("This product is not available (anymore) in this unit of measure.")
+            )
+
         if existing_sol := self._cart_find_product_line(product_id, uom_id=uom_id, **kwargs)[:1]:
             # If a matching line is found, update the existing line instead.
             return self._cart_update_line_quantity(
@@ -894,10 +912,18 @@ class SaleOrder(models.Model):
                 "Your cart is not ready to be paid, please verify previous steps."
             ))
 
-        if not self.only_services and not self.carrier_id:
-            raise ValidationError(_("No shipping method is selected."))
+        if not self.only_services:
+            if not self.carrier_id:
+                raise ValidationError(_("No shipping method is selected."))
+            if self.carrier_id not in self._get_delivery_methods():
+                raise ValidationError(
+                    _("The delivery method is not compatible with your delivery address.")
+                )
 
     def _recompute_cart(self):
         """Recompute taxes and prices for the current cart."""
         self._recompute_taxes()
         self._recompute_prices()
+
+    def _allow_express_checkout(self):
+        return True

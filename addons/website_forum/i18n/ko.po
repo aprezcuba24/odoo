@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-08 18:39+0000\n"
+"POT-Creation-Date: 2026-02-20 18:37+0000\n"
 "PO-Revision-Date: 2025-11-12 11:25+0000\n"
 "Last-Translator: \"Kwanghee Park (kwpa)\" <kwpa@odoo.com>\n"
 "Language-Team: Korean <https://translate.odoo.com/projects/odoo-19/"
@@ -64,8 +64,9 @@ msgstr "# 조회수"
 #: code:addons/website_forum/static/src/interactions/website_forum.js:0
 msgid ""
 "%(link_start)sRead the guidelines to know how to gain karma.%(link_end)s"
-msgstr "%(link_start)s 카르마를 받는 방법을 알아보려면 가이드를 확인해 보세요: "
-"%(link_end)s"
+msgstr ""
+"%(link_start)s 카르마를 받는 방법을 알아보려면 가이드를 확인해 보세요: %"
+"(link_end)s"
 
 #. module: website_forum
 #. odoo-javascript
@@ -243,26 +244,8 @@ msgid ""
 "<a class=\"btn btn-primary forum_register_url o_translate_inline\" href=\"/"
 "web/login\">Sign up</a>"
 msgstr ""
-"<a class=\"btn btn-primary forum_register_url o_translate_inline\" href="
-"\"/web/login\">회원 가입</a>"
-
-#. module: website_forum
-#: model_terms:ir.ui.view,arch_db:website_forum.404
-msgid ""
-"<a class=\"btn-link o_translate_inline\" t-attf-href=\"/forum\"><i "
-"class=\"oi oi-arrow-right display-inline-block\"/> Return to questions list</"
-"a>"
-msgstr ""
-"<a class=\"btn-link o_translate_inline\" t-attf-href=\"/forum\"><i class="
-"\"oi oi-arrow-right display-inline-block\"/>질문 목록으로 돌아가기</a>"
-
-#. module: website_forum
-#: model_terms:ir.ui.view,arch_db:website_forum.forum_all_oe_structure_forum_all_top
-msgid ""
-"<a class=\"mb-2 o_translate_inline\" t-attf-href=\"/profile/users\" data-bs-"
-"original-title=\"\" title=\"\" target=\"_blank\">Meet our community members</"
-"a>"
-msgstr ""
+"<a class=\"btn btn-primary forum_register_url o_translate_inline\" href=\"/"
+"web/login\">회원 가입</a>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.post_display
@@ -425,8 +408,8 @@ msgid ""
 "role=\"img\" aria-label=\"Gold badge\" title=\"Gold badge\"/>"
 msgstr ""
 "<b>|</b>\n"
-"                    <span class=\"fa fa-trophy o-text-gold ms-2\" role="
-"\"img\" aria-label=\"금배지\" title=\"금배지\"/>"
+"                    <span class=\"fa fa-trophy o-text-gold ms-2\" "
+"role=\"img\" aria-label=\"금배지\" title=\"금배지\"/>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.post_description_full
@@ -454,8 +437,8 @@ msgid ""
 "<i class=\"fa fa-caret-down\" data-bs-toggle=\"tooltip\" data-bs-"
 "placement=\"top\" title=\"Downvote\"/>"
 msgstr ""
-"<i class=\"fa fa-caret-down\" data-bs-toggle=\"tooltip\" data-bs-placement="
-"\"top\" title=\"반대투표\"/>"
+"<i class=\"fa fa-caret-down\" data-bs-toggle=\"tooltip\" data-bs-"
+"placement=\"top\" title=\"반대투표\"/>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.vote
@@ -463,8 +446,8 @@ msgid ""
 "<i class=\"fa fa-caret-up\" data-bs-toggle=\"tooltip\" data-bs-"
 "placement=\"top\" title=\"Upvote\"/>"
 msgstr ""
-"<i class=\"fa fa-caret-up\" data-bs-toggle=\"tooltip\" data-bs-placement="
-"\"top\" title=\"찬성투표\"/>"
+"<i class=\"fa fa-caret-up\" data-bs-toggle=\"tooltip\" data-bs-"
+"placement=\"top\" title=\"찬성투표\"/>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.post_description_full
@@ -483,7 +466,8 @@ msgstr ""
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.no_results_message
 msgid "<i class=\"fa fa-check fa-fw me-1\"/>Check your spelling and try again."
-msgstr "<i class=\"fa fa-check fa-fw me-1\"/>철자를 확인하고 다시 시도해 주세요."
+msgstr ""
+"<i class=\"fa fa-check fa-fw me-1\"/>철자를 확인하고 다시 시도해 주세요."
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.no_results_message
@@ -583,8 +567,8 @@ msgid ""
 "<i class=\"fa fa-share-alt\" data-bs-toggle=\"tooltip\" data-bs-"
 "placement=\"top\" title=\"Share\"/>"
 msgstr ""
-"<i class=\"fa fa-share-alt\" data-bs-toggle=\"tooltip\" data-bs-placement="
-"\"top\" title=\"공유\"/>"
+"<i class=\"fa fa-share-alt\" data-bs-toggle=\"tooltip\" data-bs-"
+"placement=\"top\" title=\"공유\"/>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.user_sidebar_body
@@ -655,13 +639,20 @@ msgid "<i class=\"oi oi-arrow-right d-inline-block\"/> Go to Forums"
 msgstr "<i class=\"oi oi-arrow-right d-inline-block\"/> 게시판으로 이동하기"
 
 #. module: website_forum
+#: model_terms:ir.ui.view,arch_db:website_forum.404
+msgid ""
+"<i class=\"oi oi-arrow-right display-inline-block\"/> Return to questions "
+"list"
+msgstr ""
+
+#. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.post_dropdown
 msgid ""
 "<i class=\"oi oi-ellipsis-h\" data-bs-toggle=\"tooltip\" data-bs-"
 "placement=\"top\" title=\"More\"/>"
 msgstr ""
-"<i class=\"oi oi-ellipsis-h\" data-bs-toggle=\"tooltip\" data-bs-placement="
-"\"top\" title=\"More\"/>"
+"<i class=\"oi oi-ellipsis-h\" data-bs-toggle=\"tooltip\" data-bs-"
+"placement=\"top\" title=\"More\"/>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.user_profile_content
@@ -684,8 +675,8 @@ msgid ""
 "<span class=\"fa fa-trophy o-text-bronze ms-2\" role=\"img\" aria-"
 "label=\"Bronze badge\" title=\"Bronze badge\"/>"
 msgstr ""
-"<span class=\"fa fa-trophy o-text-bronze ms-2\" role=\"img\" aria-label="
-"\"동배지\" title=\"동배지\"/>"
+"<span class=\"fa fa-trophy o-text-bronze ms-2\" role=\"img\" aria-label=\"동"
+"배지\" title=\"동배지\"/>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.contact
@@ -693,8 +684,8 @@ msgid ""
 "<span class=\"fa fa-trophy o-text-silver ms-2\" role=\"img\" aria-"
 "label=\"Silver badge\" title=\"Silver badge\"/>"
 msgstr ""
-"<span class=\"fa fa-trophy o-text-silver ms-2\" role=\"img\" aria-label="
-"\"은배지\" title=\"은배지\"/>"
+"<span class=\"fa fa-trophy o-text-silver ms-2\" role=\"img\" aria-label=\"은"
+"배지\" title=\"은배지\"/>"
 
 #. module: website_forum
 #: model_terms:forum.forum,faq:website_forum.forum_help
@@ -707,13 +698,15 @@ msgstr "<span class=\"flex-grow-1\">여기에서 어떤 질문을 할 수 있나
 #: model_terms:forum.forum,faq:website_forum.forum_help
 #: model_terms:ir.ui.view,arch_db:website_forum.default_faq
 msgid "<span class=\"flex-grow-1\">What should I avoid in my answers?</span>"
-msgstr "<span class=\"flex-grow-1\">답변에서 피해야 할 사항은 무엇인가요?</span>"
+msgstr ""
+"<span class=\"flex-grow-1\">답변에서 피해야 할 사항은 무엇인가요?</span>"
 
 #. module: website_forum
 #: model_terms:forum.forum,faq:website_forum.forum_help
 #: model_terms:ir.ui.view,arch_db:website_forum.default_faq
 msgid "<span class=\"flex-grow-1\">What should I avoid in my questions?</span>"
-msgstr "<span class=\"flex-grow-1\">질문에서 피해야 할 사항은 무엇인가요?</span>"
+msgstr ""
+"<span class=\"flex-grow-1\">질문에서 피해야 할 사항은 무엇인가요?</span>"
 
 #. module: website_forum
 #: model_terms:forum.forum,faq:website_forum.forum_help
@@ -721,7 +714,8 @@ msgstr "<span class=\"flex-grow-1\">질문에서 피해야 할 사항은 무엇�
 msgid ""
 "<span class=\"flex-grow-1\">Why can other people edit my questions/answers?</"
 "span>"
-msgstr "<span class=\"flex-grow-1\">다른 사람이 내 질문/답변을 수정할 수 있는 이유는 "
+msgstr ""
+"<span class=\"flex-grow-1\">다른 사람이 내 질문/답변을 수정할 수 있는 이유는 "
 "무엇인가요?</span>"
 
 #. module: website_forum
@@ -730,8 +724,9 @@ msgstr "<span class=\"flex-grow-1\">다른 사람이 내 질문/답변을 수정
 msgid ""
 "<span class=\"form-text small text-muted d-block\">consider adding an "
 "example.</span>"
-msgstr "<span class=\"form-text small text-muted d-block\">예제를 추가해 "
-"보세요.</span>"
+msgstr ""
+"<span class=\"form-text small text-muted d-block\">예제를 추가해 보세요.</"
+"span>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.edit_post
@@ -750,8 +745,8 @@ msgid ""
 "<span class=\"form-text small text-muted d-block\">use '/' to insert images."
 "</span>"
 msgstr ""
-"<span class=\"form-text small text-muted d-block\">'/'를 사용하여 이미지를 "
-"삽입합니다.</span>"
+"<span class=\"form-text small text-muted d-block\">'/'를 사용하여 이미지를 삽"
+"입합니다.</span>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.edit_post
@@ -760,8 +755,8 @@ msgid ""
 "<span class=\"form-text small text-muted me-1\"><i class=\"fa fa-lightbulb-"
 "o\"/> Tip:</span>"
 msgstr ""
-"<span class=\"form-text small text-muted me-1\"><i class="
-"\"fa fa-lightbulb-o\"/> 팁:</span>"
+"<span class=\"form-text small text-muted me-1\"><i class=\"fa fa-lightbulb-"
+"o\"/> 팁:</span>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.forum_forum_view_form
@@ -804,8 +799,9 @@ msgstr "<span>조정</span>"
 msgid ""
 "<span>Please wait for a moderator to validate your previous post to be "
 "allowed to reply to questions.</span>"
-msgstr "<span>운영자가 이전 게시물을 승인할 때까지 기다려야 질문에 답변할 수 "
-"있습니다.</span>"
+msgstr ""
+"<span>운영자가 이전 게시물을 승인할 때까지 기다려야 질문에 답변할 수 있습니"
+"다.</span>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.user_sidebar_header
@@ -1488,7 +1484,8 @@ msgstr "새 태그 만들기"
 msgid ""
 "Create an account today to enjoy exclusive features and engage with our "
 "awesome community!"
-msgstr "지금 바로 가입하여 독점 서비스를 이용해보고 특별한 커뮤니티와 소통하세요!"
+msgstr ""
+"지금 바로 가입하여 독점 서비스를 이용해보고 특별한 커뮤니티와 소통하세요!"
 
 #. module: website_forum
 #: model:ir.model.fields,field_description:website_forum.field_forum_forum__karma_tag_create
@@ -1841,8 +1838,9 @@ msgstr "즐겨찾기"
 msgid ""
 "Field to keep track of a post's last activity. Updated whenever it is "
 "replied to, or when a comment is added on the post or one of its replies."
-msgstr "필드를 사용하여 게시물의 마지막 활동을 추적합니다. 댓글이 달리거나 추가 "
-"댓글이 달릴 때마다 업데이트됩니다."
+msgstr ""
+"필드를 사용하여 게시물의 마지막 활동을 추적합니다. 댓글이 달리거나 추가 댓글"
+"이 달릴 때마다 업데이트됩니다."
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.moderation_queue
@@ -2132,7 +2130,8 @@ msgstr "도움말"
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.user_votes
 msgid "Help moderating the forums by upvoting and downvoting posts. <br/>"
-msgstr "게시글에 대한 찬성표와 반대표를 던져 게시판을 중재하는 데 도움을 줍니다. <br/"
+msgstr ""
+"게시글에 대한 찬성표와 반대표를 던져 게시판을 중재하는 데 도움을 줍니다. <br/"
 ">"
 
 #. module: website_forum
@@ -2430,6 +2429,11 @@ msgstr "모욕 게시물로 표시"
 #: model_terms:ir.ui.view,arch_db:website_forum.moderation_queue
 msgid "Mark as spam"
 msgstr "스팸으로 표시"
+
+#. module: website_forum
+#: model_terms:ir.ui.view,arch_db:website_forum.forum_all_oe_structure_forum_all_top
+msgid "Meet our community members"
+msgstr ""
 
 #. module: website_forum
 #: model:ir.model.fields,field_description:website_forum.field_forum_forum__message_has_error
@@ -3364,8 +3368,9 @@ msgstr "태그"
 msgid ""
 "Tap into the collective knowledge of our community by asking your questions "
 "in our forums,<br/> where helpful members are ready to assist you."
-msgstr "도움이 필요한 회원들은 게시판에<br/> 질문을 남겨 커뮤니티 구성원의 "
-"집단지성을 활용할 수 있습니다."
+msgstr ""
+"도움이 필요한 회원들은 게시판에<br/> 질문을 남겨 커뮤니티 구성원의 집단지성"
+"을 활용할 수 있습니다."
 
 #. module: website_forum
 #: model:gamification.badge,name:website_forum.badge_32
@@ -4274,6 +4279,15 @@ msgstr "툴팁으로 귀하의 이력을 볼 수 있습니다"
 #: model_terms:ir.ui.view,arch_db:website_forum.follow
 msgid "your email..."
 msgstr "귀하의 이메일..."
+
+#~ msgid ""
+#~ "<a class=\"btn-link o_translate_inline\" t-attf-href=\"/forum\"><i "
+#~ "class=\"oi oi-arrow-right display-inline-block\"/> Return to questions "
+#~ "list</a>"
+#~ msgstr ""
+#~ "<a class=\"btn-link o_translate_inline\" t-attf-href=\"/forum\"><i "
+#~ "class=\"oi oi-arrow-right display-inline-block\"/>질문 목록으로 돌아가기</"
+#~ "a>"
 
 #~ msgid "%d karma required to unlink a comment."
 #~ msgstr "댓글 링크를 해제하려면 %d 명성이 필요합니다."

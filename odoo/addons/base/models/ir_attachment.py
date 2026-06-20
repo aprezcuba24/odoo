@@ -7,22 +7,35 @@ import hashlib
 import logging
 import mimetypes
 import os
-import psycopg2
 import re
 import uuid
 import warnings
-import werkzeug
-
 from collections import defaultdict
 from collections.abc import Collection
 
-from odoo import api, fields, models, _
-from odoo.exceptions import AccessError, MissingError, ValidationError, UserError
+import psycopg2
+import werkzeug
+
+from odoo import _, api, fields, models
+from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.fields import Domain
-from odoo.http import Stream, root, request
-from odoo.tools import config, consteq, human_size, image, split_every, str2bool, OrderedSet
+from odoo.http import Stream, request, root
+from odoo.tools import (
+    OrderedSet,
+    config,
+    consteq,
+    human_size,
+    image,
+    split_every,
+    str2bool,
+)
 from odoo.tools.constants import PREFETCH_MAX
-from odoo.tools.mimetypes import guess_mimetype, fix_filename_extension, _olecf_mimetypes
+from odoo.tools.mimetypes import (
+    MIMETYPE_HEAD_SIZE,
+    _olecf_mimetypes,
+    fix_filename_extension,
+    guess_mimetype,
+)
 from odoo.tools.misc import limited_field_access_token
 
 _logger = logging.getLogger(__name__)
@@ -147,10 +160,10 @@ class IrAttachment(models.Model):
         fname, full_path = self._get_path(bin_value, checksum)
         if not os.path.exists(full_path):
             try:
-                with open(full_path, 'wb') as fp:
-                    fp.write(bin_value)
                 # add fname to checklist, in case the transaction aborts
                 self._mark_for_gc(fname)
+                with open(full_path, 'wb') as fp:
+                    fp.write(bin_value)
             except OSError:
                 _logger.info("_file_write writing %s", full_path)
                 raise
@@ -256,6 +269,14 @@ class IrAttachment(models.Model):
                 attach.raw = attach._file_read(attach.store_fname)
             else:
                 attach.raw = attach.db_datas
+
+    def _get_pdf_raw(self):
+        self.ensure_one()
+        if self.type != 'binary':
+            return False
+        if not self.mimetype.startswith('application/pdf'):
+            return False
+        return self.raw
 
     def _inverse_raw(self):
         self._set_attachment_data(lambda a: a.raw or b'')
@@ -469,6 +490,15 @@ class IrAttachment(models.Model):
                 has_group = self.env.user.has_group
                 if not any(has_group(g) for g in attachment.get_serving_groups()):
                     raise ValidationError(_("Sorry, you are not allowed to write on this document"))
+
+    @api.constrains('res_model', 'res_id')
+    def _check_circular_attachment(self):
+        for record in self.sudo():
+            if record.res_model == 'ir.attachment' and record.id == record.res_id:
+                raise ValidationError(_(
+                    "You cannot attach an attachment to itself.\n"
+                    "Attachment %(record)s cannot have res_id: %(res_id)s",
+                    record=record, res_id=record))
 
     @api.model
     def check(self, mode, values=None):
@@ -861,7 +891,7 @@ class IrAttachment(models.Model):
             mimetype = file.content_type
             filename = file.filename
         elif mimetype == 'GUESS':
-            head = file.read(1024)
+            head = file.read(MIMETYPE_HEAD_SIZE)
             file.seek(-len(head), 1)  # rewind
             mimetype = guess_mimetype(head)
             filename = fix_filename_extension(file.filename, mimetype)

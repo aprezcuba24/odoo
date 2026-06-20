@@ -4,7 +4,7 @@ import {
     waitForEndOfOperation,
 } from "@html_builder/../tests/helpers";
 import { expect, test } from "@odoo/hoot";
-import { click, queryAll, queryOne, waitFor } from "@odoo/hoot-dom";
+import { animationFrame, click, queryAll, queryOne, waitFor } from "@odoo/hoot-dom";
 import { contains, dataURItoBlob, onRpc, patchWithCleanup } from "@web/../tests/web_test_helpers";
 import { uniqueId } from "@web/core/utils/functions";
 import {
@@ -107,11 +107,23 @@ test.skip("Remove all images in gallery", async () => {
     expect(".o_select_media_dialog").toHaveCount(1);
 });
 
-test("Change gallery layout", async () => {
+test("Rapidly remove an image from the gallery", async () => {
     await setupWbsiteBuilderWithImageWall();
+    const initialCount = queryAll(":iframe .o_masonry_col img").length;
+    await click(":iframe .o_masonry_col img[data-index='1']");
+    await waitFor("[data-container-title='Image'] .oe_snippet_remove");
+    click("[data-container-title='Image'] .oe_snippet_remove");
+    click("[data-container-title='Image'] .oe_snippet_remove");
+    await animationFrame();
+    expect(":iframe .o_masonry_col img[data-index='1']").toHaveCount(0);
+    expect(":iframe .o_masonry_col img").toHaveCount(initialCount - 1);
+});
+
+test("Change gallery layout", async () => {
+    const { waitSidebarUpdated } = await setupWbsiteBuilderWithImageWall();
 
     await contains(":iframe img").click();
-    await waitFor("[data-label='Mode']");
+    await waitSidebarUpdated();
     expect("[data-label='Mode']").toHaveCount(1);
     expect(queryOne("[data-label='Mode'] .dropdown-toggle").textContent).toBe("Masonry");
     await contains("[data-label='Mode'] .dropdown-toggle").click();
@@ -157,7 +169,8 @@ test("Change gallery layout when images have a link", async () => {
     await contains("[data-label='Media'] button[data-action-id='setLink']").click();
 
     await contains("[data-label='Your URL'] [data-action-id='setUrl'] > input").fill(
-        "http://odoo.com"
+        "http://odoo.com",
+        { confirm: "blur" }
     );
     expect(":iframe section a[href='http://odoo.com'] > img[data-index='1']").toHaveCount(1);
 
@@ -202,4 +215,29 @@ test("Cloning an image gallery should produce a unique ID", async () => {
     expect(":iframe .s_image_gallery:nth-child(2) .carousel").toHaveAttribute("id");
     const imageCarousels = queryAll(":iframe .s_image_gallery .carousel");
     expect(imageCarousels[0].id).not.toEqual(imageCarousels[1].id);
+});
+
+test("Change gallery layout still works when img.decode() fails", async () => {
+    // to handle the Chrome bug where img.decode() can fail with "EncodingError:
+    // The source image cannot be decoded" when decoding many images simultaneously.
+    // See: https://bugs.chromium.org/p/chromium/issues/detail?id=1256288
+    // To reproduce the issue in the test we will set image src = "".
+    const builder = await setupWebsiteBuilderWithSnippet("s_images_wall");
+    // Change img source so decoding will fail
+    const images = queryAll(":iframe img");
+    images.forEach((imgEl) => {
+        imgEl.src = "";
+    });
+    await images.at(0).click();
+    await builder.waitSidebarUpdated();
+    await contains("[data-label='Mode'] .dropdown-toggle").click();
+
+    // This should NOT throw an error even img.decode() call will fail
+    await contains("[data-action-param='grid']").click();
+    await builder.waitSidebarUpdated();
+
+    // Verify the layout change worked despite decode failures
+    expect(":iframe .o_grid").toHaveCount(1);
+    expect(":iframe .o_masonry_col").toHaveCount(0);
+    expect("[data-label='Mode'] .dropdown-toggle").toHaveText("Grid");
 });

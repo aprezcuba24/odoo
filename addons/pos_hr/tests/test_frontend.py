@@ -12,16 +12,11 @@ class TestPosHrHttpCommon(TestPointOfSaleHttpCommon):
 
         cls.env.user.group_ids += cls.env.ref('hr.group_hr_user')
 
-        cls.main_pos_config.write({"module_pos_hr": True})
-
         # Admin employee
-        cls.admin = cls.env.ref("hr.employee_admin").sudo().copy({
-            "date_version": '2000-01-01',
-            "company_id": cls.env.company.id,
-            "user_id": cls.pos_admin.id,
-            "name": "Mitchell Admin",
-            "pin": False,
-        })
+        cls.pos_admin.employee_id.name = "Mitchell Admin"
+        cls.admin = cls.pos_admin.employee_id
+
+        cls.main_pos_config.write({"module_pos_hr": True})
 
         # Managers
         cls.manager_user = new_test_user(
@@ -266,5 +261,19 @@ class TestUi(TestPosHrHttpCommon):
         self.start_tour(
             "/pos/ui?config_id=%d" % self.main_pos_config.id,
             "test_maximum_closing_difference",
+            login="pos_admin"
+        )
+
+    def test_scan_employee_barcode_with_pos_hr_disabled(self):
+        """
+        Ensure that scanning an employee barcode when module_pos_hr is disabled does not
+        trigger any traceback.
+        """
+        self.main_pos_config.module_pos_hr = False
+        self.main_pos_config.with_user(self.pos_admin).open_ui()
+
+        self.start_tour(
+            "/pos/ui?config_id=%d" % self.main_pos_config.id,
+            "test_scan_employee_barcode_with_pos_hr_disabled",
             login="pos_admin"
         )

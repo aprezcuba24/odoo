@@ -60,7 +60,7 @@ class ResCompany(models.Model):
         help='Primary contact email for Peppol connection related communications and notifications.\n'
              'In particular, this email is used by Odoo to reconnect your Peppol account in case of database change.',
     )
-    account_peppol_migration_key = fields.Char(string="Migration Key")
+    account_peppol_migration_key = fields.Char(string="Migration Key", groups="base.group_system")
     account_peppol_phone_number = fields.Char(
         string='Mobile number',
         compute='_compute_account_peppol_phone_number', store=True, readonly=False,
@@ -133,14 +133,8 @@ class ResCompany(models.Model):
 
         return self.env['res.company']
 
-    def _have_unauthorized_peppol_parent_company(self):
-        """
-        Returns True if the company is using the active peppol connection of the parent company
-        but the user does not have access to that parent company.
-        """
-        self.ensure_one()
-        parent_company = self.peppol_parent_company_id
-        return parent_company and parent_company not in self.env.user.company_ids
+    def _have_unauthorized_peppol_parent_company(self):  # TODO : remove in master
+        return False
 
     def _reset_peppol_configuration(self, soft=False):
         """
@@ -175,8 +169,7 @@ class ResCompany(models.Model):
 
         error_message = _(
             "Please enter the mobile number in the correct international format.\n"
-            "For example: +32123456789, where +32 is the country code.\n"
-            "Currently, only European countries are supported.")
+            "For example: +32123456789, where +32 is the country code.")
 
         self._check_phonenumbers_import()
 
@@ -192,8 +185,7 @@ class ResCompany(models.Model):
         except phonenumbers.phonenumberutil.NumberParseException:
             raise ValidationError(error_message)
 
-        country_code = phonenumbers.phonenumberutil.region_code_for_number(phone_nbr)
-        if country_code not in PEPPOL_LIST or not phonenumbers.is_valid_number(phone_nbr):
+        if not phonenumbers.is_valid_number(phone_nbr):
             raise ValidationError(error_message)
 
     def _check_peppol_endpoint_number(self, warning=False):
@@ -233,19 +225,25 @@ class ResCompany(models.Model):
     @api.depends('account_edi_proxy_client_ids')
     def _compute_account_peppol_edi_user(self):
         for company in self:
-            company.account_peppol_edi_user = company.account_edi_proxy_client_ids.filtered(lambda u: u.proxy_type == 'peppol')
+            company.account_peppol_edi_user = company.account_edi_proxy_client_ids.filtered(
+                lambda u: u.proxy_type in self.env['account_edi_proxy_client.user']._get_peppol_proxy_types()
+            )
 
     @api.depends('peppol_eas', 'peppol_endpoint')
     def _compute_peppol_parent_company_id(self):
         self.peppol_parent_company_id = False
         for company in self:
             for parent_company in company.parent_ids[::-1][1:]:
-                if all((
-                    company.peppol_eas,
-                    company.peppol_endpoint,
-                    company.peppol_eas == parent_company.peppol_eas,
-                    company.peppol_endpoint == parent_company.peppol_endpoint,
-                )):
+                if (
+                    company.peppol_eas
+                    and company.peppol_endpoint
+                    and company.peppol_eas == parent_company.peppol_eas
+                    and company.peppol_endpoint == parent_company.peppol_endpoint
+                ) or (
+                    not company.peppol_endpoint
+                    and parent_company.peppol_eas
+                    and parent_company.peppol_endpoint
+                ):
                     company.peppol_parent_company_id = parent_company
                     break
 
@@ -372,10 +370,6 @@ class ResCompany(models.Model):
                     "SI-UBL 2.0 Invoice",
                 "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2::CreditNote##urn:cen.eu:en16931:2017#compliant#urn:fdc:nen.nl:nlcius:v1.0::2.1":
                     "SI-UBL 2.0 CreditNote",
-                "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2::Invoice##urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0::2.1":
-                    "XRechnung UBL Invoice V2.0",
-                "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2::CreditNote##urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0::2.1":
-                    "XRechnung UBL CreditNote V2.0",
             }
         }
 
@@ -391,7 +385,7 @@ class ResCompany(models.Model):
         self.ensure_one()
         config_param = self.env['ir.config_parameter'].sudo().get_param('account_peppol.edi.mode')
         # by design, we can only have zero or one proxy user per company with type Peppol
-        peppol_user = self.sudo().account_edi_proxy_client_ids.filtered(lambda u: u.proxy_type == 'peppol')
+        peppol_user = self.sudo().account_edi_proxy_client_ids.filtered(lambda u: u.proxy_type in self.env['account_edi_proxy_client.user']._get_peppol_proxy_types())
         demo_if_demo_identifier = 'demo' if (temporary_eas or self.peppol_eas) == 'odemo' else False
         return demo_if_demo_identifier or peppol_user.edi_mode or config_param or 'prod'
 
@@ -448,3 +442,10 @@ class ResCompany(models.Model):
             return
 
         mail_template.send_mail(self.id, force_send=True)
+
+    def _get_peppol_proxy_type(self):
+        self.ensure_one()
+        peppol_user = self.sudo().account_edi_proxy_client_ids.filtered(
+            lambda u: u.proxy_type in self.env['account_edi_proxy_client.user']._get_peppol_proxy_types()
+        )
+        return peppol_user.proxy_type or 'peppol'

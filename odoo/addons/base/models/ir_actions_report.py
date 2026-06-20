@@ -462,13 +462,13 @@ class IrActionsReport(models.Model):
 
         return bodies, res_ids, header, footer, specific_paperformat_args
 
-    def _run_wkhtmltoimage(self, bodies, width, height, image_format="jpg"):
+    def _run_wkhtmltoimage(self, bodies, width, height, image_format="jpg") -> list[bytes | None]:
         """
-        :bodies str: valid html documents as strings
-        :param width int: width in pixels
-        :param height int: height in pixels
-        :param image_format union['jpg', 'png']: format of the image
-        :return list[bytes|None]:
+        :param str bodies: valid html documents as strings
+        :param int width: width in pixels
+        :param int height: height in pixels
+        :param image_format: format of the image
+        :type image_format: typing.Literal['jpg', 'png']
         """
         if modules.module.current_test:
             return [None] * len(bodies)
@@ -577,15 +577,15 @@ class IrActionsReport(models.Model):
 
             if header:
                 head_file_fd, head_file_path = tempfile.mkstemp(suffix='.html', prefix='report.header.tmp.')
+                stack.callback(delete_file, head_file_path)
                 with closing(os.fdopen(head_file_fd, 'wb')) as head_file:
                     head_file.write(header.encode())
-                stack.callback(delete_file, head_file_path)
                 files_command_args.extend(['--header-html', head_file_path])
             if footer:
                 foot_file_fd, foot_file_path = tempfile.mkstemp(suffix='.html', prefix='report.footer.tmp.')
+                stack.callback(delete_file, foot_file_path)
                 with closing(os.fdopen(foot_file_fd, 'wb')) as foot_file:
                     foot_file.write(footer.encode())
-                stack.callback(delete_file, foot_file_path)
                 files_command_args.extend(['--footer-html', foot_file_path])
 
             paths = []
@@ -593,6 +593,7 @@ class IrActionsReport(models.Model):
             for body_idx, body in enumerate(bodies):
                 prefix = f'report.body.tmp.{body_idx}.'
                 body_file_fd, body_file_path = tempfile.mkstemp(suffix='.html', prefix=prefix)
+                stack.callback(delete_file, body_file_path)
                 with closing(os.fdopen(body_file_fd, 'wb')) as body_file:
                     # HACK: wkhtmltopdf doesn't like big table at all and the
                     #       processing time become exponential with the number
@@ -608,11 +609,10 @@ class IrActionsReport(models.Model):
                         _split_table(tree, 500)
                         body_file.write(lxml.html.tostring(tree))
                 paths.append(body_file_path)
-                stack.callback(delete_file, body_file_path)
 
             pdf_report_fd, pdf_report_path = tempfile.mkstemp(suffix='.pdf', prefix='report.tmp.')
-            os.close(pdf_report_fd)
             stack.callback(delete_file, pdf_report_path)
+            os.close(pdf_report_fd)
 
             process = _run_wkhtmltopdf(command_args + files_command_args + paths + [pdf_report_path])
             err = process.stderr
@@ -792,14 +792,17 @@ class IrActionsReport(models.Model):
         raise UserError(_("Odoo is unable to merge the generated PDFs."))
 
     @api.model
-    def _merge_pdfs(self, streams, handle_error=_handle_merge_pdfs_error):
+    def _merge_pdfs(self, streams, handle_error=None):
         writer = PdfFileWriter()
         for stream in streams:
             try:
                 reader = PdfFileReader(stream)
                 writer.appendPagesFromReader(reader)
             except (PdfReadError, TypeError, NotImplementedError, ValueError) as e:
-                handle_error(error=e, error_stream=stream)
+                if handle_error is None:
+                    self._handle_merge_pdfs_error(error=e, error_stream=stream)
+                else:
+                    handle_error(error=e, error_stream=stream)
         result_stream = io.BytesIO()
         streams.append(result_stream)
         try:
@@ -966,11 +969,11 @@ class IrActionsReport(models.Model):
                         stream = io.BytesIO()
                         attachment_writer.write(stream)
                         collected_streams[res_ids_wo_stream[i]]['stream'] = stream
-                    return collected_streams
                 else:
                     for res_id in res_ids_wo_stream:
                         individual_collected_stream = self._render_qweb_pdf_prepare_streams(report_ref=report_ref, data=data, res_ids=[res_id])
                         collected_streams[res_id]['stream'] = individual_collected_stream[res_id]['stream']
+                return collected_streams
             collected_streams[False] = {'stream': pdf_content_stream, 'attachment': None}
 
         return collected_streams

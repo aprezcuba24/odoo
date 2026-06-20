@@ -1,9 +1,11 @@
 import { BackgroundOption } from "@html_builder/plugins/background_option/background_option";
 import { BackgroundPositionOverlay } from "@html_builder/plugins/background_option/background_position_overlay";
+import { Plugin } from "@html_editor/plugin";
 import { expect, test } from "@odoo/hoot";
 import { animationFrame, queryOne, scroll, waitFor } from "@odoo/hoot-dom";
 import { contains, patchWithCleanup } from "@web/../tests/web_test_helpers";
 import {
+    addPlugin,
     addOption,
     defineWebsiteModels,
     setupWebsiteBuilder,
@@ -295,6 +297,35 @@ test("Background position overlay behavior", async () => {
     );
 });
 
+test("Color filter doesn't disappear when video background is set", async () => {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <section class="color-target o_background_video" data-snippet="s_banner" data-name="Banner" data-bg-video-src="/test_route">
+            <div class="o_bg_video_container" contenteditable="false">
+                <div class="o_bg_video_loading d-flex justify-content-center align-items-center text-primary"></div>
+            </div>
+            <div>First section</div>
+            <div class="o_we_bg_filter" style="background-color: rgba(100, 100, 100, 0.5);" />
+        </section>
+        <section class="gradient-target o_background_video" data-snippet="s_banner" data-name="Banner" data-bg-video-src="/test_route">
+            <div class="o_bg_video_container" contenteditable="false">
+                <div class="o_bg_video_loading d-flex justify-content-center align-items-center text-primary"></div>
+            </div>
+            <div>Second section</div>
+            <div class="o_we_bg_filter" style="background-image: linear-gradient(135deg, rgba(255, 204, 51, 0.5) 0%, rgba(226, 51, 255, 0.5) 100%)" />
+        </section>`);
+    expect(":iframe .o_we_bg_filter").toHaveCount(2);
+
+    await contains(":iframe .color-target").click();
+    await waitSidebarUpdated();
+    expect(":iframe .color-target .o_we_bg_filter").toHaveCount(1);
+    expect(":iframe .gradient-target .o_we_bg_filter").toHaveCount(1);
+
+    await contains(":iframe .gradient-target").click();
+    await waitSidebarUpdated();
+    expect(":iframe .color-target .o_we_bg_filter").toHaveCount(1);
+    expect(":iframe .gradient-target .o_we_bg_filter").toHaveCount(1);
+});
+
 async function openBgPositionOverlay(editingElement, waitSidebarUpdated) {
     await contains(editingElement).click();
     await waitSidebarUpdated();
@@ -339,7 +370,7 @@ async function dragAndDropBgImage() {
 }
 
 test("change the main color of a background image of type '/html_editor/shape'", async () => {
-    await setupWebsiteBuilder(
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(
         `
             <section style="background-image: url('/html_editor/shape/http_routing/404.svg?c2=o-color-2');">
                 AAAA
@@ -350,6 +381,7 @@ test("change the main color of a background image of type '/html_editor/shape'",
         }
     );
     await contains(":iframe section").click();
+    await waitSidebarUpdated();
     await contains("[data-label='Main Color'] .o_we_color_preview").click();
     await contains(
         ".o-main-components-container .o_colorpicker_section [data-color='o-color-5']"
@@ -385,6 +417,7 @@ test("remove the background image of a snippet", async () => {
             </div>
         </section>`);
     await contains(":iframe section").click();
+    await waitSidebarUpdated();
     expect(":iframe section").toHaveStyle("backgroundImage");
     await contains("[data-action-id='toggleBgImage']").click();
     await waitSidebarUpdated();
@@ -392,7 +425,7 @@ test("remove the background image of a snippet", async () => {
 });
 
 test("changing shape's background color doesn't hide the shape itself", async () => {
-    await setupWebsiteBuilder(
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(
         `<section style="background-image: url('/html_editor/shape/http_routing/404.svg?c2=o-color-2');">
             AAAA
         </section>`,
@@ -401,6 +434,7 @@ test("changing shape's background color doesn't hide the shape itself", async ()
         }
     );
     await contains(":iframe section").click();
+    await waitSidebarUpdated();
     await contains("button[data-action-id='toggleBgShape']").click();
     await contains(
         ".o_pager_container .o-hb-bg-shape-btn [data-action-value='html_builder/Connections/01'][data-action-id='setBackgroundShape']"
@@ -414,6 +448,18 @@ test("changing shape's background color doesn't hide the shape itself", async ()
 
 test("remove background image removes color filter", async () => {
     await setupWebsiteBuilderWithSnippet("s_cover");
+    await contains(":iframe section").click();
+    await contains("[data-action-id='toggleBgImage']").click();
+    expect(":iframe section .o_we_bg_filter").not.toHaveCount();
+});
+
+test("remove background image removes gradient color filter", async () => {
+    await setupWebsiteBuilder(`
+        <section style="background-image: url('/web/image/123/transparent.png');">
+            <div class="o_we_bg_filter"
+                style="background-image: linear-gradient(135deg, red, blue);"></div>
+            AAAA
+        </section>`);
     await contains(":iframe section").click();
     await contains("[data-action-id='toggleBgImage']").click();
     expect(":iframe section .o_we_bg_filter").not.toHaveCount();
@@ -468,4 +514,67 @@ test("background shape detection is compatible with previous ones (web_editor)",
         "data-action-value",
         "html_builder/Connections/01"
     );
+});
+
+test("can customize background shape groups", async () => {
+    class CustomBackgroundShapeGroupsPlugin extends Plugin {
+        static id = "customBackgroundShapeGroups";
+        resources = {
+            background_shape_groups_providers: (shapeGroups) => {
+                const connections = shapeGroups.basic.subgroups.connections.shapes;
+                const customShapes = {
+                    "html_builder/Connections/01": {
+                        ...connections["html_builder/Connections/01"],
+                        selectLabel: "Custom 01",
+                    },
+                    "html_builder/Connections/02": {
+                        ...connections["html_builder/Connections/02"],
+                        selectLabel: "Custom 02",
+                    },
+                };
+                const extraShapes = {
+                    "html_builder/Connections/03": {
+                        ...connections["html_builder/Connections/03"],
+                        selectLabel: "Extra 03",
+                    },
+                };
+                delete connections["html_builder/Connections/01"];
+                delete connections["html_builder/Connections/02"];
+                return {
+                    basic: {
+                        subgroups: {
+                            custom: {
+                                label: "Custom",
+                                shapes: customShapes,
+                            },
+                        },
+                    },
+                    extra: {
+                        label: "Extra",
+                        subgroups: {
+                            extra: {
+                                label: "Extra",
+                                shapes: extraShapes,
+                            },
+                        },
+                    },
+                };
+            },
+        };
+    }
+    addPlugin(CustomBackgroundShapeGroupsPlugin);
+
+    await setupWebsiteBuilder(`<section>AAAA</section>`);
+    await contains(":iframe section").click();
+    await contains("button[data-action-id='toggleBgShape']").click();
+    expect(".o_pager_container").toHaveText(/Custom/);
+    expect("button.o-hb-select-pager-tab[data-group-id='extra']").toHaveCount(1);
+    expect("[data-action-value='html_builder/Connections/01']").toHaveCount(1);
+    expect("[data-action-value='html_builder/Connections/02']").toHaveCount(1);
+    await contains("[data-action-value='html_builder/Connections/01']").click();
+    expect(":iframe section").toHaveAttribute(
+        "data-oe-shape-data",
+        '{"shape":"html_builder/Connections/01","flip":[],"showOnMobile":false,"shapeAnimationSpeed":"0"}'
+    );
+    expect("div[data-label='Shape'] button:not([data-action-id])").toHaveText("Custom 01");
 });

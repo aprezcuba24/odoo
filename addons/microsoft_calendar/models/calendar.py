@@ -170,11 +170,18 @@ class CalendarEvent(models.Model):
         notify_context = self.env.context.get('dont_notify', False)
 
         # Forbid recurrence updates through Odoo and suggest user to update it in Outlook.
-        if self._check_microsoft_sync_status():
+        if not notify_context:
             recurrency_in_batch = self.filtered(lambda ev: ev.recurrency)
             recurrence_update_attempt = recurrence_update_setting or 'recurrency' in values or recurrency_in_batch and len(recurrency_in_batch) > 0
-            if not notify_context and recurrence_update_attempt and not 'active' in values:
-                self._forbid_recurrence_update()
+            # Check if this is an Outlook recurring event with active sync
+            if recurrence_update_attempt and 'active' not in values:
+                recurring_events = self.filtered('microsoft_recurrence_master_id')
+                if recurring_events and any(
+                    event.with_user(organizer)._check_microsoft_sync_status()
+                    for event in recurring_events
+                    if (organizer := event._get_organizer())
+                ):
+                    self._forbid_recurrence_update()
 
         # When changing the organizer, check its sync status and verify if the user is listed as attendee.
         # Updates from Microsoft must skip this check since changing the organizer on their side is not possible.
@@ -406,7 +413,9 @@ class CalendarEvent(models.Model):
         elif self.env.user.partner_id.email not in emails:
             commands_attendee += [(0, 0, {'state': 'accepted', 'partner_id': self.env.user.partner_id.id})]
             commands_partner += [(4, self.env.user.partner_id.id)]
-        partners = self.env['mail.thread']._partner_find_from_emails_single(emails, no_create=False)
+        partners = self.env['mail.thread'].with_context(
+            mail_create_log_from_calendar_sync=True,
+        )._partner_find_from_emails_single(emails, no_create=False)
         attendees_by_emails = {a.email: a for a in existing_attendees}
         partners_by_emails = {p.email_normalized: p for p in partners}
         for email, attendee_info in zip(emails, microsoft_attendees):

@@ -802,7 +802,14 @@ class PaymentProvider(models.Model):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError:
-            error_msg = self._parse_response_error(response)
+            try:
+                error_msg = self._parse_response_error(response)
+            except Exception:  # Catch any error during error parsing to avoid the conflicting JSONDecodeError classes in simplejosn and stdlib json.
+                _logger.exception(
+                    "An error occurred while parsing the error message of the response from "
+                    "provider %s. The original error message will be used instead.", self.name
+                )
+                error_msg = response.text
             raise ValidationError(_("The payment provider rejected the request.\n%s", error_msg))
         return self._parse_response_content(response, **kwargs)
 

@@ -3,13 +3,13 @@
 # * loyalty
 #
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# "Junko Augias (juau)" <juau@odoo.com>, 2025.
+# "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-12 18:35+0000\n"
-"PO-Revision-Date: 2025-12-20 09:53+0000\n"
+"POT-Creation-Date: 2026-04-10 18:39+0000\n"
+"PO-Revision-Date: 2026-05-23 09:50+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/loyalty/"
 "ja/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 5.17\n"
 
 #. module: loyalty
 #: model:ir.model.fields,help:loyalty.field_loyalty_program__trigger
@@ -55,11 +55,6 @@ msgstr ""
 #: code:addons/loyalty/models/loyalty_reward.py:0
 msgid " (Max %s)"
 msgstr " (最大 %s)"
-
-#. module: loyalty
-#: model_terms:ir.ui.view,arch_db:loyalty.loyalty_report
-msgid "$100"
-msgstr "$100"
 
 #. module: loyalty
 #. odoo-python
@@ -118,25 +113,10 @@ msgid "10% on your order"
 msgstr "注文の10%"
 
 #. module: loyalty
-#: model_terms:ir.ui.view,arch_db:loyalty.gift_card_report
-msgid "1000"
-msgstr "1000"
-
-#. module: loyalty
 #. odoo-python
 #: code:addons/loyalty/models/loyalty_program.py:0
 msgid "2+1 Free"
 msgstr "2+1 無料"
-
-#. module: loyalty
-#: model_terms:ir.ui.view,arch_db:loyalty.loyalty_report
-msgid "2023-08-20"
-msgstr "2023-08-20"
-
-#. module: loyalty
-#: model_terms:ir.ui.view,arch_db:loyalty.gift_card_report
-msgid "2023-12-31"
-msgstr "2023-12-31"
 
 #. module: loyalty
 #: model:mail.template,body_html:loyalty.mail_template_gift_card
@@ -453,13 +433,13 @@ msgid ""
 "</tbody></table>\n"
 "        "
 msgstr ""
-"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style="
-"\"width:100%; margin:0px auto; background:#ffffff; color:#333333;\"><tbody>\n"
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; "
+"margin:0px auto; background:#ffffff; color:#333333;\"><tbody>\n"
 "<tr>\n"
 "    <td valign=\"top\" style=\"text-align: center; font-size: 14px;\">\n"
 "        <t t-if=\"object._mail_get_customer().name\">\n"
-"            <t t-out=\"object._mail_get_customer().name or ''\">Brandon Freem"
-"an</t>様、おめでとうございます！<br/>\n"
+"            <t t-out=\"object._mail_get_customer().name or ''\">Brandon "
+"Freeman</t>様、おめでとうございます！<br/>\n"
 "        </t>\n"
 "\n"
 "        <t t-out=\"object.program_id.company_id.name or ''\">YourCompany</t>"
@@ -467,8 +447,8 @@ msgstr ""
 "\n"
 "        <t t-foreach=\"object.program_id.reward_ids\" t-as=\"reward\">\n"
 "            <t t-if=\"reward.required_points &lt;= object.points\">\n"
-"                <span t-attf-style=\"font-size: 50px; color: {{"
-"object.program_id.company_id.email_secondary_color or '#875A7B'}}; font-"
+"                <span t-attf-style=\"font-size: 50px; color: "
+"{{object.program_id.company_id.email_secondary_color or '#875A7B'}}; font-"
 "weight: bold;\" t-esc=\"reward.description\">リワード説明</span>\n"
 "                <br/>\n"
 "            </t>\n"
@@ -479,13 +459,13 @@ msgstr ""
 "    <td valign=\"top\" style=\"text-align: center; font-size: 14px;\">\n"
 "        このプロモーションコードをご使用ください\n"
 "        <t t-if=\"object.expiration_date\">\n"
-"            有効期限：<t t-out=\"format_date(object.expiration_date) or ''\""
-">2021-06-16</t>\n"
+"            有効期限：<t t-out=\"format_date(object.expiration_date) or "
+"''\">2021-06-16</t>\n"
 "        </t>\n"
 "        <p style=\"margin-top: 16px;\">\n"
 "            <strong style=\"padding: 16px 8px 16px 8px; border-radius: 3px; "
-"background-color: #F1F1F1;\" t-out=\"object.code or ''\""
-">15637502648479132902</strong>\n"
+"background-color: #F1F1F1;\" t-out=\"object.code or "
+"''\">15637502648479132902</strong>\n"
 "        </p>\n"
 "        <t t-foreach=\"object.program_id.rule_ids\" t-as=\"rule\">\n"
 "            <t t-if=\"rule.minimum_qty not in [0, 1]\">\n"
@@ -496,19 +476,19 @@ msgstr ""
 "            </t>\n"
 "            <t t-if=\"rule.minimum_amount != 0.00\">\n"
 "                <span style=\"font-size: 14px;\">\n"
-"                    最低購入金額：<t t-out="
-"\"rule.company_id.currency_id.symbol or ''\">$</t><t t-out="
-"\"'%0.2f' % float(rule.minimum_amount) or ''\">10.00</t>\n"
+"                    最低購入金額：<t t-"
+"out=\"rule.company_id.currency_id.symbol or ''\">$</t><t t-out=\"'%0.2f' % "
+"float(rule.minimum_amount) or ''\">10.00</t>\n"
 "                </span><br/>\n"
 "            </t>\n"
 "        </t>\n"
 "        <br/>\n"
 "        よろしくお願いいたします。\n"
-"        <t t-if=\"object._get_signature()\" data-o-mail-quote-container=\"1\""
-">\n"
+"        <t t-if=\"object._get_signature()\" data-o-mail-quote-"
+"container=\"1\">\n"
 "            <br/>\n"
-"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t "
-"t-out=\"object._get_signature() or ''\" data-o-mail-quote=\"1\">Mitchell "
+"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
+"out=\"object._get_signature() or ''\" data-o-mail-quote=\"1\">Mitchell "
 "Admin</t></div>\n"
 "        </t>\n"
 "    </td>\n"
@@ -569,13 +549,13 @@ msgstr "要アクション"
 #: model:ir.model.fields,field_description:loyalty.field_loyalty_rule__active
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_card_view_search
 msgid "Active"
-msgstr "アクティブ"
+msgstr "有効"
 
 #. module: loyalty
 #: model:ir.model.fields,field_description:loyalty.field_res_partner__loyalty_card_count
 #: model:ir.model.fields,field_description:loyalty.field_res_users__loyalty_card_count
 msgid "Active loyalty cards"
-msgstr "アクティブなロイヤリティカード"
+msgstr "有効なロイヤリティカード"
 
 #. module: loyalty
 #. odoo-javascript
@@ -627,7 +607,7 @@ msgstr "適用先:"
 #. module: loyalty
 #: model:ir.model.fields,field_description:loyalty.field_loyalty_program__applies_on
 msgid "Applies On"
-msgstr "以下に適用"
+msgstr "適用対象"
 
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_program_view_form
@@ -1401,7 +1381,7 @@ msgstr "チェックした場合は、新しいメッセージに注意が必要
 #: model:ir.model.fields,help:loyalty.field_loyalty_card__message_has_error
 #: model:ir.model.fields,help:loyalty.field_loyalty_card__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
-msgstr "選択されている場合、一部のメッセージで配信エラーが発生しています。"
+msgstr "有効にすると、一部のメッセージに配信エラーが発生します。"
 
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_rule_view_kanban
@@ -1417,7 +1397,7 @@ msgstr "交換ポイント"
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_card_view_search
 msgid "Inactive"
-msgstr "非アクティブ"
+msgstr "無効"
 
 #. module: loyalty
 #. odoo-python
@@ -1546,7 +1526,7 @@ msgstr "ロイヤリティ特典"
 #. module: loyalty
 #: model:ir.model,name:loyalty.model_loyalty_rule
 msgid "Loyalty Rule"
-msgstr "ロイヤリティ規則"
+msgstr "ロイヤリティルール"
 
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_card_history_template
@@ -1918,7 +1898,7 @@ msgstr "規則 & リワード"
 #. module: loyalty
 #: model:ir.model.fields,field_description:loyalty.field_loyalty_card__message_has_sms_error
 msgid "SMS Delivery error"
-msgstr "SMS送信エラー"
+msgstr "SMS配信エラー"
 
 #. module: loyalty
 #: model:ir.model.fields.selection,name:loyalty.selection__loyalty_generate_wizard__mode__selected
@@ -2018,8 +1998,7 @@ msgstr "終了日はこのプログラムの有効期間内です。"
 msgid ""
 "The loyalty program's currency must be the same as all it's pricelists ones."
 msgstr ""
-"ロイヤリティプログラムの通貨はそのプライスリストの通貨と同一である必要があり"
-"ます。"
+"ロイヤリティプログラムの通貨はその価格表の通貨と同一である必要があります。"
 
 #. module: loyalty
 #. odoo-python
@@ -2080,6 +2059,8 @@ msgid ""
 "This pricelist may not be archived. It is being used for active promotion "
 "programs: %s"
 msgstr ""
+"この価格表はアーカイブできません。現在、以下のプロモーションプログラムで使用"
+"されています: %s"
 
 #. module: loyalty
 #. odoo-python
@@ -2088,8 +2069,8 @@ msgid ""
 "This product may not be archived. It is being used for an active promotion "
 "program."
 msgstr ""
-"このプロダクトはアーカイブされない場合があります。アクティブなプロモーション"
-"プログラムに使用されています。"
+"このプロダクトはアーカイブされない場合があります。有効なプロモーションプログ"
+"ラムに使用されています。"
 
 #. module: loyalty
 #: model:ir.model.fields,help:loyalty.field_loyalty_program__pricelist_ids
@@ -2171,7 +2152,7 @@ msgstr "有効期限:"
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_program_view_form
 msgid "Visible to all"
-msgstr ""
+msgstr "全員に表示"
 
 #. module: loyalty
 #: model:ir.model.fields,field_description:loyalty.field_loyalty_card__website_message_ids
@@ -2217,6 +2198,8 @@ msgid ""
 "Whether to separate reward coupons per matched unit, only applies to "
 "'future' programs and trigger mode per money spent or unit paid..."
 msgstr ""
+"リワードクーポンを一致した単位ごとに分けるかどうか。「今後の」プログラムにの"
+"み適用されます。"
 
 #. module: loyalty
 #: model:ir.model.fields,field_description:loyalty.field_loyalty_generate_wizard__will_send_mail
@@ -2243,7 +2226,7 @@ msgstr "カードの残高を変更しようとしています"
 #. odoo-python
 #: code:addons/loyalty/models/loyalty_program.py:0
 msgid "You can not delete a program in an active state"
-msgstr "アクティブなステータスのプログラムを削除することはできません。"
+msgstr "有効なステータスのプログラムを削除することはできません。"
 
 #. module: loyalty
 #. odoo-python
@@ -2344,13 +2327,13 @@ msgstr "ロイヤリティ特典"
 #. odoo-python
 #: code:addons/loyalty/models/loyalty_program.py:0
 msgid "mail.template"
-msgstr ""
+msgstr "mail.template"
 
 #. module: loyalty
 #. odoo-python
 #: code:addons/loyalty/models/loyalty_rule.py:0
 msgid "money"
-msgstr ""
+msgstr "お金"
 
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_reward_view_kanban
@@ -2430,6 +2413,11 @@ msgstr "使用"
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_program_view_form
 msgid "used)"
+msgstr "使用済み)"
+
+#. module: loyalty
+#: model_terms:ir.ui.view,arch_db:loyalty.loyalty_reward_view_kanban
+msgid "x"
 msgstr ""
 
 #. module: loyalty
@@ -2437,6 +2425,18 @@ msgstr ""
 #: code:addons/loyalty/models/loyalty_reward.py:0
 msgid "your order"
 msgstr "自分のオーダ"
+
+#~ msgid "$100"
+#~ msgstr "$100"
+
+#~ msgid "1000"
+#~ msgstr "1000"
+
+#~ msgid "2023-08-20"
+#~ msgstr "2023-08-20"
+
+#~ msgid "2023-12-31"
+#~ msgstr "2023-12-31"
 
 #~ msgid ""
 #~ "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" "

@@ -11,6 +11,7 @@ import {
     queryOne,
     waitFor,
     waitForNone,
+    setInputRange,
 } from "@odoo/hoot-dom";
 import { contains, onRpc } from "@web/../tests/web_test_helpers";
 import {
@@ -19,8 +20,7 @@ import {
     setupWebsiteBuilderOeId,
 } from "./website_helpers";
 import { dummyBase64Img } from "@html_builder/../tests/helpers";
-import { testImg } from "./image_test_helpers";
-import { delay } from "@web/core/utils/concurrency";
+import { onRpcImg, testGifImg, testImg, testSvgImg } from "./image_test_helpers";
 import { expectElementCount } from "@html_editor/../tests/_helpers/ui_expectations";
 
 defineWebsiteModels();
@@ -279,16 +279,69 @@ describe("Image format/optimize", () => {
         const img = await waitFor(":iframe .test-options-target img");
         await contains(":iframe .test-options-target img").click();
         await waitSidebarUpdated();
-        const input = queryFirst('[data-action-id="setImageQuality"] input');
-        input.value = 50;
-        input.dispatchEvent(new Event("input"));
-        await delay();
-        input.dispatchEvent(new Event("change"));
-        await delay();
+        await setInputRange(`[data-action-id="setImageQuality"] input`, 50);
         // ensure the shape action has been applied
         await editor.shared.operation.next(() => {});
 
         expect(img.dataset.quality).toBe("50");
+    });
+    test("Quality option does not disappear when a shape is applied on the image", async () => {
+        onRpcImg("/html_builder/static/image_shapes/devices/iphone_front_portrait.svg");
+        onRpc("/html_editor/get_image_info", () => ({
+            attachment: { id: 1 },
+            original: {
+                id: 1,
+                image_src: "/website/static/src/img/snippets_demo/s_text_image.webp",
+                mimetype: "image/webp",
+            },
+        }));
+        // The first img corresponds to a default image on which a shape has
+        // been applied. The second one corresponds to a modified image on which
+        // a shape has been applied. The last one corresponds to a case where
+        // the mimetype information is not present (this case should not appear
+        // in practice but the system should be robust to this case as the
+        // backend has all the information needed to work correctly).
+        const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            <img src='${dummyBase64Img}'
+                data-attachment-id="1" data-original-id="1"
+                data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp"
+                data-mimetype="image/svg+xml"
+                data-shape="html_builder/devices/iphone_front_portrait"
+                data-mimetype-before-conversion="image/webp"
+                class="first"
+            >
+        </div>
+        <div class="test-options-target">
+            <img src='${dummyBase64Img}'
+                data-attachment-id="1" data-original-id="1"
+                data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp"
+                data-mimetype="image/svg+xml"
+                data-shape="html_builder/devices/iphone_front_portrait"
+                data-mimetype-before-conversion="image/webp"
+                data-format-mimetype="image/webp"
+                class="second"
+            >
+        </div>
+        <div class="test-options-target">
+            <img src='${dummyBase64Img}'
+                data-attachment-id="1" data-original-id="1"
+                data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp"
+                data-mimetype="image/svg+xml"
+                data-shape="html_builder/devices/iphone_front_portrait"
+                class="third"
+            >
+        </div>
+    `);
+        await contains(":iframe .test-options-target img.first").click();
+        await waitSidebarUpdated();
+        expect(`[data-action-id="setImageQuality"]`).toBeVisible();
+        await contains(":iframe .test-options-target img.second").click();
+        await waitSidebarUpdated();
+        expect(`[data-action-id="setImageQuality"]`).toBeVisible();
+        await contains(":iframe .test-options-target img.third").click();
+        await waitSidebarUpdated();
+        expect(`[data-action-id="setImageQuality"]`).toBeVisible();
     });
 });
 
@@ -316,5 +369,27 @@ test("Save image with correct parameter", async () => {
             >
         </div>`);
     await contains(".o-snippets-top-actions button:contains(Save)").click();
-    expect.verifySteps(["modify_image"]);
+    await expect.waitForSteps(["modify_image"]);
 });
+
+test("Correct options appear when clicking on a gif image", async () => {
+    await clickOnImgAndCheckOptions(testGifImg);
+});
+
+test("Correct options appear when clicking on a svg image", async () => {
+    await clickOnImgAndCheckOptions(testSvgImg);
+});
+
+async function clickOnImgAndCheckOptions(imgEl) {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            ${imgEl}
+        </div>
+    `);
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+    // Check that the options that need a canvas to work are not displayed
+    expect("[data-action-id='cropImage']").not.toHaveCount();
+    expect("[data-action-id='setImageFormat']").not.toHaveCount();
+    expect("[data-action-id='setImageQuality']").not.toHaveCount();
+}

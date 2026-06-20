@@ -86,7 +86,7 @@ class IrQweb(models.AbstractModel):
         el.set('t-call', key)
         snippet_lang = self.env.context.get('snippet_lang')
         if snippet_lang:
-            el.set('t-lang', f"'{snippet_lang}'")
+            el.set('t-lang', repr(snippet_lang))
 
         el.set('t-options', f"{{'snippet-key': {key!r}}}")
         view = self.env['ir.ui.view']._get_template_view(key)
@@ -252,7 +252,10 @@ class IrQwebFieldMany2one(models.AbstractModel):
                 attrs['data-oe-many2one-allowreset'] = 1
                 if not many2one:
                     attrs['data-oe-many2one-model'] = record._fields[field_name].comodel_name
-            attrs['data-oe-many2one-domain'] = json_safe.dumps(field._description_domain(self.env))
+            domain = field._description_domain(self.env)
+            if isinstance(domain, str):
+                domain = []
+            attrs['data-oe-many2one-domain'] = json_safe.dumps(domain)
         return attrs
 
     @api.model

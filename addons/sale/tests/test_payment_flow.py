@@ -519,3 +519,36 @@ class TestSalePayment(AccountPaymentCommon, MailCase, PaymentHttpCommon, SaleCom
         self.assertTrue(invoice.is_move_sent, "Invoice should be marked as sent")
         invoice_sent_mail = invoice.message_ids[0]
         self.assertTrue(invoice_sent_mail.author_id.id not in invoice_sent_mail.notified_partner_ids.ids)
+
+    def test_refund_message_author_is_logged_in_user_for_sale_order(self):
+        """Ensure that the chatter message author is the user processing the refund."""
+        self.provider.support_refund = 'full_only'
+
+        tx = self._create_transaction(
+            'redirect',
+            sale_order_ids=[self.sale_order.id],
+            state='done',
+        )
+        tx._post_process()
+
+        with patch.object(
+            self.env.registry['mail.thread'], 'message_post', autospec=True
+        ) as message_post_mock:
+            tx.action_refund()
+            author_id = message_post_mock.call_args[1].get("author_id")
+
+        self.assertEqual(author_id, self.user.partner_id.id)
+
+    def test_payment_linking_when_invoice_already_created(self):
+        """
+        Example of when this will occur: ACH Direct Debit has a delay, user creates invoice, _invoice_sale_orders eventually hits and
+        removes connection between invoice and transaction
+        """
+        transaction = self._create_transaction("redirect", sale_order_ids=self.sale_order, state="pending")
+        self.sale_order.action_confirm()
+        invoice = self.sale_order._create_invoices()
+
+        transaction._set_done()
+        transaction._invoice_sale_orders()
+
+        self.assertEqual(transaction.invoice_ids, invoice, "Invoice id was incorrectly removed from payment.transaction")

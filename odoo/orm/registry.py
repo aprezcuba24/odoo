@@ -8,7 +8,6 @@ from __future__ import annotations
 import functools
 import inspect
 import logging
-import os
 import threading
 import time
 import typing
@@ -27,7 +26,6 @@ from odoo.tools import (
     OrderedSet,
     config,
     gc,
-    lazy_classproperty,
     remove_accents,
     sql,
 )
@@ -93,22 +91,8 @@ class Registry(Mapping[str, type["BaseModel"]]):
     _lock: threading.RLock | DummyRLock = threading.RLock()
     _saved_lock: threading.RLock | DummyRLock | None = None
 
-    @lazy_classproperty
-    def registries(cls) -> LRU[str, Registry]:
-        """ A mapping from database names to registries. """
-        size = config.get('registry_lru_size', None)
-        if not size:
-            # Size the LRU depending of the memory limits
-            if os.name != 'posix':
-                # cannot specify the memory limit soft on windows...
-                size = 42
-            else:
-                # A registry takes 10MB of memory on average, so we reserve
-                # 10Mb (registry) + 5Mb (working memory) per registry
-                avgsz = 15 * 1024 * 1024
-                limit_memory_soft = config['limit_memory_soft'] if config['limit_memory_soft'] > 0 else (2048 * 1024 * 1024)
-                size = (limit_memory_soft // avgsz) or 1
-        return LRU(size)
+    registries = LRU[str, "Registry"](42)  # random default value
+    """ A mapping from database names to registries. """
 
     def __new__(cls, db_name: str):
         """ Return the registry for the given database name."""
@@ -451,6 +435,9 @@ class Registry(Mapping[str, type["BaseModel"]]):
             # recursively mark fields to re-setup
             todo = []
             for model_cls in self.models.values():
+                if model_cls._custom:
+                    # custom models are going to be reloaded and set up below
+                    model_cls._setup_done__ = False
                 if model_cls._setup_done__:
                     models_field_depends_done.add(model_cls)
                 else:
@@ -474,6 +461,14 @@ class Registry(Mapping[str, type["BaseModel"]]):
                     field.__set_name__(model_cls, name)
                     field._setup_done = False
 
+                    models_field_depends_done.discard(model_cls)
+
+                elif model_cls._setup_done__ and field.related and field.manual:
+                    # manually-added related field (e.g. added via Studio) that has
+                    # no _base_fields__ so it cannot be partially reset; mark the
+                    # whole model for full re-setup so that setup_model_classes()
+                    # recreates the field pointing to the updated target field
+                    model_cls._setup_done__ = False
                     models_field_depends_done.discard(model_cls)
 
                 # partial invalidation of field_depends[_context]
@@ -591,7 +586,10 @@ class Registry(Mapping[str, type["BaseModel"]]):
         self._is_modifying_relations.clear()
 
         # discard fields from field inverses
-        self.field_inverses.discard_keys_and_values(fields)
+        if 'field_inverses' in vars(self):
+            self.field_inverses.discard_keys_and_values(fields)
+
+        self.field_setup_dependents.discard_keys_and_values(fields)
 
     def get_field_trigger_tree(self, field: Field) -> TriggerTree:
         """ Return the trigger tree of a field by computing it from the transitive
@@ -701,6 +699,8 @@ class Registry(Mapping[str, type["BaseModel"]]):
                 # not already marked as "to be applied".
                 with cr.savepoint(flush=False):
                     func(cr)
+            else:
+                self._constraint_queue[key] = func
         except Exception as e:
             if self._is_install:
                 _schema.error(*e.args)
@@ -782,8 +782,7 @@ class Registry(Mapping[str, type["BaseModel"]]):
             SELECT c.relname, a.attname
             FROM pg_attribute a
             JOIN pg_class c ON a.attrelid = c.oid
-            JOIN pg_namespace n ON c.relnamespace = n.oid
-            WHERE n.nspname = 'public'
+            WHERE c.relnamespace = current_schema::regnamespace
             AND a.attnotnull = true
             AND a.attnum > 0
             AND a.attname != 'id';
@@ -818,7 +817,8 @@ class Registry(Mapping[str, type["BaseModel"]]):
             return
 
         # retrieve existing indexes with their corresponding table
-        cr.execute("SELECT indexname, tablename FROM pg_indexes WHERE indexname IN %s",
+        cr.execute("SELECT indexname, tablename FROM pg_indexes WHERE indexname IN %s"
+                   "   AND schemaname = current_schema",
                    [tuple(row[0] for row in expected)])
         existing = dict(cr.fetchall())
 
@@ -898,6 +898,7 @@ class Registry(Mapping[str, type["BaseModel"]]):
             JOIN pg_attribute AS a1 ON a1.attrelid = c1.oid AND fk.conkey[1] = a1.attnum
             JOIN pg_attribute AS a2 ON a2.attrelid = c2.oid AND fk.confkey[1] = a2.attnum
             WHERE fk.contype = 'f' AND c1.relname IN %s
+            AND c1.relnamespace = current_schema::regnamespace
         """
         cr.execute(query, [tuple({table for table, column in self._foreign_keys})])
         existing = {
@@ -984,10 +985,9 @@ class Registry(Mapping[str, type["BaseModel"]]):
             query = """
                 SELECT c.relname
                   FROM pg_class c
-                  JOIN pg_namespace n ON (n.oid = c.relnamespace)
                  WHERE c.relname IN %s
                    AND c.relkind = 'r'
-                   AND n.nspname = 'public'
+                   AND c.relnamespace = current_schema::regnamespace
             """
             tables = tuple(m._table for m in self.models.values())
             cr.execute(query, [tables])
@@ -1021,7 +1021,8 @@ class Registry(Mapping[str, type["BaseModel"]]):
             # The `orm_signaling_...` sequences indicates when caches must
             # be invalidated (i.e. cleared).
             signaling_tables = tuple(f'orm_signaling_{cache_name}' for cache_name in ['registry', *_CACHES_BY_KEY])
-            cr.execute("SELECT table_name FROM information_schema.tables WHERE table_name IN %s", [signaling_tables])
+            cr.execute("SELECT table_name FROM information_schema.tables"
+                       " WHERE table_name IN %s AND table_schema = current_schema", [signaling_tables])
 
             existing_sig_tables = tuple(s[0] for s in cr.fetchall())  # could be a set but not efficient with such a little list
             # signaling was previously using sequence but this doesn't work with replication

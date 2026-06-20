@@ -15,23 +15,23 @@ from unittest.mock import patch
 
 @patch.object(ResUsers, '_get_google_calendar_token', lambda user: 'dummy-token')
 class TestSyncGoogle2Odoo(TestSyncGoogle):
-
-    def setUp(self):
-        super().setUp()
-        self.other_company = self.env['res.company'].create({'name': 'Other Company'})
-        self.public_partner = self.env['res.partner'].create({
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.other_company = cls.env['res.company'].create({'name': 'Other Company'})
+        cls.public_partner = cls.env['res.partner'].create({
             'name': 'Public Contact',
             'email': 'public_email@example.com',
             'type': 'contact',
         })
-        self.env.ref('base.partner_admin').write({
+        cls.env.ref('base.partner_admin').write({
             'name': 'Mitchell Admin',
             'email': 'admin@yourcompany.example.com',
         })
-        self.private_partner = self.env['res.partner'].create({
+        cls.private_partner = cls.env['res.partner'].create({
             'name': 'Private Contact',
             'email': 'private_email@example.com',
-            'company_id': self.other_company.id,
+            'company_id': cls.other_company.id,
         })
 
     def generate_recurring_event(self, mock_dt, **values):
@@ -414,6 +414,55 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         self.assertNotEqual(events.attendee_ids.partner_id, user.partner_id)
         self.assertNotEqual(events.partner_ids, user.partner_id)
         self.assertGoogleAPINotCalled()
+
+    @patch_api
+    def test_new_attendee_and_date_change_does_not_patch_deleted_events(self):
+        """
+        When a Google recurrence update includes both a new attendee and a base event date
+        change, _google_patch must not be called for events that are subsequently deleted.
+        """
+        google_id = 'nimotopia'
+
+        base_event = self.env['calendar.event'].create({
+            'name': 'Call Razof',
+            'start': datetime(2020, 1, 6, 8, 0),
+            'stop': datetime(2020, 1, 6, 9, 0),
+            'need_sync': False,
+            'partner_ids': [(4, self.organizer_user.partner_id.id)],
+        })
+        recurrence = self.env['calendar.recurrence'].create({
+            'google_id': google_id,
+            'rrule': 'FREQ=WEEKLY;COUNT=3;BYDAY=MO',
+            'need_sync': False,
+            'base_event_id': base_event.id,
+            'calendar_event_ids': [(4, base_event.id)],
+            'event_tz': 'UTC',
+        })
+        recurrence._apply_recurrence()
+        for event in recurrence.calendar_event_ids:
+            event.write({
+                'google_id': recurrence._get_event_google_id(event),
+                'need_sync': False,
+            })
+
+        # Start time changed AND a new attendee
+        google_event = GoogleEvent([{
+            'id': google_id,
+            'summary': 'Call Razof',
+            'recurrence': ['RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO'],
+            'start': {'dateTime': '2020-01-06T09:00:00+00:00', 'timeZone': 'UTC'},
+            'end': {'dateTime': '2020-01-06T10:00:00+00:00', 'timeZone': 'UTC'},
+            'reminders': {'useDefault': True},
+            'attendees': [
+                {'email': self.organizer_user.email, 'responseStatus': 'accepted'},
+                {'email': self.attendee_user.email, 'responseStatus': 'accepted', 'self': True},
+            ],
+            'updated': self.now,
+            'organizer': {'email': self.organizer_user.email},
+        }])
+        self.sync(google_event)
+
+        self.assertGoogleEventNotPatched()
 
     @patch_api
     def test_recurrence(self):
@@ -1227,6 +1276,33 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
             self.assertEqual(len(events.exists()), 2)
 
     @patch_api
+    def test_new_google_birthday_event(self):
+        """Birthday events are not supported, so they should not be synced in."""
+        birthday_google_id = "20260226"
+        values = [{
+            'id': birthday_google_id,
+            'kind': 'calendar#event',
+            'sequence': 0,
+            'status': 'confirmed',
+            'summary': "Bob's birthday",
+            'creator': {'email': self.organizer_user.partner_id.email, 'self': True},
+            'organizer': {'email': self.organizer_user.partner_id.email, 'self': True},
+            'originalStartTime': {'date': '2026-02-26'}, 'start': {'date': '2026-02-26'}, 'end': {'date': '2026-02-27'},
+            'recurringEventId': 'abc', 'iCalUID': 'abc@google.com',
+            'transparency': 'transparent', 'visibility': 'private',
+            'birthdayProperties': {'type': 'birthday'},
+            'eventType': 'birthday',
+        }]
+        with patch.object(GoogleCalendarService, 'get_events', return_value=(
+            GoogleEvent(values), None, [{'method': 'popup', 'minutes': 30}],
+        )):
+            self.organizer_user.sudo()._sync_google_calendar(self.google_service)
+        recurrences = self.env["calendar.recurrence"].search([('google_id', '=', birthday_google_id)])
+        events = self.env["calendar.recurrence"].search([('google_id', '=', birthday_google_id)])
+        self.assertFalse(recurrences, 'Birthday recurrent events should be ignored when syncing from google, as not supported.')
+        self.assertFalse(events, 'Birthday recurrent events should be ignored when syncing from google, as not supported.')
+
+    @patch_api
     def test_new_google_notifications(self):
         """ Event from Google should not create notifications and trigger. It ruins the perfs on large databases """
         cron_id = self.env.ref('calendar.ir_cron_scheduler_alarm').id
@@ -1414,6 +1490,42 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
             'reminders': {'overrides': [], 'useDefault': False},
             'transparency': 'opaque',
         }, timeout=3)
+
+    @patch_api
+    def test_attendee_not_dropped_when_other_email_matches_alias(self):
+        """ Ensure no attendees are dropped when one Google attendee's email matches a mail alias """
+        alias_domain = self.env['mail.alias.domain'].create({'name': 'test-alias.example.com'})
+        model_id = self.env['ir.model']._get_id('calendar.event')
+        alias = self.env['mail.alias'].create({
+            'alias_name': 'calendar-events',
+            'alias_model_id': model_id,
+            'alias_domain_id': alias_domain.id,
+        })
+        alias_email = alias.alias_full_name  # 'calendar-events@test-alias.example.com'
+
+        partner_a, partner_b = self.env['res.partner'].create([
+            {'name': 'Partner A', 'email': 'partner.a@example.com'},
+            {'name': 'Partner B', 'email': 'partner.b@example.com'},
+        ])
+
+        synced = self.env['calendar.event']._sync_google2odoo(GoogleEvent([{
+            'id': 'test_alias_attendee_sync',
+            'summary': 'Test Alias Attendee',
+            'updated': self.now,
+            'organizer': {'email': partner_a.email},
+            'attendees': [
+                {'email': partner_a.email, 'responseStatus': 'accepted'},
+                {'email': alias_email, 'responseStatus': 'accepted'},
+                {'email': partner_b.email, 'responseStatus': 'needsAction'},
+            ],
+            'reminders': {'useDefault': True},
+            'start': {'dateTime': '2020-01-13T16:00:00+01:00', 'timeZone': 'Europe/Brussels', 'date': None},
+            'end': {'dateTime': '2020-01-13T17:00:00+01:00', 'timeZone': 'Europe/Brussels', 'date': None},
+            'visibility': 'public',
+        }]))
+        self.assertEqual(len(synced.partner_ids), 2, "The alias-matched attendee must not be added as a partner")
+        self.assertIn(partner_a, synced.partner_ids, "partner_a must not be dropped when another attendee email matches an alias")
+        self.assertIn(partner_b, synced.partner_ids, "partner_b must not be dropped when another attendee email matches an alias")
 
     @patch_api
     def test_attendee_recurrence_answer(self):

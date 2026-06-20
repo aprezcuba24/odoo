@@ -124,6 +124,7 @@ class TestHrAttendanceUndertime(HttpCase):
             'name': 'Flexible 40 hours/week',
             'company_id': cls.company.id,
             'hours_per_day': 8,
+            'hours_per_week': 40,
             'flexible_hours': True,
             'full_time_required_hours': 40,
         })
@@ -177,7 +178,7 @@ class TestHrAttendanceUndertime(HttpCase):
         self.assertFalse(overtime, 'No overtime record should exist for that employee')
 
         checkin_am.write({'check_out': datetime(2021, 1, 4, 12, 0)})
-        overtime = self.env['hr.attendance.overtime.line'].search([('employee_id', '=', self.employee.id), ('date', '=', date(2021, 1, 4))])
+        overtime = checkin_am._linked_overtimes()
         self.assertTrue(overtime, 'An overtime record should be created')
         self.assertEqual(overtime.duration, -4)
 
@@ -185,11 +186,77 @@ class TestHrAttendanceUndertime(HttpCase):
             'employee_id': self.employee.id,
             'check_in': datetime(2021, 1, 4, 13, 0),
         })
+        overtime = checkin_pm._linked_overtimes()
         self.assertFalse(overtime.exists(), 'Overtime duration should not exist when an attendance has not been checked out.')
         checkin_pm.write({'check_out': datetime(2021, 1, 4, 18, 0)})
         overtime = self.env['hr.attendance.overtime.line'].search([('employee_id', '=', self.employee.id), ('date', '=', date(2021, 1, 4))])
         self.assertAlmostEqual(overtime.duration, 1)
         self.assertAlmostEqual(self.employee.total_overtime, 1)
+
+    def test_simple_undertime_multiple_rules(self):
+        """ Checks that only the least consequent undertime of the rules is considered."""
+        ruleset = self.env['hr.attendance.overtime.ruleset'].with_company(self.company).create({
+            'name': 'Ruleset schedule quantity',
+            'rule_ids': [Command.create({
+                    'name': 'Rule schedule quantity',
+                    'base_off': 'quantity',
+                    'expected_hours_from_contract': False,
+                    'expected_hours': 8.0,
+                    'quantity_period': 'day',
+                }),
+                Command.create({
+                    'name': 'Rule schedule quantity',
+                    'base_off': 'quantity',
+                    'expected_hours_from_contract': False,
+                    'expected_hours': 10.0,
+                    'quantity_period': 'day',
+                })],
+        })
+        self.employee.ruleset_id = ruleset
+
+        attendance = self.env['hr.attendance'].create({
+            'employee_id': self.employee.id,
+            'check_in': datetime(2021, 1, 4, 13, 0),
+            'check_out': datetime(2021, 1, 4, 18, 0),
+        })
+
+        self.assertEqual(attendance.overtime_hours, -3.0)
+        overtime = attendance._linked_overtimes()
+        self.assertEqual(len(overtime), 1, 'Only one overtime record should be created')
+        self.assertEqual(overtime.duration, -3.0)
+
+    def test_simple_undertime_multiple_rules_on_several_periods(self):
+        """Whatever the period type, only the least consequent undertime of the rules is considered.
+        """
+        ruleset = self.env['hr.attendance.overtime.ruleset'].with_company(self.company).create({
+            'name': 'Ruleset schedule quantity',
+            'rule_ids': [Command.create({
+                    'name': 'Rule schedule quantity',
+                    'base_off': 'quantity',
+                    'expected_hours_from_contract': False,
+                    'expected_hours': 8.0,
+                    'quantity_period': 'day',
+                }),
+                Command.create({
+                    'name': 'Rule schedule quantity',
+                    'base_off': 'quantity',
+                    'expected_hours_from_contract': False,
+                    'expected_hours': 40.0,
+                    'quantity_period': 'week',
+                })],
+        })
+        self.employee.ruleset_id = ruleset
+
+        attendance = self.env['hr.attendance'].create({
+            'employee_id': self.employee.id,
+            'check_in': datetime(2021, 1, 4, 13, 0),
+            'check_out': datetime(2021, 1, 4, 18, 0),
+        })
+
+        self.assertEqual(attendance.overtime_hours, -3.0)
+        overtime = attendance._linked_overtimes()
+        self.assertEqual(len(overtime), 1, 'Only one overtime record should be created')
+        self.assertEqual(overtime.duration, -3.0)
 
     def test_undertime_change_employee(self):
         attendance = self.env['hr.attendance'].create({
@@ -410,8 +477,8 @@ class TestHrAttendanceUndertime(HttpCase):
 
     def test_no_validation_extra_hours_change(self):
         """
-         In case of attendances requiring no validation, check that extra hours are not recomputed
-         if the value is different from `validated_hours` (meaning it has been modified by the user).
+         Check that manual edits are recomputed when updating another attendance,
+         but flags the record as 'to_approve'.
         """
         self.company.attendance_overtime_validation = "no_validation"
 
@@ -427,7 +494,7 @@ class TestHrAttendanceUndertime(HttpCase):
         self.assertAlmostEqual(attendance.overtime_hours, -2, 2)
         self.assertAlmostEqual(attendance.validated_overtime_hours, -2, 2)
 
-        attendance.linked_overtime_ids.manual_duration = previous = -1.5
+        attendance.linked_overtime_ids.manual_duration = -1.5
         self.assertNotEqual(attendance.validated_overtime_hours, attendance.overtime_hours)
 
         # Create another attendance for the same employee
@@ -436,7 +503,11 @@ class TestHrAttendanceUndertime(HttpCase):
             'check_in': datetime(2023, 1, 4, 8, 0),
             'check_out': datetime(2023, 1, 4, 18, 0),
         })
-        self.assertEqual(attendance.validated_overtime_hours, previous, "Extra hours shouldn't be recomputed")
+        # The hours will now be recomputed
+        # But they should have the 'approved' status since it is on a different day and there is only daily rules
+        self.assertEqual(attendance.linked_overtime_ids.status, 'approved')
+        self.assertAlmostEqual(attendance.linked_overtime_ids.duration, -2.0, 2, "Math should be reset to -2.0")
+        self.assertEqual(attendance.validated_overtime_hours, -1.5, "Validated hours should be -1.5 as it was already approved")
 
     def test_overtime_employee_tolerance(self):
         self.ruleset.rule_ids[0].employee_tolerance = 10 / 60
@@ -462,3 +533,25 @@ class TestHrAttendanceUndertime(HttpCase):
         overtime = self.env['hr.attendance.overtime.line'].search([('employee_id', '=', self.employee.id)])
         self.assertTrue(overtime, 'Overtime entry should exist since the tolerance has been lowered.')
         self.assertAlmostEqual(overtime.duration, -(10 / 60), places=2, msg='Overtime should be equal to -10 minutes.')
+
+    def test_overtime_on_multiple_days(self):
+        attendance = self.env['hr.attendance'].create({
+            'employee_id': self.employee.id,
+            'check_in': datetime(2021, 1, 8, 8, 0),  # Friday 8 AM - 17 PM work, 17 - 24 overtime (7 hours)
+            'check_out': datetime(2021, 1, 9, 3, 0),  # Saturday 0-3 AM overtime (3 hours)
+        })
+
+        overtime = attendance._linked_overtimes()
+        self.assertEqual(len(overtime), 2, 'There should be 2 overtime records for that attendance.')
+        self.assertEqual(sum(overtime.mapped('duration')), 10, 'There should be a total of 10 hours of overtime for that attendance.')
+
+        attendance.write({
+            'check_out': datetime(2021, 1, 8, 20, 0),
+        })
+
+        overtime = attendance._linked_overtimes()
+        self.assertEqual(len(overtime), 1, 'There should have only 1 overtime for that attendance after modification.')
+        self.assertEqual(sum(overtime.mapped('duration')), 3, 'There should be a total of 3 hours of overtime for that attendance after modification.')
+
+        all_overtimes = self.env['hr.attendance.overtime.line'].search([('employee_id', '=', self.employee.id)])
+        self.assertEqual(len(all_overtimes), 1, 'There should be only 1 overtime record in total for that employee.')

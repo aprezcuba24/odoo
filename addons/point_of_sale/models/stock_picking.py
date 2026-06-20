@@ -128,6 +128,29 @@ class StockPickingType(models.Model):
     _name = 'stock.picking.type'
     _inherit = ['stock.picking.type', 'pos.load.mixin']
 
+    has_stock_reports_to_print = fields.Boolean(compute='_compute_has_stock_reports_to_print')
+
+    @api.depends(
+        'auto_print_delivery_slip',
+        'auto_print_return_slip',
+        'auto_print_reception_report',
+        'auto_print_reception_report_labels',
+        'auto_print_product_labels',
+        'auto_print_lot_labels',
+        'auto_print_packages',
+    )
+    def _compute_has_stock_reports_to_print(self):
+        for record in self:
+            record.has_stock_reports_to_print = (
+                record.auto_print_delivery_slip
+                or record.auto_print_return_slip
+                or record.auto_print_reception_report
+                or record.auto_print_reception_report_labels
+                or record.auto_print_product_labels
+                or record.auto_print_lot_labels
+                or record.auto_print_packages
+            )
+
     @api.depends('warehouse_id')
     def _compute_hide_reservation_method(self):
         super()._compute_hide_reservation_method()
@@ -150,7 +173,7 @@ class StockPickingType(models.Model):
 
     @api.model
     def _load_pos_data_fields(self, config):
-        return ['id', 'use_create_lots', 'use_existing_lots']
+        return ['id', 'use_create_lots', 'use_existing_lots', 'has_stock_reports_to_print']
 
 
 class StockMove(models.Model):
@@ -158,8 +181,9 @@ class StockMove(models.Model):
 
     def _get_new_picking_values(self):
         vals = super()._get_new_picking_values()
-        order = self.reference_ids.pos_order_ids
-        if order:
+        orders = self.reference_ids.pos_order_ids
+        if orders:
+            order = orders.filtered(lambda o: o.is_refund and o.state == 'paid')[:1] or orders[:1]
             vals['pos_session_id'] = order.session_id.id
             vals['pos_order_id'] = order.id
         return vals
@@ -191,7 +215,7 @@ class StockMove(models.Model):
             moves_product_ids = set(moves.mapped('product_id').ids)
             lots = lines.pack_lot_ids.filtered(lambda l: l.lot_name and l.product_id.id in moves_product_ids)
             lots_data = set(lots.mapped(lambda l: (l.product_id.id, l.lot_name)))
-            existing_lots = self.env['stock.lot'].search([
+            existing_lots = self.env['stock.lot'].with_context(skip_preprocess_gs1=True).search([
                 '|', ('company_id', '=', False), ('company_id', '=', moves[0].picking_type_id.company_id.id),
                 ('product_id', 'in', lines.product_id.ids),
                 ('name', 'in', lots.mapped('lot_name')),
@@ -249,38 +273,43 @@ class StockMove(models.Model):
         moves_remaining = self - moves_to_assign
         existing_lots = moves_remaining._create_production_lots_for_pos_order(related_order_lines)
         move_lines_to_create = []
-        mls_qties = []
         if are_qties_done:
             for move in moves_remaining:
                 move.move_line_ids.unlink()
                 for line in lines_data[move.product_id.id]['order_lines']:
-                    sum_of_lots = 0
                     for lot in line.pack_lot_ids.filtered(lambda l: l.lot_name):
                         qty = 1 if line.product_id.tracking == 'serial' else abs(line.qty)
-                        ml_vals = dict(move._prepare_move_line_vals(qty))
                         if existing_lots:
                             existing_lot = existing_lots.filtered_domain([('product_id', '=', line.product_id.id), ('name', '=', lot.lot_name)])
-                            quant = self.env['stock.quant']
+                            quants = self.env['stock.quant']
                             if existing_lot:
-                                quant = self.env['stock.quant'].search(
+                                quants = self.env['stock.quant'].search(
                                     [('lot_id', '=', existing_lot.id), ('quantity', '>', '0.0'), ('location_id', 'child_of', move.location_id.id)],
                                     order='id desc',
-                                    limit=1
                                 )
-                                if quant:
-                                    ml_vals.update({
-                                        'quant_id': quant.id,
-                                    })
-                                else:
-                                    ml_vals.update({
-                                        'lot_name': existing_lot.name,
-                                        'lot_id': existing_lot.id,
-                                    })
+                            qty_left_to_assign = qty
+                            for quant in quants:
+                                if qty_left_to_assign <= 0:
+                                    break
+                                qty_chg = min(qty_left_to_assign, quant.quantity)
+                                ml_vals = dict(move._prepare_move_line_vals(qty_chg))
+                                qty_left_to_assign -= qty_chg
+                                ml_vals.update({
+                                    'quant_id': quant.id,
+                                })
+                                move_lines_to_create.append(ml_vals)
+                            if qty_left_to_assign > 0:
+                                ml_vals = dict(move._prepare_move_line_vals(qty_left_to_assign))
+                                ml_vals.update({
+                                    'lot_name': existing_lot.name,
+                                    'lot_id': existing_lot.id,
+                                })
+                                move_lines_to_create.append(ml_vals)
                         else:
+                            ml_vals = dict(move._prepare_move_line_vals(qty))
                             ml_vals.update({'lot_name': lot.lot_name})
-                        move_lines_to_create.append(ml_vals)
-                        mls_qties.append(qty)
-                        sum_of_lots += qty
+                            move_lines_to_create.append(ml_vals)
+
             self.env['stock.move.line'].create(move_lines_to_create)
         else:
             for move in moves_remaining:
@@ -295,3 +324,29 @@ class StockMove(models.Model):
                             if existing_lot:
                                 move._update_reserved_quantity(qty, move.location_id, lot_id=existing_lot)
                                 continue
+
+    @api.depends("product_id")
+    def _compute_description_picking(self):
+        super()._compute_description_picking()
+        seen = set()
+        for move in self:
+            if not (pos_order := move.reference_ids.pos_order_ids) or move.description_picking_manual:
+                continue
+
+            product = move.product_id
+            line = pos_order.lines.filtered(
+                lambda l: l.product_id == product
+                and l.id not in seen
+                and any(av.attribute_id.create_variant == "no_variant" or av.is_custom for av in l.attribute_value_ids)
+            )[:1]
+
+            if line and move.description_picking == product.display_name:
+                never_values = line.attribute_value_ids.filtered(
+                    lambda av: av.attribute_id.create_variant == 'no_variant' and not av.is_custom
+                )
+                descriptions = never_values.mapped("display_name")
+                for custom_value in line.custom_attribute_value_ids:
+                    descriptions.append(f"{custom_value.display_name}")
+
+                move.description_picking = "\n".join(descriptions) if descriptions else ""
+                seen.add(line.id)

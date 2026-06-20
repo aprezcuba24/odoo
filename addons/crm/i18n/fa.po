@@ -22,11 +22,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0beta\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-08 18:37+0000\n"
+"POT-Creation-Date: 2026-02-20 18:35+0000\n"
 "PO-Revision-Date: 2025-11-16 15:09+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
-"Language-Team: Persian <https://translate.odoo.com/projects/odoo-19/crm/fa/>"
-"\n"
+"Language-Team: Persian <https://translate.odoo.com/projects/odoo-19/crm/fa/"
+">\n"
 "Language: fa\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -198,8 +198,8 @@ msgid ""
 msgstr ""
 "<span class=\"o_stat_text\" invisible=\"duplicate_lead_count &lt; 2\">سرنخ "
 "های مشابه</span>\n"
-"                                    <span class=\"o_stat_text\" invisible="
-"\"duplicate_lead_count &gt; 1\">سرنخ مشابه</span>"
+"                                    <span class=\"o_stat_text\" "
+"invisible=\"duplicate_lead_count &gt; 1\">سرنخ مشابه</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.utm_campaign_view_form
@@ -209,8 +209,8 @@ msgid ""
 "invisible=\"use_leads\">Opportunities</span>"
 msgstr ""
 "<span class=\"o_stat_text\" invisible=\"not use_leads\">سرنخ ها</span>\n"
-"                        <span class=\"o_stat_text\" invisible=\"use_leads\""
-">فرصت ها</span>"
+"                        <span class=\"o_stat_text\" "
+"invisible=\"use_leads\">فرصت ها</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lost_reason_view_form
@@ -221,15 +221,6 @@ msgstr "<span class=\"o_stat_text\"> سرنخ‌ها</span>"
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
 msgid ""
 "<span class=\"opacity-50 p-2 text-nowrap d-none d-sm-block\"> at </span>"
-msgstr ""
-
-#. module: crm
-#: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
-msgid ""
-"<span class=\"opacity-50 p-2\" groups=\"crm.group_use_recurring_revenues\"> "
-"+ </span>\n"
-"                                        <span class=\"opacity-50 p-2\" "
-"groups=\"!crm.group_use_recurring_revenues\"> at </span>"
 msgstr ""
 
 #. module: crm
@@ -322,7 +313,7 @@ msgid ""
 "                    <td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                        <div>\n"
 "                            Hi <t t-out=\"object.partner_id and "
-"object.partner_id.name or ''\">Deco Addict</t>,<br/><br/>\n"
+"object.partner_id.name or ''\">Acme Corporation</t>,<br/><br/>\n"
 "                            Welcome to <t t-out=\"object.company_id.name or "
 "''\">My Company (San Francisco)</t>.\n"
 "                            It's great to meet you! Now that you're on "
@@ -682,8 +673,8 @@ msgid ""
 msgstr ""
 "از آنجایی که عضو هیچ تیم فروش نیستید، فرصت های <b>تیم اول به طور پیش فرض به "
 "شما نشان داده می شود.</b>\n"
-"                                         برای کار با CRM، باید <a name=\"%d\""
-" type=\"action\" tabindex=\"-1\">به یک تیم بپیوندید.</a>"
+"                                         برای کار با CRM، باید <a "
+"name=\"%d\" type=\"action\" tabindex=\"-1\">به یک تیم بپیوندید.</a>"
 
 #. module: crm
 #. odoo-python
@@ -4199,8 +4190,8 @@ msgid ""
 "Use the CRM Forecast Kanban to easily define when Opportunities are expected "
 "to be won."
 msgstr ""
-"از کانبان پیش‌بینی CRM استفاده کنید تا به راحتی مشخص کنید چه زمانی انتظار می‌"
-"رود فرصت‌ها برنده شوند."
+"از کانبان پیش‌بینی CRM استفاده کنید تا به راحتی مشخص کنید چه زمانی انتظار "
+"می‌رود فرصت‌ها برنده شوند."
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
@@ -4420,6 +4411,11 @@ msgstr "کدپستی"
 #: model_terms:ir.ui.view,arch_db:crm.sales_team_form_view_in_crm
 msgid "alias"
 msgstr "نام مستعار"
+
+#. module: crm
+#: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
+msgid "at"
+msgstr ""
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form

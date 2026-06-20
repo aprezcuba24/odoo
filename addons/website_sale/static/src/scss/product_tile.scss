@@ -46,6 +46,8 @@
     margin-right: var(--o-wsale-card-margin-x);
     width: 100%;
     container: oe_product_cart / inline-size;
+    contain: layout style;
+    content-visibility: auto;
 
     &:before {
         $_y: var(--o-wsale-card-pseudobg-y, MIN(#{map-get($spacers, 3) * -0.5}, calc(var(--o-wsale-products-grid-gap-y) / 2)));
@@ -113,7 +115,7 @@
         }
         .oe_product_image_img, .oe_product_image_img_secondary {
             position: absolute;
-            object-fit: var(--o-wsale-card-thumb-fill-mode, contain);
+            object-fit: var(--o-wsale-card-thumb-fill-mode, contain) !important;
             object-position: var(--o-wsale-card-thumb-position, center);
             background-size: var(--o-wsale-card-thumb-fill-mode, contain);
             background-position: var(--o-wsale-card-thumb-position, center);
@@ -669,7 +671,7 @@
 }
 .o_wsale_products_opt_design_grid {
     --o-wsale-card-height: 100%;
-    --o-wsale-card-border-width: 0 #{$border-width $border-width} 0;
+    --o-wsale-card-border-width: 0 #{$border-width $border-width} 0 #{"/*rtl: 0 0 " + $border-width $border-width + "*/"};
     --o-wsale-card-info-padding: #{map-get($spacers, 2)};
     --o-wsale-card-info-grow: 1;
     --o-wsale-card-border-radius: 0px !important;
@@ -1104,6 +1106,11 @@ $_wsale_products_roundness_map: (
         @content;
     }
 }
+// Default opacity for secondary images, prevents PNG transparency from showing
+// the underlying image when hover effect: None
+.o_wsale_products_opt_img_secondary_show .oe_product_image_link_has_secondary {
+    --o-wsale-card-img-opacity-hover: 0;
+}
 
 .o_wsale_products_opt_img_hover_zoom_in {
     --o-wsale-card-img-transition: all .25s;
@@ -1111,7 +1118,6 @@ $_wsale_products_roundness_map: (
     --o-wsale-card-img-transition-hover: all .25s;
 
     @include o-wsale-card-when-secondary-img() {
-        --o-wsale-card-img-opacity-hover: 0;
         --o-wsale-card-img-transition: all .5s ease-in-out;
         --o-wsale-card-img-secondary-transition: all .5s ease-in-out;
         --o-wsale-card-img-secondary-opacity-hover: 1;
@@ -1123,7 +1129,6 @@ $_wsale_products_roundness_map: (
     --o-wsale-card-img-transform-hover: scale(1.04);
 
     @include o-wsale-card-when-secondary-img() {
-        --o-wsale-card-img-opacity-hover: 0;
         --o-wsale-card-img-transition: all .5s ease-in-out;
         --o-wsale-card-img-secondary-transition: all .5s;
         --o-wsale-card-img-secondary-opacity-hover: 1;
@@ -1138,7 +1143,6 @@ $_wsale_products_roundness_map: (
     --o-wsale-card-img-transition-hover: all .1s;
 
     @include o-wsale-card-when-secondary-img() {
-        --o-wsale-card-img-opacity-hover: 0;
         --o-wsale-card-img-transition: all .5s ease-in-out;
         --o-wsale-card-img-secondary-transform: scale(1.08);
         --o-wsale-card-img-secondary-transition: all .5s ease-in-out;
@@ -1153,7 +1157,6 @@ $_wsale_products_roundness_map: (
     --o-wsale-card-img-transition-hover: all .1s;
 
     @include o-wsale-card-when-secondary-img() {
-        --o-wsale-card-img-opacity-hover: 0;
         --o-wsale-card-img-transition: all .5s ease-in-out;
         --o-wsale-card-img-secondary-transform: scale(1.04);
         --o-wsale-card-img-secondary-transition: all .5s ease-in-out;

@@ -6,13 +6,14 @@
 # Martin Trigaux, 2022
 # Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022
 # Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Vlad Patenko <vlad.patenko@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0beta\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-08 18:37+0000\n"
-"PO-Revision-Date: 2025-11-10 13:22+0000\n"
-"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"POT-Creation-Date: 2026-04-10 18:38+0000\n"
+"PO-Revision-Date: 2026-04-16 08:25+0000\n"
+"Last-Translator: Vlad Patenko <vlad.patenko@gmail.com>\n"
 "Language-Team: Ukrainian <https://translate.odoo.com/projects/odoo-19/"
 "website_hr_recruitment/uk/>\n"
 "Language: uk\n"
@@ -23,7 +24,7 @@ msgstr ""
 "? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > "
 "14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % "
 "100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.16.2\n"
 
 #. module: website_hr_recruitment
 #. odoo-python
@@ -50,11 +51,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.index
 msgid "'. Showing results for '"
 msgstr "'. Показ результату для '"
-
-#. module: website_hr_recruitment
-#: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_right_side_bar
-msgid "+1 (650) 555-0187"
-msgstr "+1 (650) 555-0187"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.default_website_description
@@ -95,8 +91,8 @@ msgid ""
 "bold\">Take a look around our website:</span>"
 msgstr ""
 "<span class=\"h5 fw-light\">Тим часом,</span><br/>\n"
-"                                            <span class="
-"\"h3 mt8 mb32 fw-bold\">перегляньте наш веб-сайт:</span>"
+"                                            <span class=\"h3 mt8 mb32 fw-"
+"bold\">перегляньте наш веб-сайт:</span>"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.apply
@@ -131,8 +127,8 @@ msgid ""
 "class=\"s_website_form_mark\"> *</span>"
 msgstr ""
 "<span class=\"s_website_form_label_content\">Ваш Email</span>\n"
-"                                                <span class="
-"\"s_website_form_mark\"> *</span>"
+"                                                <span "
+"class=\"s_website_form_mark\"> *</span>"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.apply
@@ -153,8 +149,8 @@ msgid ""
 "class=\"s_website_form_mark\"> *</span>"
 msgstr ""
 "<span class=\"s_website_form_label_content\">Ваш номер телефону</span>\n"
-"                                                <span class="
-"\"s_website_form_mark\"> *</span>"
+"                                                <span "
+"class=\"s_website_form_mark\"> *</span>"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.apply
@@ -318,7 +314,7 @@ msgstr ""
 "природи, потрібно думати\n"
 "                        нестандартно. Ми сподіваємось, що кандидат буде "
 "ініціативним і має дух \"зробити це\". \n"
-"Щоб досягти успіху, ви будете мати надійні навички вирішення проблем"
+"Щоб досягти успіху, ви будете мати надійні навички вирішення проблем."
 
 #. module: website_hr_recruitment
 #. odoo-javascript
@@ -910,8 +906,8 @@ msgid ""
 "class=\"fw-bold\">contact us</span> for a spontaneous application."
 msgstr ""
 "Наразі немає відкритих вакансій,<br class=\"mb-2\"/>\n"
-"                                            але не соромтеся <span class"
-"=\"fw-bold\">звʼязуватися з нами</span> для спонтанних заявок."
+"                                            але не соромтеся <span "
+"class=\"fw-bold\">звʼязуватися з нами</span> для спонтанних заявок."
 
 #. module: website_hr_recruitment
 #. odoo-javascript
@@ -1036,6 +1032,11 @@ msgid "What's great in the job?"
 msgstr "Що чудового у роботі?"
 
 #. module: website_hr_recruitment
+#: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_right_side_bar
+msgid "X"
+msgstr ""
+
+#. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.thankyou_ir_ui_view
 msgid "Your <b>contact</b> information is:"
 msgstr "Ваша <b>контактна</b> інформація:"
@@ -1103,6 +1104,9 @@ msgstr "вакантні посади"
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.index
 msgid "unpublished"
 msgstr "неопубліковано"
+
+#~ msgid "+1 (650) 555-0187"
+#~ msgstr "+1 (650) 555-0187"
 
 #~ msgid "%s's Application"
 #~ msgstr "Заявка %s"

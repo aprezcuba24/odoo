@@ -36,7 +36,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:35+0000\n"
+"POT-Creation-Date: 2026-05-15 17:35+0000\n"
 "PO-Revision-Date: 2025-11-21 14:46+0000\n"
 "Last-Translator: Odoo Turkish Import <dyki+tr@odoo.com>\n"
 "Language-Team: Turkish <https://translate.odoo.com/projects/odoo-19/"
@@ -212,17 +212,8 @@ msgid ""
 "<a href=\"/contactus\" class=\"btn btn-primary rounded-circle "
 "o_translate_inline\">Contact us</a>"
 msgstr ""
-"<a href=\"/contactus\" class="
-"\"btn btn-primary rounded-circle o_translate_inline\">Bize ulaşın</a>"
-
-#. module: website_slides
-#: model_terms:ir.ui.view,arch_db:website_slides.profile_access_denied
-msgid ""
-"<a t-attf-href=\"/slides/course-#{request.params.get('channel_id')}\" "
-"class=\"o_translate_inline\">Return to the course.</a>"
-msgstr ""
-"<a t-attf-href=\"/slides/course-#{request.params.get('channel_id')}\" class="
-"\"o_translate_inline\">Kursa geri dönün.</a>"
+"<a href=\"/contactus\" class=\"btn btn-primary rounded-circle "
+"o_translate_inline\">Bize ulaşın</a>"
 
 #. module: website_slides
 #. odoo-python
@@ -338,34 +329,34 @@ msgid ""
 "            "
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <div style="
-"\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                       <p style=\"margin: 0px;\">Merhaba <t t-out="
-"\"object.partner_id.name or ''\">Brandon Freeman</t>,</p><br/>\n"
+"                    <div style=\"margin: 0px; padding: 0px; font-size: 13px;"
+"\">\n"
+"                       <p style=\"margin: 0px;\">Merhaba <t t-"
+"out=\"object.partner_id.name or ''\">Brandon Freeman</t>,</p><br/>\n"
 "                       <p><b>Tebrikler!</b></p>\n"
 "                        <p> <b t-out=\"object.channel_id.name or ''\"> "
 "Bahçeciliğin Temelleri kursunu tamamladınız.</b></p>\n"
 "                       <p>Mevcut diğer kurslara göz atın.</p><br/>\n"
 "\n"
-"                       <div style="
-"\"padding: 16px 8px 16px 8px; text-align: center;\">\n"
+"                       <div style=\"padding: 16px 8px 16px 8px; text-align: "
+"center;\">\n"
 "                            <a href=\"/slides\" t-attf-style=\"background-"
 "color: {{object.channel_id.user_id.company_id.email_secondary_color or "
-"'#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{"
-"object.channel_id.user_id.company_id.email_primary_color or '#FFFFFF'}}; "
-"border-radius: 5px;\">{{"
-"object.channel_id.user_id.company_id.email_primary_color or '#FFFFFF'}}; "
-"border-radius: 5px;\">\n"
+"'#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: "
+"{{object.channel_id.user_id.company_id.email_primary_color or '#FFFFFF'}}; "
+"border-radius: 5px;"
+"\">{{object.channel_id.user_id.company_id.email_primary_color or "
+"'#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                Kursları keşfedin\n"
 "                           </a>\n"
 "                        </div>\n"
 "                        Bu özel içeriğin tadını çıkarın!\n"
-"                       <t t-if=\"object.channel_id.user_id.signature\" data-o"
-"-mail-quote-container=\"1\">\n"
+"                       <t t-if=\"object.channel_id.user_id.signature\" data-"
+"o-mail-quote-container=\"1\">\n"
 "                            <br/>\n"
 "                           <div data-o-mail-quote=\"1\">--<br data-o-mail-"
-"quote=\"1\"/><t t-out=\"object.channel_id.user_id.signature or ''\" data-o"
-"-mail-quote=\"1\">Mitchell Admin</t></div>\n"
+"quote=\"1\"/><t t-out=\"object.channel_id.user_id.signature or ''\" data-o-"
+"mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                       </t>\n"
 "                    </div>\n"
 "               </div>\n"
@@ -410,37 +401,38 @@ msgid ""
 "            "
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">"
-"\n"
+"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;"
+"\">\n"
 "                        Merhaba<br/><br/>\n"
 "                       <t t-out=\"user.name or ''\">Mitchell Admin</t> "
 "<strong t-out=\"object.name or ''\"> belgesini</strong> sizlerle paylaştı!\n"
-"                       </p><div style="
-"\"margin: 16px 8px 16px 8px; text-align: center;\">\n"
+"                       </p><div style=\"margin: 16px 8px 16px 8px; text-"
+"align: center;\">\n"
 "                           <a t-att-href=\"object.website_absolute_url\">\n"
-"                                <img t-att-alt=\"object.name\" t-attf-src=\""
-"{{ ctx.get('base_url') }}/web/image/slide.channel/{{ object.id }}/image_256\""
-" style=\"height:auto; width:150px; margin: 16px;\"/>{{ object.id }}/"
-"image_256\" style=\"height:auto; width:150px; margin: 16px;\"/>\n"
+"                                <img t-att-alt=\"object.name\" t-attf-"
+"src=\"{{ ctx.get('base_url') }}/web/image/slide.channel/{{ object.id }}/"
+"image_256\" style=\"height:auto; width:150px; margin: 16px;\"/"
+">{{ object.id }}/image_256\" style=\"height:auto; width:150px; margin: 16px;"
+"\"/>\n"
 "                           </a>\n"
 "                        </div>\n"
-"                       <div style="
-"\"padding: 16px 8px 16px 8px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.website_absolute_url\" t"
-"-attf-style=\"background-color: {{user.company_id.email_secondary_color or "
+"                       <div style=\"padding: 16px 8px 16px 8px; text-align: "
+"center;\">\n"
+"                            <a t-att-href=\"object.website_absolute_url\" t-"
+"attf-style=\"background-color: {{user.company_id.email_secondary_color or "
 "'#875A7B'}}; padding: 8px 16px 8px 16px;                                 "
 "text-decoration: none; color: {{user.company_id.email_primary_color or "
 "'#FFFFFF'}}; border-radius: 5px;\">{{user.company_id.email_primary_color or "
 "'#FFFFFF'}}; border-radius: 5px;\">\n"
-"                                Görüntüle <strong t-out=\"object.name or ''\""
-">Belge</strong></a>\n"
+"                                Görüntüle <strong t-out=\"object.name or "
+"''\">Belge</strong></a>\n"
 "                       </div>\n"
 "                        <t t-if=\"user.signature\" data-o-mail-quote-"
 "container=\"1\">\n"
 "                           <br/>\n"
 "                            <div data-o-mail-quote=\"1\">--<br data-o-mail-"
-"quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\""
-">Mitchell Admin</t></div>\n"
+"quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-"
+"quote=\"1\">Mitchell Admin</t></div>\n"
 "                       </t>\n"
 "                    \n"
 "                </div>\n"
@@ -486,38 +478,39 @@ msgid ""
 "            "
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">"
-"\n"
+"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;"
+"\">\n"
 "                        Merhaba<br/><br/>\n"
-"                       <t t-out=\"user.name or ''\">Mitchell Admin</t> <t "
-"t-out=\"object.slide_category or ''\"> belgesini</t> <strong t-out="
-"\"object.name or ''\">Ağaçlar</strong> sizlerle paylaştı!\n"
-"                       </p><div style="
-"\"margin: 16px 8px 16px 8px; text-align: center;\">\n"
-"                           <a t-att-href=\"(object.website_share_url + "
-"'?fullscreen=1') if ctx.get('fullscreen') else object.website_share_url\">\n"
-"                                <img t-att-alt=\"object.name\" t-attf-src=\""
-"{{ ctx.get('base_url') }}/web/image/slide.slide/{{ object.id }}/image_1024\" "
-"style=\"height:auto; width:150px; margin: 16px;\"/>{{ object.id }}/"
-"image_1024\" style=\"height:auto; width:150px; margin: 16px;\"/>\n"
+"                       <t t-out=\"user.name or ''\">Mitchell Admin</t> <t t-"
+"out=\"object.slide_category or ''\"> belgesini</t> <strong t-"
+"out=\"object.name or ''\">Ağaçlar</strong> sizlerle paylaştı!\n"
+"                       </p><div style=\"margin: 16px 8px 16px 8px; text-"
+"align: center;\">\n"
+"                           <a t-att-href=\"(object.website_share_url + '?"
+"fullscreen=1') if ctx.get('fullscreen') else object.website_share_url\">\n"
+"                                <img t-att-alt=\"object.name\" t-attf-"
+"src=\"{{ ctx.get('base_url') }}/web/image/slide.slide/{{ object.id }}/"
+"image_1024\" style=\"height:auto; width:150px; margin: 16px;\"/"
+">{{ object.id }}/image_1024\" style=\"height:auto; width:150px; margin: 16px;"
+"\"/>\n"
 "                           </a>\n"
 "                        </div>\n"
-"                       <div style="
-"\"padding: 16px 8px 16px 8px; text-align: center;\">\n"
-"                            <a t-att-href=\"(object.website_share_url + "
-"'?fullscreen=1') if ctx.get('fullscreen') else object.website_share_url\" t"
-"-attf-style=\"background-color: {{user.company_id.email_secondary_color or "
-"'#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{"
-"user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">{{"
-"user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;"
+"                       <div style=\"padding: 16px 8px 16px 8px; text-align: "
+"center;\">\n"
+"                            <a t-att-href=\"(object.website_share_url + '?"
+"fullscreen=1') if ctx.get('fullscreen') else object.website_share_url\" t-"
+"attf-style=\"background-color: {{user.company_id.email_secondary_color or "
+"'#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: "
+"{{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;"
+"\">{{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;"
 "\"> <strong t-out=\"object.name or ''\">Ağaçları Görüntüle</strong></a>\n"
 "                       </div>\n"
 "                        <t t-if=\"user.signature\" data-o-mail-quote-"
 "container=\"1\">\n"
 "                           <br/>\n"
 "                            <div data-o-mail-quote=\"1\">--<br data-o-mail-"
-"quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\""
-">Mitchell Admin</t></div>\n"
+"quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-"
+"quote=\"1\">Mitchell Admin</t></div>\n"
 "                       </t>\n"
 "                    \n"
 "                </div>\n"
@@ -567,41 +560,42 @@ msgid ""
 "            "
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">"
-"\n"
+"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;"
+"\">\n"
 "                        Merhaba<br/><br/>\n"
-"                        Takip etmekte olduğunuz <strong t-out="
-"\"object.channel_id.name or ''\">Ağaçlar, Ahşap ve Bahçeler</strong> "
+"                        Takip etmekte olduğunuz <strong t-"
+"out=\"object.channel_id.name or ''\">Ağaçlar, Ahşap ve Bahçeler</strong> "
 "kursunda yeni bir şey var:<br/><br/>\n"
-"                       </p><center><strong t-out=\"object.name or ''\""
-">Ağaçlar</strong></center>\n"
+"                       </p><center><strong t-out=\"object.name or "
+"''\">Ağaçlar</strong></center>\n"
 "                       <t t-if=\"object.image_1024\">\n"
-"                            <div style="
-"\"padding: 16px 8px 16px 8px; text-align: center;\">\n"
+"                            <div style=\"padding: 16px 8px 16px 8px; text-"
+"align: center;\">\n"
 "                               <a t-att-href=\"object.website_share_url\">\n"
-"                                <img t-att-alt=\"object.name\" t-attf-src=\""
-"{{ ctx.get('base_url') }}/web/image/slide.slide/{{ object.id }}/image_1024\" "
-"style=\"height:auto; width:150px; margin: 16px;\"/>{{ object.id }}/"
-"image_1024\" style=\"height:auto; width:150px; margin: 16px;\"/>\n"
+"                                <img t-att-alt=\"object.name\" t-attf-"
+"src=\"{{ ctx.get('base_url') }}/web/image/slide.slide/{{ object.id }}/"
+"image_1024\" style=\"height:auto; width:150px; margin: 16px;\"/"
+">{{ object.id }}/image_1024\" style=\"height:auto; width:150px; margin: 16px;"
+"\"/>\n"
 "                           </a>\n"
 "                        </div>\n"
 "                       </t>\n"
-"                        <div style="
-"\"padding: 16px 8px 16px 8px; text-align: center;\">\n"
+"                        <div style=\"padding: 16px 8px 16px 8px; text-align: "
+"center;\">\n"
 "                           <a t-att-href=\"object.website_share_url\" t-attf-"
 "style=\"background-color: {{object.user_id.company_id.email_secondary_color "
-"or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{"
-"object.user_id.company_id.email_primary_color or '#FFFFFF'}}; border-radius: "
-"5px;\">{{object.user_id.company_id.email_primary_color or '#FFFFFF'}}; "
-"border-radius: 5px;\">İçeriği görüntüle</a>\n"
+"or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: "
+"{{object.user_id.company_id.email_primary_color or '#FFFFFF'}}; border-"
+"radius: 5px;\">{{object.user_id.company_id.email_primary_color or "
+"'#FFFFFF'}}; border-radius: 5px;\">İçeriği görüntüle</a>\n"
 "                        </div>\n"
 "                        Bu özel içeriğin tadını çıkarın!\n"
 "                       <t t-if=\"user.signature\" data-o-mail-quote-"
 "container=\"1\">\n"
 "                            <br/>\n"
 "                           <div data-o-mail-quote=\"1\">--<br data-o-mail-"
-"quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\""
-">Mitchell Admin</t></div>\n"
+"quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-"
+"quote=\"1\">Mitchell Admin</t></div>\n"
 "                       </t>\n"
 "                    \n"
 "                </div>\n"
@@ -1024,8 +1018,8 @@ msgid ""
 "<span class=\"me-2 d-none d-md-inline\">Continue</span><i class=\"oi oi-"
 "arrow-right\" aria-hidden=\"true\"/>"
 msgstr ""
-"<span class=\"me-2 d-none d-md-inline\">Devam et</span><i class="
-"\"oi oi-arrow-right\" aria-hidden=\"true\"/>"
+"<span class=\"me-2 d-none d-md-inline\">Devam et</span><i class=\"oi oi-"
+"arrow-right\" aria-hidden=\"true\"/>"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.course_slides_list
@@ -2955,6 +2949,7 @@ msgid "Display"
 msgstr "Ekran"
 
 #. module: website_slides
+#: model:ir.model.fields,field_description:website_slides.field_base_partner_merge_automatic_wizard__display_name
 #: model:ir.model.fields,field_description:website_slides.field_gamification_challenge__display_name
 #: model:ir.model.fields,field_description:website_slides.field_gamification_karma_tracking__display_name
 #: model:ir.model.fields,field_description:website_slides.field_mail_activity__display_name
@@ -3683,6 +3678,7 @@ msgid "HowTo"
 msgstr "Nasıl"
 
 #. module: website_slides
+#: model:ir.model.fields,field_description:website_slides.field_base_partner_merge_automatic_wizard__id
 #: model:ir.model.fields,field_description:website_slides.field_gamification_challenge__id
 #: model:ir.model.fields,field_description:website_slides.field_gamification_karma_tracking__id
 #: model:ir.model.fields,field_description:website_slides.field_mail_activity__id
@@ -4392,6 +4388,11 @@ msgid "Menu Entry"
 msgstr "Menü Girişi"
 
 #. module: website_slides
+#: model:ir.model,name:website_slides.model_base_partner_merge_automatic_wizard
+msgid "Merge Partner Wizard"
+msgstr ""
+
+#. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel__message_has_error
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__message_has_error
 msgid "Message Delivery error"
@@ -4819,8 +4820,8 @@ msgid ""
 msgstr ""
 "Bir e-posta gönderirken seçmek için isteğe bağlı çeviri dili (ISO kodu). "
 "Ayarlanmazsa, ana ortağın dili kullanılacaktır. Bu genellikle uygun dili "
-"sağlayan bir yer tutucu ifade olmalıdır, örneğin {{ object.partner_id.lang "
-"}}."
+"sağlayan bir yer tutucu ifade olmalıdır, örneğin "
+"{{ object.partner_id.lang }}."
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_channel_form
@@ -4875,6 +4876,7 @@ msgstr "Pivot"
 #: code:addons/website_slides/static/src/xml/slide_course_join.xml:0
 #: code:addons/website_slides/static/src/xml/slide_quiz.xml:0
 #: model_terms:ir.ui.view,arch_db:website_slides.course_join
+#: model_terms:ir.ui.view,arch_db:website_slides.slide_social_email
 msgid "Please"
 msgstr "Lütfen"
 
@@ -4894,16 +4896,6 @@ msgstr ""
 msgid "Please %(a_login_open)slogin%(a_login_close)s to vote for this lesson"
 msgstr ""
 "Bu derse oy vermek için lütfen %(a_login_open)sgiriş yapın%(a_login_close)s"
-
-#. module: website_slides
-#: model_terms:ir.ui.view,arch_db:website_slides.slide_social_email
-msgid ""
-"Please <a t-attf-href=\"/odoo?redirect=#{request.httprequest.url}\" "
-"class=\"fw-bold o_translate_inline\"> login </a> to share this"
-msgstr ""
-"Bunu paylaşmak için lütfen <a t-attf-href="
-"\"/odoo?redirect=#{request.httprequest.url}\" class=\"fw-bold "
-"o_translate_inline\"> giriş yapın </a>"
 
 #. module: website_slides
 #. odoo-python
@@ -5324,6 +5316,11 @@ msgid "Retry"
 msgstr "Yinele"
 
 #. module: website_slides
+#: model_terms:ir.ui.view,arch_db:website_slides.profile_access_denied
+msgid "Return to the course."
+msgstr "Kursa geri dön."
+
+#. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_channel_form
 msgid "Review Course"
 msgstr "Kursu Gözden Geçirin"
@@ -5504,7 +5501,7 @@ msgstr "Manuel olarak Seç"
 
 #. module: website_slides
 #. odoo-javascript
-#: code:addons/website_slides/static/src/js/public/components/slide_upload_dialog/slide_upload_category.js:0
+#: code:addons/website_slides/static/src/js/public/components/slide_upload_dialog/slide_upload_category.xml:0
 msgid "Select or create a category"
 msgstr "Bir kategori seçin veya oluşturun"
 
@@ -5522,7 +5519,7 @@ msgstr "Bir etiket grubu seçin veya oluşturun"
 
 #. module: website_slides
 #. odoo-javascript
-#: code:addons/website_slides/static/src/js/public/components/slide_upload_dialog/slide_upload_select_tags.xml:0
+#: code:addons/website_slides/static/src/js/public/components/slide_upload_dialog/slide_upload_category.xml:0
 msgid "Select or create tags"
 msgstr "Etiketleri seçin veya oluşturun"
 
@@ -6969,6 +6966,14 @@ msgstr ""
 
 #. module: website_slides
 #. odoo-python
+#: code:addons/website_slides/models/base_partner_merge.py:0
+msgid ""
+"You cannot merge these contacts because multiple contacts are enrolled in "
+"the same courses: %s"
+msgstr ""
+
+#. module: website_slides
+#. odoo-python
 #: code:addons/website_slides/controllers/main.py:0
 msgid "You cannot upload on this channel."
 msgstr "Bu kanala yükleyemezsiniz."
@@ -7334,6 +7339,7 @@ msgstr "katılın"
 #. odoo-javascript
 #: code:addons/website_slides/static/src/js/public/components/slide_share_dialog/email_sharing_input.xml:0
 #: code:addons/website_slides/static/src/xml/slide_course_join.xml:0
+#: model_terms:ir.ui.view,arch_db:website_slides.slide_social_email
 msgid "login"
 msgstr "giriş"
 
@@ -7418,6 +7424,7 @@ msgstr "erişim talep etmek için"
 #. module: website_slides
 #. odoo-javascript
 #: code:addons/website_slides/static/src/js/public/components/slide_share_dialog/email_sharing_input.xml:0
+#: model_terms:ir.ui.view,arch_db:website_slides.slide_social_email
 msgid "to share this"
 msgstr "bunu paylaşmak için"
 
@@ -7452,6 +7459,21 @@ msgstr "{{ user.name }} sizinle bir {{ object.slide_category }} paylaştı!"
 #: model_terms:ir.ui.view,arch_db:website_slides.course_nav
 msgid "└<span class=\"ms-1\">Uncategorized</span>"
 msgstr "└<span class=\"ms-1\">Kategorize edilmemiş</span>"
+
+#~ msgid ""
+#~ "<a t-attf-href=\"/slides/course-#{request.params.get('channel_id')}\" "
+#~ "class=\"o_translate_inline\">Return to the course.</a>"
+#~ msgstr ""
+#~ "<a t-attf-href=\"/slides/course-#{request.params.get('channel_id')}\" "
+#~ "class=\"o_translate_inline\">Kursa geri dönün.</a>"
+
+#~ msgid ""
+#~ "Please <a t-attf-href=\"/odoo?redirect=#{request.httprequest.url}\" "
+#~ "class=\"fw-bold o_translate_inline\"> login </a> to share this"
+#~ msgstr ""
+#~ "Bunu paylaşmak için lütfen <a t-attf-href=\"/odoo?"
+#~ "redirect=#{request.httprequest.url}\" class=\"fw-bold "
+#~ "o_translate_inline\"> giriş yapın </a>"
 
 #~ msgid "<i class=\"fa fa-comments\"/> Comments ("
 #~ msgstr "<i class=\"fa fa-comments\"/> Yorumlar ("
@@ -7750,9 +7772,6 @@ msgstr "└<span class=\"ms-1\">Kategorize edilmemiş</span>"
 
 #~ msgid "Restrict publishing to this website."
 #~ msgstr "Bu web sitesinde yayınlamayı kısıtlayın."
-
-#~ msgid "Return to the course."
-#~ msgstr "Kursa geri dön."
 
 #~ msgid "Save & Publish"
 #~ msgstr "Kaydet ve Yayınla"

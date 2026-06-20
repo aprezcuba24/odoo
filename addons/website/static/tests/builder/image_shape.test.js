@@ -1,9 +1,15 @@
 import { describe, expect, test } from "@odoo/hoot";
-import { queryFirst, waitFor } from "@odoo/hoot-dom";
-import { contains } from "@web/../tests/web_test_helpers";
-import { defineWebsiteModels, setupWebsiteBuilder } from "./website_helpers";
-import { delay } from "@web/core/utils/concurrency";
-import { testImg } from "./image_test_helpers";
+import { queryFirst, setInputRange } from "@odoo/hoot-dom";
+import { contains, onRpc } from "@web/../tests/web_test_helpers";
+import { Plugin } from "@html_editor/plugin";
+import {
+    addPlugin,
+    defineWebsiteModels,
+    setupWebsiteBuilder,
+    setupWebsiteBuilderWithSnippet,
+} from "./website_helpers";
+import { onRpcImg, testImg, testSvgImg, testSvgImgSrc } from "./image_test_helpers";
+import { dummyCORSSrc, setupCORSProtectedImg } from "@html_builder/../tests/helpers";
 
 defineWebsiteModels();
 
@@ -43,7 +49,137 @@ test("Should set a shape on an image", async () => {
         "data-file-name",
         "s_text_image.svg"
     );
-    expect(":iframe .test-options-target img").toHaveAttribute("data-shape-colors", ";;;;");
+});
+
+test("Should remove all shape related dataset items when removing the shape", async () => {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            ${testImg}
+        </div>
+    `);
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+
+    await contains(
+        "[data-label='Shape'] button[data-action-id='setImageShape'] i.oi-close"
+    ).click();
+    await waitSidebarUpdated();
+
+    expect(":iframe .test-options-target img").not.toHaveAttribute("data-shape");
+    expect(":iframe .test-options-target img").not.toHaveAttribute("data-file-name");
+    expect(":iframe .test-options-target img").not.toHaveAttribute("data-shape-colors");
+    expect(":iframe .test-options-target img").not.toHaveAttribute("aspect-ratio");
+});
+
+test("Changing the shape, from the one that has an animation speed to the one that doesn't, removes the speed attribute", async () => {
+    onRpcImg("/html_builder/static/image_shapes/composition/composition_line_2.svg");
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            ${testImg}
+        </div>
+    `);
+
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/composition/composition_line_2']").click();
+    await waitSidebarUpdated();
+
+    await setInputRange("[data-action-id='setImageShapeSpeed'] input", 1.2);
+    await waitSidebarUpdated();
+    expect(":iframe .test-options-target img").toHaveAttribute("data-shape-animation-speed", "1.2");
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+
+    expect(":iframe .test-options-target img").not.toHaveAttribute("data-shape-animation-speed");
+});
+
+test("Changing the shape from the one that has a transform option to the one that doesn't removes the flip and rotate attributes", async () => {
+    onRpcImg("/html_builder/static/image_shapes/geometric/geo_triangle.svg");
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            ${testImg}
+        </div>
+    `);
+
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_triangle']").click();
+    await waitSidebarUpdated();
+
+    await contains(`[data-action-id='flipImageShape'][title='Horizontal mirror']`).click();
+    await waitSidebarUpdated();
+    await contains(`[data-action-id='rotateImageShape'][title="Rotate left"]`).click();
+    await waitSidebarUpdated();
+    expect(":iframe .test-options-target img").toHaveAttribute("data-shape-flip", "x");
+    expect(":iframe .test-options-target img").toHaveAttribute("data-shape-rotate", "270");
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+
+    expect(":iframe .test-options-target img").not.toHaveAttribute("data-shape-flip");
+    expect(":iframe .test-options-target img").not.toHaveAttribute("data-shape-rotate");
+});
+
+test("Should clean previously saved useless attributes when saving", async () => {
+    const imgEl = `
+        <img src='/web/image/website.s_text_image_default_image'
+            data-attachment-id="1" data-original-id="1"
+            data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp"
+            data-mimetype-before-conversion="image/webp"
+            data-file-name="s_text_image.svg"
+            data-shape-colors=";;;;"
+            data-shape-flip="x"
+            >
+        `;
+    await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            ${imgEl}
+        </div>
+    `);
+    onRpc("ir.ui.view", "save", () => {
+        expect(":iframe .test-options-target").toHaveInnerHTML(
+            `<img src="/web/image/website.s_text_image_default_image"
+                data-attachment-id="1" data-original-id="1"
+                data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp"
+                data-mimetype-before-conversion="image/webp">`
+        );
+        expect.step("save");
+        return true;
+    });
+    await contains(".btn[data-action='save']").click();
+    expect.verifySteps(["save"]);
+});
+
+test("Should clean shape/hover related data on an incompatible image when saving", async () => {
+    await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            <img src="${dummyCORSSrc}"
+                data-shape="html_builder/geometric/geo_shuriken"
+                data-file-name="website.svg"
+                data-shape-colors=";;;;"
+                data-shape-flip="x"
+                data-hover-effect="overlay">
+        </div>
+    `);
+    setupCORSProtectedImg();
+    onRpc("ir.ui.view", "save", () => {
+        expect(":iframe .test-options-target").toHaveInnerHTML(`<img src="${dummyCORSSrc}"/>`);
+        expect.step("save");
+        return true;
+    });
+    await contains(".btn[data-action='save']").click();
+    expect.verifySteps(["save"]);
 });
 
 test("Should set a shape on a GIF", async () => {
@@ -54,12 +190,11 @@ test("Should set a shape on a GIF", async () => {
     >`;
 
     // Set up the website builder with the test GIF.
-    const { getEditor, waitSidebarUpdated } = await setupWebsiteBuilder(`
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
         <div class="test-options-target">
             ${testGif}
         </div>
         `);
-    const editor = getEditor();
 
     // Click the GIF to activate the image options in the sidebar.
     await contains(":iframe .test-options-target img").click();
@@ -68,8 +203,7 @@ test("Should set a shape on a GIF", async () => {
     // Select and apply a shape.
     await contains("[data-label='Shape'] .dropdown").click();
     await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
-    // Wait for the editor to process the change.
-    await editor.shared.operation.next(() => {});
+    await waitSidebarUpdated();
 
     const gif = queryFirst(":iframe .test-options-target img");
 
@@ -98,6 +232,10 @@ test("Should set a shape on a GIF", async () => {
         "data-shape",
         "html_builder/geometric/geo_shuriken"
     );
+
+    // 6. The stretch option should not be visible as it works with a canvas
+    // transformation that is not compatible with a gif.
+    expect("[data-action-id='toggleImageShapeRatio']").not.toHaveCount();
 });
 
 test("Should change the shape color of an image", async () => {
@@ -115,8 +253,6 @@ test("Should change the shape color of an image", async () => {
     await contains("[data-label='Shape'] .dropdown").click();
     await contains("[data-action-value='html_builder/pattern/pattern_wave_4']").click();
     await waitSidebarUpdated();
-
-    await waitFor(`[data-label="Colors"] .o_we_color_preview`);
 
     expect(`[data-label="Colors"] .o_we_color_preview`).toHaveCount(4);
 
@@ -175,8 +311,6 @@ test("Should change the shape color of an image with a class color", async () =>
     await contains("[data-label='Shape'] .dropdown").click();
     await contains("[data-action-value='html_builder/pattern/pattern_wave_4']").click();
     await waitSidebarUpdated();
-
-    await waitFor(`[data-label="Colors"] .o_we_color_preview`);
 
     expect(`[data-label="Colors"] .o_we_color_preview`).toHaveCount(4);
 
@@ -249,7 +383,6 @@ describe("flip shape axis", () => {
         await contains("[data-label='Shape'] .dropdown").click();
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         await waitSidebarUpdated();
-        await waitFor(`[data-action-id="flipImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -275,7 +408,6 @@ describe("flip shape axis", () => {
         await contains("[data-label='Shape'] .dropdown").click();
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         await waitSidebarUpdated();
-        await waitFor(`[data-action-id="flipImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -302,7 +434,6 @@ describe("flip shape axis", () => {
         await contains("[data-label='Shape'] .dropdown").click();
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         await waitSidebarUpdated();
-        await waitFor(`[data-action-id="flipImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -328,7 +459,6 @@ describe("flip shape axis", () => {
         await contains("[data-label='Shape'] .dropdown").click();
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         await waitSidebarUpdated();
-        await waitFor(`[data-action-id="flipImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -357,7 +487,6 @@ describe("rotate shape", () => {
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         // ensure the shape action has been applied
         await waitSidebarUpdated();
-        await waitFor(`[data-action-id="rotateImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -382,7 +511,6 @@ describe("rotate shape", () => {
         await contains("[data-label='Shape'] .dropdown").click();
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         await waitSidebarUpdated();
-        await waitFor(`[data-action-id="rotateImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -410,8 +538,6 @@ describe("rotate shape", () => {
         await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
         // ensure the shape action has been applied
         await waitSidebarUpdated();
-
-        await waitFor(`[data-action-id="rotateImageShape"]`);
 
         expect(`:iframe .test-options-target img`).toHaveAttribute(
             "data-shape",
@@ -456,14 +582,7 @@ test("Should change the speed of an animated shape", async () => {
 
     const originalSrc = queryFirst(":iframe .test-options-target img").src;
 
-    await waitFor(`[data-action-id="setImageShapeSpeed"]`);
-    const rangeInput = queryFirst(`[data-action-id="setImageShapeSpeed"] input`);
-    rangeInput.value = 2;
-    rangeInput.dispatchEvent(new Event("input"));
-    await delay();
-    rangeInput.dispatchEvent(new Event("change"));
-    await delay();
-
+    await setInputRange(`[data-action-id="setImageShapeSpeed"] input`, 2);
     // ensure the shape action has been applied
     await editor.shared.operation.next(() => {});
 
@@ -535,9 +654,297 @@ test("Should have the correct active shape in the image shape selector", async (
     `);
 
     await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
     await contains("[data-label='Shape'] .dropdown").click();
     await contains("[data-action-value='html_builder/geometric/geo_tetris']").click();
     await waitSidebarUpdated();
     await contains("[data-label='Shape'] .dropdown").click();
     expect("[data-action-value='html_builder/geometric/geo_tetris']").toHaveClass("active");
+});
+
+test("Should keep colors when changing speed and vice versa", async () => {
+    const { getEditor, waitSidebarUpdated } = await setupWebsiteBuilder(
+        `<div class="test-options-target">
+            ${testImg}
+        </div>`,
+        {
+            loadIframeBundles: true,
+        }
+    );
+    const editor = getEditor();
+
+    // Select image and apply shape
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/pattern/pattern_wave_4']").click();
+    await waitSidebarUpdated();
+
+    const imgSelector = ":iframe .test-options-target img";
+    const initialColors = [
+        queryFirst(`[data-label="Colors"] .o_we_color_preview:nth-child(1)`).style.backgroundColor,
+        queryFirst(`[data-label="Colors"] .o_we_color_preview:nth-child(2)`).style.backgroundColor,
+        queryFirst(`[data-label="Colors"] .o_we_color_preview:nth-child(3)`).style.backgroundColor,
+        queryFirst(`[data-label="Colors"] .o_we_color_preview:nth-child(4)`).style.backgroundColor,
+    ];
+
+    // Change speed
+    await setInputRange(`[data-action-id="setImageShapeSpeed"] input`, -1);
+    await editor.shared.operation.next(() => {});
+
+    // Change first color and verify speed unchanged
+    await contains(`[data-label="Colors"] .o_we_color_preview:nth-child(1)`).click();
+    await contains(`.o_font_color_selector [data-color="#FF0000"]`).click();
+    await waitSidebarUpdated();
+
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(1)`).toHaveStyle({
+        backgroundColor: "rgb(255, 0, 0)",
+    });
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(2)`).toHaveStyle({
+        backgroundColor: initialColors[1],
+    });
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(3)`).toHaveStyle({
+        backgroundColor: initialColors[2],
+    });
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(4)`).toHaveStyle({
+        backgroundColor: initialColors[3],
+    });
+
+    expect(imgSelector).toHaveAttribute("data-shape-animation-speed", "-1");
+
+    // Change speed and verify colors unchanged
+    await setInputRange(`[data-action-id="setImageShapeSpeed"] input`, 2);
+    await editor.shared.operation.next(() => {});
+
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(1)`).toHaveStyle({
+        backgroundColor: "rgb(255, 0, 0)",
+    });
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(2)`).toHaveStyle({
+        backgroundColor: initialColors[1],
+    });
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(3)`).toHaveStyle({
+        backgroundColor: initialColors[2],
+    });
+    expect(`[data-label="Colors"] .o_we_color_preview:nth-child(4)`).toHaveStyle({
+        backgroundColor: initialColors[3],
+    });
+
+    expect(imgSelector).toHaveAttribute("data-shape-animation-speed", "2");
+});
+
+test("Be able to add and remove shape from custom groups", async () => {
+    class CustomImageShapeGroupsPlugin extends Plugin {
+        static id = "customImageShapeGroups";
+        resources = {
+            image_shape_groups_providers: (shapeGroups) => {
+                const geometrics = shapeGroups.basic.subgroups.geometrics.shapes;
+                const customShapes = {
+                    "html_builder/geometric/geo_shuriken": {
+                        ...geometrics["html_builder/geometric/geo_shuriken"],
+                        selectLabel: "Custom Shuriken",
+                    },
+                    "html_builder/geometric/geo_diamond": {
+                        ...geometrics["html_builder/geometric/geo_diamond"],
+                        selectLabel: "Custom Diamond",
+                    },
+                };
+                const extraShapes = {
+                    "html_builder/geometric/geo_triangle": {
+                        ...geometrics["html_builder/geometric/geo_triangle"],
+                        selectLabel: "Extra Triangle",
+                    },
+                };
+                delete geometrics["html_builder/geometric/geo_shuriken"];
+                delete geometrics["html_builder/geometric/geo_diamond"];
+                return {
+                    basic: {
+                        subgroups: {
+                            custom: {
+                                label: "Custom",
+                                shapes: customShapes,
+                            },
+                        },
+                    },
+                    extra: {
+                        label: "Extra",
+                        subgroups: {
+                            extra: {
+                                label: "Extra",
+                                shapes: extraShapes,
+                            },
+                        },
+                    },
+                };
+            },
+        };
+    }
+    addPlugin(CustomImageShapeGroupsPlugin);
+
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            ${testImg}
+        </div>
+    `);
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+    await contains("[data-label='Shape'] .dropdown").click();
+    expect(".o_pager_container").toHaveText(/Custom/);
+    expect("button.o-hb-select-pager-tab[data-group-id='extra']").toHaveCount(1);
+    expect("[data-action-value='html_builder/geometric/geo_shuriken']").toHaveCount(1);
+    expect("[data-action-value='html_builder/geometric/geo_diamond']").toHaveCount(1);
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+    expect(":iframe .test-options-target img").toHaveAttribute(
+        "data-shape",
+        "html_builder/geometric/geo_shuriken"
+    );
+    expect("div[data-label='Shape'] .dropdown").toHaveText("Custom Shuriken");
+});
+
+test("Should reset shape transformation with reset button and when switching shape", async () => {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            <img src='/web/image/website.s_text_image_default_image'
+                data-original-id="1"
+                data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp"
+                data-mimetype-before-conversion="image/webp"
+                data-shape="html_builder/geometric/geo_tetris"
+                data-shape-colors=";;;;"
+                data-shape-flip="xy"
+                data-shape-rotate="270"
+            >
+        </div>
+    `);
+    const imgSelector = ":iframe .test-options-target img";
+
+    await contains(imgSelector).click();
+    await waitSidebarUpdated();
+
+    await contains("[data-action-id='resetImageShapeTransformation']").click();
+    await waitSidebarUpdated();
+
+    expect(imgSelector).toHaveAttribute("data-shape", "html_builder/geometric/geo_tetris");
+    expect(imgSelector).not.toHaveAttribute("data-shape-flip");
+    expect(imgSelector).not.toHaveAttribute("data-shape-rotate");
+
+    await contains(`[data-action-id="flipImageShape"]:has(.oi-arrows-h)`).click();
+    await contains(`[data-action-id="rotateImageShape"]:has(.fa-rotate-right)`).click();
+    await waitSidebarUpdated();
+
+    expect(imgSelector).toHaveAttribute("data-shape-flip", "x");
+    expect(imgSelector).toHaveAttribute("data-shape-rotate", "90");
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+
+    expect(imgSelector).toHaveAttribute("data-shape", "html_builder/geometric/geo_shuriken");
+    expect(imgSelector).not.toHaveAttribute("data-shape-flip");
+    expect(imgSelector).not.toHaveAttribute("data-shape-rotate");
+});
+
+test("Don't display the shape option on image that do not have an original src", async () => {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(`
+        <div class="test-options-target">
+            <img src="${dummyCORSSrc}">
+        </div>
+    `);
+    setupCORSProtectedImg();
+
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+    expect("[data-label='Shape']").toHaveCount(0);
+});
+
+test("Check that the stretch option does not appear when applying a shape on a svg image", async () => {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(
+        `<div class="test-options-target">
+            ${testSvgImg}
+        </div>`,
+        {
+            loadIframeBundles: true,
+        }
+    );
+
+    // Select image and apply shape
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+    // The stretch option should not be visible as it works with a canvas
+    // transformation that is not compatible with a svg.
+    expect("[data-action-id='toggleImageShapeRatio']").not.toHaveCount();
+});
+
+test("Replacing a shaped image by an svg should also apply the shape on the svg", async () => {
+    onRpc("ir.attachment", "search_read", () => [
+        {
+            id: 1,
+            name: "logo",
+            mimetype: "image/svg+xml",
+            image_src: testSvgImgSrc,
+            access_token: false,
+            public: true,
+        },
+    ]);
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(
+        `<div class="test-options-target">
+            ${testImg}
+        </div>`
+    );
+    await contains(":iframe .test-options-target img").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-label='Shape'] .dropdown").click();
+    await contains("[data-action-value='html_builder/geometric/geo_shuriken']").click();
+    await waitSidebarUpdated();
+
+    await contains("[data-action-id=replaceMedia]").click();
+    await contains(".o_we_existing_attachments .o_button_area").click();
+    await waitSidebarUpdated();
+    const imgEl = queryFirst(":iframe .test-options-target img");
+    expect(imgEl.src.startsWith("data:image/svg+xml;base64,")).toBe(true);
+    expect(`:iframe .test-options-target img`).toHaveAttribute(
+        "data-shape",
+        "html_builder/geometric/geo_shuriken"
+    );
+});
+
+test("Shape should not be applied on replaced CORS-protected image", async () => {
+    const { waitSidebarUpdated } = await setupWebsiteBuilder(
+        `<div class="test-options-target">
+            <img src='${testSvgImgSrc}' data-mimetype="image/svg+xml" data-shape="html_builder/geometric/geo_shuriken" data-original-id="1665" data-original-src="/website/static/src/img/snippets_demo/s_text_image.webp" data-mimetype-before-conversion="image/jpeg" data-shape-colors=";;;;" data-aspect-ratio="1/1" data-file-name="s_text_image.svg" data-attachment-id="1665">
+        </div>`
+    );
+    setupCORSProtectedImg();
+    onRpc("ir.attachment", "search_read", () => [
+        {
+            id: 1,
+            name: "logo",
+            mimetype: "image/jpeg",
+            image_src: dummyCORSSrc,
+            access_token: false,
+            public: true,
+        },
+    ]);
+    await contains(":iframe img").click();
+    await waitSidebarUpdated();
+    await contains("[data-action-id=replaceMedia]").click();
+    await contains(".o_we_existing_attachments .o_button_area").click();
+    await waitSidebarUpdated();
+    const imgEl = queryFirst(":iframe .test-options-target img");
+    expect(imgEl).toHaveAttribute("src", dummyCORSSrc);
+    expect(imgEl).not.toHaveAttribute("data-shape");
+    expect(imgEl).not.toHaveAttribute("data-shape-colors");
+});
+
+test("Verify that the image shape color option appears in the sidebar for s_cta_mockups", async () => {
+    await setupWebsiteBuilderWithSnippet("s_cta_mockups", {
+        loadIframeBundles: true,
+    });
+    await contains(":iframe .s_cta_mockups .o_grid_item_image img").click();
+    expect(`[data-label="Colors"] .o_we_color_preview`).toHaveCount(1);
 });

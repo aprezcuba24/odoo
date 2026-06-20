@@ -47,6 +47,7 @@ export class LinkPopover extends Component {
         allowCustomStyle: { type: Boolean, optional: true },
         allowTargetBlank: { type: Boolean, optional: true },
         allowStripDomain: { type: Boolean, optional: true },
+        publicAttachments: { type: Boolean, optional: true },
         formatColor: { type: Function, optional: true },
     };
     static defaultProps = {
@@ -210,6 +211,10 @@ export class LinkPopover extends Component {
                     },
                     {
                         env: this.__owl__.childEnv,
+                        // `useOverlayServiceOffset` adds 1000 to each sequence value to solve
+                        // overlay visibility in `iframe`, here we increment default sequence (50)
+                        // by 1 and we add 1000 to have color picker always on top of all overlays.
+                        sequence: 1051,
                     }
                 );
             this.customTextColorPicker = createCustomColorPicker(
@@ -267,6 +272,11 @@ export class LinkPopover extends Component {
     toggleRelAttr(attr) {
         const option = this.state.relAttributeOptions[attr];
         option.isChecked = !option.isChecked;
+    }
+
+    discard() {
+        this.props.onDiscard();
+        this.cancelUpload?.();
     }
 
     onChange() {
@@ -403,7 +413,7 @@ export class LinkPopover extends Component {
      */
     async updateDocumentState() {
         const url = this.state.url;
-        const urlObject = URL.parse(url, this.props.document.URL);
+        const urlObject = URL.parse(url, document.URL);
         if (
             url &&
             (url.startsWith("/web/content/") ||
@@ -504,7 +514,7 @@ export class LinkPopover extends Component {
             return;
         }
         try {
-            url = new URL(this.state.url, this.props.document.URL); // relative to absolute
+            url = new URL(this.state.url, document.URL); // relative to absolute
         } catch {
             // Invalid URL, might happen with editor unsuported protocol. eg type
             // `geo:37.786971,-122.399677`, become `http://geo:37.786971,-122.399677`
@@ -534,7 +544,12 @@ export class LinkPopover extends Component {
                 value: `https://www.google.com/s2/favicons?sz=16&domain=${encodeURIComponent(url)}`,
             };
 
-            const externalMetadata = await this.props.getExternalMetaData(this.state.url);
+            const externalMetadata = await this.props
+                .getExternalMetaData(this.state.url)
+                .catch((error) => {
+                    console.warn(`Error fetching external metadata for ${url.href}:`, error);
+                    return {};
+                });
 
             this.state.urlTitle = externalMetadata?.og_title || this.state.url;
             this.state.urlDescription = externalMetadata?.og_description || "";
@@ -553,7 +568,9 @@ export class LinkPopover extends Component {
             const internalMetadata = await this.props
                 .getInternalMetaData(url.href)
                 .catch((error) => {
-                    console.warn(`Error fetching internal metadata for ${url.href}:`, error);
+                    if (!session.test_mode) {
+                        console.warn(`Error fetching internal metadata for ${url.href}:`, error);
+                    }
                     return {};
                 });
             if (internalMetadata.favicon) {
@@ -659,7 +676,14 @@ export class LinkPopover extends Component {
     async uploadFile() {
         const { upload, getURL } = this.uploadService;
         const { resModel, resId } = this.props.recordInfo;
-        const [attachment] = await upload({ resModel, resId, accessToken: true });
+        const setAbortCallback = (abortFn) => {
+            this.cancelUpload = abortFn;
+        };
+        const [attachment] = await upload(
+            { resModel, resId },
+            { accessToken: true, setAbortCallback }
+        );
+        delete this.cancelUpload;
         if (!attachment) {
             // No file selected or upload failed
             return;

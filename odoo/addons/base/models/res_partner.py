@@ -398,8 +398,11 @@ class ResPartner(models.Model):
     def _compute_lang(self):
         """ While creating / updating child contact, take the parent lang by
         default if any. 0therwise, fallback to default context / DB lang """
-        for partner in self.filtered('parent_id'):
-            partner.lang = partner.parent_id.lang or self.default_get(['lang']).get('lang') or self.env.lang
+        for partner in self:
+            if partner.parent_id:
+                partner.lang = partner.parent_id.lang or partner.default_get(['lang']).get('lang') or partner.env.lang
+            elif not partner.lang:
+                partner.lang = partner.default_get(['lang']).get('lang') or partner.env.lang
 
     @api.depends('lang')
     def _compute_active_lang_count(self):
@@ -750,9 +753,17 @@ class ResPartner(models.Model):
             fields_to_sync = self._commercial_fields()
         sync_vals = commercial_partner._convert_fields_to_values(fields_to_sync)
         sync_children = self.child_ids.filtered(lambda c: not c.is_company)
+        children_ids_to_sync = tools.OrderedSet()
         for child in sync_children:
+            if any(
+                self.env['res.partner']._fields[fname].convert_to_write(child[fname], self) != sync_vals[fname]
+                for fname in fields_to_sync
+            ):
+                children_ids_to_sync.add(child.id)
             child._commercial_sync_to_descendants(fields_to_sync)
-        sync_children.write(sync_vals)
+        if children_ids_to_sync:
+            children_to_sync = self.env['res.partner'].browse(children_ids_to_sync)
+            children_to_sync.write(sync_vals)
 
     def _fields_sync(self, values):
         """ Sync commercial fields and address fields from company and to children.
@@ -762,6 +773,7 @@ class ResPartner(models.Model):
 
         :param dict values: updated values, triggering sync
         """
+        self.fetch(['parent_id', 'type', 'commercial_partner_id'])
         # 1. From UPSTREAM: sync from parent
         if values.get('parent_id') or values.get('type') == 'contact':
             # 1a. Commercial fields: sync if parent changed
@@ -904,7 +916,7 @@ class ResPartner(models.Model):
         for partner, pre_values in zip(self, pre_values_list, strict=True):
             if internal_users := partner.user_ids.filtered(lambda u: u._is_internal() and u != self.env.user):
                 internal_users.check_access('write')
-            updated = {fname: fvalue for fname, fvalue in vals.items() if partner[fname] != pre_values[fname]}
+            updated = {fname: fvalue for fname, fvalue in vals.items() if partner[fname] != pre_values.get(fname)}
             if updated:
                 partner._fields_sync(updated)
         return result
@@ -922,13 +934,14 @@ class ResPartner(models.Model):
         # due to ir.default, compute is not called as there is a default value
         # hence calling the compute manually
         for partner, values in zip(partners, vals_list):
-            if 'lang' not in values and partner.parent_id:
+            if 'lang' not in values:
                 partner._compute_lang()
 
         if self.env.context.get('_partners_skip_fields_sync'):
             return partners
 
         for partner, vals in zip(partners, vals_list):
+            vals = self.env['res.partner']._add_missing_default_values(vals)
             partner._fields_sync(vals)
         return partners
 
@@ -1126,6 +1139,7 @@ class ResPartner(models.Model):
                         result[record.type] = record.id
                     if len(result) == len(adr_pref):
                         return result
+                    record.child_ids.fetch(['type', 'child_ids', 'is_company', 'parent_id'])
                     to_scan = [c for c in record.child_ids
                                  if c not in visited
                                  if not c.is_company] + to_scan
@@ -1235,6 +1249,10 @@ class ResPartner(models.Model):
             'city': self.city,
             'country': self.country_id.code,
         }]
+
+    @api.model
+    def _get_res_city_by_name(self, name, country_id):
+        pass
 
 
 class ResPartnerIndustry(models.Model):

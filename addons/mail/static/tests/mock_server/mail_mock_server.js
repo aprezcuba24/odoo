@@ -579,7 +579,7 @@ async function mail_link_preview(request) {
     const { message_id } = await parseRequestParams(request);
     const [message] = MailMessage.search_read([["id", "=", message_id]]);
     const link = createDocumentFragmentFromContent(markup(message.body)).querySelector(
-        "a[href^='https://tenor.com'], a[href='https://make-link-preview.com']"
+        "a[href^='https://tenor.com'], a[href^='https://make-link-preview.com']"
     );
     if (link) {
         const isGifPreview = link.href.startsWith("https://tenor.com");
@@ -769,21 +769,28 @@ async function mail_message_update_content(request) {
         msg_values.partner_ids = false;
         msg_values.parent_id = false;
     }
+    if ("subject" in update_data) {
+        msg_values.subject = update_data.subject;
+    }
     MailMessage.write([message_id], msg_values);
+    const res = {
+        attachment_ids: mailDataHelpers.Store.many(IrAttachment.browse(message.attachment_ids)),
+        body: ["markup", message.body],
+        parent_id: mailDataHelpers.Store.one(MailMessage.browse(message.parent_id)),
+        partner_ids: mailDataHelpers.Store.many(
+            this.env["res.partner"].browse(message.partner_ids),
+            makeKwArgs({ fields: ["avatar_128", "name"] })
+        ),
+        pinned_at: message.pinned_at,
+        message_link_preview_ids: message.message_link_preview_ids,
+    };
+    if ("subject" in update_data) {
+        res.subject = message.subject;
+    }
     BusBus._sendone(
         MailMessage._bus_notification_target(message.id),
         "mail.record/insert",
-        new mailDataHelpers.Store(MailMessage.browse(message.id), {
-            attachment_ids: mailDataHelpers.Store.many(IrAttachment.browse(message.attachment_ids)),
-            body: ["markup", message.body],
-            parent_id: mailDataHelpers.Store.one(MailMessage.browse(message.parent_id)),
-            partner_ids: mailDataHelpers.Store.many(
-                this.env["res.partner"].browse(message.partner_ids),
-                makeKwArgs({ fields: ["avatar_128", "name"] })
-            ),
-            pinned_at: message.pinned_at,
-            message_link_preview_ids: message.message_link_preview_ids,
-        }).get_result()
+        new mailDataHelpers.Store(MailMessage.browse(message.id), res).get_result()
     );
     return new mailDataHelpers.Store(
         MailMessage.browse(message_id),
@@ -1120,7 +1127,11 @@ function _process_request_for_all(store, name, params, context = {}) {
         });
     }
     if (name === "/discuss/create_group") {
-        const channelId = DiscussChannel._create_group(params.partners_to, params.name);
+        const channelId = DiscussChannel._create_group(
+            params.partners_to,
+            params.default_display_mode,
+            params.name
+        );
         store.add(channelId).resolve_data_request({
             channel: mailDataHelpers.Store.one(channelId, makeKwArgs({ only_id: true })),
         });

@@ -8,15 +8,15 @@
 # Larissa Manderfeld, 2023
 # Martin Trigaux, 2023
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# "Larissa Manderfeld (lman)" <lman@odoo.com>, 2025.
+# "Larissa Manderfeld (lman)" <lman@odoo.com>, 2025, 2026.
 # "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025.
 # Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-05 18:36+0000\n"
-"PO-Revision-Date: 2025-12-09 14:04+0000\n"
+"POT-Creation-Date: 2026-06-12 17:35+0000\n"
+"PO-Revision-Date: 2026-06-08 11:04+0000\n"
 "Last-Translator: \"Larissa Manderfeld (lman)\" <lman@odoo.com>\n"
 "Language-Team: German <https://translate.odoo.com/projects/odoo-19/hr/de/>\n"
 "Language: de\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: hr
 #. odoo-python
@@ -36,7 +36,7 @@ msgstr " Datensätze"
 #: model:ir.model.fields,field_description:hr.field_res_company__hr_presence_control_email_amount
 #: model:ir.model.fields,field_description:hr.field_res_config_settings__hr_presence_control_email_amount
 msgid "# emails to send"
-msgstr "# zu versendende E-Mails"
+msgstr "Anzahl zu versendender E-Mails"
 
 #. module: hr
 #. odoo-python
@@ -63,7 +63,7 @@ msgstr ""
 "\n"
 "- Ändern Sie das Startdatum, damit es sich nicht mit dem bestehenden Vertrag "
 "überschneidet, oder\n"
-"- Legen Sie einen neuen Mitarbeiter an, wenn dieser Mitarbeiter mehrere "
+"- legen Sie einen neuen Mitarbeiter an, wenn dieser Mitarbeiter mehrere "
 "aktive Verträge haben soll."
 
 #. module: hr
@@ -74,7 +74,7 @@ msgstr "'Abzeichen - %s' % (object.name).replace('/', '')"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_contract_template_form_view
 msgid "/ month"
-msgstr "/ Monat"
+msgstr "/Monat"
 
 #. module: hr
 #: model_terms:hr.job,job_details:hr.job_consultant
@@ -156,7 +156,7 @@ msgid ""
 "title=\"Company\"/>"
 msgstr ""
 "<i class=\"fa fa-building-o\" role=\"img\" aria-label=\"Company\" "
-"title=\"Company\"/>"
+"title=\"Unternehmen\"/>"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_users_view_form
@@ -210,13 +210,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr.hr_employee_public_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr.hr_kanban_view_employees
 msgid "<i class=\"fa fa-fw me-2 fa-envelope text-primary\" title=\"Email\"/>"
-msgstr "<i class=\"fa fa-fw me-2 fa-envelope text-primary\" title=\"Email\"/>"
+msgstr "<i class=\"fa fa-fw me-2 fa-envelope text-primary\" title=\"E-Mail\"/>"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_employee_public_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr.hr_kanban_view_employees
 msgid "<i class=\"fa fa-fw me-2 fa-phone text-primary\" title=\"Phone\"/>"
-msgstr "<i class=\"fa fa-fw me-2 fa-phone text-primary\" title=\"Phone\"/>"
+msgstr "<i class=\"fa fa-fw me-2 fa-phone text-primary\" title=\"Telefon\"/>"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_kanban_view_employees
@@ -438,6 +438,11 @@ msgid "<span invisible=\"not contract_date_start\">to</span>"
 msgstr "<span invisible=\"not contract_date_start\">bis</span>"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.view_partner_bank_form_inherit_hr
+msgid "<span invisible=\"not employee_salary_amount_is_percentage\">%</span>"
+msgstr "<span invisible=\"not employee_salary_amount_is_percentage\">%</span>"
+
+#. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid ""
 "<span invisible=\"not user_id or is_user_active\">\n"
@@ -650,7 +655,7 @@ msgstr ""
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_consultant
 msgid "Ability to build client relationships."
-msgstr "Möglichkeit zum Aufbau von Kundenbeziehungen"
+msgstr "Möglichkeit zum Aufbau von Kundenbeziehungen."
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_hrm
@@ -688,7 +693,7 @@ msgstr "Erreichen der monatlichen Verkaufsziele"
 #: model:ir.model.fields,field_description:hr.field_hr_job__message_needaction
 #: model:ir.model.fields,field_description:hr.field_hr_version__message_needaction
 msgid "Action Needed"
-msgstr "Aktion notwendig"
+msgstr "Aktion erforderlich"
 
 #. module: hr
 #: model_terms:digest.tip,tip_description:hr.digest_tip_hr_0
@@ -726,7 +731,7 @@ msgstr "Aktivitäten"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__activity_exception_decoration
 #: model:ir.model.fields,field_description:hr.field_hr_version__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "Aktivitätsausnahme-Dekoration"
+msgstr "Kennzeichnung von Aktivitätsausnahmen"
 
 #. module: hr
 #: model:ir.model,name:hr.model_mail_activity_plan
@@ -1254,7 +1259,6 @@ msgid "Attachment Count"
 msgstr "Anzahl Anhänge"
 
 #. module: hr
-#: model_terms:ir.ui.view,arch_db:hr.res_users_view_form
 #: model_terms:ir.ui.view,arch_db:hr.res_users_view_form_preferences
 msgid "Attendance PIN"
 msgstr "PIN für Anwesenheitskontrolle"
@@ -1267,7 +1271,7 @@ msgstr "Anwesenheit/Kassensystem"
 #. module: hr
 #: model:ir.model.fields.selection,name:hr.selection__mail_alias__alias_contact__employees
 msgid "Authenticated Employees"
-msgstr "Authentifizierten Mitarbeitern"
+msgstr "Authentifizierte Mitarbeiter"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.discuss_channel_view_form
@@ -1394,8 +1398,8 @@ msgstr "Bankname"
 msgid ""
 "Bank account %s not found within the salary distribution of the employee"
 msgstr ""
-"Das Bankkonto %s wurde in der Gehaltsverteilung des Mitarbeiters nicht "
-"gefunden."
+"Das Bankkonto %s wurde nicht in der Gehaltsverteilung des Mitarbeiters "
+"gefunden"
 
 #. module: hr
 #: model:ir.model,name:hr.model_base
@@ -1461,9 +1465,10 @@ msgstr "Abbrechen"
 #. module: hr
 #. odoo-python
 #: code:addons/hr/models/hr_version.py:0
-msgid "Cannot archive the only active record of an employee."
+msgid "Cannot archive all the active versions of an employee."
 msgstr ""
-"Der einzige aktive Datensatz eines Mitarbeiters kann nicht archiviert werden."
+"Es ist nicht möglich, alle aktiven Versionen eines Mitarbeiters zu "
+"archivieren."
 
 #. module: hr
 #. odoo-python
@@ -1478,9 +1483,10 @@ msgstr ""
 #. module: hr
 #. odoo-python
 #: code:addons/hr/models/hr_version.py:0
-msgid "Cannot unassign the only active record of an employee."
+msgid "Cannot unassign all the active versions of an employee."
 msgstr ""
-"Der einzige aktive Datensatz eines Mitarbeiters kann nicht zugewiesen werden."
+"Es ist nicht möglich, alle aktiven Versionen eines Mitarbeiters gleichzeitig "
+"zuzuweisen."
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__certificate
@@ -1824,7 +1830,7 @@ msgstr "Erstellt am"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_users_simple_form_inherit_hr
 msgid "Create Employee"
-msgstr "Mitarbeiter anlegen"
+msgstr "Mitarbeiter erstellen"
 
 #. module: hr
 #. odoo-python
@@ -1838,33 +1844,33 @@ msgstr "Benutzer erstellen"
 #. module: hr
 #: model:ir.model,website_form_label:hr.model_res_partner
 msgid "Create a Customer"
-msgstr "Kunden erstellen"
+msgstr "Kunde erstellen"
 
 #. module: hr
 #: model:ir.actions.act_window,name:hr.action_create_job_position
 msgid "Create a Job Position"
-msgstr "Eine Stelle erstellen"
+msgstr "Stelle erstellen"
 
 #. module: hr
 #: model_terms:ir.actions.act_window,help:hr.hr_department_kanban_action
 #: model_terms:ir.actions.act_window,help:hr.hr_department_tree_action
 msgid "Create a new department"
-msgstr "Eine neue Abteilung erstellen"
+msgstr "Neue Abteilung erstellen"
 
 #. module: hr
 #: model_terms:ir.actions.act_window,help:hr.hr_contract_type_action
 msgid "Create a new employment type"
-msgstr "Einen neuen Mitarbeitertyp erstellen"
+msgstr "Neuen Mitarbeitertyp erstellen"
 
 #. module: hr
 #: model_terms:ir.actions.act_window,help:hr.hr_work_location_action
 msgid "Create a new work location"
-msgstr "Einen neuen Arbeitsort erstellen"
+msgstr "Neuen Arbeitsort erstellen"
 
 #. module: hr
 #: model_terms:ir.actions.act_window,help:hr.mail_activity_plan_action
 msgid "Create an Activity Plan"
-msgstr "Einen Aktivitätsplan erstellen"
+msgstr "Aktivitätsplan erstellen"
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_consultant
@@ -1878,7 +1884,7 @@ msgstr "Inhalte erstellen, die unseren Nutzern im Alltag helfen"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_users_view_form
 msgid "Create employee"
-msgstr "Mitarbeiter anlegen"
+msgstr "Mitarbeiter erstellen"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_bank_account_allocation_wizard__create_uid
@@ -2461,7 +2467,7 @@ msgstr "Arbeitsstunden des Mitarbeiters"
 #: model:ir.model.fields,help:hr.field_hr_employee__wage
 #: model:ir.model.fields,help:hr.field_hr_version__wage
 msgid "Employee's monthly gross wage."
-msgstr "Monatsbruttolohn des Mitarbeiters"
+msgstr "Monatsbruttolohn des Mitarbeiters."
 
 #. module: hr
 #. odoo-python
@@ -3771,7 +3777,7 @@ msgstr "Notiz"
 #: model:ir.model.fields,field_description:hr.field_hr_job__message_needaction_counter
 #: model:ir.model.fields,field_description:hr.field_hr_version__message_needaction_counter
 msgid "Number of Actions"
-msgstr "Anzahl der Aktionen"
+msgstr "Anzahl Aktionen"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_hr_job_tree
@@ -3807,7 +3813,7 @@ msgstr "Aktuelle Stellenbesetzung dieser Position"
 #: model:ir.model.fields,field_description:hr.field_hr_job__message_has_error_counter
 #: model:ir.model.fields,field_description:hr.field_hr_version__message_has_error_counter
 msgid "Number of errors"
-msgstr "Anzahl der Fehler"
+msgstr "Anzahl Fehler"
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_department__message_needaction_counter
@@ -3823,7 +3829,7 @@ msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
 #: model:ir.model.fields,help:hr.field_hr_job__message_has_error_counter
 #: model:ir.model.fields,help:hr.field_hr_version__message_has_error_counter
 msgid "Number of messages with delivery error"
-msgstr "Anzahl der Nachrichten mit Zustellungsfehler."
+msgstr "Anzahl Nachrichten mit Zustellungsfehler"
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_job__no_of_recruitment
@@ -3940,7 +3946,7 @@ msgid ""
 msgstr ""
 "PIN, die zum An- und Abmelden im Kioskmodus der Anwesenheitsapp (falls in "
 "der Konfiguration aktiviert) und zum Wechsel des Kassierers in der "
-"Kassensystemapp verwendet wird."
+"Kassensystem-App verwendet wird."
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_department__parent_id
@@ -4897,7 +4903,7 @@ msgid ""
 "You can use this field for quick search."
 msgstr ""
 "ISO-Ländercode in zwei Zeichen. \n"
-"Sie können dieses Feld auch für eine Schnellsuche einsetzen."
+"Sie können dieses Feld auch für eine Schnellsuche verwenden."
 
 #. module: hr
 #: model_terms:hr.job,description:hr.job_marketing
@@ -4986,6 +4992,13 @@ msgstr ""
 
 #. module: hr
 #. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "The following employees have the same work email address: %s"
+msgstr ""
+"Die folgenden Mitarbeiter haben dieselbe geschäftliche E-Mail-Adresse: %s"
+
+#. module: hr
+#. odoo-python
 #: code:addons/hr/models/res_users.py:0
 msgid "The following fields were modified by %s"
 msgstr "Die folgenden Felder wurde geändert von: %s"
@@ -5055,6 +5068,13 @@ msgstr "Wissenschaftszeit"
 #: code:addons/hr/models/hr_employee.py:0
 msgid "This employee already has an user."
 msgstr "Dieser Mitarbeiter hat bereits einen Benutzer."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "This field %(field_name)s doesn't exist on this model (hr.version)."
+msgstr ""
+"Dieses Feld „ %(field_name)s“ existiert in diesem Modell (hr.version) nicht."
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_employee__tz
@@ -5308,6 +5328,11 @@ msgstr "Version"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__versions_count
 msgid "Versions Count"
 msgstr "Anzahl Versionen"
+
+#. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_list_view
+msgid "View"
+msgstr ""
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
@@ -5910,6 +5935,16 @@ msgstr "Arbeit"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
 msgstr "work_permit_name"
+
+#~ msgid "Cannot archive the only active record of an employee."
+#~ msgstr ""
+#~ "Der einzige aktive Datensatz eines Mitarbeiters kann nicht archiviert "
+#~ "werden."
+
+#~ msgid "Cannot unassign the only active record of an employee."
+#~ msgstr ""
+#~ "Der einzige aktive Datensatz eines Mitarbeiters kann nicht zugewiesen "
+#~ "werden."
 
 #~ msgid "Not linked to an user"
 #~ msgstr "Mit keinem Benutzer verknüpft"

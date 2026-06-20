@@ -1,6 +1,7 @@
-import { describe, test } from "@odoo/hoot";
+import { describe, expect, test } from "@odoo/hoot";
+import { animationFrame, press } from "@odoo/hoot-dom";
 import { patchWithCleanup } from "@web/../tests/web_test_helpers";
-import { base64Img, testEditor } from "./_helpers/editor";
+import { base64Img, setupEditor, testEditor } from "./_helpers/editor";
 import { insertText } from "./_helpers/user_actions";
 
 describe("inline code", () => {
@@ -319,13 +320,21 @@ describe("inline code", () => {
         });
     });
 
-    test("should create an empty inline code when their is no text in between two backtics", async () => {
+    test("should not create an empty inline code when there is no text between two backticks", async () => {
         await testEditor({
             contentBefore: "<p>a`[]b</p>",
             stepFunction: async (editor) => insertText(editor, "`"),
-            contentAfterEdit:
-                '<p>a\ufeff<code class="o_inline_code">\ufeff[]\ufeff</code>\ufeffb</p>',
-            contentAfter: '<p>a<code class="o_inline_code">[]</code>b</p>',
+            contentAfterEdit: "<p>a``[]b</p>",
+            contentAfter: "<p>a``[]b</p>",
+        });
+    });
+
+    test("should not create an empty inline code when there is a backtick between two backticks", async () => {
+        await testEditor({
+            contentBefore: "<p>a``[]b</p>",
+            stepFunction: async (editor) => insertText(editor, "`"),
+            contentAfterEdit: "<p>a```[]b</p>",
+            contentAfter: "<p>a```[]b</p>",
         });
     });
 
@@ -335,5 +344,15 @@ describe("inline code", () => {
             stepFunction: async (editor) => insertText(editor, "`"),
             contentAfter: "<p>a`[]f</p>",
         });
+    });
+
+    test.tags("desktop");
+    test("should not open the odoo global command bar when pressing ctrl+k inside a inline code element", async () => {
+        await setupEditor(`<p><code class="o_inline_code">[test]</code></p>`);
+
+        // Pressing ctrl+k to open odoo global command bar
+        await press(["ctrl", "k"]);
+        await animationFrame();
+        expect('.o_command span[title="Create link"]').toHaveCount(0);
     });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "@odoo/hoot";
 import {
     click,
+    delay,
     fill,
     press,
     queryFirst,
@@ -17,9 +18,14 @@ import { setupEditor } from "../_helpers/editor";
 import { cleanLinkArtifacts } from "../_helpers/format";
 import { getContent, setContent, setSelection } from "../_helpers/selection";
 import { expectElementCount } from "../_helpers/ui_expectations";
-import { insertLineBreak, insertText, splitBlock, undo } from "../_helpers/user_actions";
+import {
+    insertLineBreak,
+    insertSpace,
+    insertText,
+    splitBlock,
+    undo,
+} from "../_helpers/user_actions";
 import { execCommand } from "../_helpers/userCommands";
-import { MAIN_PLUGINS, NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS } from "@html_editor/plugin_sets";
 
 const base64Img =
     "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA\n        AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO\n            9TXL0Y4OHwAAAABJRU5ErkJggg==";
@@ -441,7 +447,7 @@ describe("Link creation", () => {
         test("typing valid URL + space should convert to link", async () => {
             const { editor, el } = await setupEditor("<p>[]</p>");
             await insertText(editor, "http://google.co.in");
-            await insertText(editor, " ");
+            await insertSpace(editor);
             expect(cleanLinkArtifacts(getContent(el))).toBe(
                 '<p><a href="http://google.co.in">http://google.co.in</a>&nbsp;[]</p>'
             );
@@ -449,7 +455,7 @@ describe("Link creation", () => {
         test("typing valid URL without protocol + space should convert to https link", async () => {
             const { editor, el } = await setupEditor("<p>[]</p>");
             await insertText(editor, "google.com");
-            await insertText(editor, " ");
+            await insertSpace(editor);
             expect(cleanLinkArtifacts(getContent(el))).toBe(
                 '<p><a href="https://google.com">google.com</a>&nbsp;[]</p>'
             );
@@ -457,7 +463,7 @@ describe("Link creation", () => {
         test("typing valid http URL + space should convert to http link", async () => {
             const { editor, el } = await setupEditor("<p>[]</p>");
             await insertText(editor, "http://google.com");
-            await insertText(editor, " ");
+            await insertSpace(editor);
             expect(cleanLinkArtifacts(getContent(el))).toBe(
                 '<p><a href="http://google.com">http://google.com</a>&nbsp;[]</p>'
             );
@@ -467,6 +473,14 @@ describe("Link creation", () => {
             await insertText(editor, "www.odoo");
             await insertText(editor, " ");
             expect(cleanLinkArtifacts(getContent(el))).toBe("<p>www.odoo []</p>");
+        });
+        test("typing uppercase URL + space should convert to link", async () => {
+            const { editor, el } = await setupEditor("<p>[]</p>");
+            await insertText(editor, "http://ODOO.COM");
+            await insertSpace(editor);
+            expect(cleanLinkArtifacts(getContent(el))).toBe(
+                '<p><a href="http://ODOO.COM">http://ODOO.COM</a>&nbsp;[]</p>'
+            );
         });
     });
     describe("Creation by powerbox", () => {
@@ -1157,6 +1171,9 @@ describe("shortcut", () => {
         // Tab through all focusable elements
         await press("Tab");
         await animationFrame();
+        expect("button:has(i.fa-upload)").toBeFocused();
+        await press("Tab");
+        await animationFrame();
         expect("select[name='link_type']").toBeFocused();
         await press("Tab");
         await animationFrame();
@@ -1174,6 +1191,12 @@ describe("shortcut", () => {
         await press(["Shift", "Tab"]);
         await animationFrame();
         expect(".o_we_discard_link").toBeFocused();
+    });
+    test("should not create a link via shortcut for partial selection inside contenteditable false", async () => {
+        await setupEditor(`<p contenteditable="false">T[e]st</p>`);
+        await press(["ctrl", "k"]);
+        await animationFrame();
+        expect('.o_command span[title="Create link"]').toHaveCount(0);
     });
 });
 
@@ -1590,10 +1613,8 @@ describe("link in contenteditable=false", () => {
 });
 
 describe("upload file via link popover", () => {
-    test("should display upload button when url input is empty", async () => {
-        const { editor } = await setupEditor("<p>[]<br></p>", {
-            config: { Plugins: [...MAIN_PLUGINS, ...NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS] },
-        });
+    test("should display upload button whether url input is empty or filled.", async () => {
+        const { editor } = await setupEditor("<p>[]<br></p>");
         execCommand(editor, "openLinkTools");
         await waitFor(".o-we-linkpopover");
         // Upload button should be visible
@@ -1601,11 +1622,7 @@ describe("upload file via link popover", () => {
         await click(".o_we_href_input_link");
         await press("a");
         await animationFrame();
-        // Upload button should NOT be visible
-        expect("button i[class='fa fa-upload']").toHaveCount(0);
-        await press("Backspace");
-        await animationFrame();
-        // Upload button should be visible again
+        // Still upload button should be visible
         expect("button i[class='fa fa-upload']").toHaveCount(1);
     });
     const patchUpload = (editor) => {
@@ -1620,9 +1637,7 @@ describe("upload file via link popover", () => {
         return mockedUploadPromise;
     };
     test("can create a link to an uploaded file", async () => {
-        const { editor, el } = await setupEditor("<p>[]<br></p>", {
-            config: { Plugins: [...MAIN_PLUGINS, ...NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS] },
-        });
+        const { editor, el } = await setupEditor("<p>[]<br></p>");
         const mockedUpload = patchUpload(editor);
         execCommand(editor, "openLinkTools");
         await waitFor(".o-we-linkpopover");
@@ -1666,9 +1681,7 @@ describe("upload file via link popover", () => {
     });
 
     test("label input does not get filled on file upload if it is already filled", async () => {
-        const { editor } = await setupEditor("<p>[]<br></p>", {
-            config: { Plugins: [...MAIN_PLUGINS, ...NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS] },
-        });
+        const { editor } = await setupEditor("<p>[]<br></p>");
         const mockedUpload = patchUpload(editor);
         execCommand(editor, "openLinkTools");
         await waitFor(".o-we-linkpopover");
@@ -1689,6 +1702,69 @@ describe("upload file via link popover", () => {
         );
         const favIcon = await waitFor(".o_we_preview_favicon span.o_image");
         expect(favIcon).toHaveAttribute("data-mimetype", "text/plain");
+    });
+
+    test("should not insert attachment as link if popover is discarded during file upload", async () => {
+        const patchUpload = (editor) => {
+            const mockedUploadPromise = new Promise((resolve) => {
+                patchWithCleanup(editor.services.uploadLocalFiles, {
+                    async upload({ resId, resModel }, { setAbortCallback } = {}) {
+                        const attachments = [];
+                        await editor.services.upload.uploadFiles(
+                            [
+                                new File(["test"], "fake_file.txt", {
+                                    type: "text/plain",
+                                    size: 100,
+                                }),
+                            ],
+                            { resModel, resId },
+                            (attachment) => {
+                                attachments.push(attachment);
+                            },
+                            setAbortCallback
+                        );
+                        resolve();
+                        return attachments;
+                    },
+                });
+            });
+            return mockedUploadPromise;
+        };
+
+        onRpc("/html_editor/attachment/add_data", async (request) => {
+            const { params } = await request.json();
+            await delay(100);
+            return {
+                name: params.name,
+            };
+        });
+        const { editor, el } = await setupEditor("<p>[]<br></p>");
+        const mockedUpload = patchUpload(editor);
+        execCommand(editor, "openLinkTools");
+        await waitFor(".o-we-linkpopover");
+        let xhr;
+        const waitForRequest = new Promise((res) => {
+            patchWithCleanup(XMLHttpRequest.prototype, {
+                open() {
+                    xhr = this;
+                    super.open(...arguments);
+                    res();
+                },
+                abort() {
+                    xhr.dispatchEvent(new Event("abort"));
+                    super.abort();
+                },
+            });
+        });
+        await click("button i[class='fa fa-upload']");
+        await waitForRequest;
+        await expectElementCount(".o_notification_manager .o_notification", 1);
+        await click(".o_we_discard_link");
+        await expectElementCount(".o-we-linkpopover", 0);
+        await expectElementCount(".o_notification_manager .o_notification", 0);
+        await mockedUpload;
+        await tick();
+        expect(getContent(el)).toBe(`<p o-we-hint-text='Type "/" for commands' class="o-we-hint">[]<br></p>`);
     });
 });
 
@@ -1736,6 +1812,17 @@ describe("hidden label field", () => {
         await waitFor(".o_we_href_input_link", { timeout: 1500 });
         expect(".o_we_label_link").not.toBeVisible();
         expect(".o_we_href_input_link").toHaveValue("http://test.com/");
+    });
+});
+
+describe("Selection in input/textarea", () => {
+    test("Should not show link preview", async () => {
+        await setupEditor(
+            `<p><a href="http://test.com/">a[]b</a><span contenteditable="false" data-oe-protected="true"><input></span></p>`
+        );
+        await waitFor(".o-we-linkpopover");
+        queryOne("input").focus();
+        await expectElementCount(".o-we-linkpopover", 0);
     });
 });
 
@@ -1941,4 +2028,21 @@ describe("label is a valid URL", () => {
             message: "should focus label input by default, when we don't have a label",
         });
     });
+});
+
+test("Should properly show the preview if fetching metadata fails", async () => {
+    const id = Math.random().toString();
+    onRpc("/html_editor/link_preview_internal", () => Promise.reject(new Error(`No data ${id}`)));
+    onRpc("/contactus", () => ({}));
+    const originalConsoleWarn = console.warn.bind(console);
+    patchWithCleanup(console, {
+        warn: (msg, error, ...args) => {
+            if (!error?.message?.includes?.(id)) {
+                originalConsoleWarn(msg, error, ...args);
+            }
+        },
+    });
+    const { el } = await setupEditor('<p><a href="/contactus">a[]b</a></p>');
+    await waitFor(".o-we-linkpopover");
+    expect(cleanLinkArtifacts(getContent(el))).toBe('<p><a href="/contactus">a[]b</a></p>');
 });

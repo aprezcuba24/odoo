@@ -248,6 +248,16 @@ test("[canBeMergedWith]: Base test", async () => {
     // Test with same note
     line2.setNote("Test note");
     expect(line1.canBeMergedWith(line2)).toBe(true);
+    // Test with discount applied
+    line1.setDiscount(10.0);
+    expect(line1.canBeMergedWith(line2)).toBe(false);
+    // Test with same discount
+    line2.setDiscount(10.0);
+    expect(line1.canBeMergedWith(line2)).toBe(true);
+    // Test with different price unit
+    line2.price_unit = line1.price_unit + 1;
+    line2.price_type = "manual";
+    expect(line1.canBeMergedWith(line2)).toBe(false);
     // Test to merge lines
     line1.merge(line2);
     expect(line1.qty).toBe(5);
@@ -297,4 +307,47 @@ describe("Test taxes after fiscal position", () => {
         const nonTaxedProductlineValues = orderLine.prepareBaseLineForTaxesComputationExtraValues();
         expect(nonTaxedProductlineValues.tax_ids.length).toBe(0);
     });
+});
+
+test("Test serial number requirements", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const serial_line = order.lines[0];
+    serial_line.product_id.tracking = "serial";
+    expect(serial_line.hasValidProductLot()).toBe(false); // No SN set
+    serial_line.setPackLotLines({
+        modifiedPackLotLines: {},
+        newPackLotLines: [
+            {
+                lot_name: "SN001",
+            },
+        ],
+    });
+    expect(serial_line.hasValidProductLot()).toBe(true);
+    serial_line.qty = 2;
+    expect(serial_line.hasValidProductLot()).toBe(false); // Only one SN set
+    serial_line.setPackLotLines({
+        modifiedPackLotLines: {},
+        newPackLotLines: [
+            {
+                lot_name: "SN002",
+            },
+        ],
+    });
+    expect(serial_line.hasValidProductLot()).toBe(true);
+
+    const lot_line = order.lines[1];
+    lot_line.product_id.tracking = "lot";
+    expect(lot_line.hasValidProductLot()).toBe(false);
+    lot_line.setPackLotLines({
+        modifiedPackLotLines: {},
+        newPackLotLines: [
+            {
+                lot_name: "LOT001",
+            },
+        ],
+    });
+    expect(lot_line.hasValidProductLot()).toBe(true);
+    lot_line.qty = 2;
+    expect(lot_line.hasValidProductLot()).toBe(true); // One lot is enough
 });

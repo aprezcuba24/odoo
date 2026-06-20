@@ -12,13 +12,25 @@ export class PosOrderAccounting extends Base {
         super.setup();
 
         this._prices = {};
-        this.triggerRecomputeAllPrices();
+        this._pricesDirty = false;
+        this._doRecomputeAllPrices();
     }
 
+    /**
+     * Mark prices as dirty so they are recomputed lazily on the next read of
+     * `prices` or `unitPrices`. Multiple mutations in the same synchronous
+     * operation (e.g. line create → merge → delete during addLineToOrder) all
+     * collapse into a single recomputation instead of running it three times.
+     */
     triggerRecomputeAllPrices() {
         if (!this._prices) {
             return;
         }
+        this._pricesDirty = true;
+    }
+
+    _doRecomputeAllPrices() {
+        this._pricesDirty = false;
         this._prices.original = this._constructPriceData();
         this._prices.unit = this._constructPriceData({ baseLineOpts: { quantity: 1 } });
     }
@@ -70,15 +82,18 @@ export class PosOrderAccounting extends Base {
     get remainingDue() {
         const isNegative = this.totalDue < 0;
         const total = this.totalDue;
-        const remaining = total - this.amountPaid;
+        const remaining = this.currency.round(total - this.amountPaid);
 
         // Amount paid covers the total due
         if ((isNegative && remaining >= 0) || (!isNegative && remaining <= 0)) {
             return 0;
         }
 
-        const tolerance = this.orderIsRounded ? this.config.rounding_method.rounding : 0;
-        const amount = Math.abs(total - this.amountPaid) <= tolerance ? 0 : Math.abs(remaining);
+        const amount =
+            this.orderIsRounded &&
+            this.config.rounding_method.asymmetricRound(isNegative ? -remaining : remaining) == 0
+                ? 0
+                : Math.abs(remaining);
         return isNegative ? this.currency.round(-amount) : this.currency.round(amount);
     }
     get change() {
@@ -97,7 +112,12 @@ export class PosOrderAccounting extends Base {
             (isNegative ? -roundingSanatizer : roundingSanatizer);
 
         const amount = isNegative ? -this.currency.round(total) : this.currency.round(total);
-        return this.config.cash_rounding ? this.config.rounding_method.round(amount) : amount;
+        return this.shouldRoundChange
+            ? this.config.rounding_method.asymmetricRound(amount)
+            : amount;
+    }
+    get shouldRoundChange() {
+        return this.config.cash_rounding;
     }
     get orderIsRounded() {
         const cashPm = this.payment_ids.some((p) => p.payment_method_id.is_cash_count);
@@ -106,9 +126,12 @@ export class PosOrderAccounting extends Base {
     get appliedRounding() {
         const total = this.prices.taxDetails.total_amount_no_rounding;
         const isNegative = this.amountPaid > total;
-        const remaining = total - this.amountPaid;
-        const tolerance = this.orderIsRounded ? this.config.rounding_method.rounding : 0;
-        const amount = Math.abs(total - this.amountPaid) <= tolerance ? Math.abs(remaining) : 0;
+        const remaining = this.currency.round(total - this.amountPaid);
+        const amount =
+            this.orderIsRounded &&
+            this.config.rounding_method.asymmetricRound(total < 0 ? -remaining : remaining) == 0
+                ? Math.abs(remaining)
+                : 0;
         return isNegative ? this.currency.round(amount) : this.currency.round(-amount);
     }
 
@@ -117,11 +140,21 @@ export class PosOrderAccounting extends Base {
      * These getters must be used each time the order prices are needed.
      *
      * Do not try to make your own price computation outside these getters.
+     *
+     * The dirty-check flush here is intentional: `triggerRecomputeAllPrices()`
+     * only marks the cache as stale rather than recomputing immediately, so
+     * the first read after one or more mutations recomputes exactly once.
      */
     get prices() {
+        if (this._pricesDirty) {
+            this._doRecomputeAllPrices();
+        }
         return this._prices.original;
     }
     get unitPrices() {
+        if (this._pricesDirty) {
+            this._doRecomputeAllPrices();
+        }
         return this._prices.unit;
     }
     get priceIncl() {
@@ -221,7 +254,9 @@ export class PosOrderAccounting extends Base {
      */
     _constructPriceData(opts = {}) {
         const data = this._computeAllPrices(opts);
-        const noDiscount = this._computeAllPrices({ baseLineOpts: { discount: 0.0 }, ...opts });
+        const addedBlOpts = opts.baseLineOpts || {};
+        const ndBaseLineOpts = { ...addedBlOpts, discount: 0.0 };
+        const noDiscount = this._computeAllPrices({ ...opts, baseLineOpts: ndBaseLineOpts });
         const currency = this.currency;
 
         for (const key of Object.keys(data.baseLineByLineUuids)) {

@@ -8,15 +8,15 @@
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2023
 # Jolien De Paepe, 2023
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# Bren Driesen <brdri@odoo.com>, 2025.
+# Bren Driesen <brdri@odoo.com>, 2025, 2026.
 # "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025.
 # Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:35+0000\n"
-"PO-Revision-Date: 2025-12-20 09:49+0000\n"
+"POT-Creation-Date: 2026-05-22 17:40+0000\n"
+"PO-Revision-Date: 2026-06-06 20:07+0000\n"
 "Last-Translator: Bren Driesen <brdri@odoo.com>\n"
 "Language-Team: Dutch <https://translate.odoo.com/projects/odoo-19/"
 "website_sale/nl/>\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -172,44 +172,10 @@ msgid "1 Column"
 msgstr "1 Kolom"
 
 #. module: website_sale
-#: model:ir.model.fields.selection,name:website_sale.selection__website__product_page_image_width__100_pc
-msgid "100 %"
-msgstr "100 %"
-
-#. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_list_page_option.xml:0
 msgid "2 Columns"
 msgstr "2 Kolommen"
-
-#. module: website_sale
-#: model:ir.model.fields.selection,name:website_sale.selection__website__product_page_image_width__33_pc
-msgid "33 %"
-msgstr "33%"
-
-#. module: website_sale
-#: model:ir.model.fields.selection,name:website_sale.selection__website__product_page_image_width__50_pc
-msgid "50 %"
-msgstr "50 %"
-
-#. module: website_sale
-#: model:ir.model.fields.selection,name:website_sale.selection__website__product_page_image_width__66_pc
-msgid "66 %"
-msgstr "66 %"
-
-#. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.confirmation
-msgid ""
-"<a role=\"button\" t-att-href=\"order.partner_id.signup_prepare() and "
-"order.partner_id.with_context(relative_url=True)._get_signup_url()\" "
-"class=\"btn btn-primary o_translate_inline\">Sign Up</a>\n"
-"                    <span class=\"align-middle\">to follow your order.</span>"
-msgstr ""
-"<a role=\"button\" t-att-href=\"order.partner_id.signup_prepare() and "
-"order.partner_id.with_context(relative_url=True)._get_signup_url()\" "
-"class=\"btn btn-primary o_translate_inline\">Meld je aan</a>\n"
-"                    <span class=\"align-middle\"> om je bestelling te volgen."
-"</span>"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.o_wsale_offcanvas
@@ -419,6 +385,11 @@ msgid "<span class=\"align-middle\">Already have an account?</span>"
 msgstr "<span class=\"align-middle\">Heb je al een account?</span>"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.confirmation
+msgid "<span class=\"align-middle\">to follow your order.</span>"
+msgstr "<span class=\"align-middle\">om je bestelling te volgen.</span>"
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.s_dynamic_snippet_products_preview_data
 msgid ""
 "<span class=\"fw-bold\" name=\"product_price\" data-oe-type=\"monetary\" "
@@ -445,7 +416,7 @@ msgstr ""
 "<span class=\"fw-bold\" name=\"product_price\" data-oe-type=\"monetary\" "
 "data-oe-expression=\"data['price']\">\n"
 "                                                <span "
-"class=\"oe_currency_value\">140.00</span>\n"
+"class=\"oe_currency_value\">140,00</span>\n"
 "                                            </span>"
 
 #. module: website_sale
@@ -460,7 +431,7 @@ msgstr ""
 "<span class=\"fw-bold\" name=\"product_price\" data-oe-type=\"monetary\" "
 "data-oe-expression=\"data['price']\">\n"
 "                                                <span "
-"class=\"oe_currency_value\">33.00</span>\n"
+"class=\"oe_currency_value\">33,00</span>\n"
 "                                            </span>"
 
 #. module: website_sale
@@ -652,41 +623,6 @@ msgstr "<span>dagen na publicatie.</span>"
 #: model_terms:ir.ui.view,arch_db:website_sale.product_ribbon_form_view
 msgid "<span>for</span>"
 msgstr "<span>voor</span>"
-
-#. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.cart
-msgid ""
-"<strong>\n"
-"                                <a class=\"o_translate_inline\" t-attf-"
-"href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
-"&amp;revive_method=merge\">Click here</a>\n"
-"                            </strong> if you want to merge your previous "
-"cart into current cart."
-msgstr ""
-"<strong>\n"
-"                                <a class=\"o_translate_inline\" t-attf-"
-"href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
-"&amp;revive_method=merge\">Klik hier</a>\n"
-"                            </strong> als je je vorige winkelwagen wilt "
-"samenvoegen met de huidige winkelwagen."
-
-#. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.cart
-msgid ""
-"<strong>\n"
-"                                <a class=\"o_translate_inline\" t-attf-"
-"href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
-"&amp;revive_method=squash\">Click here</a>\n"
-"                            </strong> if you want to restore your previous "
-"cart. Your current cart will be replaced with your previous cart."
-msgstr ""
-"<strong>\n"
-"                                <a class=\"o_translate_inline\" t-attf-"
-"href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
-"&amp;revive_method=squash\">Klik hier</a>\n"
-"                            </strong> als je je vorige winkelwagen wilt "
-"herstellen. Je huidige winkelwagen wordt vervangen door je vorige "
-"winkelwagen."
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product
@@ -918,7 +854,7 @@ msgstr "Achtergelaten winkelmandjes"
 #: model:ir.model.fields,field_description:website_sale.field_res_config_settings__cart_abandoned_delay
 #: model:ir.model.fields,field_description:website_sale.field_website__cart_abandoned_delay
 msgid "Abandoned Delay"
-msgstr "Vertraging voor achterlaten"
+msgstr "Wachttijd tot Achtergelaten"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_res_config_settings__send_abandoned_cart_email
@@ -1391,11 +1327,11 @@ msgid ""
 "minimum purchase amount, period). Rewards can be discounts (% or "
 "amount)                            or free products."
 msgstr ""
-"Boost je verkoop met verschillende programma's: Coupons, "
-"promoties,                            cadeaukarten, getrouwheidsprogramma's. "
-"Je kan verschillende voorwaarden instellen (producten, "
+"Boost je verkoop met verschillende programma's: Kortingsbonnen, "
+"promoties,                            cadeaukaarten, loyaliteitsprogramma's. "
+"Je kunt verschillende voorwaarden instellen (producten, "
 "klanten,                            minimum aankoopbedrag, periode). "
-"Beloningen kunnen kortingen zijn (% or amount)                            of "
+"Beloningen kunnen kortingen zijn (% of bedrag)                            of "
 "gratis producten."
 
 #. module: website_sale
@@ -1724,6 +1660,11 @@ msgstr ""
 "maken."
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.cart
+msgid "Click here"
+msgstr "Klik hier"
+
+#. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/tours/website_sale_shop.js:0
 msgid "Click here to open the reporting menu"
@@ -1885,7 +1826,7 @@ msgstr "Configureren"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "Configure Delivery Methods"
-msgstr "Bezorgmethoden configureren"
+msgstr "Leveringsmethoden configureren"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
@@ -1898,7 +1839,7 @@ msgid ""
 "Configure delivery methods or work with delivery providers using existing "
 "integrations."
 msgstr ""
-"Configureer bezorgmethoden of werk met bezorgdiensten via bestaande "
+"Configureer leveringsmethoden of werk met bezorgdiensten via bestaande "
 "integraties."
 
 #. module: website_sale
@@ -2095,7 +2036,7 @@ msgstr "Klanten"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.s_dynamic_snippet_products_preview_data
 msgid "Customizable Desk"
-msgstr "Verstelbaar bureau"
+msgstr "Personaliseerbaar bureau"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
@@ -2186,7 +2127,7 @@ msgstr ""
 "- Handmatig: Je wijst het lint handmatig toe aan producten.\n"
 "- Uitverkoop: Toegewezen wanneer een product zichtbaar in uitverkoop is.\n"
 "- Nieuw: Toegewezen op basis van de 'Nieuwe periode' die je instelt.\n"
-"- Niet op voorraad: Toegewezen wanneer het product out of stock is."
+"- Niet op voorraad: Toegewezen wanneer het product niet op voorraad is."
 
 #. module: website_sale
 #: model:ir.model.fields,help:website_sale.field_product_ribbon__style
@@ -2398,7 +2339,7 @@ msgstr "Weergave"
 #: model:ir.model.fields,field_description:website_sale.field_website_track__display_name
 #: model:ir.model.fields,field_description:website_sale.field_website_visitor__display_name
 msgid "Display Name"
-msgstr "Weergavenaam"
+msgstr "Schermnaam"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
@@ -2835,6 +2776,8 @@ msgid ""
 "For formula or fixed pricing, the original price isn’t shown in\n"
 "                    sale orders or checkout."
 msgstr ""
+"Voor formule- of vaste prijzen wordt de originele prijs niet weergegeven in "
+"verkooporders of bij het afrekenen."
 
 #. module: website_sale
 #. odoo-javascript
@@ -2858,14 +2801,12 @@ msgstr "Vol"
 #: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
 #: model:ir.model.fields.selection,name:website_sale.selection__website__product_page_container__fluid
 #: model:ir.model.fields.selection,name:website_sale.selection__website__shop_page_container__fluid
-#, fuzzy
 msgid "Full-width"
 msgstr "Volledige breedte"
 
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/const.py:0
-#, fuzzy
 msgid "Functional"
 msgstr "Functioneel"
 
@@ -2880,7 +2821,6 @@ msgstr "Meubels"
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/models/website.py:0
-#, fuzzy
 msgid "GMC 1"
 msgstr "GMC 1"
 
@@ -3206,7 +3146,7 @@ msgstr "Afbeeldingszone"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
 msgid "Inherit desktop"
-msgstr ""
+msgstr "Desktopweergave overnemen"
 
 #. module: website_sale
 #. odoo-javascript
@@ -3216,7 +3156,6 @@ msgstr "Inline"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.template_footer_website_sale
-#, fuzzy
 msgid "Instagram"
 msgstr "Instagram"
 
@@ -3300,7 +3239,7 @@ msgid ""
 "change the delivery method anymore."
 msgstr ""
 "Het lijkt erop dat er al een transactie voor je order is, je kunt de "
-"bezorgmethode niet meer wijzigen."
+"leveringsmethode niet meer wijzigen."
 
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_account_move
@@ -4062,7 +4001,6 @@ msgstr "Orders om te factureren"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.price_dynamic_filter_template_product_product
 #: model_terms:ir.ui.view,arch_db:website_sale.products_item
-#, fuzzy
 msgid "Original price"
 msgstr "Originele prijs"
 
@@ -4100,7 +4038,6 @@ msgstr "Paginabreedte"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_public_category__parent_id
-#, fuzzy
 msgid "Parent"
 msgstr "Bovenliggend"
 
@@ -4124,7 +4061,7 @@ msgstr "Bovenliggende en zichzelf"
 #. odoo-python
 #: code:addons/website_sale/controllers/main.py:0
 msgid "Pay now"
-msgstr "Betaal nu"
+msgstr "Nu betalen"
 
 #. module: website_sale
 #: model:website.checkout.step,name:website_sale.checkout_step_payment
@@ -4291,7 +4228,7 @@ msgstr "Prijslijsten zijn beschikbaar voor deze e-commerce/website"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.total
 msgid "Price will be updated after choosing a delivery method"
-msgstr "De prijs wordt bijgewerkt nadat je een bezorgmethode hebt gekozen."
+msgstr "De prijs wordt bijgewerkt nadat je een leveringsmethode hebt gekozen."
 
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_product_pricelist
@@ -4484,7 +4421,7 @@ msgstr "Productreferentieprijs"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_ribbon_view_tree
 msgid "Product Ribbon"
-msgstr "Productenlint"
+msgstr "Productlint"
 
 #. module: website_sale
 #: model:ir.actions.act_window,name:website_sale.product_ribbon_action
@@ -4682,7 +4619,7 @@ msgstr "Naar boven duwen"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
 msgid "Quantity"
-msgstr "Aantal"
+msgstr "Hoeveelheid"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.quick_reorder_sidebar
@@ -4808,7 +4745,6 @@ msgstr "Verwijderen"
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
-#, fuzzy
 msgid "Remove All"
 msgstr "Alles verwijderen"
 
@@ -4882,7 +4818,6 @@ msgstr "Order hervatten"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.template_footer_website_sale
-#, fuzzy
 msgid "Returns"
 msgstr "Retouren"
 
@@ -4928,7 +4863,6 @@ msgstr "Rechts"
 #: code:addons/website_sale/static/src/website_builder/dynamic_snippet_category_options.xml:0
 #: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
-#, fuzzy
 msgid "Roundness"
 msgstr "Afronding"
 
@@ -4961,7 +4895,6 @@ msgstr "Verkoopanalyse"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products_item
-#, fuzzy
 msgid "Sale price"
 msgstr "Verkoopprijs"
 
@@ -5049,9 +4982,15 @@ msgstr "Globaal zoeken"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.o_wsale_offcanvas
 #: model_terms:ir.ui.view,arch_db:website_sale.product
+#: model_terms:ir.ui.view,arch_db:website_sale.product_search
 #: model_terms:ir.ui.view,arch_db:website_sale.products
 msgid "Search in"
 msgstr "Zoeken in"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.filter_radio_and_multi_attributes
+msgid "Search {{0}} ({{1}})"
+msgstr "{{0}} ({{1}}) zoeken"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -5161,13 +5100,13 @@ msgstr "Diensten"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Shadow-In"
-msgstr ""
+msgstr "Schaduw in"
 
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Shadow-Out"
-msgstr ""
+msgstr "schaduw uit"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.template_footer_website_sale
@@ -5228,18 +5167,18 @@ msgstr "Winkel standaard sorteren"
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_website__shop_opt_products_design_classes
 msgid "Shop Design Class"
-msgstr ""
+msgstr "Shop Ontwerpklasse"
 
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/product_header_shop_option_plugin.js:0
 msgid "Shop Header"
-msgstr ""
+msgstr "Shop-header"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_website__shop_page_container
 msgid "Shop Page Container"
-msgstr ""
+msgstr "Webshoppagina Container"
 
 #. module: website_sale
 #. odoo-python
@@ -5348,6 +5287,11 @@ msgid "Sidebar"
 msgstr "Zijbalk"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.confirmation
+msgid "Sign Up"
+msgstr "Aanmelden"
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
 msgid "Sign in"
 msgstr "Aanmelden"
@@ -5355,7 +5299,7 @@ msgstr "Aanmelden"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "Sign in/up at checkout"
-msgstr "Aanmelden/aanmelden bij het afrekenen"
+msgstr "Aanmelden/registreren bij afrekenen"
 
 #. module: website_sale
 #. odoo-python
@@ -5580,7 +5524,6 @@ msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.template_footer_website_sale
-#, fuzzy
 msgid "Terms &amp; Conditions"
 msgstr "Algemene voorwaarden"
 
@@ -5650,6 +5593,12 @@ msgid ""
 msgstr ""
 "Het bedrijf van de website waarvan je probeert te verkopen (%"
 "(website_company)s) is anders dan degene die je wilt gebruiken (%(company)s)"
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/models/sale_order.py:0
+msgid "The delivery method is not compatible with your delivery address."
+msgstr "De leveringsmethode is niet compatibel met je leveringsadres."
 
 #. module: website_sale
 #. odoo-python
@@ -5859,6 +5808,12 @@ msgid "This product is no longer available."
 msgstr "Dit product is niet meer beschikbaar."
 
 #. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/models/sale_order.py:0
+msgid "This product is not available (anymore) in this unit of measure."
+msgstr "Dit product is niet (meer) beschikbaar in deze maateenheid."
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products_item
 msgid "This product is unpublished."
 msgstr "Dit product is niet gepubliceerd."
@@ -6011,7 +5966,7 @@ msgstr "Niet gepubliceerd"
 #. module: website_sale
 #: model:ir.model.fields.selection,name:website_sale.selection__website__product_page_container__unset
 msgid "Unset"
-msgstr ""
+msgstr "Terugstellen"
 
 #. module: website_sale
 #. odoo-javascript
@@ -6034,6 +5989,8 @@ msgstr "Gebruik API van Google Places om adressen te valideren"
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Use auto values or force the link-color defined in the Theme Tab"
 msgstr ""
+"Gebruik automatische waarden of forceer de linkkleur die is gedefinieerd in "
+"het tabblad 'Thema'"
 
 #. module: website_sale
 #: model:ir.model.fields,help:website_sale.field_product_attribute__is_thumbnail_visible
@@ -6045,7 +6002,6 @@ msgstr ""
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/snippets/s_add_to_cart/add_to_cart_snippet.js:0
-#, fuzzy
 msgid "User Error"
 msgstr "Gebruikersfout"
 
@@ -6081,6 +6037,14 @@ msgid "Video URL"
 msgstr "Video URL"
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/interactions/website_sale.js:0
+msgid "View Less"
+msgstr "Minder weergeven"
+
+#. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/interactions/website_sale.js:0
 #: model_terms:ir.ui.view,arch_db:website_sale.filter_radio_and_multi_attributes
 msgid "View More"
 msgstr "Toon meer"
@@ -6095,7 +6059,7 @@ msgstr "Bekijk winkelmandje"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/xml/website_sale_image_viewer.xml:0
 msgid "Viewer"
-msgstr "Viewer"
+msgstr "Kijker"
 
 #. module: website_sale
 #: model:product.public.category,name:website_sale.public_category_boxes_vintage
@@ -6378,7 +6342,6 @@ msgstr ""
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/controllers/cart.py:0
-#, fuzzy
 msgid "Yesterday"
 msgstr "Gisteren"
 
@@ -6497,7 +6460,6 @@ msgstr "Zoom bij klik"
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
-#, fuzzy
 msgid "Zoom-In"
 msgstr "Inzoomen"
 
@@ -6505,12 +6467,11 @@ msgstr "Inzoomen"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Zoom-In Light"
-msgstr ""
+msgstr "Licht inzoomen"
 
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
-#, fuzzy
 msgid "Zoom-Out"
 msgstr "Uitzoomen"
 
@@ -6518,7 +6479,7 @@ msgstr "Uitzoomen"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Zoom-Out Light"
-msgstr ""
+msgstr "Licht uitzoomen"
 
 #. module: website_sale
 #. odoo-javascript
@@ -6600,6 +6561,21 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "hours."
 msgstr "uur."
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.cart
+msgid "if you want to merge your previous cart into current cart."
+msgstr ""
+"als je je oude winkelmandje wilt samenvoegen met je huidige winkelmandje."
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.cart
+msgid ""
+"if you want to restore your previous cart. Your current cart will be "
+"replaced with your previous cart."
+msgstr ""
+"als je je vorige winkelmandje wilt herstellen. Je huidige winkelmandje wordt "
+"vervangen door je vorige winkelmandje."
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -6704,9 +6680,70 @@ msgid "terms &amp; conditions"
 msgstr "algemene voorwaarden"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.cart_combo_item_line
+msgid "x"
+msgstr "x"
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.dynamic_filter_template_product_product_products_item
 msgid "{{0}} image"
 msgstr "{{0}} afbeelding"
+
+#~ msgid "100 %"
+#~ msgstr "100 %"
+
+#~ msgid "33 %"
+#~ msgstr "33%"
+
+#~ msgid "50 %"
+#~ msgstr "50 %"
+
+#~ msgid "66 %"
+#~ msgstr "66 %"
+
+#~ msgid ""
+#~ "<a role=\"button\" t-att-href=\"order.partner_id.signup_prepare() and "
+#~ "order.partner_id.with_context(relative_url=True)._get_signup_url()\" "
+#~ "class=\"btn btn-primary o_translate_inline\">Sign Up</a>\n"
+#~ "                    <span class=\"align-middle\">to follow your order.</"
+#~ "span>"
+#~ msgstr ""
+#~ "<a role=\"button\" t-att-href=\"order.partner_id.signup_prepare() and "
+#~ "order.partner_id.with_context(relative_url=True)._get_signup_url()\" "
+#~ "class=\"btn btn-primary o_translate_inline\">Meld je aan</a>\n"
+#~ "                    <span class=\"align-middle\"> om je bestelling te "
+#~ "volgen.</span>"
+
+#~ msgid ""
+#~ "<strong>\n"
+#~ "                                <a class=\"o_translate_inline\" t-attf-"
+#~ "href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
+#~ "&amp;revive_method=merge\">Click here</a>\n"
+#~ "                            </strong> if you want to merge your previous "
+#~ "cart into current cart."
+#~ msgstr ""
+#~ "<strong>\n"
+#~ "                                <a class=\"o_translate_inline\" t-attf-"
+#~ "href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
+#~ "&amp;revive_method=merge\">Klik hier</a>\n"
+#~ "                            </strong> als je je vorige winkelwagen wilt "
+#~ "samenvoegen met de huidige winkelwagen."
+
+#~ msgid ""
+#~ "<strong>\n"
+#~ "                                <a class=\"o_translate_inline\" t-attf-"
+#~ "href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
+#~ "&amp;revive_method=squash\">Click here</a>\n"
+#~ "                            </strong> if you want to restore your "
+#~ "previous cart. Your current cart will be replaced with your previous cart."
+#~ msgstr ""
+#~ "<strong>\n"
+#~ "                                <a class=\"o_translate_inline\" t-attf-"
+#~ "href=\"/shop/cart/?id={{id}}&amp;access_token={{access_token}}"
+#~ "&amp;revive_method=squash\">Klik hier</a>\n"
+#~ "                            </strong> als je je vorige winkelwagen wilt "
+#~ "herstellen. Je huidige winkelwagen wordt vervangen door je vorige "
+#~ "winkelwagen."
 
 #~ msgid "placeholder"
 #~ msgstr "placeholder"
@@ -7030,9 +7067,6 @@ msgstr "{{0}} afbeelding"
 
 #~ msgid "City"
 #~ msgstr "Stad"
-
-#~ msgid "Click here"
-#~ msgstr "Klik hier"
 
 #~ msgid "Compute shipping cost and ship with Easypost"
 #~ msgstr "Verzendkosten berekenen en verzenden met Easypost"
@@ -7455,9 +7489,6 @@ msgstr "{{0}} afbeelding"
 #~ msgid "Show b2b Fields"
 #~ msgstr "Toon b2b-velden"
 
-#~ msgid "Sign Up"
-#~ msgstr "Aanmelden"
-
 #~ msgid "Slanted"
 #~ msgstr "Schuin"
 
@@ -7642,17 +7673,6 @@ msgstr "{{0}} afbeelding"
 
 #~ msgid "eCommerce Shop"
 #~ msgstr "e-commerce winkel"
-
-#~ msgid "if you want to merge your previous cart into current cart."
-#~ msgstr ""
-#~ "Als je je oude winkelmandje wilt samenvoegen met het nieuwe winkelmandje."
-
-#~ msgid ""
-#~ "if you want to restore your previous cart. Your current cart will be "
-#~ "replaced with your previous cart."
-#~ msgstr ""
-#~ "Als je je vorige winkelmandje wilt herstellen. Je huidige winkelmandje "
-#~ "wordt vervangen door je vorige."
 
 #~ msgid "item(s))"
 #~ msgstr "item(s))"
