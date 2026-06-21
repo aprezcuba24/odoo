@@ -3,6 +3,9 @@ _build/
 
 # dotfiles
 .*
+!.cursor
+!.agents
+!.claude
 !.gitignore
 !.gitkeep
 !.github
