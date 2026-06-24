@@ -15,7 +15,7 @@ Odoo only sees modules that sit on the **addons path**. For this project that me
 |----------|------|
 | `odoo/addons` | Odoo core addons |
 | `addons` | Standard/community addons shipped in this repo |
-| `own_modules` | Your custom modules (e.g. `order_bridge`) |
+| `own_modules` | Your custom modules (e.g. `order_bridge`, `mcp_api`) |
 | `oca` | OCA addons vendored here (e.g. `server_environment`, `fs_storage`, `fs_attachment` for Odoo 19) |
 
 **Ways to configure it**
@@ -134,6 +134,22 @@ ruff format .
 ```
 
 Configuration: [`ruff.toml`](ruff.toml).
+
+---
+
+## MCP (JSON-2)
+
+Addon Odoo con métodos custom para JSON-2: [`own_modules/mcp_api`](own_modules/mcp_api/README.md). El servicio MCP (FastMCP + `OdooClient`) vive fuera de este repositorio.
+
+Install the addon: `python3 odoo-bin -d odoo -i mcp_api --stop-after-init --no-http`
+
+Run tests:
+
+```bash
+python3 odoo-bin -d odoo \
+  --addons-path=odoo/addons,addons,own_modules,oca \
+  --test-tags /mcp_api --stop-after-init --no-http --http-port=8071
+```
 
 ---
 

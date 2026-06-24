@@ -11,7 +11,7 @@ description: >-
 
 ## Before writing code
 
-1. Read the live client if present: `mcp/odoo_mcp/odoo_client.py` (or `odoo_client.py` in the MCP package).
+1. Read the live client in your external MCP package (`odoo_client.py`). If absent, use the canonical client below.
 2. Match its API (`call`, headers, env vars, error type). Do not invent a second HTTP client.
 3. New capabilities = **MCP tool** that delegates to `odoo.call(model, method, **params)` — not raw `requests` in each tool.
 
@@ -20,7 +20,7 @@ description: >-
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `ODOO_URL` | Yes | Base URL, no trailing slash |
-| `ODOO_API_KEY` | Yes | Bearer token (bot user API key, scope `rpc`) |
+| `ODOO_API_KEY` | Per session | Bearer token of the authenticated `res.users` (scope `rpc`). Dev-only fallback via env. |
 | `ODOO_DATABASE` | If multi-DB | Sent as `X-Odoo-Database` |
 | `ODOO_LANG` | No | Default `es_ES` in `context` |
 | `ODOO_TIMEOUT` | No | HTTP timeout seconds (default 60) |
@@ -64,6 +64,7 @@ class OdooClient:
 
     @classmethod
     def from_env(cls) -> "OdooClient":
+        """Single-user dev helper. Production MCP must pass each user's API key to the constructor."""
         return cls(
             url=os.environ["ODOO_URL"],
             api_key=os.environ["ODOO_API_KEY"],
@@ -101,11 +102,11 @@ from fastmcp import FastMCP
 from odoo_client import OdooClient
 
 mcp = FastMCP("odoo")
-odoo = OdooClient.from_env()
 
 @mcp.tool
-def my_tool(arg: str) -> list[dict]:
+def my_tool(arg: str, api_key: str) -> list[dict]:
     """One-line description for the LLM."""
+    odoo = OdooClient(url=os.environ["ODOO_URL"], api_key=api_key, ...)
     return odoo.call("model.name", "method_name", ...)
 ```
 
@@ -153,12 +154,25 @@ To implement a **new search** (products, orders, …): same shape — pick model
 - **Create + confirm (production):** single call to `sale.order` / `api_create_confirmed_order` if that method exists on the server.
 - Do not chain `create` + `action_confirm` across separate tools in production (separate transactions).
 
+## Authentication (per user)
+
+Each MCP operator is a normal **`res.users`** with their own API key (scope `rpc`). Odoo maps the Bearer token to that user; ACL and record rules apply as in the web UI. Instantiate `OdooClient(url=..., api_key=user_key)` per session — do not share one global key in production. See [`own_modules/mcp_api/README.md`](../../own_modules/mcp_api/README.md).
+
+## Custom Odoo methods (`mcp_api` addon)
+
+| Model | Method | Purpose |
+|-------|--------|---------|
+| `sale.order` | `api_create_confirmed_order` | Create + confirm standard sale order (one transaction) |
+| `sale.order` | `api_create_confirmed_order_bridge` | Tienda Apk admin order (reuses `order_bridge` confirm/reservation) |
+
+Read-only operations use standard ORM methods (`search_read`, `read`, …) with the user's permissions.
+
 ## Errors
 
 | HTTP | Meaning |
 |------|---------|
 | 401 | Missing/invalid API key |
-| 403 | Bot user lacks ACL / record rules |
+| 403 | Authenticated user lacks ACL / record rules |
 | 404 | Unknown model/method or private method |
 | 422 | Bad args (e.g. `ids` on `create`) |
 
