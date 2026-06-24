@@ -50,7 +50,7 @@ def create_draft_order(partner_id: int, lines: list[dict], ref: str | None = Non
 
 ## Create and confirm (single transaction — preferred)
 
-Requires `api_create_confirmed_order` on `sale.order` in Odoo:
+Creates a Tienda Apk admin order (`order_bridge_origin=admin`) via `api_create_confirmed_order` on `sale.order`:
 
 ```python
 def create_confirmed_order(partner_id: int, lines: list[dict], ref: str | None = None) -> dict:

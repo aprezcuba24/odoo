@@ -30,17 +30,9 @@ class TestMcpApiSaleOrder(TransactionCase):
         self.assertEqual(result['partner_id'], self.partner.id)
         self.assertEqual(result['client_order_ref'], 'MCP-REF-1')
         order = self.env['sale.order'].browse(result['id'])
+        self.assertEqual(order.order_bridge_origin, 'admin')
         self.assertEqual(len(order.order_line), 1)
         self.assertEqual(order.order_line.product_uom_qty, 2.0)
-
-    def test_api_create_confirmed_order_bridge(self):
-        result = self.env['sale.order'].api_create_confirmed_order_bridge(
-            partner_id=self.partner.id,
-            lines=[{'product_id': self.product.id, 'product_uom_qty': 1.0}],
-        )
-        order = self.env['sale.order'].browse(result['id'])
-        self.assertEqual(order.order_bridge_origin, 'admin')
-        self.assertEqual(result['state'], 'sale')
 
     def test_api_create_confirmed_order_invalid_partner(self):
         with self.assertRaises(ValidationError):
@@ -108,3 +100,5 @@ class TestMcpApiJson2(HttpCase):
         body = res.json()
         self.assertEqual(body['state'], 'sale')
         self.assertEqual(body['client_order_ref'], 'JSON2-1')
+        order = self.env['sale.order'].browse(body['id'])
+        self.assertEqual(order.order_bridge_origin, 'admin')

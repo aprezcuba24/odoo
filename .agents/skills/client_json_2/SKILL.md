@@ -151,7 +151,7 @@ To implement a **new search** (products, orders, …): same shape — pick model
 ## Write operations
 
 - **Draft order:** `sale.order` / `create` with `vals_list` and `order_line` as `[0, 0, {product_id, product_uom_qty}]`.
-- **Create + confirm (production):** single call to `sale.order` / `api_create_confirmed_order` if that method exists on the server.
+- **Create + confirm (production):** single call to `sale.order` / `api_create_confirmed_order` (Tienda Apk admin order via `order_bridge` hooks).
 - Do not chain `create` + `action_confirm` across separate tools in production (separate transactions).
 
 ## Authentication (per user)
@@ -162,8 +162,7 @@ Each MCP operator is a normal **`res.users`** with their own API key (scope `rpc
 
 | Model | Method | Purpose |
 |-------|--------|---------|
-| `sale.order` | `api_create_confirmed_order` | Create + confirm standard sale order (one transaction) |
-| `sale.order` | `api_create_confirmed_order_bridge` | Tienda Apk admin order (reuses `order_bridge` confirm/reservation) |
+| `sale.order` | `api_create_confirmed_order` | Tienda Apk admin order (`order_bridge_origin=admin`; confirm + greedy reservation via `order_bridge.create`) |
 
 Read-only operations use standard ORM methods (`search_read`, `read`, …) with the user's permissions.
 

@@ -33,15 +33,13 @@ No hay usuario bot compartido: en producción multi-usuario, el cliente MCP debe
 | Operación | Grupos Odoo |
 |-----------|-------------|
 | Buscar clientes / productos | Ventas / Usuario (+ lectura contactos/productos) |
-| Crear pedidos vía MCP | Ventas / Usuario |
-| Pedidos Tienda Apk (`api_create_confirmed_order_bridge`) | Ventas / Usuario + `order_bridge` instalado |
+| Crear pedidos vía MCP (`api_create_confirmed_order`) | Ventas / Usuario + `order_bridge` instalado |
 
 ## Métodos expuestos
 
 | Modelo | Método | Descripción |
 |--------|--------|-------------|
-| `sale.order` | `api_create_confirmed_order` | Crear y confirmar pedido estándar en una transacción |
-| `sale.order` | `api_create_confirmed_order_bridge` | Pedido con `order_bridge_origin=admin` (confirmación y reserva de `order_bridge`) |
+| `sale.order` | `api_create_confirmed_order` | Pedido Tienda Apk (`order_bridge_origin=admin`): confirmación y reserva vía hooks de `order_bridge` |
 
 Operaciones de solo lectura (clientes, productos, pedidos existentes) usan métodos ORM estándar (`search_read`, `read`, …) sin código en este módulo.
 
@@ -78,7 +76,7 @@ Respuesta (200):
 | App móvil | `/api/order_bridge/*` | Bearer `device_key` |
 | MCP | `/json/2/*` | Bearer API key de `res.users` |
 
-La lógica compartida (reserva greedy, confirmación Tienda Apk) vive en `order_bridge`; `mcp_api` la reutiliza en `api_create_confirmed_order_bridge` sin duplicar controladores REST.
+La lógica compartida (reserva greedy, confirmación Tienda Apk) vive en `order_bridge`; `mcp_api` la reutiliza en `api_create_confirmed_order` vía `self.create()` sin duplicar controladores REST.
 
 ## Tests
 

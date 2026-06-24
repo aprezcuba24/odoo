@@ -59,39 +59,16 @@ class SaleOrder(models.Model):
 
     @api.model
     def api_create_confirmed_order(self, partner_id, lines, client_order_ref=None):
-        """Create and confirm a sale order in one transaction (JSON-2 / MCP).
+        """Create and confirm a Tienda Apk admin order (JSON-2 / MCP).
 
-        Runs as ``self.env.user``; ACL and record rules apply.
+        Sets ``order_bridge_origin='admin'`` and delegates to ``order_bridge``'s
+        ``create`` hooks (reference, address snapshot, auto-confirm, greedy
+        stock reservation). Runs as ``self.env.user``; ACL and record rules apply.
 
         :param int partner_id: Customer ``res.partner`` id.
         :param list lines: ``[{product_id, qty}]`` or ``product_uom_qty`` per line.
         :param str client_order_ref: Optional customer reference on the order.
         :returns: dict with id, name, state, amount_total, partner_id, client_order_ref
-        """
-        partner = self.env['res.partner'].browse(int(partner_id)).exists()
-        if not partner:
-            raise ValidationError(_('Cliente %(pid)s no encontrado.', pid=partner_id))
-
-        line_vals = self._mcp_api_normalize_lines(lines)
-        order_line = [(0, 0, vals) for vals in line_vals]
-        vals = {
-            'partner_id': partner.id,
-            'order_line': order_line,
-        }
-        if client_order_ref:
-            vals['client_order_ref'] = client_order_ref
-
-        order = self.create(vals)
-        if order.state in ('draft', 'sent'):
-            order.action_confirm()
-        return self._mcp_api_order_response(order)
-
-    @api.model
-    def api_create_confirmed_order_bridge(self, partner_id, lines, client_order_ref=None):
-        """Create a Tienda Apk admin order with order_bridge confirm + stock reservation.
-
-        Sets ``order_bridge_origin='admin'`` so ``order_bridge`` create hooks run
-        (auto-confirm and greedy reservation). Same ACL as the authenticated user.
         """
         partner = self.env['res.partner'].browse(int(partner_id)).exists()
         if not partner:
