@@ -32,18 +32,63 @@ No hay usuario bot compartido: en producción multi-usuario, el cliente MCP debe
 
 | Operación | Grupos Odoo |
 |-----------|-------------|
-| Buscar clientes / productos | Ventas / Usuario (+ lectura contactos/productos) |
+| Buscar clientes Tienda Apk (`api_search_customers`) | Ventas / Usuario (+ lectura contactos) |
 | Crear pedidos vía MCP (`api_create_confirmed_order`) | Ventas / Usuario + `order_bridge` instalado |
 
 ## Métodos expuestos
 
 | Modelo | Método | Descripción |
 |--------|--------|-------------|
+| `res.partner` | `api_search_customers` | Clientes Tienda Apk (`order_bridge_registered`); `query` opcional (nombre/teléfono/dirección); devuelve dirección anidada |
 | `sale.order` | `api_create_confirmed_order` | Pedido Tienda Apk (`order_bridge_origin=admin`): confirmación y reserva vía hooks de `order_bridge` |
 
-Operaciones de solo lectura (clientes, productos, pedidos existentes) usan métodos ORM estándar (`search_read`, `read`, …) sin código en este módulo.
+Otras lecturas (productos, pedidos existentes) pueden usar métodos ORM estándar (`search_read`, `read`, …).
 
-## Ejemplo JSON-2
+## Ejemplo JSON-2 — buscar clientes Tienda Apk
+
+Parámetros: `query` (opcional; si se omite o está vacío, lista clientes APK sin filtro de texto), `limit` (default 10, máx. 20).
+
+Listar sin filtro:
+
+```bash
+curl -sS -X POST "$ODOO_URL/json/2/res.partner/api_search_customers" \
+  -H "Authorization: Bearer $USER_API_KEY" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"limit": 20}'
+```
+
+Buscar por nombre, teléfono o dirección:
+
+```bash
+curl -sS -X POST "$ODOO_URL/json/2/res.partner/api_search_customers" \
+  -H "Authorization: Bearer $USER_API_KEY" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"query": "Centro", "limit": 10}'
+```
+
+Respuesta (200):
+
+```json
+[
+  {
+    "id": 42,
+    "name": "María",
+    "phone": "+34600000000",
+    "order_bridge_registered": true,
+    "order_bridge_phone_validated": false,
+    "address": {
+      "street": "Calle 10",
+      "municipality_id": 3,
+      "municipality_name": "Camagüey",
+      "neighborhood_id": 15,
+      "neighborhood_name": "Centro",
+      "state": "Camagüey"
+    }
+  }
+]
+```
+
+## Ejemplo JSON-2 — crear pedido
 
 ```bash
 curl -sS -X POST "$ODOO_URL/json/2/sale.order/api_create_confirmed_order" \

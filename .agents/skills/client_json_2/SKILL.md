@@ -162,6 +162,7 @@ Each MCP operator is a normal **`res.users`** with their own API key (scope `rpc
 
 | Model | Method | Purpose |
 |-------|--------|---------|
+| `res.partner` | `api_search_customers` | Tienda Apk customers (`order_bridge_registered`); optional `query` (name/phone/address); nested delivery address |
 | `sale.order` | `api_create_confirmed_order` | Tienda Apk admin order (`order_bridge_origin=admin`; confirm + greedy reservation via `order_bridge.create`) |
 
 Read-only operations use standard ORM methods (`search_read`, `read`, …) with the user's permissions.
