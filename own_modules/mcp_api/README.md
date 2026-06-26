@@ -33,6 +33,7 @@ No hay usuario bot compartido: en producción multi-usuario, el cliente MCP debe
 | Operación | Grupos Odoo |
 |-----------|-------------|
 | Buscar clientes Tienda Apk (`api_search_customers`) | Ventas / Usuario (+ lectura contactos) |
+| Buscar productos Tienda Apk (`api_search_products`) | Ventas / Usuario (+ lectura productos) |
 | Crear pedidos vía MCP (`api_create_confirmed_order`) | Ventas / Usuario + `order_bridge` instalado |
 
 ## Métodos expuestos
@@ -40,9 +41,10 @@ No hay usuario bot compartido: en producción multi-usuario, el cliente MCP debe
 | Modelo | Método | Descripción |
 |--------|--------|-------------|
 | `res.partner` | `api_search_customers` | Clientes Tienda Apk (`order_bridge_registered`); `query` opcional (nombre/teléfono/dirección); devuelve dirección anidada |
+| `product.product` | `api_search_products` | Productos disponibles para la tienda (catálogo Tienda Apk + stock); `query`, `category_id`, `limit`, `offset`; devuelve página con `items` y `total` |
 | `sale.order` | `api_create_confirmed_order` | Pedido Tienda Apk (`order_bridge_origin=admin`): confirmación y reserva vía hooks de `order_bridge` |
 
-Otras lecturas (productos, pedidos existentes) pueden usar métodos ORM estándar (`search_read`, `read`, …).
+Otras lecturas (pedidos existentes) pueden usar métodos ORM estándar (`search_read`, `read`, …).
 
 ## Ejemplo JSON-2 — buscar clientes Tienda Apk
 
@@ -86,6 +88,55 @@ Respuesta (200):
     }
   }
 ]
+```
+
+## Ejemplo JSON-2 — buscar productos Tienda Apk
+
+Parámetros: `query` (opcional; nombre o categoría), `category_id` (opcional; `child_of`), `limit` (default 80, máx. 200), `offset` (default 0).
+
+Solo devuelve productos **disponibles para la tienda**: catálogo Tienda Apk (`order_bridge_visible`, `sale_ok`, `active`) con stock (misma regla que `GET /api/order_bridge/products`). Los almacenables sin stock no aparecen; los servicios sí. `total` es el recuento tras el filtro de stock (antes de paginar).
+
+Listar sin filtro:
+
+```bash
+curl -sS -X POST "$ODOO_URL/json/2/product.product/api_search_products" \
+  -H "Authorization: Bearer $USER_API_KEY" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"limit": 20, "offset": 0}'
+```
+
+Buscar por nombre o categoría, o filtrar por categoría:
+
+```bash
+curl -sS -X POST "$ODOO_URL/json/2/product.product/api_search_products" \
+  -H "Authorization: Bearer $USER_API_KEY" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"query": "Bebidas", "category_id": 3, "limit": 10, "offset": 0}'
+```
+
+Respuesta (200):
+
+```json
+{
+  "items": [
+    {
+      "id": 7,
+      "name": "Agua mineral",
+      "default_code": false,
+      "list_price": 0.8,
+      "uom_name": "Units",
+      "barcode": false,
+      "category": {
+        "id": 3,
+        "name": "Bebidas",
+        "parent_id": 1
+      }
+    }
+  ],
+  "limit": 10,
+  "offset": 0,
+  "total": 1
+}
 ```
 
 ## Ejemplo JSON-2 — crear pedido
