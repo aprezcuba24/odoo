@@ -3,6 +3,7 @@
 import json
 from datetime import datetime, timedelta
 
+from odoo.exceptions import ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import HttpCase, TransactionCase
 
@@ -179,6 +180,31 @@ class TestMcpApiProductProduct(TransactionCase):
         with self.assertRaises(Exception):
             self.env['product.product'].api_search_products(category_id=0)
 
+    def test_api_get_product_with_stock(self):
+        result = self.env['product.product'].api_get_product(self.product_with_stock.id)
+        self.assertEqual(result['id'], self.product_with_stock.id)
+        self.assertEqual(result['category']['name'], 'Bebidas MCP')
+        self.assertEqual(result['list_price'], 1.5)
+
+    def test_api_get_product_service_without_quants(self):
+        result = self.env['product.product'].api_get_product(self.service_product.id)
+        self.assertEqual(result['id'], self.service_product.id)
+
+    def test_api_get_product_not_found(self):
+        with self.assertRaises(ValidationError) as cm:
+            self.env['product.product'].api_get_product(999999999)
+        self.assertIn('no está disponible', str(cm.exception))
+
+    def test_api_get_product_not_in_store(self):
+        with self.assertRaises(ValidationError) as cm:
+            self.env['product.product'].api_get_product(self.product_not_in_store.id)
+        self.assertIn('no está disponible', str(cm.exception))
+
+    def test_api_get_product_no_stock(self):
+        with self.assertRaises(ValidationError) as cm:
+            self.env['product.product'].api_get_product(self.product_no_stock.id)
+        self.assertIn('no está disponible', str(cm.exception))
+
 
 @tagged('post_install', '-at_install')
 class TestMcpApiProductProductJson2(HttpCase):
@@ -272,3 +298,34 @@ class TestMcpApiProductProductJson2(HttpCase):
         ids = {row['id'] for row in body['items']}
         self.assertIn(self.product.id, ids)
         self.assertIn('total', body)
+
+    def test_json2_api_get_product(self):
+        payload = {'product_id': self.product.id}
+        res = self.url_open(
+            '/json/2/product.product/api_get_product',
+            data=json.dumps(payload),
+            headers=self.bearer_header,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        body = res.json()
+        self.assertEqual(body['id'], self.product.id)
+        self.assertEqual(body['category']['name'], 'JSON2 Bebidas')
+        self.assertEqual(body['list_price'], 2.0)
+
+    def test_json2_api_get_product_not_available(self):
+        tmpl = self.env['product.template'].create({
+            'name': 'JSON2 Oculto MCP',
+            'sale_ok': True,
+            'order_bridge_visible': False,
+            'is_storable': True,
+            'list_price': 1.0,
+        })
+        payload = {'product_id': tmpl.product_variant_id.id}
+        res = self.url_open(
+            '/json/2/product.product/api_get_product',
+            data=json.dumps(payload),
+            headers=self.bearer_header,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 422, res.text)

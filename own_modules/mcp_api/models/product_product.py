@@ -65,6 +65,29 @@ class ProductProduct(models.Model):
         return domain
 
     @api.model
+    def api_get_product(self, product_id):
+        """Return one Tienda Apk product by id (JSON-2 / MCP).
+
+        Same availability rules as ``api_search_products``. Runs as
+        ``self.env.user``; ACL and record rules apply.
+
+        :param int product_id: ``product.product`` id.
+        :returns: dict with id, name, price, uom, barcode and category
+        """
+        company = self.env.company
+        Product = self.with_company(company)
+        products = Product.search(
+            company._order_bridge_product_domain() + [('id', '=', int(product_id))],
+        )
+        stock_installed, warehouse, precision = get_catalog_warehouse(self.env, company)
+        product = filter_available_products(products, stock_installed, warehouse, precision)
+        if not product:
+            raise ValidationError(
+                _('El producto %(pid)s no está disponible.', pid=product_id),
+            )
+        return self._mcp_api_product_response(product)
+
+    @api.model
     def api_search_products(self, query=None, limit=80, offset=0, category_id=None):
         """Search products available for Tienda Apk by name or category (JSON-2 / MCP).
 

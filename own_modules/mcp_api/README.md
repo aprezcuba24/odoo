@@ -34,6 +34,7 @@ No hay usuario bot compartido: en producción multi-usuario, el cliente MCP debe
 |-----------|-------------|
 | Buscar clientes Tienda Apk (`api_search_customers`) | Ventas / Usuario (+ lectura contactos) |
 | Buscar productos Tienda Apk (`api_search_products`) | Ventas / Usuario (+ lectura productos) |
+| Obtener producto Tienda Apk (`api_get_product`) | Ventas / Usuario (+ lectura productos) |
 | Crear pedidos vía MCP (`api_create_confirmed_order`) | Ventas / Usuario + `order_bridge` instalado |
 
 ## Métodos expuestos
@@ -42,6 +43,7 @@ No hay usuario bot compartido: en producción multi-usuario, el cliente MCP debe
 |--------|--------|-------------|
 | `res.partner` | `api_search_customers` | Clientes Tienda Apk (`order_bridge_registered`); `query` opcional (nombre/teléfono/dirección); devuelve dirección anidada |
 | `product.product` | `api_search_products` | Productos disponibles para la tienda (catálogo Tienda Apk + stock); `query`, `category_id`, `limit`, `offset`; devuelve página con `items` y `total` |
+| `product.product` | `api_get_product` | Un producto por `product_id`; misma disponibilidad que búsqueda; devuelve categoría anidada |
 | `sale.order` | `api_create_confirmed_order` | Pedido Tienda Apk (`order_bridge_origin=admin`): confirmación y reserva vía hooks de `order_bridge` |
 
 Otras lecturas (pedidos existentes) pueden usar métodos ORM estándar (`search_read`, `read`, …).
@@ -136,6 +138,35 @@ Respuesta (200):
   "limit": 10,
   "offset": 0,
   "total": 1
+}
+```
+
+## Ejemplo JSON-2 — obtener producto Tienda Apk por id
+
+Parámetro: `product_id` (entero). Misma disponibilidad que `api_search_products` (catálogo + stock). Si el producto no existe, no está en la tienda o no tiene stock, responde 422.
+
+```bash
+curl -sS -X POST "$ODOO_URL/json/2/product.product/api_get_product" \
+  -H "Authorization: Bearer $USER_API_KEY" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"product_id": 7}'
+```
+
+Respuesta (200):
+
+```json
+{
+  "id": 7,
+  "name": "Agua mineral",
+  "default_code": false,
+  "list_price": 0.8,
+  "uom_name": "Units",
+  "barcode": false,
+  "category": {
+    "id": 3,
+    "name": "Bebidas",
+    "parent_id": 1
+  }
 }
 ```
 
