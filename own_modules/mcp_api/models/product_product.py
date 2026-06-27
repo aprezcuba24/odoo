@@ -22,7 +22,19 @@ class ProductProduct(models.Model):
         }
 
     @api.model
-    def _mcp_api_product_response(self, product):
+    def _mcp_api_product_stock_fields(self, product, stock_installed=False, warehouse=None):
+        if not stock_installed or not warehouse or not product.is_storable:
+            return {
+                'available_qty': False,
+                'qty_on_hand': False,
+            }
+        return {
+            'available_qty': float(product.free_qty),
+            'qty_on_hand': float(product.qty_available),
+        }
+
+    @api.model
+    def _mcp_api_product_response(self, product, stock_installed=False, warehouse=None):
         tmpl = product.product_tmpl_id
         return {
             'id': product.id,
@@ -32,12 +44,20 @@ class ProductProduct(models.Model):
             'uom_name': product.uom_id.name if product.uom_id else False,
             'barcode': product.barcode or False,
             'category': self._mcp_api_category_response(tmpl.categ_id),
+            **self._mcp_api_product_stock_fields(product, stock_installed, warehouse),
         }
 
     @api.model
-    def _mcp_api_products_page_response(self, products, limit, offset, total):
+    def _mcp_api_products_page_response(
+        self, products, limit, offset, total, stock_installed=False, warehouse=None,
+    ):
+        if stock_installed and warehouse:
+            products = products.with_context(warehouse_id=warehouse.id)
         return {
-            'items': [self._mcp_api_product_response(product) for product in products],
+            'items': [
+                self._mcp_api_product_response(product, stock_installed, warehouse)
+                for product in products
+            ],
             'limit': limit,
             'offset': offset,
             'total': total,
@@ -72,7 +92,7 @@ class ProductProduct(models.Model):
         ``self.env.user``; ACL and record rules apply.
 
         :param int product_id: ``product.product`` id.
-        :returns: dict with id, name, price, uom, barcode and category
+        :returns: dict with id, name, price, uom, barcode, category, available_qty and qty_on_hand
         """
         company = self.env.company
         Product = self.with_company(company)
@@ -85,7 +105,9 @@ class ProductProduct(models.Model):
             raise ValidationError(
                 _('El producto %(pid)s no está disponible.', pid=product_id),
             )
-        return self._mcp_api_product_response(product)
+        if stock_installed and warehouse:
+            product = product.with_context(warehouse_id=warehouse.id)
+        return self._mcp_api_product_response(product, stock_installed, warehouse)
 
     @api.model
     def api_search_products(self, query=None, limit=80, offset=0, category_id=None):
@@ -117,4 +139,6 @@ class ProductProduct(models.Model):
         available = filter_available_products(products, stock_installed, warehouse, precision)
         total = len(available)
         page = available[offset:offset + limit]
-        return self._mcp_api_products_page_response(page, limit, offset, total)
+        return self._mcp_api_products_page_response(
+            page, limit, offset, total, stock_installed, warehouse,
+        )

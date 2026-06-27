@@ -169,12 +169,16 @@ class TestMcpApiProductProduct(TransactionCase):
         items = self._items(result)
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]['id'], self.product_with_stock.id)
+        self.assertEqual(items[0]['available_qty'], 5.0)
+        self.assertEqual(items[0]['qty_on_hand'], 5.0)
 
     def test_api_search_products_includes_service_without_quants(self):
         result = self.env['product.product'].api_search_products('Servicio MCP')
         items = self._items(result)
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]['id'], self.service_product.id)
+        self.assertFalse(items[0]['available_qty'])
+        self.assertFalse(items[0]['qty_on_hand'])
 
     def test_api_search_products_invalid_category_id(self):
         with self.assertRaises(Exception):
@@ -185,6 +189,8 @@ class TestMcpApiProductProduct(TransactionCase):
         self.assertEqual(result['id'], self.product_with_stock.id)
         self.assertEqual(result['category']['name'], 'Bebidas MCP')
         self.assertEqual(result['list_price'], 1.5)
+        self.assertEqual(result['available_qty'], 5.0)
+        self.assertEqual(result['qty_on_hand'], 5.0)
 
     def test_api_get_product_service_without_quants(self):
         result = self.env['product.product'].api_get_product(self.service_product.id)
@@ -266,6 +272,8 @@ class TestMcpApiProductProductJson2(HttpCase):
         self.assertEqual(body['items'][0]['id'], self.product.id)
         self.assertEqual(body['items'][0]['category']['name'], 'JSON2 Bebidas')
         self.assertEqual(body['items'][0]['list_price'], 2.0)
+        self.assertEqual(body['items'][0]['available_qty'], 3.0)
+        self.assertEqual(body['items'][0]['qty_on_hand'], 3.0)
 
     def test_json2_api_search_products_with_category_id_and_offset(self):
         payload = {
@@ -312,6 +320,8 @@ class TestMcpApiProductProductJson2(HttpCase):
         self.assertEqual(body['id'], self.product.id)
         self.assertEqual(body['category']['name'], 'JSON2 Bebidas')
         self.assertEqual(body['list_price'], 2.0)
+        self.assertEqual(body['available_qty'], 3.0)
+        self.assertEqual(body['qty_on_hand'], 3.0)
 
     def test_json2_api_get_product_not_available(self):
         tmpl = self.env['product.template'].create({

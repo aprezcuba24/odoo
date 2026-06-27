@@ -128,6 +128,8 @@ Respuesta (200):
       "list_price": 0.8,
       "uom_name": "Units",
       "barcode": false,
+      "available_qty": 12.0,
+      "qty_on_hand": 12.0,
       "category": {
         "id": 3,
         "name": "Bebidas",
@@ -162,6 +164,8 @@ Respuesta (200):
   "list_price": 0.8,
   "uom_name": "Units",
   "barcode": false,
+  "available_qty": 12.0,
+  "qty_on_hand": 12.0,
   "category": {
     "id": 3,
     "name": "Bebidas",
