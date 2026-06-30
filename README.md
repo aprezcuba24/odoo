@@ -15,7 +15,7 @@ Odoo only sees modules that sit on the **addons path**. For this project that me
 |----------|------|
 | `odoo/addons` | Odoo core addons |
 | `addons` | Standard/community addons shipped in this repo |
-| `own_modules` | Your custom modules (e.g. `order_bridge`) |
+| `own_modules` | Your custom modules (e.g. `order_bridge`, `mcp_api`) |
 | `oca` | OCA addons vendored here (e.g. `server_environment`, `fs_storage`, `fs_attachment` for Odoo 19) |
 
 **Ways to configure it**
@@ -137,33 +137,48 @@ Configuration: [`ruff.toml`](ruff.toml).
 
 ---
 
-## Tests (`order_bridge`)
+## MCP (JSON-2)
+
+Addon Odoo con métodos custom para JSON-2: [`own_modules/mcp_api`](own_modules/mcp_api/README.md). El servicio MCP (FastMCP + `OdooClient`) vive fuera de este repositorio.
+
+Install the addon: `python3 odoo-bin -d odoo -i mcp_api --stop-after-init --no-http`
+
+---
+
+## Tests (`own_modules`)
 
 Start the dev server first (e.g. `python3 odoo-bin --dev=all -d odoo` on port **8069**). Then run tests in **another terminal** so logs stay separate:
 
-[`own_modules/order_bridge/scripts/run_tests.sh`](own_modules/order_bridge/scripts/run_tests.sh)
+[`own_modules/scripts/run_tests.sh`](own_modules/scripts/run_tests.sh)
 
-The script uses `odoo-bin shell` and Odoo’s `run_tests()` helper. It does **not** run `-u order_bridge` or bind to port 8069; the test harness uses **8070** by default. By default it only prints a **summary** (`passed` / `failed` / `total`); Odoo logs go to a temp file (shown on failure). Use `--verbose` for full Odoo output on screen.
+The script discovers addons under `own_modules/` that have a `tests/` folder and `__manifest__.py`, and runs their tests via `odoo-bin shell` and Odoo’s `run_tests()` helper. It does **not** run `-u` or bind to port 8069; the test harness uses **8070** by default. By default it only prints a **summary** (`passed` / `failed` / `total`); Odoo logs go to a temp file (shown on failure). Use `--verbose` for full Odoo output on screen.
 
 ```bash
-# All order_bridge tests
-./own_modules/order_bridge/scripts/run_tests.sh
+# All own_modules tests (currently order_bridge + mcp_api)
+./own_modules/scripts/run_tests.sh
 
-# Order-created listener only
-./own_modules/order_bridge/scripts/run_tests.sh listener
+# Single module
+./own_modules/scripts/run_tests.sh mcp_api
 
-# Other shortcuts
-./own_modules/order_bridge/scripts/run_tests.sh store   # store state transitions
-./own_modules/order_bridge/scripts/run_tests.sh api     # HTTP API (HttpCase on port 8070)
+# Multiple modules
+./own_modules/scripts/run_tests.sh order_bridge mcp_api
+
+# order_bridge shortcuts (module name + shortcut)
+./own_modules/scripts/run_tests.sh order_bridge listener
+./own_modules/scripts/run_tests.sh order_bridge store   # store state transitions
+./own_modules/scripts/run_tests.sh order_bridge api     # HTTP API (HttpCase on port 8070)
+
+# List discovered modules
+./own_modules/scripts/run_tests.sh --list
 ```
 
 Options:
 
 ```bash
-./own_modules/order_bridge/scripts/run_tests.sh listener --db odoo
-./own_modules/order_bridge/scripts/run_tests.sh --tags '/order_bridge:TestOrderBridgeOrderCreatedListener'
-./own_modules/order_bridge/scripts/run_tests.sh --help
-./own_modules/order_bridge/scripts/run_tests.sh listener --verbose
+./own_modules/scripts/run_tests.sh order_bridge listener --db odoo
+./own_modules/scripts/run_tests.sh --tags '/order_bridge:TestOrderBridgeOrderCreatedListener'
+./own_modules/scripts/run_tests.sh --help
+./own_modules/scripts/run_tests.sh order_bridge listener --verbose
 ```
 
 Defaults (devcontainer):
@@ -173,7 +188,7 @@ Defaults (devcontainer):
 | Database | `odoo` (override with `--db` or `ODOO_DB`) |
 | Test HTTP port | `8070` (harness only; dev server stays on 8069; override with `--http-port` or `ODOO_TEST_HTTP_PORT`) |
 | Log output | summary only (`--verbose` for full Odoo logs on screen) |
-| Module update | none — upgrade `order_bridge` on the running server after schema changes |
+| Module update | none — upgrade modules on the running server after schema changes |
 | Addons path | `odoo/addons,addons,own_modules,oca` (override with `ODOO_ADDONS_PATH`) |
 
 Equivalent manual command:
@@ -182,7 +197,7 @@ Equivalent manual command:
 python3 odoo-bin shell -d odoo --http-port 8070 \
   --addons-path=odoo/addons,addons,own_modules,oca <<'PY'
 from odoo.tests.shell import run_tests
-report = run_tests(env, '/order_bridge:TestOrderBridgeOrderCreatedListener', modules=['order_bridge'])
+report = run_tests(env, 'order_bridge,mcp_api', modules=['order_bridge', 'mcp_api'])
 raise SystemExit(0 if report.wasSuccessful() else 1)
 PY
 ```
