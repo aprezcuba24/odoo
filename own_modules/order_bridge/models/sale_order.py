@@ -60,6 +60,12 @@ class SaleOrder(models.Model):
         index=True,
         help='Clave de idempotencia enviada por la app móvil al crear el pedido.',
     )
+    order_bridge_promo_code = fields.Char(
+        string='Código promocional',
+        readonly=True,
+        copy=False,
+        help='Código promocional aplicado al crear el pedido por la API.',
+    )
     order_bridge_snapshot_address_id = fields.Many2one(
         'order_bridge.order_address_snapshot',
         string='Instantánea de dirección de entrega',
@@ -156,6 +162,7 @@ class SaleOrder(models.Model):
             apply_status = self._apply_program_reward(rewards, coupon)
             if 'error' in apply_status:
                 raise UserError(apply_status['error'])
+        self.order_bridge_promo_code = code.strip()
 
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""

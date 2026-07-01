@@ -876,6 +876,8 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(res.status_code, 200, res.text)
         data = json.loads(res.text)
         self.assertEqual(data.get('amount_total'), 100.0)
+        self.assertIsNone(data.get('promo_code'))
+        self.assertIsNone(data.get('discount_amount'))
 
     def test_orders_post_valid_promo_code_applies_discount(self):
         self._order_bridge_create_promo_program()
@@ -896,8 +898,50 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(res.status_code, 200, res.text)
         data = json.loads(res.text)
         self.assertEqual(data.get('amount_total'), 90.0)
+        self.assertEqual(data.get('promo_code'), 'TEST10')
+        self.assertEqual(data.get('discount_amount'), 10.0)
         order = self.env['sale.order'].browse(data['id'])
         self.assertTrue(order.order_line.filtered('is_reward_line'))
+        self.assertEqual(order.order_bridge_promo_code, 'TEST10')
+
+    def test_orders_get_list_and_detail_include_promo_fields(self):
+        self._order_bridge_create_promo_program()
+        key = self._order_bridge_register_device('60011405')
+        product = self._order_bridge_create_visible_product('Promo GET OB test', 100.0)
+        auth = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        post = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({
+                'client_order_id': str(uuid.uuid4()),
+                'promo_code': 'TEST10',
+                'lines': [{'product_id': product.id, 'qty': 1}],
+            }),
+            headers=auth,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(post.status_code, 200, post.text)
+        order_id = json.loads(post.text)['id']
+        list_res = self.url_open(
+            '/api/order_bridge/orders',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(list_res.status_code, 200, list_res.text)
+        items = json.loads(list_res.text).get('items') or []
+        row = next((i for i in items if i.get('id') == order_id), None)
+        self.assertIsNotNone(row)
+        self.assertEqual(row.get('promo_code'), 'TEST10')
+        self.assertEqual(row.get('discount_amount'), 10.0)
+        detail_res = self.url_open(
+            f'/api/order_bridge/orders/{order_id}',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(detail_res.status_code, 200, detail_res.text)
+        detail = json.loads(detail_res.text)
+        self.assertEqual(detail.get('promo_code'), 'TEST10')
+        self.assertEqual(detail.get('discount_amount'), 10.0)
 
     def test_orders_post_invalid_promo_code_returns_400(self):
         self._order_bridge_create_promo_program()
@@ -960,3 +1004,7 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(created_first.get('id'), created_second.get('id'))
         self.assertEqual(created_first.get('amount_total'), 90.0)
         self.assertEqual(created_second.get('amount_total'), 90.0)
+        self.assertEqual(created_first.get('promo_code'), 'FIRST10')
+        self.assertEqual(created_second.get('promo_code'), 'FIRST10')
+        self.assertEqual(created_first.get('discount_amount'), 10.0)
+        self.assertEqual(created_second.get('discount_amount'), 10.0)

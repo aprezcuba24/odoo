@@ -586,6 +586,18 @@
             "title": "Device Validated",
             "type": "boolean"
           },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
           "effective_date": {
             "anyOf": [
               {
@@ -617,6 +629,18 @@
             ],
             "default": null,
             "title": "Order Ref"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
           },
           "state": {
             "title": "State",
@@ -1359,6 +1383,18 @@
             "title": "Device Validated",
             "type": "boolean"
           },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
           "effective_date": {
             "anyOf": [
               {
@@ -1401,6 +1437,18 @@
           "origin": {
             "title": "Origin",
             "type": "string"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
           },
           "state": {
             "title": "State",
@@ -1563,6 +1611,18 @@
             "title": "Device Validated",
             "type": "boolean"
           },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
           "effective_date": {
             "anyOf": [
               {
@@ -1598,6 +1658,18 @@
           "origin": {
             "title": "Origin",
             "type": "string"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
           },
           "state": {
             "title": "State",

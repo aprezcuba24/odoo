@@ -303,8 +303,20 @@ def _delivery_fields_from_order(order):
     return delivery_status, effective_date
 
 
+def _coupon_fields_from_order(order):
+    """Promo code and discount amount for API responses (null when no coupon applied)."""
+    promo_code = order.order_bridge_promo_code
+    if not promo_code and order.applied_coupon_ids:
+        promo_code = order.applied_coupon_ids[0].code
+    promo_code = promo_code or None
+    reward = float(order.reward_amount)
+    discount_amount = abs(reward) if reward else None
+    return promo_code, discount_amount
+
+
 def sale_order_to_summary(order):
     delivery_status, effective_date = _delivery_fields_from_order(order)
+    promo_code, discount_amount = _coupon_fields_from_order(order)
     return SaleOrderSummary(
         id=order.id,
         name=order.name,
@@ -313,6 +325,8 @@ def sale_order_to_summary(order):
         state=order.state,
         date_order=order.date_order.isoformat() if order.date_order else None,
         amount_total=float(order.amount_total),
+        promo_code=promo_code,
+        discount_amount=discount_amount,
         currency=order.currency_id.name if order.currency_id else None,
         device_validated=order.order_bridge_device_phone_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
@@ -333,12 +347,15 @@ def sale_order_to_detail_response(order):
 
 def sale_order_to_created_response(order):
     delivery_status, effective_date = _delivery_fields_from_order(order)
+    promo_code, discount_amount = _coupon_fields_from_order(order)
     return OrderCreatedResponse(
         id=order.id,
         name=order.name,
         order_ref=order.order_bridge_ref,
         state=order.state,
         amount_total=float(order.amount_total),
+        promo_code=promo_code,
+        discount_amount=discount_amount,
         device_validated=order.order_bridge_device_phone_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
         delivery_status=delivery_status,
