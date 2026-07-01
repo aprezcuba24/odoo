@@ -1,5 +1,8 @@
 from typing import Literal
 
+# Idioma fijo para mensajes de error y traducciones Odoo en la API HTTP.
+API_LANG = 'es_ES'
+
 # Topic fijo usado por la app odoo-shop para difusiones a todos los usuarios.
 FCM_TOPIC_ALL_USERS = 'com_culabs_odooshop_all'
 

@@ -9,6 +9,7 @@ from odoo.tools.float_utils import float_compare
 
 from odoo.addons.order_bridge.utils import order_stock
 from odoo.addons.order_bridge.utils.constant import (
+    API_LANG,
     DEFAULT_STORE_STATE,
     STATE_CANCELED,
     STATE_DELIVERED,
@@ -151,18 +152,25 @@ class SaleOrder(models.Model):
     def _order_bridge_apply_promo_code(self, code):
         """Apply coupon/promo code via sale_loyalty. Raises UserError on failure."""
         self.ensure_one()
-        status = self._try_apply_code(code.strip())
+        code = code.strip()
+        Lang = self.env['res.lang'].sudo()
+        order = self.with_context(lang=API_LANG) if Lang._get_data(code=API_LANG) else self
+        status = order._try_apply_code(code)
         if 'error' in status:
+            if status.get('not_found'):
+                raise UserError(
+                    _('El código promocional no es válido (%s).', code)
+                )
             raise UserError(status['error'])
         if not status:
             raise UserError(_('El código no genera ningún descuento aplicable.'))
         for coupon, rewards in status.items():
             if len(rewards) != 1:
                 raise UserError(_('El código tiene varias recompensas; no se puede aplicar por API.'))
-            apply_status = self._apply_program_reward(rewards, coupon)
+            apply_status = order._apply_program_reward(rewards, coupon)
             if 'error' in apply_status:
                 raise UserError(apply_status['error'])
-        self.order_bridge_promo_code = code.strip()
+        self.order_bridge_promo_code = code
 
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""

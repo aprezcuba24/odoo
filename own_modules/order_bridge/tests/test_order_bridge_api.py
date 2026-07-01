@@ -9,6 +9,11 @@ from odoo.tests.common import HttpCase, tagged
 
 @tagged('post_install', '-at_install')
 class TestOrderBridgeApi(HttpCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env['res.lang']._activate_lang('es_ES')
+
     def test_register_and_status_flow(self):
         key = str(uuid.uuid4())
         payload = json.dumps({
@@ -222,6 +227,12 @@ class TestOrderBridgeApi(HttpCase):
         body = json.loads(res.text)
         self.assertEqual(body.get('error'), 'validation')
         self.assertIn('details', body)
+        msg = body.get('message') or ''
+        details_msg = (body.get('details') or [{}])[0].get('msg') or ''
+        self.assertTrue(
+            'obligatorio' in msg.lower() or 'obligatorio' in details_msg.lower(),
+            f'Expected Spanish validation message, got message={msg!r} details={details_msg!r}',
+        )
 
     def test_orders_post_requires_device_auth(self):
         res = self.url_open(
@@ -821,6 +832,12 @@ class TestOrderBridgeApi(HttpCase):
         data = json.loads(res.text)
         self.assertEqual(data.get('error'), 'validation')
         self.assertIn('details', data)
+        msg = data.get('message') or ''
+        details_msg = (data.get('details') or [{}])[0].get('msg') or ''
+        self.assertTrue(
+            'entero' in msg.lower() or 'entero' in details_msg.lower(),
+            f'Expected Spanish int parsing message, got message={msg!r} details={details_msg!r}',
+        )
 
     def _order_bridge_register_device(self, phone='60011400'):
         key = str(uuid.uuid4())
@@ -961,6 +978,11 @@ class TestOrderBridgeApi(HttpCase):
             timeout=60,
         )
         self.assertEqual(res.status_code, 400, res.text)
+        body = json.loads(res.text)
+        self.assertEqual(body.get('error'), 'validation')
+        msg = (body.get('message') or '').lower()
+        self.assertIn('válido', msg)
+        self.assertNotIn('this code is invalid', msg)
         count = self.env['sale.order'].search_count([
             ('order_bridge_device_id.device_key', '=', key),
             ('order_bridge_client_order_id', '=', client_order_id),
