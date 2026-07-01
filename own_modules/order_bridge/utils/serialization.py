@@ -338,6 +338,7 @@ def sale_order_to_created_response(order):
         name=order.name,
         order_ref=order.order_bridge_ref,
         state=order.state,
+        amount_total=float(order.amount_total),
         device_validated=order.order_bridge_device_phone_validated,
         delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
         delivery_status=delivery_status,

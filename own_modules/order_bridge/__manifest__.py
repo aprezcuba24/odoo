@@ -26,9 +26,11 @@ Para que un producto gestione existencias y siga el flujo estándar de ventas co
 
 Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas como en una venta normal. La **cantidad a mano** suele **disminuir al validar el albarán de entrega** (transferencia *hecha*), no únicamente al confirmar el pedido (donde puede quedar reservado). Servicios y bienes sin *Rastrear inventario* no descuentan stock físico.
 
-**Depende de:** ventas (sale), ventas e inventario (sale_stock), producto (product), validación de teléfono (phone_validation).
+**Depende de:** ventas (sale), ventas e inventario (sale_stock), producto (product), validación de teléfono (phone_validation), cupones en ventas (sale_loyalty).
+
+**Cupones:** ``POST /api/order_bridge/orders`` acepta un campo opcional ``promo_code``. Requiere programas de fidelización/cupones configurados en Odoo.
     """,
-    'depends': ['sale', 'sale_management', 'sale_stock', 'product', 'phone_validation'],
+    'depends': ['sale', 'sale_management', 'sale_stock', 'product', 'phone_validation', 'sale_loyalty'],
     'external_dependencies': {'python': ['firebase_admin']},
     'data': [
         'security/order_bridge_security.xml',

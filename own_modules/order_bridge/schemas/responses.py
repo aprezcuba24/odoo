@@ -283,6 +283,7 @@ class OrderCreatedResponse(BaseModel):
     name: str
     order_ref: str | None = None
     state: str
+    amount_total: float
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
     delivery_status: DeliveryStatusLiteral | None = None

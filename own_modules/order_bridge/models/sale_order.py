@@ -142,6 +142,21 @@ class SaleOrder(models.Model):
                         remaining,
                     )
 
+    def _order_bridge_apply_promo_code(self, code):
+        """Apply coupon/promo code via sale_loyalty. Raises UserError on failure."""
+        self.ensure_one()
+        status = self._try_apply_code(code.strip())
+        if 'error' in status:
+            raise UserError(status['error'])
+        if not status:
+            raise UserError(_('El código no genera ningún descuento aplicable.'))
+        for coupon, rewards in status.items():
+            if len(rewards) != 1:
+                raise UserError(_('El código tiene varias recompensas; no se puede aplicar por API.'))
+            apply_status = self._apply_program_reward(rewards, coupon)
+            if 'error' in apply_status:
+                raise UserError(apply_status['error'])
+
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""
         self.ensure_one()
@@ -236,6 +251,9 @@ class SaleOrder(models.Model):
                         'state': addr.state or '',
                     })
                     order.write({'order_bridge_snapshot_address_id': snap.id})
+            promo_code = self.env.context.get('order_bridge_promo_code')
+            if promo_code:
+                order._order_bridge_apply_promo_code(promo_code)
             order._order_bridge_try_confirm()
             order._order_bridge_schedule_order_created_notification()
         return records

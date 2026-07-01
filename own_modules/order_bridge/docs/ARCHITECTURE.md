@@ -32,6 +32,7 @@ Instalaciones nuevas no necesitan el paso SQL.
 | **point_of_sale** | `pos.config`, `pos.category`, y la misma lógica de dominio que el TPV (`product.template._load_pos_data_domain`) para alinear el catálogo API con un punto de venta concreto. |
 | **contacts** (base) | `res.partner` y campo `phone`. |
 | **phone_validation** | Normalización de números vía `phone_format` (E.164 cuando es posible). |
+| **sale_loyalty** | Cupones y códigos promocionales en pedidos de venta (`_try_apply_code`). Dependencia dura de `order_bridge`; arrastra `loyalty`. |
 
 Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referencia de patrones HTTP/JSON en core (este módulo no usa `/json/2`).
 
@@ -111,7 +112,7 @@ Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normaliz
 | POST | `/orders/<id>/cancel` | Bearer |
 | GET | `/profile` | Bearer |
 
-El cuerpo de creación acepta `client_order_id` (clave de idempotencia, p. ej. UUID v4 generado por la app). Reutilizar el mismo valor en reintentos de red del mismo checkout; el backend devuelve la orden existente sin duplicar. Las creaciones del mismo dispositivo se serializan con un lock transaccional para evitar carreras de stock.
+El cuerpo de creación acepta `client_order_id` (clave de idempotencia, p. ej. UUID v4 generado por la app) y, opcionalmente, `promo_code` (código promocional o cupón de un programa `sale_loyalty`). Si el código es inválido, la petición responde **400** y no se crea el pedido. Reutilizar el mismo `client_order_id` en reintentos de red del mismo checkout; el backend devuelve la orden existente sin duplicar (el `promo_code` del reintento se ignora). Las creaciones del mismo dispositivo se serializan con un lock transaccional para evitar carreras de stock.
 
 Listados: paginación `limit` / `offset` donde aplica. En JSON de pedidos, la referencia legible se expone como `order_ref` y el origen como `origin`.
 
@@ -177,7 +178,7 @@ flowchart LR
 ## Flujos resumidos
 
 1. **Alta**: Cliente genera `device_key` → POST `/register` con `phone`, `name`, `device_key` → partner + device; admin valida en backend → GET `/status` refleja `validated`.
-2. **Pedido**: POST `/orders` con líneas y `client_order_id` (UUID por checkout); se crea `sale.order` con `order_bridge_origin=app` y dispositivo vinculado; la validación mostrada en API y backend refleja el estado actual del dispositivo. Reintentos con el mismo `client_order_id` son idempotentes. Telegram se envía solo tras commit de la transacción HTTP.
+2. **Pedido**: POST `/orders` con líneas, `client_order_id` (UUID por checkout) y opcionalmente `promo_code`; se crea `sale.order` con `order_bridge_origin=app` y dispositivo vinculado; si hay cupón válido se aplica antes de confirmar. La validación mostrada en API y backend refleja el estado actual del dispositivo. Reintentos con el mismo `client_order_id` son idempotentes. Telegram se envía solo tras commit de la transacción HTTP.
 3. **Cambio de dispositivo**: nuevo `device_key` + mismo teléfono → dispositivos previos con ese teléfono inactivos → nuevo pendiente de validación.
 
 ---
