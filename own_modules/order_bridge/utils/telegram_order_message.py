@@ -46,7 +46,8 @@ def format_order_created_message(order) -> str:
     lines = order.order_line.filtered(lambda l: not l.display_type and l.product_id)
     product_lines = []
     for line in lines:
-        name = escape_markdown(line.name)
+        product = line.product_id.with_context(display_default_code=False)
+        name = escape_markdown(product.display_name)
         qty = format_qty(order, line.product_uom_qty)
         price_unit = format_money(order, line.price_unit)
         subtotal = format_money(order, line.price_subtotal)

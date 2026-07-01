@@ -82,6 +82,35 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
         self.assertIn('*Total:*', text)
         self.assertNotIn('*Cupón de descuento:*', text)
 
+    @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
+    def test_format_order_created_message_excludes_description_sale(self, _mock_send):
+        product = self.env['product.product'].create({
+            'name': 'Arroz',
+            'description_sale': 'Descripción larga del producto',
+            'sale_ok': True,
+            'list_price': 100.0,
+        })
+        partner = self.env['res.partner'].create({
+            'name': 'Cliente Arroz',
+            'phone': '+5355512345',
+        })
+        device = self.env['order_bridge.device'].create({
+            'device_key': 'telegram-desc-test',
+            'partner_id': partner.id,
+            'phone': partner.phone,
+        })
+        order = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'order_bridge_origin': 'app',
+            'order_bridge_device_id': device.id,
+            'order_line': [
+                Command.create({'product_id': product.id, 'product_uom_qty': 1.0}),
+            ],
+        })
+        text = format_order_created_message(order)
+        self.assertIn('Arroz', text)
+        self.assertNotIn('Descripción larga del producto', text)
+
     def _create_promo_program(self, code='TEST10', discount=10):
         self.env['loyalty.program'].search([]).sudo().write({'active': False})
         return self.env['loyalty.program'].create({
