@@ -80,6 +80,59 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
         self.assertIn('Leche en polvo Malibú (1kg)', text)
         self.assertIn(r'Aceite \*especial\*', text)
         self.assertIn('*Total:*', text)
+        self.assertNotIn('*Cupón de descuento:*', text)
+
+    def _create_promo_program(self, code='TEST10', discount=10):
+        self.env['loyalty.program'].search([]).sudo().write({'active': False})
+        return self.env['loyalty.program'].create({
+            'name': 'Telegram promo test',
+            'program_type': 'promo_code',
+            'applies_on': 'current',
+            'trigger': 'with_code',
+            'rule_ids': [(0, 0, {'mode': 'with_code', 'code': code})],
+            'reward_ids': [(0, 0, {
+                'reward_type': 'discount',
+                'discount': discount,
+                'discount_mode': 'percent',
+                'discount_applicability': 'order',
+                'required_points': 1,
+            })],
+        })
+
+    @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
+    def test_format_order_created_message_with_promo_code(self, _mock_send):
+        self._create_promo_program()
+        product = self.env['product.product'].create({
+            'name': 'Producto con cupón',
+            'sale_ok': True,
+            'list_price': 100.0,
+            'taxes_id': [(6, 0, [])],
+        })
+        partner = self.env['res.partner'].create({
+            'name': 'Cliente Cupón',
+            'phone': '+5355512345',
+        })
+        device = self.env['order_bridge.device'].create({
+            'device_key': 'telegram-promo-test',
+            'partner_id': partner.id,
+            'phone': partner.phone,
+        })
+        order = self.env['sale.order'].with_context(
+            order_bridge_promo_code='TEST10',
+        ).create({
+            'partner_id': partner.id,
+            'order_bridge_origin': 'app',
+            'order_bridge_device_id': device.id,
+            'order_line': [
+                Command.create({'product_id': product.id, 'product_uom_qty': 1.0}),
+            ],
+        })
+        text = format_order_created_message(order)
+        self.assertIn('*Cupón de descuento:* TEST10', text)
+        self.assertIn('*Descuento:*', text)
+        self.assertIn('*Total:*', text)
+        self.assertEqual(order.amount_total, 90.0)
+        self.assertEqual(order.order_bridge_promo_code, 'TEST10')
 
     @patch.dict(os.environ, {}, clear=True)
     def test_send_message_without_env_warns_once(self):

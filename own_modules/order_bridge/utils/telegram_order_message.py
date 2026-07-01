@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from odoo.addons.order_bridge.utils.serialization import _coupon_fields_from_order
 from odoo.addons.order_bridge.utils.telegram_client import (
     escape_markdown,
     format_money,
@@ -54,6 +55,16 @@ def format_order_created_message(order) -> str:
     products_block = '\n'.join(product_lines) if product_lines else escape_markdown('-')
     total = format_money(order, order.amount_total)
 
+    promo_code, discount_amount = _coupon_fields_from_order(order)
+    coupon_block = ''
+    if promo_code:
+        code = escape_markdown(promo_code)
+        discount = format_money(order, discount_amount)
+        coupon_block = (
+            f'\n*Cupón de descuento:* {code}\n'
+            f'*Descuento:* {discount}\n'
+        )
+
     return (
         '*🛒 Nueva orden*\n'
         '\n'
@@ -64,6 +75,7 @@ def format_order_created_message(order) -> str:
         '\n'
         '*Productos*\n'
         f'{products_block}\n'
+        f'{coupon_block}'
         '\n'
         f'*Total:* {total}'
     )
