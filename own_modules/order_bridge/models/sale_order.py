@@ -20,6 +20,7 @@ from odoo.addons.order_bridge.utils.constant import (
 )
 from odoo.addons.order_bridge.listeners.order_created_listener import order_bridge_order_created
 from odoo.addons.order_bridge.listeners.store_state_listener import order_bridge_store_state_changed
+from odoo.addons.order_bridge.listeners.store_state_push_listener import order_bridge_store_state_push
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +29,8 @@ class SaleOrder(models.Model):
     _name = 'sale.order'
     _inherit = ['sale.order', 'order_bridge.dispatch.mixin']
     _LISTENERS = [
-        (order_bridge_store_state_changed, 'order_bridge_store_state_changed'),
+        (order_bridge_store_state_changed, 'order_bridge_sale_changed'),
+        (order_bridge_store_state_push, 'order_bridge_sale_changed'),
         (order_bridge_order_created, 'order_bridge_order_created'),
     ]
 
@@ -237,7 +239,7 @@ class SaleOrder(models.Model):
         res = super().write(vals)
         for order in self:
             old = previous_by_id.get(order.id)
-            order.on_event('order_bridge_store_state_changed', old, order)
+            order.on_event('order_bridge_sale_changed', old, order)
         return res
 
     @api.model_create_multi

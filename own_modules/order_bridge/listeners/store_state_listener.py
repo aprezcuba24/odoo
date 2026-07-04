@@ -5,7 +5,7 @@ from odoo.addons.order_bridge.utils.constant import STATE_CANCELED, STATE_DELIVE
 
 
 def order_bridge_store_state_changed(order, old_entity, new_entity):
-    """Hook tras persistir un cambio de estado tienda; ampliar en otros módulos (llamar a super)."""
+    """Hook tras persistir un write de pedido tienda; filtra cambios de estado tienda."""
     if order.order_bridge_origin not in ('app', 'admin'):
         return
     old_ss = old_entity.get('order_bridge_store_state') if old_entity else None
