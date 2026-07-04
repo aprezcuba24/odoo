@@ -523,6 +523,21 @@
             "minItems": 1,
             "title": "Lines",
             "type": "array"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "C\u00f3digo promocional o cup\u00f3n (opcional).",
+            "title": "Promo Code"
           }
         },
         "required": [
@@ -534,6 +549,10 @@
       "OrderCreatedResponse": {
         "additionalProperties": false,
         "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
           "delivery_address": {
             "anyOf": [
               {
@@ -567,6 +586,18 @@
             "title": "Device Validated",
             "type": "boolean"
           },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
           "effective_date": {
             "anyOf": [
               {
@@ -599,6 +630,18 @@
             "default": null,
             "title": "Order Ref"
           },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
+          },
           "state": {
             "title": "State",
             "type": "string"
@@ -619,6 +662,7 @@
           "id",
           "name",
           "state",
+          "amount_total",
           "device_validated",
           "store_state"
         ],
@@ -1339,6 +1383,18 @@
             "title": "Device Validated",
             "type": "boolean"
           },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
           "effective_date": {
             "anyOf": [
               {
@@ -1381,6 +1437,18 @@
           "origin": {
             "title": "Origin",
             "type": "string"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
           },
           "state": {
             "title": "State",
@@ -1543,6 +1611,18 @@
             "title": "Device Validated",
             "type": "boolean"
           },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
           "effective_date": {
             "anyOf": [
               {
@@ -1578,6 +1658,18 @@
           "origin": {
             "title": "Origin",
             "type": "string"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
           },
           "state": {
             "title": "State",

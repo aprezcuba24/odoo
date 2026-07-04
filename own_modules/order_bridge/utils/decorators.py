@@ -18,6 +18,7 @@ from ..schemas.responses import (
     UnauthorizedErrorResponse,
     ValidationErrorResponse,
 )
+from ..utils.constant import API_LANG
 from ..utils.order_stock import InsufficientStockError
 
 _logger = logging.getLogger(__name__)
@@ -30,6 +31,14 @@ CORS_HEADERS = [
     ('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS'),
     ('Access-Control-Max-Age', '86400'),
 ]
+
+
+def _ensure_api_lang():
+    """Force Spanish for Odoo translations on public API routes (no user session)."""
+    if request.env.context.get('lang') == API_LANG:
+        return
+    if request.env['res.lang'].sudo()._get_data(code=API_LANG):
+        request.update_context(lang=API_LANG)
 
 
 def api_json_response(payload, status=200):
@@ -112,6 +121,7 @@ def _order_bridge_request_context(
     Returns a werkzeug response to return immediately, or ``None`` if the handler
     should run.
     """
+    _ensure_api_lang()
     if request.httprequest.method == 'OPTIONS':
         return api_cors_preflight()
     device = resolve_api_device()
@@ -194,6 +204,7 @@ def api_validated_query(model_cls, *, kwarg_name='q'):
     def decorator(endpoint):
         @functools.wraps(endpoint)
         def wrapper(self, *args, **kwargs):
+            _ensure_api_lang()
             try:
                 parsed = model_cls.from_request_params(request.params)
             except ValidationError as e:
@@ -224,6 +235,7 @@ def api_validated_json_body(model_cls, *, kwarg_name='body', validation_context=
         def wrapper(self, *args, **kwargs):
             if request.httprequest.method == 'OPTIONS':
                 return api_cors_preflight()
+            _ensure_api_lang()
             body = get_json_body()
             if body is None:
                 return api_json_response(SimpleErrorResponse(error='invalid_json'), 400)

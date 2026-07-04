@@ -83,7 +83,10 @@ class OrdersController(http.Controller):
             order_vals['warehouse_id'] = warehouse.id
         try:
             with request.env.cr.savepoint():
-                order = Order.create(order_vals)
+                create_env = Order
+                if body.promo_code:
+                    create_env = Order.with_context(order_bridge_promo_code=body.promo_code)
+                order = create_env.create(order_vals)
         except UserError as e:
             return api_json_response(
                 MessageErrorResponse(error='validation', message=str(e)),

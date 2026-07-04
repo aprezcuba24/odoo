@@ -116,6 +116,22 @@ class OrderCreateBody(BaseModel):
         ),
     )
     lines: list[OrderLineIn] = Field(..., min_length=1)
+    promo_code: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=128,
+        description='Código promocional o cupón (opcional).',
+    )
+
+    @field_validator('promo_code')
+    @classmethod
+    def promo_code_not_blank(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        s = str(v).strip()
+        if not s:
+            raise ValueError('promo_code no puede estar vacío')
+        return s
 
     @field_validator('client_order_id')
     @classmethod

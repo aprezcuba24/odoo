@@ -161,6 +161,7 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'name': 'S',
             'order_ref': None,
             'state': 'draft',
+            'amount_total': 90.0,
             'device_validated': False,
             'delivery_address': None,
             'store_state': 'reviewing',

@@ -225,6 +225,8 @@ class SaleOrderSummary(BaseModel):
     state: str
     date_order: str | None = None
     amount_total: float
+    promo_code: str | None = None
+    discount_amount: float | None = None
     currency: str | None = None
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
@@ -232,7 +234,7 @@ class SaleOrderSummary(BaseModel):
     effective_date: str | None = None
     store_state: STORE_STATE_VALID
 
-    @field_validator('order_ref', 'currency', mode='before')
+    @field_validator('order_ref', 'currency', 'promo_code', mode='before')
     @classmethod
     def falsy_to_none(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
@@ -283,13 +285,16 @@ class OrderCreatedResponse(BaseModel):
     name: str
     order_ref: str | None = None
     state: str
+    amount_total: float
+    promo_code: str | None = None
+    discount_amount: float | None = None
     device_validated: bool
     delivery_address: DeliveryAddressOut | None = None
     delivery_status: DeliveryStatusLiteral | None = None
     effective_date: str | None = None
     store_state: STORE_STATE_VALID
 
-    @field_validator('order_ref', mode='before')
+    @field_validator('order_ref', 'promo_code', mode='before')
     @classmethod
     def order_ref_falsy(cls, v: Any) -> str | None:
         return _odoo_falsy_str(v)
