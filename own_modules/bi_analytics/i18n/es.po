@@ -1,0 +1,146 @@
+# Translation of Odoo Server.
+# This file contains Spanish translations for bi_analytics (source strings are already in Spanish).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_product_sale_report
+msgid "Reporte de ventas por producto"
+msgstr "Reporte de ventas por producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_id
+msgid "Producto"
+msgstr "Producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_tmpl_id
+msgid "Plantilla de producto"
+msgstr "Plantilla de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__categ_id
+msgid "Categoría de producto"
+msgstr "Categoría de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__company_id
+msgid "Compañía"
+msgstr "Compañía"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__currency_id
+msgid "Moneda"
+msgstr "Moneda"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__qty_sold
+msgid "Cantidad"
+msgstr "Cantidad"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__sale_amount
+msgid "Venta"
+msgstr "Venta"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__cost_amount
+msgid "Costo"
+msgstr "Costo"
+
+#. module: bi_analytics
+#: model:ir.actions.act_window,name:bi_analytics.action_bi_product_sale_report
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_product_sale_report
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Reportes de productos"
+msgstr "Reportes de productos"
+
+#. module: bi_analytics
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_analytics_root
+msgid "Inteligencia de Negocio"
+msgstr "Inteligencia de Negocio"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Cantidad total"
+msgstr "Cantidad total"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Importe total de venta"
+msgstr "Importe total de venta"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Importe total de costo"
+msgstr "Importe total de costo"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Categoría de producto"
+msgstr "Categoría de producto"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Compañía"
+msgstr "Compañía"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.action_bi_product_sale_report
+msgid "Aún no hay ventas confirmadas."
+msgstr "Aún no hay ventas confirmadas."
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.action_bi_product_sale_report
+msgid "Este reporte muestra por producto la cantidad vendida y los importes totales de venta y costo."
+msgstr "Este reporte muestra por producto la cantidad vendida y los importes totales de venta y costo."
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_id
+msgid "Product"
+msgstr "Producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_tmpl_id
+msgid "Product Template"
+msgstr "Plantilla de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__categ_id
+msgid "Product Category"
+msgstr "Categoría de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__company_id
+msgid "Company"
+msgstr "Compañía"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__currency_id
+msgid "Currency"
+msgstr "Moneda"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__qty_sold
+msgid "Quantity Sold"
+msgstr "Cantidad"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__sale_amount
+msgid "Sale Amount"
+msgstr "Venta"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__cost_amount
+msgid "Cost Amount"
+msgstr "Costo"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_product_sale_report
+msgid "Product Sales Report"
+msgstr "Reporte de ventas por producto"

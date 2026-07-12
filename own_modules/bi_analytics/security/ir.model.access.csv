@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bi_product_sale_report_salesman,bi.product.sale.report.salesman,bi_analytics.model_bi_product_sale_report,sales_team.group_sale_salesman,1,0,0,0

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_bi_analytics_root"
+        name="Inteligencia de Negocio"
+        sequence="35"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_product_sale_report"
+        name="Reportes de productos"
+        parent="menu_bi_analytics_root"
+        action="action_bi_product_sale_report"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+</odoo>
