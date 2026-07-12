@@ -53,6 +53,16 @@ msgid "Costo"
 msgstr "Costo"
 
 #. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__profit_amount
+msgid "Ganancia"
+msgstr "Ganancia"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__date_order
+msgid "Fecha del pedido"
+msgstr "Fecha del pedido"
+
+#. module: bi_analytics
 #: model:ir.actions.act_window,name:bi_analytics.action_bi_product_sale_report
 #: model:ir.ui.menu,name:bi_analytics.menu_bi_product_sale_report
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
@@ -81,6 +91,11 @@ msgid "Importe total de costo"
 msgstr "Importe total de costo"
 
 #. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Importe total de ganancia"
+msgstr "Importe total de ganancia"
+
+#. module: bi_analytics
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
 msgid "Categoría de producto"
 msgstr "Categoría de producto"
@@ -91,14 +106,19 @@ msgid "Compañía"
 msgstr "Compañía"
 
 #. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Fecha del pedido"
+msgstr "Fecha del pedido"
+
+#. module: bi_analytics
 #: model_terms:ir.ui.view,arch_db:bi_analytics.action_bi_product_sale_report
 msgid "Aún no hay ventas confirmadas."
 msgstr "Aún no hay ventas confirmadas."
 
 #. module: bi_analytics
 #: model_terms:ir.ui.view,arch_db:bi_analytics.action_bi_product_sale_report
-msgid "Este reporte muestra por producto la cantidad vendida y los importes totales de venta y costo."
-msgstr "Este reporte muestra por producto la cantidad vendida y los importes totales de venta y costo."
+msgid "Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia. Por defecto se filtra por el mes actual."
+msgstr "Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia. Por defecto se filtra por el mes actual."
 
 #. module: bi_analytics
 #: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_id
@@ -139,6 +159,16 @@ msgstr "Venta"
 #: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__cost_amount
 msgid "Cost Amount"
 msgstr "Costo"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__profit_amount
+msgid "Profit Amount"
+msgstr "Ganancia"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__date_order
+msgid "Order Date"
+msgstr "Fecha del pedido"
 
 #. module: bi_analytics
 #: model:ir.model,name:bi_analytics.model_bi_product_sale_report
