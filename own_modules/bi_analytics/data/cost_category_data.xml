@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="product_category_supplies" model="product.category">
+        <field name="name">Insumos</field>
+    </record>
+
+    <record id="cost_category_fixed" model="bi.cost.category">
+        <field name="name">Costo fijo</field>
+        <field name="cost_type">fixed</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="cost_category_supply" model="bi.cost.category">
+        <field name="name">Insumo</field>
+        <field name="cost_type">supply</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="cost_category_other" model="bi.cost.category">
+        <field name="name">Otro</field>
+        <field name="cost_type">other</field>
+        <field name="sequence">30</field>
+    </record>
+</odoo>

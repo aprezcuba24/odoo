@@ -13,4 +13,60 @@
         action="action_bi_product_sale_report"
         sequence="10"
         groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_profitability_report"
+        name="Resumen de rentabilidad"
+        parent="menu_bi_analytics_root"
+        action="action_bi_profitability_report"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_other_cost"
+        name="Otros costos"
+        parent="menu_bi_analytics_root"
+        action="action_bi_other_cost"
+        sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_supply_product"
+        name="Insumos"
+        parent="menu_bi_analytics_root"
+        action="action_bi_supply_product"
+        sequence="40"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_supply_purchase"
+        name="Compras de insumos"
+        parent="menu_bi_analytics_root"
+        action="action_bi_supply_purchase"
+        sequence="41"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_supply_stock"
+        name="Existencias de insumos"
+        parent="menu_bi_analytics_root"
+        action="action_bi_supply_stock"
+        sequence="42"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_supply_scrap"
+        name="Consumo de insumos"
+        parent="menu_bi_analytics_root"
+        action="action_bi_supply_scrap"
+        sequence="43"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_cost_category"
+        name="Categorías de costo"
+        parent="menu_bi_analytics_root"
+        action="action_bi_cost_category"
+        sequence="90"
+        groups="sales_team.group_sale_manager"/>
 </odoo>

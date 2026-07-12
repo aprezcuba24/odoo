@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bi_supply_scrap_form" model="ir.ui.view">
+        <field name="name">stock.scrap.supply.form</field>
+        <field name="model">stock.scrap</field>
+        <field name="inherit_id" ref="stock.stock_scrap_form_view"/>
+        <field name="arch" type="xml">
+            <field name="product_id" position="attributes">
+                <attribute name="domain">[('sale_ok', '=', False), ('purchase_ok', '=', True), ('is_storable', '=', True)]</attribute>
+            </field>
+        </field>
+    </record>
+
+    <record id="action_bi_supply_purchase" model="ir.actions.act_window">
+        <field name="name">Compras de insumos</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Registra la compra de insumos a tus proveedores.</p>
+            <p>Crea una solicitud de cotización, añade líneas con productos de tipo insumo y confirma la orden. Al recibir la mercancía, el stock del insumo aumentará.</p>
+        </field>
+    </record>
+
+    <record id="action_bi_supply_scrap" model="ir.actions.act_window">
+        <field name="name">Consumo de insumos</field>
+        <field name="res_model">stock.scrap</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('product_id.sale_ok', '=', False)]</field>
+        <field name="context">{'default_origin': 'Consumo de insumo'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Registra el consumo de insumos.</p>
+            <p>Indica el producto, la cantidad y valida. Se descontará del inventario y se creará automáticamente un gasto confirmado para el reporte de rentabilidad.</p>
+        </field>
+    </record>
+
+    <record id="action_bi_supply_stock" model="ir.actions.act_window">
+        <field name="name">Existencias de insumos</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="stock.product_product_stock_tree"/>
+        <field name="domain">[('sale_ok', '=', False), ('purchase_ok', '=', True), ('is_storable', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aún no hay existencias de insumos.</p>
+            <p>Compra insumos o ajusta el inventario para ver las cantidades disponibles en almacén.</p>
+        </field>
+    </record>
+</odoo>

@@ -2,18 +2,25 @@
 
 {
     'name': 'Inteligencia de Negocio',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.2.0',
     'category': 'Ventas/Informes',
     'summary': 'Reportes de inteligencia de negocio.',
     'description': """
 Inteligencia de Negocio
 =======================
 
-Reportes analíticos sobre ventas confirmadas.
+Reportes analíticos sobre ventas confirmadas, otros costos y rentabilidad.
+Incluye flujo de compra, existencias y consumo de insumos.
     """,
-    'depends': ['sale', 'sale_margin'],
+    'depends': ['sale', 'sale_margin', 'purchase', 'stock'],
     'data': [
         'security/ir.model.access.csv',
+        'data/cost_category_data.xml',
+        'views/cost_category_views.xml',
+        'views/other_cost_views.xml',
+        'views/profitability_report_views.xml',
+        'views/supply_product_views.xml',
+        'views/supply_operations_views.xml',
         'views/product_sale_report_views.xml',
         'views/bi_analytics_menu.xml',
     ],

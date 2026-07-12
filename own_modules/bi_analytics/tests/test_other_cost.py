@@ -1,0 +1,95 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from dateutil.relativedelta import relativedelta
+
+from odoo import fields
+from odoo.exceptions import ValidationError
+from odoo.tests import tagged
+from odoo.tests.common import TransactionCase
+
+
+@tagged('post_install', '-at_install')
+class TestBiOtherCost(TransactionCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.cost_company = cls.env['res.company'].create({
+            'name': 'BI Other Cost Test Co',
+        })
+        cls.fixed_category = cls.env.ref('bi_analytics.cost_category_fixed')
+        cls.supply_category = cls.env.ref('bi_analytics.cost_category_supply')
+        cls.supply_product = cls.env['product.product'].with_company(cls.cost_company).create({
+            'name': 'BI Test Supply',
+            'sale_ok': False,
+            'purchase_ok': True,
+            'standard_price': 2.0,
+        })
+
+    def _create_cost(self, values):
+        values.setdefault('company_id', self.cost_company.id)
+        values.setdefault('currency_id', self.cost_company.currency_id.id)
+        return self.env['bi.other.cost'].create(values)
+
+    def test_other_cost_confirm_and_draft(self):
+        cost = self._create_cost({
+            'name': 'Alquiler test',
+            'date': fields.Date.today(),
+            'amount': 500.0,
+            'category_id': self.fixed_category.id,
+        })
+        self.assertEqual(cost.state, 'draft')
+        cost.action_confirm()
+        self.assertEqual(cost.state, 'confirmed')
+        cost.action_draft()
+        self.assertEqual(cost.state, 'draft')
+
+    def test_other_cost_excludes_draft_from_profitability(self):
+        month_start = fields.Date.today().replace(day=1)
+        self._create_cost({
+            'name': 'Gasto borrador',
+            'date': month_start,
+            'amount': 100.0,
+            'category_id': self.fixed_category.id,
+        })
+        confirmed = self._create_cost({
+            'name': 'Gasto confirmado',
+            'date': month_start,
+            'amount': 200.0,
+            'category_id': self.fixed_category.id,
+        })
+        confirmed.action_confirm()
+
+        report = self.env['bi.profitability.report'].search([
+            ('date', '=', month_start),
+            ('company_id', '=', self.cost_company.id),
+        ])
+        self.assertEqual(len(report), 1)
+        self.assertAlmostEqual(report.other_cost_amount, 200.0)
+
+    def test_supply_cost_requires_product(self):
+        with self.assertRaises(ValidationError):
+            self._create_cost({
+                'name': 'Insumo sin producto',
+                'date': fields.Date.today(),
+                'amount': 50.0,
+                'category_id': self.supply_category.id,
+            })
+
+    def test_fixed_cost_rejects_product(self):
+        with self.assertRaises(ValidationError):
+            self._create_cost({
+                'name': 'Fijo con producto',
+                'date': fields.Date.today(),
+                'amount': 50.0,
+                'category_id': self.fixed_category.id,
+                'product_id': self.supply_product.id,
+            })
+
+    def test_other_cost_rejects_non_positive_amount(self):
+        with self.assertRaises(ValidationError):
+            self._create_cost({
+                'name': 'Importe inválido',
+                'date': fields.Date.today(),
+                'amount': 0.0,
+                'category_id': self.fixed_category.id,
+            })
