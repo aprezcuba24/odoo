@@ -22,6 +22,7 @@ Incluye flujo de compra, existencias y consumo de insumos.
         'views/supply_product_views.xml',
         'views/supply_operations_views.xml',
         'views/product_sale_report_views.xml',
+        'views/other_cost_report_views.xml',
         'views/bi_analytics_menu.xml',
     ],
     'license': 'LGPL-3',
