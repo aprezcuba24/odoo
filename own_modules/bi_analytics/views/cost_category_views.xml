@@ -31,7 +31,7 @@
     </record>
 
     <record id="action_bi_cost_category" model="ir.actions.act_window">
-        <field name="name">Categorías de costo</field>
+        <field name="name">Categoría</field>
         <field name="res_model">bi.cost.category</field>
         <field name="view_mode">list,form</field>
     </record>
