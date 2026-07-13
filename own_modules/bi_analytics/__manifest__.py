@@ -2,7 +2,7 @@
 
 {
     'name': 'Inteligencia de Negocio',
-    'version': '19.0.1.3.0',
+    'version': '19.0.1.4.0',
     'category': 'Ventas/Informes',
     'summary': 'Reportes de inteligencia de negocio.',
     'description': """
@@ -18,6 +18,7 @@ Incluye catálogo de insumos y registro de consumos.
         'data/cost_category_data.xml',
         'views/cost_category_views.xml',
         'views/supply_views.xml',
+        'views/supply_entry_views.xml',
         'views/other_cost_views.xml',
         'views/profitability_report_views.xml',
         'views/product_sale_report_views.xml',

@@ -19,7 +19,14 @@ class TestBiOtherCost(TransactionCase):
         cls.supply = cls.env['bi.supply'].with_company(cls.cost_company).create({
             'name': 'BI Test Supply',
             'unit': 'unidad',
-            'cost': 2.0,
+            'company_id': cls.cost_company.id,
+            'currency_id': cls.cost_company.currency_id.id,
+        })
+        cls.env['bi.supply.entry'].create({
+            'supply_id': cls.supply.id,
+            'date': fields.Date.today(),
+            'quantity': 100.0,
+            'unit_cost': 2.0,
             'company_id': cls.cost_company.id,
             'currency_id': cls.cost_company.currency_id.id,
         })
@@ -80,6 +87,7 @@ class TestBiOtherCost(TransactionCase):
             'supply_id': self.supply.id,
             'quantity': 10.0,
         })
+        self.assertAlmostEqual(cost.unit_cost, 2.0)
         self.assertAlmostEqual(cost.amount, 20.0)
         self.assertEqual(cost.name, 'BI Test Supply (10 unidad)')
 
@@ -91,6 +99,40 @@ class TestBiOtherCost(TransactionCase):
             'quantity': 3.0,
         })
         self.assertEqual(cost.name, 'BI Test Supply (3 unidad)')
+
+    def test_supply_cost_confirm_uses_snapshot_and_decreases_stock(self):
+        cost = self._create_cost({
+            'date': fields.Date.today(),
+            'category_id': self.supply_category.id,
+            'supply_id': self.supply.id,
+            'quantity': 10.0,
+        })
+        cost.action_confirm()
+        self.assertAlmostEqual(cost.unit_cost, 2.0)
+        self.assertAlmostEqual(cost.amount, 20.0)
+        self.assertAlmostEqual(self.supply.qty_available, 90.0)
+
+    def test_supply_cost_confirm_rejects_insufficient_stock(self):
+        cost = self._create_cost({
+            'date': fields.Date.today(),
+            'category_id': self.supply_category.id,
+            'supply_id': self.supply.id,
+            'quantity': 150.0,
+        })
+        with self.assertRaises(ValidationError):
+            cost.action_confirm()
+
+    def test_supply_cost_draft_restores_stock(self):
+        cost = self._create_cost({
+            'date': fields.Date.today(),
+            'category_id': self.supply_category.id,
+            'supply_id': self.supply.id,
+            'quantity': 10.0,
+        })
+        cost.action_confirm()
+        self.assertAlmostEqual(self.supply.qty_available, 90.0)
+        cost.action_draft()
+        self.assertAlmostEqual(self.supply.qty_available, 100.0)
 
     def test_fixed_cost_rejects_supply(self):
         with self.assertRaises(ValidationError):

@@ -7,7 +7,8 @@
             <list string="Insumos">
                 <field name="name"/>
                 <field name="unit"/>
-                <field name="cost"/>
+                <field name="average_cost"/>
+                <field name="qty_available"/>
                 <field name="company_id" groups="base.group_multi_company" optional="show"/>
                 <field name="currency_id" column_invisible="True"/>
             </list>
@@ -24,7 +25,8 @@
                         <group>
                             <field name="name"/>
                             <field name="unit"/>
-                            <field name="cost"/>
+                            <field name="average_cost"/>
+                            <field name="qty_available"/>
                         </group>
                         <group>
                             <field name="company_id" groups="base.group_multi_company"/>
@@ -32,6 +34,18 @@
                             <field name="active"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page string="Entradas" name="entries">
+                            <field name="entry_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_cost"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -61,7 +75,7 @@
         <field name="context">{'search_default_filter_active': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Crea insumos para registrar materias primas y otros gastos de consumo.</p>
-            <p>Define el nombre, la unidad de medida y el costo unitario. Luego regístralos en <b>Otros costos</b> con la categoría Insumo.</p>
+            <p>Define el nombre y la unidad de medida. Registra entradas para actualizar el stock y el costo promedio, y luego consúmelos en <b>Otros costos</b> con la categoría Insumo.</p>
         </field>
     </record>
 </odoo>

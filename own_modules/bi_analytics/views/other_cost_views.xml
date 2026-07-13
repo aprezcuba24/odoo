@@ -10,6 +10,7 @@
                 <field name="category_id"/>
                 <field name="supply_id" optional="show"/>
                 <field name="quantity" optional="show"/>
+                <field name="unit_cost" optional="show"/>
                 <field name="amount" sum="Importe total"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
                 <field name="company_id" groups="base.group_multi_company" optional="show"/>
@@ -37,6 +38,8 @@
                             <field name="date"/>
                             <field name="supply_id" invisible="cost_type != 'supply'" required="cost_type == 'supply'"/>
                             <field name="quantity" invisible="cost_type != 'supply'" required="cost_type == 'supply'"/>
+                            <field name="unit_cost" invisible="cost_type != 'supply'"/>
+                            <field name="amount" invisible="cost_type != 'supply'"/>
                         </group>
                         <group>
                             <field name="amount" invisible="cost_type == 'supply'"/>

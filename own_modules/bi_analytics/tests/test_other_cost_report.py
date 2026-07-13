@@ -20,7 +20,14 @@ class TestBiOtherCostReport(TransactionCase):
         cls.supply = cls.env['bi.supply'].with_company(cls.cost_company).create({
             'name': 'BI Test Supply',
             'unit': 'unidad',
-            'cost': 2.0,
+            'company_id': cls.cost_company.id,
+            'currency_id': cls.cost_company.currency_id.id,
+        })
+        cls.env['bi.supply.entry'].create({
+            'supply_id': cls.supply.id,
+            'date': fields.Date.today(),
+            'quantity': 100.0,
+            'unit_cost': 2.0,
             'company_id': cls.cost_company.id,
             'currency_id': cls.cost_company.currency_id.id,
         })

@@ -2,6 +2,7 @@
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class BiOtherCost(models.Model):
@@ -34,6 +35,7 @@ class BiOtherCost(models.Model):
         ondelete='restrict',
     )
     quantity = fields.Float(string='Cantidad', digits='Product Unit')
+    unit_cost = fields.Monetary(string='Precio unitario', readonly=True)
     company_id = fields.Many2one(
         'res.company',
         string='Compañía',
@@ -63,18 +65,21 @@ class BiOtherCost(models.Model):
     def _onchange_supply_description(self):
         if self.cost_type == 'supply' and self.supply_id:
             self.name = self._supply_description(self.supply_id, self.quantity)
+            self.unit_cost = self.supply_id.average_cost
 
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
             self._apply_supply_description(vals)
+            self._apply_supply_unit_cost(vals)
         return super().create(vals_list)
 
     def write(self, vals):
         res = super().write(vals)
         if {'supply_id', 'quantity', 'category_id'} & set(vals):
-            for cost in self.filtered(lambda c: c.cost_type == 'supply'):
+            for cost in self.filtered(lambda c: c.cost_type == 'supply' and c.state == 'draft'):
                 cost.name = cost._supply_description(cost.supply_id, cost.quantity)
+                cost.unit_cost = cost.supply_id.average_cost
         return res
 
     def _supply_description(self, supply, quantity):
@@ -95,17 +100,25 @@ class BiOtherCost(models.Model):
         if description:
             vals['name'] = description
 
+    def _apply_supply_unit_cost(self, vals):
+        category = self.env['bi.cost.category'].browse(vals.get('category_id'))
+        if category.cost_type != 'supply':
+            return
+        supply = self.env['bi.supply'].browse(vals.get('supply_id'))
+        if supply:
+            vals['unit_cost'] = supply.average_cost
+
     @api.constrains('category_id', 'name')
     def _check_name(self):
         for cost in self:
             if cost.cost_type != 'supply' and not cost.name:
                 raise ValidationError('La descripción es obligatoria.')
 
-    @api.depends('category_id.cost_type', 'supply_id.cost', 'quantity')
+    @api.depends('category_id.cost_type', 'unit_cost', 'quantity')
     def _compute_amount(self):
         for cost in self:
             if cost.category_id.cost_type == 'supply':
-                cost.amount = (cost.supply_id.cost or 0.0) * (cost.quantity or 0.0)
+                cost.amount = (cost.unit_cost or 0.0) * (cost.quantity or 0.0)
 
     @api.constrains('category_id', 'amount')
     def _check_amount(self):
@@ -135,14 +148,39 @@ class BiOtherCost(models.Model):
                         'Solo los gastos de tipo insumo pueden tener cantidad.',
                     )
 
+    def _check_supply_stock(self):
+        for cost in self.filtered(lambda c: c.cost_type == 'supply'):
+            available = cost.supply_id.qty_available
+            if float_compare(
+                available,
+                cost.quantity,
+                precision_digits=6,
+            ) < 0:
+                raise ValidationError(
+                    f'No hay stock suficiente de {cost.supply_id.name}. '
+                    f'Disponible: {available:g} {cost.supply_id.unit}.',
+                )
+
     def action_confirm(self):
         for cost in self:
             if cost.state != 'draft':
                 raise UserError('Solo se pueden confirmar gastos en borrador.')
-        self.write({'state': 'confirmed'})
+        supply_costs = self.filtered(lambda c: c.cost_type == 'supply')
+        supply_costs._check_supply_stock()
+        for cost in supply_costs:
+            cost.write({
+                'unit_cost': cost.supply_id.average_cost,
+                'state': 'confirmed',
+            })
+        (self - supply_costs).write({'state': 'confirmed'})
+        supply_costs.mapped('supply_id')._recompute_stock_metrics()
 
     def action_draft(self):
+        supply_costs = self.filtered(lambda c: c.cost_type == 'supply')
         for cost in self:
             if cost.state != 'confirmed':
                 raise UserError('Solo se pueden devolver a borrador los gastos confirmados.')
         self.write({'state': 'draft'})
+        for cost in supply_costs:
+            cost.unit_cost = cost.supply_id.average_cost
+        supply_costs.mapped('supply_id')._recompute_stock_metrics()

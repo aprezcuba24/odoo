@@ -6,3 +6,4 @@ from . import other_cost_report
 from . import product_sale_report
 from . import profitability_report
 from . import supply
+from . import supply_entry

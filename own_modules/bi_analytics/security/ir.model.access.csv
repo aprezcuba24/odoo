@@ -5,3 +5,4 @@ access_bi_profitability_report_salesman,bi.profitability.report.salesman,bi_anal
 access_bi_other_cost_salesman,bi.other.cost.salesman,bi_analytics.model_bi_other_cost,sales_team.group_sale_salesman,1,1,1,1
 access_bi_cost_category_salesman,bi.cost.category.salesman,bi_analytics.model_bi_cost_category,sales_team.group_sale_salesman,1,1,1,1
 access_bi_supply_salesman,bi.supply.salesman,bi_analytics.model_bi_supply,sales_team.group_sale_salesman,1,1,1,1
+access_bi_supply_entry_salesman,bi.supply.entry.salesman,bi_analytics.model_bi_supply_entry,sales_team.group_sale_salesman,1,1,1,1
