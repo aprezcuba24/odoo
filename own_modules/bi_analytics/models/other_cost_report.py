@@ -22,7 +22,8 @@ class BiOtherCostReport(models.Model):
         string='Tipo de costo',
         readonly=True,
     )
-    product_id = fields.Many2one('product.product', string='Insumo', readonly=True)
+    supply_id = fields.Many2one('bi.supply', string='Insumo', readonly=True)
+    quantity = fields.Float(string='Cantidad', readonly=True)
     company_id = fields.Many2one('res.company', string='Compañía', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Moneda', readonly=True)
     date = fields.Date(string='Fecha', readonly=True)
@@ -33,7 +34,8 @@ class BiOtherCostReport(models.Model):
             'state',
             'name',
             'category_id',
-            'product_id',
+            'supply_id',
+            'quantity',
             'company_id',
             'currency_id',
             'date',
@@ -54,7 +56,8 @@ class BiOtherCostReport(models.Model):
                     oc.name AS name,
                     oc.category_id AS category_id,
                     cc.cost_type AS cost_type,
-                    oc.product_id AS product_id,
+                    oc.supply_id AS supply_id,
+                    oc.quantity AS quantity,
                     oc.company_id AS company_id,
                     oc.currency_id AS currency_id,
                     oc.date AS date,

@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
-    <record id="product_category_supplies" model="product.category">
-        <field name="name">Insumos</field>
-    </record>
-
     <record id="cost_category_fixed" model="bi.cost.category">
         <field name="name">Costo fijo</field>
         <field name="cost_type">fixed</field>

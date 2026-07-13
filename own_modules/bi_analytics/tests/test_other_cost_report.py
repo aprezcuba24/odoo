@@ -17,11 +17,12 @@ class TestBiOtherCostReport(TransactionCase):
         })
         cls.fixed_category = cls.env.ref('bi_analytics.cost_category_fixed')
         cls.supply_category = cls.env.ref('bi_analytics.cost_category_supply')
-        cls.supply_product = cls.env['product.product'].with_company(cls.cost_company).create({
+        cls.supply = cls.env['bi.supply'].with_company(cls.cost_company).create({
             'name': 'BI Test Supply',
-            'sale_ok': False,
-            'purchase_ok': True,
-            'standard_price': 2.0,
+            'unit': 'unidad',
+            'cost': 2.0,
+            'company_id': cls.cost_company.id,
+            'currency_id': cls.cost_company.currency_id.id,
         })
 
     def _create_cost(self, values):
@@ -44,6 +45,24 @@ class TestBiOtherCostReport(TransactionCase):
         self.assertEqual(len(report), 1)
         self.assertEqual(report.category_id, self.fixed_category)
         self.assertAlmostEqual(report.amount, 500.0)
+
+    def test_other_cost_report_includes_supply_cost(self):
+        cost = self._create_cost({
+            'name': 'Consumo empaque',
+            'date': fields.Date.today(),
+            'category_id': self.supply_category.id,
+            'supply_id': self.supply.id,
+            'quantity': 5.0,
+        })
+        cost.action_confirm()
+
+        report = self.env['bi.other.cost.report'].search([
+            ('name', '=', 'Consumo empaque'),
+        ])
+        self.assertEqual(len(report), 1)
+        self.assertEqual(report.supply_id, self.supply)
+        self.assertAlmostEqual(report.quantity, 5.0)
+        self.assertAlmostEqual(report.amount, 10.0)
 
     def test_other_cost_report_excludes_draft_costs(self):
         self._create_cost({

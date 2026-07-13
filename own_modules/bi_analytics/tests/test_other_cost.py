@@ -1,7 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from dateutil.relativedelta import relativedelta
-
 from odoo import fields
 from odoo.exceptions import ValidationError
 from odoo.tests import tagged
@@ -18,11 +16,12 @@ class TestBiOtherCost(TransactionCase):
         })
         cls.fixed_category = cls.env.ref('bi_analytics.cost_category_fixed')
         cls.supply_category = cls.env.ref('bi_analytics.cost_category_supply')
-        cls.supply_product = cls.env['product.product'].with_company(cls.cost_company).create({
+        cls.supply = cls.env['bi.supply'].with_company(cls.cost_company).create({
             'name': 'BI Test Supply',
-            'sale_ok': False,
-            'purchase_ok': True,
-            'standard_price': 2.0,
+            'unit': 'unidad',
+            'cost': 2.0,
+            'company_id': cls.cost_company.id,
+            'currency_id': cls.cost_company.currency_id.id,
         })
 
     def _create_cost(self, values):
@@ -66,23 +65,41 @@ class TestBiOtherCost(TransactionCase):
         self.assertEqual(len(report), 1)
         self.assertAlmostEqual(report.other_cost_amount, 200.0)
 
-    def test_supply_cost_requires_product(self):
+    def test_supply_cost_requires_supply_and_quantity(self):
         with self.assertRaises(ValidationError):
             self._create_cost({
-                'name': 'Insumo sin producto',
+                'name': 'Insumo sin insumo',
                 'date': fields.Date.today(),
-                'amount': 50.0,
                 'category_id': self.supply_category.id,
             })
 
-    def test_fixed_cost_rejects_product(self):
+    def test_supply_cost_computes_amount_from_quantity(self):
+        cost = self._create_cost({
+            'date': fields.Date.today(),
+            'category_id': self.supply_category.id,
+            'supply_id': self.supply.id,
+            'quantity': 10.0,
+        })
+        self.assertAlmostEqual(cost.amount, 20.0)
+        self.assertEqual(cost.name, 'BI Test Supply (10 unidad)')
+
+    def test_supply_cost_auto_description_without_name(self):
+        cost = self._create_cost({
+            'date': fields.Date.today(),
+            'category_id': self.supply_category.id,
+            'supply_id': self.supply.id,
+            'quantity': 3.0,
+        })
+        self.assertEqual(cost.name, 'BI Test Supply (3 unidad)')
+
+    def test_fixed_cost_rejects_supply(self):
         with self.assertRaises(ValidationError):
             self._create_cost({
-                'name': 'Fijo con producto',
+                'name': 'Fijo con insumo',
                 'date': fields.Date.today(),
                 'amount': 50.0,
                 'category_id': self.fixed_category.id,
-                'product_id': self.supply_product.id,
+                'supply_id': self.supply.id,
             })
 
     def test_other_cost_rejects_non_positive_amount(self):

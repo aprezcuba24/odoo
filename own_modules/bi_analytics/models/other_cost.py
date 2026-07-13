@@ -15,19 +15,25 @@ class BiOtherCost(models.Model):
         required=True,
         default=fields.Date.context_today,
     )
-    amount = fields.Monetary(string='Importe', required=True)
+    amount = fields.Monetary(
+        string='Importe',
+        compute='_compute_amount',
+        store=True,
+        readonly=False,
+    )
     category_id = fields.Many2one(
         'bi.cost.category',
         string='Categoría',
         required=True,
         ondelete='restrict',
     )
-    product_id = fields.Many2one(
-        'product.product',
+    cost_type = fields.Selection(related='category_id.cost_type')
+    supply_id = fields.Many2one(
+        'bi.supply',
         string='Insumo',
-        domain=[('sale_ok', '=', False)],
         ondelete='restrict',
     )
+    quantity = fields.Float(string='Cantidad', digits='Product Unit')
     company_id = fields.Many2one(
         'res.company',
         string='Compañía',
@@ -41,13 +47,6 @@ class BiOtherCost(models.Model):
         default=lambda self: self.env.company.currency_id,
     )
     notes = fields.Text(string='Notas')
-    stock_scrap_id = fields.Many2one(
-        'stock.scrap',
-        string='Consumo de inventario',
-        readonly=True,
-        copy=False,
-        ondelete='set null',
-    )
     state = fields.Selection(
         selection=[
             ('draft', 'Borrador'),
@@ -60,23 +59,81 @@ class BiOtherCost(models.Model):
         copy=False,
     )
 
-    @api.constrains('amount')
+    @api.onchange('supply_id', 'quantity', 'category_id')
+    def _onchange_supply_description(self):
+        if self.cost_type == 'supply' and self.supply_id:
+            self.name = self._supply_description(self.supply_id, self.quantity)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            self._apply_supply_description(vals)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        res = super().write(vals)
+        if {'supply_id', 'quantity', 'category_id'} & set(vals):
+            for cost in self.filtered(lambda c: c.cost_type == 'supply'):
+                cost.name = cost._supply_description(cost.supply_id, cost.quantity)
+        return res
+
+    def _supply_description(self, supply, quantity):
+        supply = supply or self.env['bi.supply']
+        qty = quantity or 0.0
+        if not supply:
+            return False
+        return f'{supply.name} ({qty:g} {supply.unit})'
+
+    def _apply_supply_description(self, vals):
+        if vals.get('name'):
+            return
+        category = self.env['bi.cost.category'].browse(vals.get('category_id'))
+        if category.cost_type != 'supply':
+            return
+        supply = self.env['bi.supply'].browse(vals.get('supply_id'))
+        description = self._supply_description(supply, vals.get('quantity', 0.0))
+        if description:
+            vals['name'] = description
+
+    @api.constrains('category_id', 'name')
+    def _check_name(self):
+        for cost in self:
+            if cost.cost_type != 'supply' and not cost.name:
+                raise ValidationError('La descripción es obligatoria.')
+
+    @api.depends('category_id.cost_type', 'supply_id.cost', 'quantity')
+    def _compute_amount(self):
+        for cost in self:
+            if cost.category_id.cost_type == 'supply':
+                cost.amount = (cost.supply_id.cost or 0.0) * (cost.quantity or 0.0)
+
+    @api.constrains('category_id', 'amount')
     def _check_amount(self):
         for cost in self:
-            if cost.amount <= 0:
+            if cost.category_id.cost_type != 'supply' and cost.amount <= 0:
                 raise ValidationError('El importe debe ser mayor que cero.')
 
-    @api.constrains('category_id', 'product_id')
-    def _check_supply_product(self):
+    @api.constrains('category_id', 'supply_id', 'quantity')
+    def _check_supply(self):
         for cost in self:
-            if cost.category_id.cost_type == 'supply' and not cost.product_id:
-                raise ValidationError(
-                    'Los gastos de tipo insumo deben estar vinculados a un producto insumo.',
-                )
-            if cost.category_id.cost_type != 'supply' and cost.product_id:
-                raise ValidationError(
-                    'Solo los gastos de tipo insumo pueden vincularse a un producto.',
-                )
+            if cost.category_id.cost_type == 'supply':
+                if not cost.supply_id:
+                    raise ValidationError(
+                        'Los gastos de tipo insumo deben estar vinculados a un insumo.',
+                    )
+                if cost.quantity <= 0:
+                    raise ValidationError('La cantidad debe ser mayor que cero.')
+                if cost.amount <= 0:
+                    raise ValidationError('El importe debe ser mayor que cero.')
+            else:
+                if cost.supply_id:
+                    raise ValidationError(
+                        'Solo los gastos de tipo insumo pueden vincularse a un insumo.',
+                    )
+                if cost.quantity:
+                    raise ValidationError(
+                        'Solo los gastos de tipo insumo pueden tener cantidad.',
+                    )
 
     def action_confirm(self):
         for cost in self:

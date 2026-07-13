@@ -8,7 +8,8 @@
                 <field name="date"/>
                 <field name="name"/>
                 <field name="category_id"/>
-                <field name="product_id" optional="show"/>
+                <field name="supply_id" optional="show"/>
+                <field name="quantity" optional="show"/>
                 <field name="amount" sum="Importe total"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
                 <field name="company_id" groups="base.group_multi_company" optional="show"/>
@@ -30,20 +31,21 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="name"/>
-                            <field name="date"/>
                             <field name="category_id"/>
-                            <field name="product_id" invisible="category_id.cost_type != 'supply'" required="category_id.cost_type == 'supply'"/>
+                            <field name="cost_type" invisible="1"/>
+                            <field name="name" invisible="cost_type == 'supply'" required="cost_type != 'supply'"/>
+                            <field name="date"/>
+                            <field name="supply_id" invisible="cost_type != 'supply'" required="cost_type == 'supply'"/>
+                            <field name="quantity" invisible="cost_type != 'supply'" required="cost_type == 'supply'"/>
                         </group>
                         <group>
-                            <field name="amount"/>
+                            <field name="amount" invisible="cost_type == 'supply'"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="currency_id" groups="base.group_multi_currency"/>
                         </group>
                     </group>
                     <group>
                         <field name="notes"/>
-                        <field name="stock_scrap_id" readonly="1" invisible="not stock_scrap_id"/>
                     </group>
                 </sheet>
             </form>
@@ -57,7 +59,7 @@
             <search string="Otros costos">
                 <field name="name"/>
                 <field name="category_id"/>
-                <field name="product_id"/>
+                <field name="supply_id"/>
                 <filter name="filter_draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
                 <filter name="filter_confirmed" string="Confirmado" domain="[('state', '=', 'confirmed')]"/>
                 <filter name="filter_date" date="date" default_period="month"/>

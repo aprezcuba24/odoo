@@ -4,7 +4,4 @@ access_bi_other_cost_report_salesman,bi.other.cost.report.salesman,bi_analytics.
 access_bi_profitability_report_salesman,bi.profitability.report.salesman,bi_analytics.model_bi_profitability_report,sales_team.group_sale_salesman,1,0,0,0
 access_bi_other_cost_salesman,bi.other.cost.salesman,bi_analytics.model_bi_other_cost,sales_team.group_sale_salesman,1,1,1,1
 access_bi_cost_category_salesman,bi.cost.category.salesman,bi_analytics.model_bi_cost_category,sales_team.group_sale_salesman,1,1,1,1
-access_bi_supply_product_salesman,product.template.supply.salesman,product.model_product_template,sales_team.group_sale_salesman,1,1,1,0
-access_bi_stock_scrap_salesman,stock.scrap.salesman,stock.model_stock_scrap,sales_team.group_sale_salesman,1,1,1,1
-access_bi_purchase_order_salesman,purchase.order.salesman,purchase.model_purchase_order,sales_team.group_sale_salesman,1,1,1,1
-access_bi_purchase_order_line_salesman,purchase.order.line.salesman,purchase.model_purchase_order_line,sales_team.group_sale_salesman,1,1,1,1
+access_bi_supply_salesman,bi.supply.salesman,bi_analytics.model_bi_supply,sales_team.group_sale_salesman,1,1,1,1
