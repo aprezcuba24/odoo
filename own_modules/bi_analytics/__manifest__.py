@@ -9,7 +9,7 @@
 Inteligencia de Negocio
 =======================
 
-Reportes analíticos sobre ventas confirmadas, otros costos y rentabilidad.
+Reportes analíticos sobre ventas confirmadas, gastos y rentabilidad.
 Incluye catálogo de insumos y registro de consumos.
     """,
     'depends': ['sale', 'sale_margin'],

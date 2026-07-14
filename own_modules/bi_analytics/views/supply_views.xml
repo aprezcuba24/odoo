@@ -75,7 +75,7 @@
         <field name="context">{'search_default_filter_active': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Crea insumos para registrar materias primas y otros gastos de consumo.</p>
-            <p>Define el nombre y la unidad de medida. Registra entradas para actualizar el stock y el costo promedio, y luego consúmelos en <b>Otros costos</b> con la categoría Insumo.</p>
+            <p>Define el nombre y la unidad de medida. Registra entradas para actualizar el stock y el costo promedio, y luego consúmelos en <b>Gastos</b> con la categoría Insumo.</p>
         </field>
     </record>
 </odoo>

@@ -17,7 +17,7 @@ class BiProfitabilityReport(models.Model):
     sale_amount = fields.Monetary(string='Ventas', readonly=True)
     product_cost_amount = fields.Monetary(string='Costo de productos', readonly=True)
     gross_profit_amount = fields.Monetary(string='Margen bruto', readonly=True)
-    other_cost_amount = fields.Monetary(string='Otros costos', readonly=True)
+    other_cost_amount = fields.Monetary(string='Gastos', readonly=True)
     net_profit_amount = fields.Monetary(string='Ganancia neta', readonly=True)
 
     _depends = {

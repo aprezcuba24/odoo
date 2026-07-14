@@ -182,8 +182,8 @@ msgstr "Categoría de costo"
 
 #. module: bi_analytics
 #: model:ir.model,name:bi_analytics.model_bi_other_cost
-msgid "Otro costo"
-msgstr "Otro costo"
+msgid "Gasto"
+msgstr "Gasto"
 
 #. module: bi_analytics
 #: model:ir.model,name:bi_analytics.model_bi_profitability_report
@@ -203,8 +203,8 @@ msgstr "Resumen de rentabilidad"
 #: model:ir.ui.menu,name:bi_analytics.menu_bi_other_cost
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_other_cost_list
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_other_cost_search
-msgid "Otros costos"
-msgstr "Otros costos"
+msgid "Gastos"
+msgstr "Gastos"
 
 #. module: bi_analytics
 #: model:ir.actions.act_window,name:bi_analytics.action_bi_supply_product
@@ -236,8 +236,8 @@ msgstr "Margen bruto"
 
 #. module: bi_analytics
 #: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__other_cost_amount
-msgid "Otros costos"
-msgstr "Otros costos"
+msgid "Gastos"
+msgstr "Gastos"
 
 #. module: bi_analytics
 #: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__net_profit_amount

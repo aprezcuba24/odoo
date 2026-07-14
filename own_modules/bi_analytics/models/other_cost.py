@@ -7,7 +7,7 @@ from odoo.tools import float_compare
 
 class BiOtherCost(models.Model):
     _name = 'bi.other.cost'
-    _description = 'Otro costo'
+    _description = 'Gasto'
     _order = 'date desc, id desc'
 
     name = fields.Char(string='Descripción', required=True)

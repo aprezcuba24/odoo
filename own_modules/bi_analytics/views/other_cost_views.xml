@@ -4,7 +4,7 @@
         <field name="name">bi.other.cost.list</field>
         <field name="model">bi.other.cost</field>
         <field name="arch" type="xml">
-            <list string="Otros costos" decoration-muted="state == 'draft'">
+            <list string="Gastos" decoration-muted="state == 'draft'">
                 <field name="date"/>
                 <field name="name"/>
                 <field name="category_id"/>
@@ -23,7 +23,7 @@
         <field name="name">bi.other.cost.form</field>
         <field name="model">bi.other.cost</field>
         <field name="arch" type="xml">
-            <form string="Otro costo">
+            <form string="Gasto">
                 <header>
                     <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" invisible="state != 'draft'"/>
                     <button name="action_draft" string="Devolver a borrador" type="object" invisible="state != 'confirmed'"/>
@@ -59,7 +59,7 @@
         <field name="name">bi.other.cost.search</field>
         <field name="model">bi.other.cost</field>
         <field name="arch" type="xml">
-            <search string="Otros costos">
+            <search string="Gastos">
                 <field name="name"/>
                 <field name="category_id"/>
                 <field name="supply_id"/>
