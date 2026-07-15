@@ -9,8 +9,6 @@
                 <field name="sale_amount" sum="Total ventas"/>
                 <field name="product_cost_amount" sum="Total costo de productos"/>
                 <field name="gross_profit_amount" sum="Total margen bruto"/>
-                <field name="other_cost_amount" sum="Total gastos"/>
-                <field name="net_profit_amount" sum="Total ganancia neta"/>
                 <field name="company_id" groups="base.group_multi_company" optional="show"/>
                 <field name="currency_id" column_invisible="True"/>
             </list>
@@ -24,7 +22,7 @@
             <search string="Resumen de rentabilidad">
                 <filter name="filter_date" date="date" default_period="month"/>
                 <group>
-                    <filter string="Período" name="groupby_date" context="{'group_by': 'date:month'}"/>
+                    <filter string="Fecha" name="groupby_date" context="{'group_by': 'date:day'}"/>
                     <filter string="Compañía" name="groupby_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
                 </group>
             </search>
@@ -39,7 +37,7 @@
         <field name="context">{'search_default_filter_date': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Aún no hay datos de rentabilidad.</p>
-            <p>Este resumen combina ventas confirmadas, costos de productos y gastos confirmados por período.</p>
+            <p>Este resumen muestra por día las ventas confirmadas, el costo de productos y el margen bruto. Por defecto se filtra por el mes actual.</p>
         </field>
     </record>
 </odoo>

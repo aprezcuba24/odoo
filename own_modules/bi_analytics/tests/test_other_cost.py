@@ -49,29 +49,6 @@ class TestBiOtherCost(TransactionCase):
         cost.action_draft()
         self.assertEqual(cost.state, 'draft')
 
-    def test_other_cost_excludes_draft_from_profitability(self):
-        month_start = fields.Date.today().replace(day=1)
-        self._create_cost({
-            'name': 'Gasto borrador',
-            'date': month_start,
-            'amount': 100.0,
-            'category_id': self.fixed_category.id,
-        })
-        confirmed = self._create_cost({
-            'name': 'Gasto confirmado',
-            'date': month_start,
-            'amount': 200.0,
-            'category_id': self.fixed_category.id,
-        })
-        confirmed.action_confirm()
-
-        report = self.env['bi.profitability.report'].search([
-            ('date', '=', month_start),
-            ('company_id', '=', self.cost_company.id),
-        ])
-        self.assertEqual(len(report), 1)
-        self.assertAlmostEqual(report.other_cost_amount, 200.0)
-
     def test_supply_cost_requires_supply_and_quantity(self):
         with self.assertRaises(ValidationError):
             self._create_cost({
