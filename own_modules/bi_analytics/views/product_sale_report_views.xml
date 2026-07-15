@@ -43,8 +43,8 @@
         <field name="search_view_id" ref="view_bi_product_sale_report_search"/>
         <field name="context">{'search_default_groupby_product': 1, 'search_default_filter_date': 1, 'expand': 1}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Aún no hay ventas confirmadas.</p>
-            <p>Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia. Por defecto se filtra por el mes actual.</p>
+            <p class="o_view_nocontent_smiling_face">Aún no hay ventas confirmadas ni de TPV.</p>
+            <p>Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia (pedidos de venta confirmados y ventas de punto de venta). Por defecto se filtra por el mes actual.</p>
         </field>
     </record>
 </odoo>

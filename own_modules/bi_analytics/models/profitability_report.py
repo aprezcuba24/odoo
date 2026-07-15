@@ -1,5 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import pytz
+
 from odoo import fields, models
 from odoo.tools.sql import SQL
 
@@ -27,6 +29,13 @@ class BiProfitabilityReport(models.Model):
             'purchase_price',
             'display_type',
         ],
+        'pos.order': ['state', 'company_id', 'date_order'],
+        'pos.order.line': [
+            'product_id',
+            'qty',
+            'price_subtotal',
+            'total_cost',
+        ],
     }
 
     @property
@@ -50,6 +59,26 @@ class BiProfitabilityReport(models.Model):
             """,
         )
 
+    def _pos_linked_sale_filter(self) -> SQL:
+        if 'sale_order_line_id' in self.env['pos.order.line']._fields:
+            return SQL('AND l.sale_order_line_id IS NULL')
+        return SQL('')
+
+    def _report_timezone(self) -> str:
+        """Timezone used to turn UTC datetimes into calendar dates."""
+        tz = self.env.context.get('tz') or self.env.user.tz or 'UTC'
+        if tz not in pytz.all_timezones_set:
+            return 'UTC'
+        return tz
+
+    def _local_date_sql(self, datetime_sql: SQL) -> SQL:
+        """Cast a UTC timestamp to a date in the current user's timezone."""
+        return SQL(
+            "(timezone(%s, timezone('UTC', %s)))::date",
+            self._report_timezone(),
+            datetime_sql,
+        )
+
     def _from(self) -> SQL:
         return SQL(
             """
@@ -58,10 +87,23 @@ class BiProfitabilityReport(models.Model):
                     date_trunc(
                         'month',
                         (
-                            SELECT COALESCE(MIN(s.date_order::date), CURRENT_DATE)
-                            FROM sale_order s
-                            WHERE s.state = 'sale'
-                              AND s.company_id = c.id
+                            SELECT COALESCE(
+                                (
+                                    SELECT MIN(first_date)
+                                    FROM (
+                                        SELECT MIN(%s) AS first_date
+                                        FROM sale_order s
+                                        WHERE s.state = 'sale'
+                                          AND s.company_id = c.id
+                                        UNION ALL
+                                        SELECT MIN(%s) AS first_date
+                                        FROM pos_order o
+                                        WHERE o.state IN ('paid', 'done')
+                                          AND o.company_id = c.id
+                                    ) dates
+                                ),
+                                CURRENT_DATE
+                            )
                         )
                     )::date,
                     (
@@ -73,19 +115,42 @@ class BiProfitabilityReport(models.Model):
                 ) AS cal(period_date)
                 LEFT JOIN (
                     SELECT
-                        s.company_id AS company_id,
-                        s.date_order::date AS period_date,
-                        SUM(l.price_unit * l.product_uom_qty) AS sale_amount,
-                        SUM(l.purchase_price * l.product_uom_qty) AS product_cost_amount
-                    FROM sale_order_line l
-                    JOIN sale_order s ON s.id = l.order_id
-                    WHERE s.state = 'sale'
-                      AND l.display_type IS NULL
-                      AND l.product_id IS NOT NULL
-                    GROUP BY s.company_id, s.date_order::date
+                        company_id,
+                        period_date,
+                        SUM(sale_amount) AS sale_amount,
+                        SUM(product_cost_amount) AS product_cost_amount
+                    FROM (
+                        SELECT
+                            s.company_id AS company_id,
+                            %s AS period_date,
+                            l.price_unit * l.product_uom_qty AS sale_amount,
+                            l.purchase_price * l.product_uom_qty AS product_cost_amount
+                        FROM sale_order_line l
+                        JOIN sale_order s ON s.id = l.order_id
+                        WHERE s.state = 'sale'
+                          AND l.display_type IS NULL
+                          AND l.product_id IS NOT NULL
+                        UNION ALL
+                        SELECT
+                            o.company_id AS company_id,
+                            %s AS period_date,
+                            l.price_subtotal AS sale_amount,
+                            COALESCE(l.total_cost, 0) AS product_cost_amount
+                        FROM pos_order_line l
+                        JOIN pos_order o ON o.id = l.order_id
+                        WHERE o.state IN ('paid', 'done')
+                          AND l.product_id IS NOT NULL
+                          %s
+                    ) combined
+                    GROUP BY company_id, period_date
                 ) sales ON (
                     sales.company_id = c.id
                     AND sales.period_date = cal.period_date
                 )
             """,
+            self._local_date_sql(SQL('s.date_order')),
+            self._local_date_sql(SQL('o.date_order')),
+            self._local_date_sql(SQL('s.date_order')),
+            self._local_date_sql(SQL('o.date_order')),
+            self._pos_linked_sale_filter(),
         )

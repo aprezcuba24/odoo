@@ -31,15 +31,26 @@ class BiProductSaleReport(models.Model):
             'purchase_price',
             'display_type',
         ],
+        'pos.order': ['state', 'company_id', 'date_order'],
+        'pos.order.line': [
+            'product_id',
+            'qty',
+            'price_subtotal',
+            'total_cost',
+        ],
         'product.product': ['product_tmpl_id'],
         'product.template': ['categ_id'],
     }
 
     @property
     def _table_query(self) -> SQL:
-        return SQL('%s %s %s', self._select(), self._from(), self._where())
+        return SQL(
+            '%s UNION ALL %s',
+            self._sale_order_query(),
+            self._pos_order_query(),
+        )
 
-    def _select(self) -> SQL:
+    def _sale_order_query(self) -> SQL:
         return SQL(
             """
                 SELECT
@@ -54,25 +65,43 @@ class BiProductSaleReport(models.Model):
                     l.price_unit * l.product_uom_qty AS sale_amount,
                     l.purchase_price * l.product_uom_qty AS cost_amount,
                     (l.price_unit - l.purchase_price) * l.product_uom_qty AS profit_amount
-            """,
-        )
-
-    def _from(self) -> SQL:
-        return SQL(
-            """
                 FROM sale_order_line l
                 JOIN sale_order s ON s.id = l.order_id
                 JOIN res_company c ON c.id = s.company_id
                 LEFT JOIN product_product p ON p.id = l.product_id
                 LEFT JOIN product_template t ON t.id = p.product_tmpl_id
-            """,
-        )
-
-    def _where(self) -> SQL:
-        return SQL(
-            """
                 WHERE s.state = 'sale'
                   AND l.display_type IS NULL
                   AND l.product_id IS NOT NULL
             """,
+        )
+
+    def _pos_order_query(self) -> SQL:
+        exclude_linked = SQL('')
+        if 'sale_order_line_id' in self.env['pos.order.line']._fields:
+            exclude_linked = SQL('AND l.sale_order_line_id IS NULL')
+        return SQL(
+            """
+                SELECT
+                    l.id + 1000000000 AS id,
+                    l.product_id AS product_id,
+                    p.product_tmpl_id AS product_tmpl_id,
+                    t.categ_id AS categ_id,
+                    o.company_id AS company_id,
+                    c.currency_id AS currency_id,
+                    o.date_order AS date_order,
+                    l.qty AS qty_sold,
+                    l.price_subtotal AS sale_amount,
+                    COALESCE(l.total_cost, 0) AS cost_amount,
+                    l.price_subtotal - COALESCE(l.total_cost, 0) AS profit_amount
+                FROM pos_order_line l
+                JOIN pos_order o ON o.id = l.order_id
+                JOIN res_company c ON c.id = o.company_id
+                LEFT JOIN product_product p ON p.id = l.product_id
+                LEFT JOIN product_template t ON t.id = p.product_tmpl_id
+                WHERE o.state IN ('paid', 'done')
+                  AND l.product_id IS NOT NULL
+                  %s
+            """,
+            exclude_linked,
         )
