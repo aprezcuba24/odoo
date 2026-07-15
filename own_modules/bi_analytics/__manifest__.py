@@ -2,7 +2,7 @@
 
 {
     'name': 'Inteligencia de Negocio',
-    'version': '19.0.1.5.0',
+    'version': '19.0.1.6.2',
     'category': 'Ventas/Informes',
     'summary': 'Reportes de inteligencia de negocio.',
     'description': """
@@ -25,6 +25,11 @@ Incluye catálogo de insumos y registro de consumos.
         'views/other_cost_report_views.xml',
         'views/bi_analytics_menu.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'bi_analytics/static/src/scss/profitability_summary.scss',
+        ],
+    },
     'license': 'LGPL-3',
     'installable': True,
     'application': True,

@@ -192,11 +192,17 @@ msgstr "Resumen de rentabilidad"
 
 #. module: bi_analytics
 #: model:ir.actions.act_window,name:bi_analytics.action_bi_profitability_report
-#: model:ir.ui.menu,name:bi_analytics.menu_bi_profitability_report
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_profitability_report_list
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_profitability_report_search
 msgid "Resumen de rentabilidad"
 msgstr "Resumen de rentabilidad"
+
+#. module: bi_analytics
+#: model:ir.actions.server,name:bi_analytics.action_bi_profitability_summary
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_profitability_report
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_profitability_summary_form
+msgid "IPV"
+msgstr "IPV"
 
 #. module: bi_analytics
 #: model:ir.actions.act_window,name:bi_analytics.action_bi_other_cost

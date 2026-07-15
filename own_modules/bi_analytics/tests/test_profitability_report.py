@@ -51,6 +51,7 @@ class TestBiProfitabilityReport(TransactionCase):
             'name': 'BI Profitability POS',
             'payment_method_ids': [Command.set(cls.pos_payment_method.ids)],
         })
+        cls.fixed_category = cls.env.ref('bi_analytics.cost_category_fixed')
 
     def _create_confirmed_order(self, qty, price_unit, date_order=None):
         order = self.env['sale.order'].with_company(self.profitability_company).create({
@@ -103,6 +104,20 @@ class TestBiProfitabilityReport(TransactionCase):
             order.invalidate_recordset(['date_order'])
         return order
 
+    def _create_other_cost(self, amount, date, state='confirmed', company=None):
+        company = company or self.profitability_company
+        cost = self.env['bi.other.cost'].create({
+            'name': 'BI Profitability Fixed Cost',
+            'date': date,
+            'amount': amount,
+            'category_id': self.fixed_category.id,
+            'company_id': company.id,
+            'currency_id': company.currency_id.id,
+        })
+        if state == 'confirmed':
+            cost.action_confirm()
+        return cost
+
     def _search_report(self, domain, company=None):
         company = company or self.profitability_company
         return self.env['bi.profitability.report'].search(
@@ -122,6 +137,9 @@ class TestBiProfitabilityReport(TransactionCase):
         self.assertAlmostEqual(report.sale_amount, 20.0)
         self.assertAlmostEqual(report.product_cost_amount, 8.0)
         self.assertAlmostEqual(report.gross_profit_amount, 12.0)
+        self.assertAlmostEqual(report.other_cost_amount, 0.0)
+        self.assertAlmostEqual(report.total_cost_amount, 8.0)
+        self.assertAlmostEqual(report.profit_amount, 12.0)
 
     def test_profitability_report_filters_by_date(self):
         now = fields.Datetime.now()
@@ -208,3 +226,82 @@ class TestBiProfitabilityReport(TransactionCase):
 
         utc_report = self._search_report([('date', '=', utc_date)])
         self.assertFalse(utc_report.filtered(lambda r: r.sale_amount))
+
+    def test_profitability_report_includes_confirmed_other_cost(self):
+        sale_day = fields.Date.to_date('2018-06-10')
+        sale_datetime = fields.Datetime.to_datetime(sale_day).replace(hour=12)
+
+        self._create_confirmed_order(10.0, 10.0, date_order=sale_datetime)
+        self._create_other_cost(10.0, sale_day)
+        self.env.flush_all()
+
+        report = self._search_report([('date', '=', sale_day)])
+        self.assertEqual(len(report), 1)
+        self.assertAlmostEqual(report.sale_amount, 100.0)
+        self.assertAlmostEqual(report.product_cost_amount, 40.0)
+        self.assertAlmostEqual(report.gross_profit_amount, 60.0)
+        self.assertAlmostEqual(report.other_cost_amount, 10.0)
+        self.assertAlmostEqual(report.total_cost_amount, 50.0)
+        self.assertAlmostEqual(report.profit_amount, 50.0)
+
+    def test_profitability_report_excludes_draft_other_cost(self):
+        sale_day = fields.Date.to_date('2018-07-10')
+        sale_datetime = fields.Datetime.to_datetime(sale_day).replace(hour=12)
+
+        self._create_confirmed_order(2.0, 10.0, date_order=sale_datetime)
+        self._create_other_cost(25.0, sale_day, state='draft')
+        self.env.flush_all()
+
+        report = self._search_report([('date', '=', sale_day)])
+        self.assertEqual(len(report), 1)
+        self.assertAlmostEqual(report.other_cost_amount, 0.0)
+        self.assertAlmostEqual(report.total_cost_amount, 8.0)
+        self.assertAlmostEqual(report.profit_amount, 12.0)
+
+    def test_profitability_summary_computes_global_kpis(self):
+        sale_day = fields.Date.to_date('2018-08-15')
+        sale_datetime = fields.Datetime.to_datetime(sale_day).replace(hour=12)
+
+        self._create_confirmed_order(10.0, 10.0, date_order=sale_datetime)
+        self._create_other_cost(10.0, sale_day)
+        self.env.flush_all()
+
+        summary = self.env['bi.profitability.summary'].create({
+            'date_from': sale_day,
+            'date_to': sale_day,
+            'company_id': self.profitability_company.id,
+        })
+        summary._reload_data()
+
+        self.assertAlmostEqual(summary.sale_amount, 100.0)
+        self.assertAlmostEqual(summary.product_cost_amount, 40.0)
+        self.assertAlmostEqual(summary.other_cost_amount, 10.0)
+        self.assertAlmostEqual(summary.total_cost_amount, 50.0)
+        self.assertAlmostEqual(summary.cost_per_sale_pct, 40.0)
+        self.assertAlmostEqual(summary.total_cost_index_pct, 50.0)
+        self.assertAlmostEqual(summary.profit_pct, 50.0)
+        self.assertAlmostEqual(summary.profit_amount, 50.0)
+        self.assertEqual(len(summary.line_ids), 1)
+        self.assertAlmostEqual(summary.line_ids.sale_amount, 100.0)
+
+    def test_profitability_summary_action_open(self):
+        action = self.env['bi.profitability.summary'].action_open()
+        self.assertEqual(action['type'], 'ir.actions.act_window')
+        self.assertEqual(action['res_model'], 'bi.profitability.summary')
+        self.assertTrue(action['res_id'])
+        summary = self.env['bi.profitability.summary'].browse(action['res_id'])
+        self.assertTrue(summary.date_from)
+        self.assertTrue(summary.date_to)
+
+    def test_profitability_summary_month_navigation(self):
+        summary = self.env['bi.profitability.summary'].create({
+            'date_from': fields.Date.to_date('2018-08-01'),
+            'date_to': fields.Date.to_date('2018-08-31'),
+            'company_id': self.profitability_company.id,
+        })
+        summary.action_previous_month()
+        self.assertEqual(summary.date_from, fields.Date.to_date('2018-07-01'))
+        self.assertEqual(summary.date_to, fields.Date.to_date('2018-07-31'))
+        summary.action_next_month()
+        self.assertEqual(summary.date_from, fields.Date.to_date('2018-08-01'))
+        self.assertEqual(summary.date_to, fields.Date.to_date('2018-08-31'))

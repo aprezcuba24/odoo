@@ -31,9 +31,9 @@
 
     <menuitem
         id="menu_bi_profitability_report"
-        name="Resumen de rentabilidad"
+        name="IPV"
         parent="menu_bi_analytics_reports"
-        action="action_bi_profitability_report"
+        action="action_bi_profitability_summary"
         sequence="30"
         groups="sales_team.group_sale_salesman"/>
 

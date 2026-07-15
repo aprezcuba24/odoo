@@ -19,6 +19,9 @@ class BiProfitabilityReport(models.Model):
     sale_amount = fields.Monetary(string='Ventas', readonly=True)
     product_cost_amount = fields.Monetary(string='Costo de productos', readonly=True)
     gross_profit_amount = fields.Monetary(string='Margen bruto', readonly=True)
+    other_cost_amount = fields.Monetary(string='Otros costos', readonly=True)
+    total_cost_amount = fields.Monetary(string='Costo total', readonly=True)
+    profit_amount = fields.Monetary(string='Utilidad', readonly=True)
 
     _depends = {
         'sale.order': ['state', 'company_id', 'date_order'],
@@ -36,6 +39,7 @@ class BiProfitabilityReport(models.Model):
             'price_subtotal',
             'total_cost',
         ],
+        'bi.other.cost': ['date', 'amount', 'state', 'company_id'],
     }
 
     @property
@@ -55,7 +59,20 @@ class BiProfitabilityReport(models.Model):
                     cal.period_date AS date,
                     COALESCE(sales.sale_amount, 0) AS sale_amount,
                     COALESCE(sales.product_cost_amount, 0) AS product_cost_amount,
-                    COALESCE(sales.sale_amount, 0) - COALESCE(sales.product_cost_amount, 0) AS gross_profit_amount
+                    (
+                        COALESCE(sales.sale_amount, 0)
+                        - COALESCE(sales.product_cost_amount, 0)
+                    ) AS gross_profit_amount,
+                    COALESCE(costs.other_cost_amount, 0) AS other_cost_amount,
+                    (
+                        COALESCE(sales.product_cost_amount, 0)
+                        + COALESCE(costs.other_cost_amount, 0)
+                    ) AS total_cost_amount,
+                    (
+                        COALESCE(sales.sale_amount, 0)
+                        - COALESCE(sales.product_cost_amount, 0)
+                        - COALESCE(costs.other_cost_amount, 0)
+                    ) AS profit_amount
             """,
         )
 
@@ -100,6 +117,11 @@ class BiProfitabilityReport(models.Model):
                                         FROM pos_order o
                                         WHERE o.state IN ('paid', 'done')
                                           AND o.company_id = c.id
+                                        UNION ALL
+                                        SELECT MIN(oc.date) AS first_date
+                                        FROM bi_other_cost oc
+                                        WHERE oc.state = 'confirmed'
+                                          AND oc.company_id = c.id
                                     ) dates
                                 ),
                                 CURRENT_DATE
@@ -146,6 +168,18 @@ class BiProfitabilityReport(models.Model):
                 ) sales ON (
                     sales.company_id = c.id
                     AND sales.period_date = cal.period_date
+                )
+                LEFT JOIN (
+                    SELECT
+                        oc.company_id AS company_id,
+                        oc.date AS period_date,
+                        SUM(oc.amount) AS other_cost_amount
+                    FROM bi_other_cost oc
+                    WHERE oc.state = 'confirmed'
+                    GROUP BY oc.company_id, oc.date
+                ) costs ON (
+                    costs.company_id = c.id
+                    AND costs.period_date = cal.period_date
                 )
             """,
             self._local_date_sql(SQL('s.date_order')),

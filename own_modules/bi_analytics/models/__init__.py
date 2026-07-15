@@ -5,5 +5,6 @@ from . import other_cost
 from . import other_cost_report
 from . import product_sale_report
 from . import profitability_report
+from . import profitability_summary
 from . import supply
 from . import supply_entry
