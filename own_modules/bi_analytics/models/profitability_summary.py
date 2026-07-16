@@ -11,9 +11,8 @@ from odoo.fields import Command
 class BiProfitabilitySummary(models.TransientModel):
     _name = 'bi.profitability.summary'
     _description = 'IPV'
-    _rec_name = 'name'
+    _rec_name = 'date_from'
 
-    name = fields.Char(string='Nombre', default='IPV', required=True)
     date_from = fields.Date(string='Periodo', required=True)
     date_to = fields.Date(string='Hasta', required=True)
     company_id = fields.Many2one(
@@ -59,7 +58,6 @@ class BiProfitabilitySummary(models.TransientModel):
         today = fields.Date.context_today(self)
         month_start = today.replace(day=1)
         month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-        defaults.setdefault('name', 'IPV')
         defaults.setdefault('date_from', month_start)
         defaults.setdefault('date_to', month_end)
         defaults.setdefault('company_id', self.env.company.id)
