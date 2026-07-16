@@ -259,3 +259,5 @@ python3 odoo-bin --dev=all -d odoo1 --proxy-mode
 ```
 
 Then open <https://localhost>. Without `--proxy-mode`, Odoo ignores the `X-Forwarded-*` headers and generates `http://` links even though the browser sees `https://`.
+
+python3 odoo-bin -d odoo1 -u bi_analytics --stop-after-init --no-http --load-language=es_ES,es_419

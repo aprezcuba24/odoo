@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bi_other_cost_list" model="ir.ui.view">
+        <field name="name">bi.other.cost.list</field>
+        <field name="model">bi.other.cost</field>
+        <field name="arch" type="xml">
+            <list string="Gastos" decoration-muted="state == 'draft'">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="supply_id" optional="show"/>
+                <field name="quantity" optional="show"/>
+                <field name="unit_cost" optional="show"/>
+                <field name="amount" sum="Importe total"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bi_other_cost_form" model="ir.ui.view">
+        <field name="name">bi.other.cost.form</field>
+        <field name="model">bi.other.cost</field>
+        <field name="arch" type="xml">
+            <form string="Gasto">
+                <header>
+                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_draft" string="Devolver a borrador" type="object" invisible="state != 'confirmed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="category_id"/>
+                            <field name="cost_type" invisible="1"/>
+                            <field name="name" invisible="cost_type == 'supply'" required="cost_type != 'supply'"/>
+                            <field name="date"/>
+                            <field name="supply_id" invisible="cost_type != 'supply'" required="cost_type == 'supply'"/>
+                            <field name="quantity" invisible="cost_type != 'supply'" required="cost_type == 'supply'"/>
+                            <field name="unit_cost" invisible="cost_type != 'supply'"/>
+                            <field name="amount" invisible="cost_type != 'supply'"/>
+                        </group>
+                        <group>
+                            <field name="amount" invisible="cost_type == 'supply'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_bi_other_cost_search" model="ir.ui.view">
+        <field name="name">bi.other.cost.search</field>
+        <field name="model">bi.other.cost</field>
+        <field name="arch" type="xml">
+            <search string="Gastos">
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="supply_id"/>
+                <filter name="filter_draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmado" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_date" date="date" default_period="month"/>
+                <group>
+                    <filter string="Categoría" name="groupby_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Estado" name="groupby_state" context="{'group_by': 'state'}"/>
+                    <filter string="Fecha" name="groupby_date" context="{'group_by': 'date:month'}"/>
+                    <filter string="Compañía" name="groupby_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_bi_other_cost" model="ir.actions.act_window">
+        <field name="name">Gastos</field>
+        <field name="res_model">bi.other.cost</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_bi_other_cost_search"/>
+        <field name="context">{'search_default_filter_date': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Registra costos fijos, insumos y otros gastos.</p>
+            <p>Los gastos confirmados se incluyen en el resumen de rentabilidad del período correspondiente.</p>
+        </field>
+    </record>
+</odoo>

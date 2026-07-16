@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bi_product_sale_report_list" model="ir.ui.view">
+        <field name="name">bi.product.sale.report.list</field>
+        <field name="model">bi.product.sale.report</field>
+        <field name="arch" type="xml">
+            <list string="Reportes de productos" default_group_by="product_id">
+                <field name="product_id"/>
+                <field name="categ_id" optional="show"/>
+                <field name="qty_sold"/>
+                <field name="cost_amount" sum="Importe total de costo"/>
+                <field name="sale_amount" sum="Importe total de venta"/>
+                <field name="profit_amount" sum="Importe total de ganancia"/>
+                <field name="date_order" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bi_product_sale_report_search" model="ir.ui.view">
+        <field name="name">bi.product.sale.report.search</field>
+        <field name="model">bi.product.sale.report</field>
+        <field name="arch" type="xml">
+            <search string="Reportes de productos">
+                <field name="product_id"/>
+                <field name="categ_id"/>
+                <filter name="filter_date" date="date_order" default_period="month"/>
+                <group>
+                    <filter string="Producto" name="groupby_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Categoría de producto" name="groupby_categ" context="{'group_by': 'categ_id'}"/>
+                    <filter string="Compañía" name="groupby_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                    <filter string="Fecha del pedido" name="groupby_date_order" context="{'group_by': 'date_order:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_bi_product_sale_report" model="ir.actions.act_window">
+        <field name="name">Reportes de productos</field>
+        <field name="res_model">bi.product.sale.report</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_bi_product_sale_report_search"/>
+        <field name="context">{'search_default_groupby_product': 1, 'search_default_filter_date': 1, 'expand': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aún no hay ventas confirmadas ni de TPV.</p>
+            <p>Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia (pedidos de venta confirmados y ventas de punto de venta). Por defecto se filtra por el mes actual.</p>
+        </field>
+    </record>
+</odoo>

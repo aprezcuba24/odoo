@@ -1,0 +1,322 @@
+# Translation of Odoo Server.
+# This file contains Spanish translations for bi_analytics (source strings are already in Spanish).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: es_419\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_product_sale_report
+msgid "Reporte de ventas por producto"
+msgstr "Reporte de ventas por producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_id
+msgid "Producto"
+msgstr "Producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_tmpl_id
+msgid "Plantilla de producto"
+msgstr "Plantilla de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__categ_id
+msgid "Categoría de producto"
+msgstr "Categoría de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__company_id
+msgid "Compañía"
+msgstr "Compañía"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__currency_id
+msgid "Moneda"
+msgstr "Moneda"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__qty_sold
+msgid "Cantidad"
+msgstr "Cantidad"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__sale_amount
+msgid "Venta"
+msgstr "Venta"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__cost_amount
+msgid "Costo"
+msgstr "Costo"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__profit_amount
+msgid "Ganancia"
+msgstr "Ganancia"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__date_order
+msgid "Fecha del pedido"
+msgstr "Fecha del pedido"
+
+#. module: bi_analytics
+#: model:ir.actions.act_window,name:bi_analytics.action_bi_product_sale_report
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_product_sale_report
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Reportes de productos"
+msgstr "Reportes de productos"
+
+#. module: bi_analytics
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_analytics_root
+msgid "Inteligencia de Negocio"
+msgstr "Inteligencia de Negocio"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Cantidad total"
+msgstr "Cantidad total"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Importe total de venta"
+msgstr "Importe total de venta"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Importe total de costo"
+msgstr "Importe total de costo"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
+msgid "Importe total de ganancia"
+msgstr "Importe total de ganancia"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Categoría de producto"
+msgstr "Categoría de producto"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Compañía"
+msgstr "Compañía"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_search
+msgid "Fecha del pedido"
+msgstr "Fecha del pedido"
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.action_bi_product_sale_report
+msgid "Aún no hay ventas confirmadas."
+msgstr "Aún no hay ventas confirmadas."
+
+#. module: bi_analytics
+#: model_terms:ir.ui.view,arch_db:bi_analytics.action_bi_product_sale_report
+msgid "Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia. Por defecto se filtra por el mes actual."
+msgstr "Este reporte muestra por producto la cantidad vendida, los importes totales de venta, costo y ganancia. Por defecto se filtra por el mes actual."
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_id
+msgid "Product"
+msgstr "Producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__product_tmpl_id
+msgid "Product Template"
+msgstr "Plantilla de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__categ_id
+msgid "Product Category"
+msgstr "Categoría de producto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__company_id
+msgid "Company"
+msgstr "Compañía"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__currency_id
+msgid "Currency"
+msgstr "Moneda"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__qty_sold
+msgid "Quantity Sold"
+msgstr "Cantidad"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__sale_amount
+msgid "Sale Amount"
+msgstr "Venta"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__cost_amount
+msgid "Cost Amount"
+msgstr "Costo"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__profit_amount
+msgid "Profit Amount"
+msgstr "Ganancia"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__date_order
+msgid "Order Date"
+msgstr "Fecha del pedido"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_product_sale_report
+msgid "Product Sales Report"
+msgstr "Reporte de ventas por producto"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_cost_category
+msgid "Categoría de costo"
+msgstr "Categoría de costo"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_other_cost
+msgid "Gasto"
+msgstr "Gasto"
+
+#. module: bi_analytics
+#: model:ir.model,name:bi_analytics.model_bi_profitability_report
+msgid "Resumen de rentabilidad"
+msgstr "Resumen de rentabilidad"
+
+#. module: bi_analytics
+#: model:ir.actions.act_window,name:bi_analytics.action_bi_profitability_report
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_profitability_report_list
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_profitability_report_search
+msgid "Resumen de rentabilidad"
+msgstr "Resumen de rentabilidad"
+
+#. module: bi_analytics
+#: model:ir.actions.server,name:bi_analytics.action_bi_profitability_summary
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_profitability_report
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_profitability_summary_form
+msgid "IPV"
+msgstr "IPV"
+
+#. module: bi_analytics
+#: model:ir.actions.act_window,name:bi_analytics.action_bi_other_cost
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_other_cost
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_other_cost_list
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_other_cost_search
+msgid "Gastos"
+msgstr "Gastos"
+
+#. module: bi_analytics
+#: model:ir.actions.act_window,name:bi_analytics.action_bi_supply_product
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_supply_product
+#: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_supply_product_template_list
+msgid "Insumos"
+msgstr "Insumos"
+
+#. module: bi_analytics
+#: model:ir.actions.act_window,name:bi_analytics.action_bi_cost_category
+#: model:ir.ui.menu,name:bi_analytics.menu_bi_cost_category
+msgid "Categorías de costo"
+msgstr "Categorías de costo"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__sale_amount
+msgid "Ventas"
+msgstr "Ventas"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__product_cost_amount
+msgid "Costo de productos"
+msgstr "Costo de productos"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__gross_profit_amount
+msgid "Margen bruto"
+msgstr "Margen bruto"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__other_cost_amount
+msgid "Gastos"
+msgstr "Gastos"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__net_profit_amount
+msgid "Ganancia neta"
+msgstr "Ganancia neta"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_profitability_report__date
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__date
+msgid "Período"
+msgstr "Período"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__name
+msgid "Descripción"
+msgstr "Descripción"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__amount
+msgid "Importe"
+msgstr "Importe"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__category_id
+msgid "Categoría"
+msgstr "Categoría"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__product_id
+msgid "Insumo"
+msgstr "Insumo"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__notes
+msgid "Notas"
+msgstr "Notas"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_other_cost__state
+msgid "Estado"
+msgstr "Estado"
+
+#. module: bi_analytics
+#: model:ir.model.fields.selection,name:bi_analytics.selection__bi_other_cost__state__draft
+msgid "Borrador"
+msgstr "Borrador"
+
+#. module: bi_analytics
+#: model:ir.model.fields.selection,name:bi_analytics.selection__bi_other_cost__state__confirmed
+msgid "Confirmado"
+msgstr "Confirmado"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_cost_category__name
+msgid "Nombre"
+msgstr "Nombre"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_cost_category__cost_type
+msgid "Tipo de costo"
+msgstr "Tipo de costo"
+
+#. module: bi_analytics
+#: model:ir.model.fields.selection,name:bi_analytics.selection__bi_cost_category__cost_type__fixed
+msgid "Costo fijo"
+msgstr "Costo fijo"
+
+#. module: bi_analytics
+#: model:ir.model.fields.selection,name:bi_analytics.selection__bi_cost_category__cost_type__supply
+msgid "Insumo"
+msgstr "Insumo"
+
+#. module: bi_analytics
+#: model:ir.model.fields.selection,name:bi_analytics.selection__bi_cost_category__cost_type__other
+msgid "Otro"
+msgstr "Otro"

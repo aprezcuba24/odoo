@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_bi_analytics_root"
+        name="Inteligencia de Negocio"
+        sequence="35"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_analytics_reports"
+        name="Informes"
+        parent="menu_bi_analytics_root"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_product_sale_report"
+        name="Reportes de productos"
+        parent="menu_bi_analytics_reports"
+        action="action_bi_product_sale_report"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_other_cost_report"
+        name="Reportes de gastos"
+        parent="menu_bi_analytics_reports"
+        action="action_bi_other_cost_report"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_profitability_report"
+        name="IPV"
+        parent="menu_bi_analytics_reports"
+        action="action_bi_profitability_summary"
+        sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_analytics_records"
+        name="Registro"
+        parent="menu_bi_analytics_root"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_other_cost"
+        name="Gastos"
+        parent="menu_bi_analytics_records"
+        action="action_bi_other_cost"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_supply_entry"
+        name="Entrada de insumos"
+        parent="menu_bi_analytics_records"
+        action="action_bi_supply_entry"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_analytics_config"
+        name="Configuración"
+        parent="menu_bi_analytics_root"
+        sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_bi_cost_category"
+        name="Categoría"
+        parent="menu_bi_analytics_config"
+        action="action_bi_cost_category"
+        sequence="10"
+        groups="sales_team.group_sale_manager"/>
+
+    <menuitem
+        id="menu_bi_supply"
+        name="Insumos"
+        parent="menu_bi_analytics_config"
+        action="action_bi_supply"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+</odoo>
