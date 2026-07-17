@@ -20,7 +20,7 @@ Odoo only sees modules that sit on the **addons path**. For this project that me
 
 **Ways to configure it**
 
-1. **Environment variable (recommended for Docker / [Render](https://render.com/))**
+1. **Environment variable (recommended for Docker / [Railway](https://railway.com/))**
    Set `ODOO_ADDONS_PATH` to a comma-separated list of directories (no spaces). Example:
 
    ```bash
@@ -39,14 +39,53 @@ After changing paths or adding modules, install or upgrade the app from **Apps**
 
 ---
 
-## Deploy on Render (Docker)
+## Deploy on Railway (Docker)
 
-1. Create a **Web Service** and choose **Docker**; point it at this repository (root `Dockerfile`).
-2. Add **Render Postgres** (or any reachable PostgreSQL) and set a connection string as `DATABASE_URL`.
-3. Set at least: `DATABASE_URL`, `DB_PASSWORD_ADMIN`, and optionally `DB_LANGUAGE`, `DB_USERNAME`, `DB_WITH_DEMO`. See [`.env.example`](.env.example) for the full list and comments.
-4. Use **port `8069`** and ensure the service receives the same env vars at runtime as in your Render dashboard.
+Production runs on [Railway](https://railway.com/) as a **Docker** web service with managed PostgreSQL. Railway docs: [railway.com/docs](https://docs.railway.com/). See also [`docs/RAILWAY.md`](docs/RAILWAY.md) for a focused Railway reference.
 
-Render’s platform overview and docs: [render.com](https://render.com/) and [Render documentation](https://render.com/docs).
+### Quick deploy
+
+1. Create a **New Project** in the [Railway dashboard](https://railway.com/dashboard).
+2. Add a **PostgreSQL** service (Railway provisions it and can inject `DATABASE_URL` into the web service).
+3. Add a **service from GitHub repo** (or Docker image) pointing at this repository; Railway uses the root [`Dockerfile`](Dockerfile).
+4. Link `DATABASE_URL` from the Postgres service to the Odoo service (Railway **Variables** → reference the Postgres plugin variable).
+5. Set at least: `DATABASE_URL`, `DB_PASSWORD_ADMIN`, and optionally `DB_LANGUAGE`, `DB_USERNAME`, `DB_WITH_DEMO`. See [`.env.example`](.env.example) for the full list.
+6. Expose **port `8069`** (Railway detects it from the Dockerfile; confirm in service **Settings → Networking**).
+7. Add a **custom domain** (or use the generated `*.up.railway.app` URL) under **Settings → Public Networking**.
+
+### Railway-specific notes
+
+- **Private networking**: App and Postgres in the same project communicate over Railway’s internal network; use the injected `DATABASE_URL`.
+- **WebSockets**: Supported out of the box (HTTP, TCP, WebSockets). The custom Gunicorn gevent worker in this repo handles Odoo’s `/websocket` endpoint.
+- **Ephemeral filesystem**: Container disk is not durable across deploys. Use database attachment storage (default in [`docker-entrypoint.sh`](docker-entrypoint.sh)) or S3 via `fs_attachment` (see `.env.example`).
+- **Deploy upgrades**: Each deploy runs `odoo-bin -u base` before Gunicorn starts (2–5 minutes). The Dockerfile healthcheck uses a long `start-period` for this.
+- **Logs**: stdout/stderr appear in the Railway service **Logs** tab.
+- **Multi-tenant**: Use a **separate Railway project** (see below). The current production project stays single-tenant — do **not** set `ODOO_MULTI_TENANT` there.
+
+### Multi-tenant (separate Railway project)
+
+One Odoo process, many PostgreSQL databases (one per business). Activated only when `ODOO_MULTI_TENANT=true`. Full guide: [`docs/RAILWAY.md`](docs/RAILWAY.md#multi-tenant-second-railway-project).
+
+| Concern | How |
+|---------|-----|
+| Subdomain | `cliente1.plataforma.com` → DB `cliente1` via `ODOO_DBFILTER=^%d$` + Railway wildcard domain |
+| Custom domain | Register host in Railway; map with `ODOO_TENANT_DOMAIN_MAP` (module `tenant_routing`) |
+| New tenant | [`scripts/provision_tenant.sh`](scripts/provision_tenant.sh) then add name to `ODOO_TENANT_DATABASES` |
+| Production safety | Existing Railway project: leave `ODOO_MULTI_TENANT` unset |
+
+```bash
+# On the multi-tenant Railway service only:
+ODOO_MULTI_TENANT=true
+ODOO_DBFILTER=^%d$
+ODOO_LIST_DB=false
+ODOO_PROXY_MODE=true
+ODOO_TENANT_DATABASES=cliente1,cliente2
+# ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
+```
+
+### Other PaaS
+
+The same Docker image also works on other platforms. [`SEENODE_DEPLOYMENT.md`](SEENODE_DEPLOYMENT.md) documents a legacy Seenode flow. Railway is the supported production target for this repository.
 
 ---
 

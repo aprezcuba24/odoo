@@ -14,8 +14,8 @@ Los websockets requieren conexiones TCP persistentes que se mantienen abiertas. 
 ### 1. Verificar si tu plataforma soporta websockets
 
 #### ✅ Plataformas que SÍ soportan websockets:
-- **Railway** - Soporta websockets, pero puede necesitar configuración
-- **Render** - Soporta websockets con configuración adecuada
+- **Railway** (plataforma de producción de este repo) — WebSockets soportados; ver [README.md](../README.md#deploy-on-railway-docker)
+- **Render** — Soporta websockets con configuración adecuada
 - **DigitalOcean App Platform** - Soporta websockets
 - **Fly.io** - Soporta websockets
 - **Heroku** - Soporta websockets
@@ -94,7 +94,7 @@ GUNICORN_WORKER_CONNECTIONS=1000
 Si tu plataforma no soporta websockets:
 
 1. **Usar polling**: Odoo automáticamente usará polling si los websockets fallan
-2. **Migrar a una plataforma que soporte websockets**: Railway, Render, Fly.io, etc.
+2. **Migrar a una plataforma que soporte websockets**: [Railway](https://railway.com/) (recomendado para este repo), Render, Fly.io, etc.
 3. **Usar un servicio proxy**: Coloca un proxy (nginx, Caddy) delante que maneje websockets
 
 ## Diagnóstico

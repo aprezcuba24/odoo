@@ -7,6 +7,14 @@ and credentials are set, creates or updates ``fs.storage`` code
 ``s3_order_bridge_banners`` and assigns ``ir.model.storage_id`` for
 ``order_bridge.banner``.
 
+S3 layout (``ORDER_BRIDGE_BANNER_S3_BUCKET``):
+
+- **Single-tenant** (production; ``ODOO_MULTI_TENANT`` unset):
+  ``directory_path = <bucket>`` — dedicated bucket, objects at bucket root.
+- **Multi-tenant** (``ODOO_MULTI_TENANT=true``):
+  ``directory_path = <bucket>/{db_name}`` — shared bucket, one prefix per
+  database (OCA substitutes ``{db_name}`` at runtime).
+
 Existing banner images uploaded before this setup stay in the database or
 filestore until re-saved (or migrated with a custom script).
 """
@@ -20,6 +28,22 @@ import os
 _logger = logging.getLogger(__name__)
 
 BANNER_FS_STORAGE_CODE = "s3_order_bridge_banners"
+
+
+def _multi_tenant_enabled() -> bool:
+    return os.environ.get("ODOO_MULTI_TENANT", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _banner_directory_path(bucket: str) -> str:
+    """Bucket root in single-tenant; ``bucket/{db_name}`` when multi-tenant."""
+    if _multi_tenant_enabled():
+        return f"{bucket}/{{db_name}}"
+    return bucket
 
 
 def provision_banner_fs_storage(env):
@@ -78,12 +102,13 @@ def provision_banner_fs_storage(env):
     if client_kwargs:
         options["client_kwargs"] = client_kwargs
 
+    directory_path = _banner_directory_path(bucket)
     Storage = env["fs.storage"].sudo()
     vals = {
         "name": "Tienda Apk banners (S3)",
         "code": BANNER_FS_STORAGE_CODE,
         "protocol": "s3",
-        "directory_path": bucket,
+        "directory_path": directory_path,
         "eval_options_from_env": False,
         "options": json.dumps(options),
         "optimizes_directory_path": True,
@@ -97,6 +122,13 @@ def provision_banner_fs_storage(env):
         storage = existing
     else:
         storage = Storage.create(vals)
+
+    _logger.info(
+        "order_bridge: fs.storage %s directory_path=%s (multi_tenant=%s)",
+        BANNER_FS_STORAGE_CODE,
+        directory_path,
+        _multi_tenant_enabled(),
+    )
 
     if imodel.storage_id != storage:
         imodel.write({"storage_id": storage.id})
