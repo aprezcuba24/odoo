@@ -1,6 +1,8 @@
-# Deploy Odoo 19.0 on Seenode
+# Deploy Odoo 19.0 on Seenode (legacy)
 
-This guide walks you through deploying Odoo 19.0 on [Seenode](https://seenode.com), a modern PaaS similar to Render with managed PostgreSQL, WebSocket support, and automatic SSL.
+> **Production platform:** This repository is deployed on [Railway](https://railway.com/). See [README.md](README.md#deploy-on-railway-docker) for the current deployment guide.
+
+This guide walks you through deploying Odoo 19.0 on [Seenode](https://seenode.com), a PaaS with managed PostgreSQL, WebSocket support, and automatic SSL. Kept for reference if you deploy on Seenode instead of Railway.
 
 There are **two deployment modes** available:
 
@@ -313,9 +315,9 @@ Seenode supports multiple instances:
 ## Alternatives
 
 If Seenode doesn't meet your needs, this same codebase works with:
-- **Railway**: Almost identical setup, DATABASE_URL auto-configured
-- **Render**: Use `render.yaml` for infrastructure-as-code
+- **Railway** (recommended, current production): See [README.md](README.md#deploy-on-railway-docker)
 - **Fly.io**: Add `fly.toml` and use `fly deploy`
 - **DigitalOcean App Platform**: Docker-based deployment
+- **Render**: Docker web service with managed PostgreSQL
 
 The Dockerfile-based approach makes this portable across any Docker-compatible PaaS.
