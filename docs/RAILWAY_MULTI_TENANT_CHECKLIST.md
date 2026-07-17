@@ -37,12 +37,15 @@ Optional:
 ```bash
 ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
 ODOO_ATTACHMENT_STORAGE=s3
-ODOO_S3_BUCKET=...
+# Shared banner bucket; with ODOO_MULTI_TENANT, objects go under <bucket>/<db_name>/
+ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_DEFAULT_REGION=...
 ODOO_EXTRA_INIT_MODULES=fs_attachment
 ```
+
+Production single-tenant keeps its **own** `ORDER_BRIDGE_BANNER_S3_BUCKET` (dedicated, no `{db_name}` prefix) and must **not** set `ODOO_MULTI_TENANT`.
 
 ## Domains
 

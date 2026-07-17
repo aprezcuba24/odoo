@@ -140,8 +140,8 @@ Convention: **database name = subdomain** for the wildcard case.
 
 ### How the code behaves
 
-- **Single-tenant** (`ODOO_MULTI_TENANT` unset): unchanged — init/upgrade the DB named in `DATABASE_URL`.
-- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module.
+- **Single-tenant** (`ODOO_MULTI_TENANT` unset): unchanged — init/upgrade the DB named in `DATABASE_URL`. Banner S3 uses a dedicated bucket at root (`directory_path=<bucket>`).
+- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module. Banner S3 may share one bucket with per-DB prefixes (`directory_path=<bucket>/{db_name}` via [`order_bridge` hooks](../own_modules/order_bridge/hooks.py)).
 
 ---
 
