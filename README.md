@@ -60,7 +60,28 @@ Production runs on [Railway](https://railway.com/) as a **Docker** web service w
 - **Ephemeral filesystem**: Container disk is not durable across deploys. Use database attachment storage (default in [`docker-entrypoint.sh`](docker-entrypoint.sh)) or S3 via `fs_attachment` (see `.env.example`).
 - **Deploy upgrades**: Each deploy runs `odoo-bin -u base` before Gunicorn starts (2–5 minutes). The Dockerfile healthcheck uses a long `start-period` for this.
 - **Logs**: stdout/stderr appear in the Railway service **Logs** tab.
-- **Multi-tenant**: A separate Railway **project** is planned for multi-database hosting; the current production project stays single-tenant (one database).
+- **Multi-tenant**: Use a **separate Railway project** (see below). The current production project stays single-tenant — do **not** set `ODOO_MULTI_TENANT` there.
+
+### Multi-tenant (separate Railway project)
+
+One Odoo process, many PostgreSQL databases (one per business). Activated only when `ODOO_MULTI_TENANT=true`. Full guide: [`docs/RAILWAY.md`](docs/RAILWAY.md#multi-tenant-second-railway-project).
+
+| Concern | How |
+|---------|-----|
+| Subdomain | `cliente1.plataforma.com` → DB `cliente1` via `ODOO_DBFILTER=^%d$` + Railway wildcard domain |
+| Custom domain | Register host in Railway; map with `ODOO_TENANT_DOMAIN_MAP` (module `tenant_routing`) |
+| New tenant | [`scripts/provision_tenant.sh`](scripts/provision_tenant.sh) then add name to `ODOO_TENANT_DATABASES` |
+| Production safety | Existing Railway project: leave `ODOO_MULTI_TENANT` unset |
+
+```bash
+# On the multi-tenant Railway service only:
+ODOO_MULTI_TENANT=true
+ODOO_DBFILTER=^%d$
+ODOO_LIST_DB=false
+ODOO_PROXY_MODE=true
+ODOO_TENANT_DATABASES=cliente1,cliente2
+# ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
+```
 
 ### Other PaaS
 

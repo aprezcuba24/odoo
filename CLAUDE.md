@@ -101,4 +101,4 @@ The custom handler in `gunicorn_gevent_handler.py` exists specifically to solve 
 - **Database upgrades**: Every deploy runs `odoo-bin -u base` to update the database schema. This takes 2-3 minutes on subsequent deploys.
 - **Health checks**: The Dockerfile includes a healthcheck on `/web/health`. Railway uses this during deploys when configured.
 - **Logs**: All logs go to stdout/stderr and appear in the Railway dashboard. No file-based logging in production.
-- **Multi-tenant**: Planned as a **separate Railway project** (multiple databases, `dbfilter`). The current production project remains single-tenant.
+- **Multi-tenant**: Implemented as a **separate Railway project** (`ODOO_MULTI_TENANT=true`, `dbfilter`, `tenant_routing`, `scripts/provision_tenant.sh`). See `docs/RAILWAY.md`. The current production project remains single-tenant (do not set that env var there).
