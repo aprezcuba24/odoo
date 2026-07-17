@@ -108,7 +108,14 @@ ODOO_TENANT_DATABASES=cliente1,cliente2
 # ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
 
 GUNICORN_WORKERS=2
-# ODOO_ATTACHMENT_STORAGE=s3
+
+# Shared banner bucket (order_bridge); prefixes = <bucket>/{db_name}
+ODOO_ATTACHMENT_STORAGE=s3
+ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
+ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
+ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
+ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
+ODOO_EXTRA_INIT_MODULES=fs_attachment
 ```
 
 | Variable | Role |
@@ -119,6 +126,9 @@ GUNICORN_WORKERS=2
 | `ODOO_PROXY_MODE` | Trust Railway `X-Forwarded-*` headers |
 | `ODOO_TENANT_DATABASES` | Explicit list for deploy-time `-u base` |
 | `ODOO_TENANT_DOMAIN_MAP` | Custom host → DB; handled by [`own_modules/tenant_routing`](../own_modules/tenant_routing) |
+| `ORDER_BRIDGE_BANNER_S3_BUCKET` | Shared S3 bucket for banners; with multi-tenant, path is `<bucket>/{db_name}` |
+| `ORDER_BRIDGE_BANNER_S3_*` / `AWS_*` | Credentials (and optional region/endpoint) for that bucket |
+| `ODOO_EXTRA_INIT_MODULES` | e.g. `fs_attachment` so banner S3 provisioning can run |
 
 ### Routing
 

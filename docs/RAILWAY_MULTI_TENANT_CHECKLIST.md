@@ -28,24 +28,30 @@ DB_PASSWORD_ADMIN=<strong-secret>
 DB_LANGUAGE=es_ES
 DB_WITH_DEMO=false
 GUNICORN_WORKERS=2
-# After first tenant:
-ODOO_TENANT_DATABASES=cliente1
+
+# Shared S3 bucket for Tienda Apk banners (order_bridge). Same bucket for all
+# tenants; objects go under <bucket>/<db_name>/ when ODOO_MULTI_TENANT=true.
+ODOO_ATTACHMENT_STORAGE=s3
+ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
+ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
+# Prefer ORDER_BRIDGE_* keys; AWS_* also work as fallback in hooks.py
+ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
+ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
+# ORDER_BRIDGE_BANNER_S3_ENDPOINT_URL=   # only for MinIO/R2/etc.
+ODOO_EXTRA_INIT_MODULES=fs_attachment
+
+# After first tenant (and for Railway default URL mapping, see docs):
+# ODOO_TENANT_DATABASES=demo
+# ODOO_TENANT_DOMAIN_MAP={"tu-servicio.up.railway.app":"demo"}
 ```
 
 Optional:
 
 ```bash
 ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
-ODOO_ATTACHMENT_STORAGE=s3
-# Shared banner bucket; with ODOO_MULTI_TENANT, objects go under <bucket>/<db_name>/
-ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
-AWS_DEFAULT_REGION=...
-ODOO_EXTRA_INIT_MODULES=fs_attachment
 ```
 
-Production single-tenant keeps its **own** `ORDER_BRIDGE_BANNER_S3_BUCKET` (dedicated, no `{db_name}` prefix) and must **not** set `ODOO_MULTI_TENANT`.
+Production single-tenant keeps its **own** `ORDER_BRIDGE_BANNER_S3_BUCKET` (dedicated bucket, no `{db_name}` prefix) and must **not** set `ODOO_MULTI_TENANT`.
 
 ## Domains
 
