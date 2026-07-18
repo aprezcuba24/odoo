@@ -70,7 +70,7 @@ One Odoo process, many PostgreSQL databases (one per business). Activated only w
 |---------|-----|
 | Subdomain | `cliente1.plataforma.com` → DB `cliente1` via `ODOO_DBFILTER=^%d$` + Railway wildcard domain |
 | Custom domain | Register host in Railway; map with `ODOO_TENANT_DOMAIN_MAP` (module `tenant_routing`) |
-| New tenant | [`scripts/provision_tenant.sh`](scripts/provision_tenant.sh) then add name to `ODOO_TENANT_DATABASES` |
+| New tenant | `/tenant/provision` UI or [`scripts/provision_tenant.sh`](scripts/provision_tenant.sh); then add name to `ODOO_TENANT_DATABASES` |
 | Production safety | Existing Railway project: leave `ODOO_MULTI_TENANT` unset |
 
 ```bash

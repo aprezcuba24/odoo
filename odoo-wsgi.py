@@ -61,7 +61,7 @@ if MULTI_TENANT:
     conf['dbfilter'] = os.getenv('ODOO_DBFILTER', r'^%d$')
     conf['list_db'] = _env_truthy('ODOO_LIST_DB', default=False)
     conf['proxy_mode'] = _env_truthy('ODOO_PROXY_MODE', default=True)
-    # Load tenant_routing for custom domain → database mapping (server-wide).
+    # Load tenant_routing (domain map + /tenant/provision UI) as server-wide.
     wide = list(conf.get('server_wide_modules') or [])
     if not wide:
         wide = ['base', 'rpc', 'web']

@@ -1,28 +1,19 @@
 # Part of this repository. License: LGPL-3.
-
 {
-    'name': 'Tenant Routing',
-    'version': '19.0.1.0.0',
-    'category': 'Hidden',
-    'summary': 'Map custom hostnames to Odoo databases (multi-tenant).',
+    'name': 'Tenant Routing & Provision',
+    'version': '1.0.0',
+    'category': 'Technical',
+    'summary': 'Host→DB map (ODOO_TENANT_DOMAIN_MAP) and web UI to provision tenants',
     'description': """
-Tenant Routing (server-wide)
-============================
+Server-wide multi-tenant helpers (loaded when ODOO_MULTI_TENANT=true):
 
-Loaded as a server-wide module when ``ODOO_MULTI_TENANT=true``.
-
-Extends Odoo ``db_filter`` so that hostnames listed in
-``ODOO_TENANT_DOMAIN_MAP`` (JSON object host → database name) resolve to a
-single tenant database. Subdomain routing via ``ODOO_DBFILTER`` (e.g. ``^%d$``)
-continues to work for hosts not in the map.
-
-Example::
-
-    ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1","app.otro.com":"cliente2"}
+* Custom domain / Railway default host → database via ODOO_TENANT_DOMAIN_MAP
+* Web UI at /tenant/provision (master password + live logs via SSE)
     """,
-    'depends': ['base'],
-    'data': [],
+    'author': 'Local',
     'license': 'LGPL-3',
+    'depends': ['base', 'web'],
+    'data': [],
     'installable': True,
     'application': False,
     'auto_install': False,

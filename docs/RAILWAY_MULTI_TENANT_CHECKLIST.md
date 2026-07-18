@@ -59,19 +59,34 @@ Production single-tenant keeps its **own** `ORDER_BRIDGE_BANNER_S3_BUCKET` (dedi
 - [ ] Configure DNS CNAME + verification TXT at your registrar
 - [ ] For each custom domain: add in Railway Settings and in `ODOO_TENANT_DOMAIN_MAP`
 
-## First tenant
+## First tenant (recommended: web UI on the server)
 
-From a machine that can reach Postgres (Railway shell, local with public URL, or one-off):
+After the multi-tenant service is up with the new code:
+
+1. Open `https://<tu-servicio.up.railway.app>/tenant/provision`
+2. Enter master password (`DB_PASSWORD_ADMIN`), tenant name (e.g. `demo`), optional modules
+3. Watch live logs until **Completado**
+4. Set `ODOO_TENANT_DATABASES=demo` and map the Railway host if needed:
 
 ```bash
-export DATABASE_URL='...'   # same as the multi-tenant service
-export DB_PASSWORD_ADMIN='...'
-./scripts/provision_tenant.sh cliente1
-# optional: ./scripts/provision_tenant.sh cliente1 order_bridge,fs_attachment
+ODOO_TENANT_DOMAIN_MAP={"tu-servicio.up.railway.app":"demo"}
 ```
 
-- [ ] Set `ODOO_TENANT_DATABASES=cliente1` and redeploy
-- [ ] Open `https://cliente1.tuplataforma.com` and verify login
+5. Redeploy and open the service URL
+
+CLI alternative (prefer Railway shell + internal `DATABASE_URL`; public proxy often hangs):
+
+```bash
+export DATABASE_URL='...'
+export DB_PASSWORD_ADMIN='...'
+./scripts/provision_tenant.sh demo
+```
+
+The script/UI are **idempotent**: incomplete DBs are recreated; ready DBs skip init. Force: checkbox in UI or `PROVISION_FORCE_RECREATE=true`.
+
+- [ ] Provision via `/tenant/provision` (or CLI)
+- [ ] Set `ODOO_TENANT_DATABASES` (+ `ODOO_TENANT_DOMAIN_MAP` for Railway default URL)
+- [ ] Redeploy and verify login
 
 ## Verify production untouched
 

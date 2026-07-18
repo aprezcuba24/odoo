@@ -130,6 +130,8 @@ ODOO_EXTRA_INIT_MODULES=fs_attachment
 | `ORDER_BRIDGE_BANNER_S3_*` / `AWS_*` | Credentials (and optional region/endpoint) for that bucket |
 | `ODOO_EXTRA_INIT_MODULES` | e.g. `fs_attachment` so banner S3 provisioning can run |
 
+Web UI to create tenants (after deploy): `/tenant/provision` (in `tenant_routing`) — requires master password; streams logs via SSE.
+
 ### Routing
 
 | Host | Mechanism | Database |
@@ -140,6 +142,10 @@ ODOO_EXTRA_INIT_MODULES=fs_attachment
 Convention: **database name = subdomain** for the wildcard case.
 
 ### Adding a tenant
+
+**Recommended:** open `https://<service-host>/tenant/provision` (master password = `DB_PASSWORD_ADMIN`). Live logs stream in the page. Then append the DB name to `ODOO_TENANT_DATABASES` (and `ODOO_TENANT_DOMAIN_MAP` if needed) and redeploy.
+
+CLI (Railway shell preferred):
 
 ```bash
 ./scripts/provision_tenant.sh nuevo_cliente
