@@ -62,26 +62,17 @@ Production runs on [Railway](https://railway.com/) as a **Docker** web service w
 - **Logs**: stdout/stderr appear in the Railway service **Logs** tab.
 - **Multi-tenant**: Use a **separate Railway project** (see below). The current production project stays single-tenant — do **not** set `ODOO_MULTI_TENANT` there.
 
-### Multi-tenant (separate Railway project)
+### Multi-tenant (proyecto Railway aparte)
 
-One Odoo process, many PostgreSQL databases (one per business). Activated only when `ODOO_MULTI_TENANT=true`. Full guide: [`docs/RAILWAY.md`](docs/RAILWAY.md#multi-tenant-second-railway-project).
+Una instancia, muchas BD. **No** actives `ODOO_MULTI_TENANT` en producción single-tenant.
 
-| Concern | How |
-|---------|-----|
-| Subdomain | `cliente1.plataforma.com` → DB `cliente1` via `ODOO_DBFILTER=^%d$` + Railway wildcard domain |
-| Custom domain | Register host in Railway; map with `ODOO_TENANT_DOMAIN_MAP` (module `tenant_routing`) |
-| New tenant | `/tenant/provision` UI or [`scripts/provision_tenant.sh`](scripts/provision_tenant.sh); then add name to `ODOO_TENANT_DATABASES` |
-| Production safety | Existing Railway project: leave `ODOO_MULTI_TENANT` unset |
+Guía: [`docs/RAILWAY_MULTI_TENANT_CHECKLIST.md`](docs/RAILWAY_MULTI_TENANT_CHECKLIST.md)
 
-```bash
-# On the multi-tenant Railway service only:
-ODOO_MULTI_TENANT=true
-ODOO_DBFILTER=^%d$
-ODOO_LIST_DB=false
-ODOO_PROXY_MODE=true
-ODOO_TENANT_DATABASES=cliente1,cliente2
-# ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
-```
+| | |
+|-|-|
+| Subdominio | `cliente1.plataforma.com` → BD `cliente1` |
+| Dominio custom / URL Railway | `ODOO_TENANT_DOMAIN_MAP` |
+| Nuevo tenant | `/tenant/provision` o `scripts/provision_tenant.sh` → `ODOO_TENANT_DATABASES` |
 
 ### Other PaaS
 

@@ -59,129 +59,28 @@ Environment variables: see [`.env.example`](../.env.example) and the tables belo
 
 ---
 
-## Multi-tenant (second Railway project)
+## Multi-tenant
 
-Use a **new Railway project** (separate Postgres). Same Docker image; mode is env-driven.
+Proyecto Railway **aparte** (Postgres propio). Guía operativa:
 
-### Checklist — create the project
+**[`RAILWAY_MULTI_TENANT_CHECKLIST.md`](RAILWAY_MULTI_TENANT_CHECKLIST.md)** — dos secciones: montar el entorno y añadir un tenant.
 
-Step-by-step checkbox list: [`RAILWAY_MULTI_TENANT_CHECKLIST.md`](RAILWAY_MULTI_TENANT_CHECKLIST.md).
+No actives `ODOO_MULTI_TENANT` en el proyecto single-tenant de producción.
 
-1. In [Railway Dashboard](https://railway.com/dashboard): **New Project**.
-2. Add **PostgreSQL** (dedicated instance — do not share with production).
-3. Add **GitHub repo** service → root `Dockerfile`, port **8069**.
-4. Link Postgres `DATABASE_URL` into the Odoo service.
-5. Set multi-tenant env vars (below). **Do not** set these on the existing production project.
-6. Add public networking:
-   - Wildcard custom domain: `*.tuplataforma.com` ([Railway wildcard domains](https://docs.railway.com/networking/domains/working-with-domains)).
-   - Optional: each customer custom domain via Settings or [Railway Domains API](https://docs.railway.com/integrations/api/manage-domains).
-7. Provision the first tenant (service must reach Postgres — use Railway shell, one-off, or local with the private/public URL):
-
-   ```bash
-   export DATABASE_URL='postgresql://...'
-   export DB_PASSWORD_ADMIN='...'
-   ./scripts/provision_tenant.sh cliente1
-   # optional modules:
-   # ./scripts/provision_tenant.sh cliente1 order_bridge,fs_attachment
-   ```
-
-8. Set `ODOO_TENANT_DATABASES=cliente1` and redeploy.
-9. Open `https://cliente1.tuplataforma.com` and log in.
-
-### Multi-tenant environment variables
-
-```bash
-ODOO_MULTI_TENANT=true
-ODOO_DBFILTER=^%d$
-ODOO_LIST_DB=false
-ODOO_PROXY_MODE=true
-
-DATABASE_URL=postgresql://...@host:5432/railway
-DB_PASSWORD_ADMIN=<strong-master-password>
-DB_LANGUAGE=es_ES
-DB_WITH_DEMO=false
-
-# Upgrade these DBs on every deploy
-ODOO_TENANT_DATABASES=cliente1,cliente2
-
-# Custom domains (optional) — JSON host → database name
-# ODOO_TENANT_DOMAIN_MAP={"tienda.com":"cliente1"}
-
-GUNICORN_WORKERS=2
-
-# Shared S3 bucket for Tienda Apk media (banners + image fields); prefixes = <bucket>/{db_name}
-ODOO_ATTACHMENT_STORAGE=s3
-ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
-# ODOO_S3_BUCKET=mi-odoo-mt-banners  # fallback if ORDER_BRIDGE_BANNER_S3_BUCKET unset
-ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
-ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
-ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
-ODOO_EXTRA_INIT_MODULES=fs_attachment
-# Verify after deploy: ./scripts/verify_s3_storage.sh <tenant_db>
-```
-
-| Variable | Role |
-|----------|------|
-| `ODOO_MULTI_TENANT` | Enables multi-DB mode in [`odoo-wsgi.py`](../odoo-wsgi.py) and [`docker-entrypoint.sh`](../docker-entrypoint.sh) |
-| `ODOO_DBFILTER` | Default `^%d$` — first subdomain = database name |
-| `ODOO_LIST_DB` | Keep `false` in production (hides DB manager) |
-| `ODOO_PROXY_MODE` | Trust Railway `X-Forwarded-*` headers |
-| `ODOO_TENANT_DATABASES` | Explicit list for deploy-time `-u base` |
-| `ODOO_TENANT_DOMAIN_MAP` | Custom host → DB; handled by [`own_modules/tenant_routing`](../own_modules/tenant_routing) |
-| `ORDER_BRIDGE_BANNER_S3_BUCKET` | Shared S3 bucket for banners + product/image fields; with multi-tenant, path is `<bucket>/{db_name}`. Falls back to `ODOO_S3_BUCKET` if unset. |
-| `ORDER_BRIDGE_BANNER_S3_*` / `AWS_*` | Credentials (and optional region/endpoint) for that bucket |
-| `ODOO_ATTACHMENT_STORAGE` | Set `s3` on multi-tenant so deploys/provision do not force `ir_attachment.location=db` |
-| `ODOO_EXTRA_INIT_MODULES` | e.g. `fs_attachment` so media S3 provisioning can run |
-
-Web UI to create tenants (after deploy): `/tenant/provision` (in `tenant_routing`) — requires master password; streams logs via SSE.
-
-### Bootstrap / diagnose 404
-
-Railway default hosts (`*.up.railway.app`) do **not** match `ODOO_DBFILTER=^%d$` against a tenant DB name (e.g. host `odoo-production-14fc…` looks for DB `odoo-production-14fc`, not `demo`). Map the host with `ODOO_TENANT_DOMAIN_MAP`.
-
-[`odoo-wsgi.py`](../odoo-wsgi.py) calls `root.initialize()` so Gunicorn loads server-wide modules (`web`, `tenant_routing`). Without that, `/web/health` and `/tenant/provision` return **404**, and the domain map never applies.
-
-After deploy, check logs for `tenant_routing: patching http.db_filter` and `odoo-wsgi ready: MULTI_TENANT=True`. Then:
-
-1. `GET /web/health` → **200** (if 404, server-wide modules did not load)
-2. With `ODOO_TENANT_DOMAIN_MAP` pointing the Railway host at a provisioned DB → `/` opens login for that tenant
-
-### Routing
-
-| Host | Mechanism | Database |
-|------|-----------|----------|
-| `cliente1.plataforma.com` | `dbfilter` `%d` | `cliente1` |
-| `tienda.com` or `*.up.railway.app` | `ODOO_TENANT_DOMAIN_MAP` + `tenant_routing` | mapped name (e.g. `demo`) |
-
-Convention: **database name = subdomain** for the wildcard case. The Railway default URL always needs `ODOO_TENANT_DOMAIN_MAP`.
-
-### Adding a tenant
-
-**Recommended:** open `https://<service-host>/tenant/provision` (master password = `DB_PASSWORD_ADMIN`). Live logs stream in the page. Then append the DB name to `ODOO_TENANT_DATABASES` (and `ODOO_TENANT_DOMAIN_MAP` if using the Railway default URL or a custom domain) and redeploy.
-
-CLI (Railway shell preferred):
-
-```bash
-./scripts/provision_tenant.sh nuevo_cliente
-# Then on Railway multi-tenant service:
-# - Append nuevo_cliente to ODOO_TENANT_DATABASES
-# - For Railway default URL or custom domain: entry in ODOO_TENANT_DOMAIN_MAP
-```
-
-Provisioning alone is not enough for the Railway default URL: without `ODOO_TENANT_DOMAIN_MAP` (and a healthy deploy that logs `tenant_routing: patching http.db_filter`), `/` stays 404.
-
-### How the code behaves
-
-- **Single-tenant** (`ODOO_MULTI_TENANT` unset): unchanged — init/upgrade the DB named in `DATABASE_URL`. Media S3 uses a dedicated bucket at root (`directory_path=<bucket>`). Verify with `./scripts/verify_s3_storage.sh <db_name>`.
-- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module via `root.initialize()` in [`odoo-wsgi.py`](../odoo-wsgi.py). Media S3 may share one bucket with per-DB prefixes (`directory_path=<bucket>/{db_name}` via [`order_bridge` hooks](../own_modules/order_bridge/hooks.py)). Verify with `./scripts/verify_s3_storage.sh <tenant>`.
+| Pieza | Detalle |
+|-------|---------|
+| Modo | `ODOO_MULTI_TENANT=true` |
+| Routing | Subdominio → BD (`ODOO_DBFILTER=^%d$`); dominio custom / URL Railway → `ODOO_TENANT_DOMAIN_MAP` |
+| Tenants | UI `/tenant/provision` o `scripts/provision_tenant.sh`; luego `ODOO_TENANT_DATABASES` |
+| S3 | Un bucket; prefijo = nombre de BD. Ver guía. |
 
 ---
 
 ## Other platforms
 
-- [`RAILWAY_MULTI_TENANT_CHECKLIST.md`](RAILWAY_MULTI_TENANT_CHECKLIST.md) — operator checklist for the second project
-- [`SEENODE_DEPLOYMENT.md`](../SEENODE_DEPLOYMENT.md) — legacy Seenode guide
-- [`WEBSOCKET_SERVERLESS.md`](WEBSOCKET_SERVERLESS.md) — WebSocket troubleshooting on PaaS
+- [`RAILWAY_MULTI_TENANT_CHECKLIST.md`](RAILWAY_MULTI_TENANT_CHECKLIST.md) — guía multi-tenant
+- [`SEENODE_DEPLOYMENT.md`](../SEENODE_DEPLOYMENT.md) — legacy Seenode
+- [`WEBSOCKET_SERVERLESS.md`](WEBSOCKET_SERVERLESS.md) — WebSockets en PaaS
 
 ## Links
 
