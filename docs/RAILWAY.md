@@ -112,6 +112,7 @@ GUNICORN_WORKERS=2
 # Shared banner bucket (order_bridge); prefixes = <bucket>/{db_name}
 ODOO_ATTACHMENT_STORAGE=s3
 ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
+# ODOO_S3_BUCKET=mi-odoo-mt-banners  # fallback if ORDER_BRIDGE_BANNER_S3_BUCKET unset
 ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
 ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
 ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
@@ -126,8 +127,9 @@ ODOO_EXTRA_INIT_MODULES=fs_attachment
 | `ODOO_PROXY_MODE` | Trust Railway `X-Forwarded-*` headers |
 | `ODOO_TENANT_DATABASES` | Explicit list for deploy-time `-u base` |
 | `ODOO_TENANT_DOMAIN_MAP` | Custom host → DB; handled by [`own_modules/tenant_routing`](../own_modules/tenant_routing) |
-| `ORDER_BRIDGE_BANNER_S3_BUCKET` | Shared S3 bucket for banners; with multi-tenant, path is `<bucket>/{db_name}` |
+| `ORDER_BRIDGE_BANNER_S3_BUCKET` | Shared S3 bucket for banners; with multi-tenant, path is `<bucket>/{db_name}`. Falls back to `ODOO_S3_BUCKET` if unset. |
 | `ORDER_BRIDGE_BANNER_S3_*` / `AWS_*` | Credentials (and optional region/endpoint) for that bucket |
+| `ODOO_ATTACHMENT_STORAGE` | Set `s3` on multi-tenant so deploys/provision do not force `ir_attachment.location=db` |
 | `ODOO_EXTRA_INIT_MODULES` | e.g. `fs_attachment` so banner S3 provisioning can run |
 
 Web UI to create tenants (after deploy): `/tenant/provision` (in `tenant_routing`) — requires master password; streams logs via SSE.

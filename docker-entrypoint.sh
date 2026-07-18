@@ -347,10 +347,11 @@ install_extra_modules() {
 
 provision_banner_s3() {
     local target_db="${1:-$PGDATABASE}"
-    if [ -z "${ORDER_BRIDGE_BANNER_S3_BUCKET:-}" ]; then
+    local banner_bucket="${ORDER_BRIDGE_BANNER_S3_BUCKET:-${ODOO_S3_BUCKET:-}}"
+    if [ -z "$banner_bucket" ]; then
         return 0
     fi
-    print_info "Sincronizando fs.storage S3 para banners en '${target_db}' (ORDER_BRIDGE_BANNER_S3_BUCKET)..."
+    print_info "Sincronizando fs.storage S3 para banners en '${target_db}' (bucket=${banner_bucket})..."
     if printf '%s\n' "from odoo.addons.order_bridge import hooks as obhooks" "obhooks.provision_banner_fs_storage(env)" | "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${target_db}" shell --no-http; then
         print_info "Provision banners S3 completada en '${target_db}'."
     else

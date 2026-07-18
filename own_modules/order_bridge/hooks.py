@@ -7,7 +7,12 @@ and credentials are set, creates or updates ``fs.storage`` code
 ``s3_order_bridge_banners`` and assigns ``ir.model.storage_id`` for
 ``order_bridge.banner``.
 
-S3 layout (``ORDER_BRIDGE_BANNER_S3_BUCKET``):
+Bucket name (first match wins):
+
+- ``ORDER_BRIDGE_BANNER_S3_BUCKET`` (preferred)
+- ``ODOO_S3_BUCKET`` (fallback)
+
+S3 layout:
 
 - **Single-tenant** (production; ``ODOO_MULTI_TENANT`` unset):
   ``directory_path = <bucket>`` — dedicated bucket, objects at bucket root.
@@ -39,6 +44,15 @@ def _multi_tenant_enabled() -> bool:
     )
 
 
+def _banner_s3_bucket() -> str:
+    """Preferred ``ORDER_BRIDGE_BANNER_S3_BUCKET``, else ``ODOO_S3_BUCKET``."""
+    return (
+        os.environ.get("ORDER_BRIDGE_BANNER_S3_BUCKET")
+        or os.environ.get("ODOO_S3_BUCKET")
+        or ""
+    ).strip()
+
+
 def _banner_directory_path(bucket: str) -> str:
     """Bucket root in single-tenant; ``bucket/{db_name}`` when multi-tenant."""
     if _multi_tenant_enabled():
@@ -62,7 +76,7 @@ def provision_banner_fs_storage(env):
         )
         return
 
-    bucket = (os.environ.get("ORDER_BRIDGE_BANNER_S3_BUCKET") or "").strip()
+    bucket = _banner_s3_bucket()
     if not bucket:
         return
 
@@ -78,8 +92,9 @@ def provision_banner_fs_storage(env):
     ).strip()
     if not access_key or not secret_key:
         _logger.warning(
-            "order_bridge: ORDER_BRIDGE_BANNER_S3_BUCKET set but access key/secret "
-            "missing (ORDER_BRIDGE_* or AWS_*); skip fs.storage provisioning"
+            "order_bridge: banner S3 bucket set (%s) but access key/secret "
+            "missing (ORDER_BRIDGE_* or AWS_*); skip fs.storage provisioning",
+            bucket,
         )
         return
 
