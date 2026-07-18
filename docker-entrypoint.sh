@@ -325,7 +325,7 @@ migrate_attachments_to_db() {
     local target_db="${1:-$PGDATABASE}"
     print_info "Migrando adjuntos existentes del filestore a la base de datos '${target_db}' (force_storage)..."
 
-    if printf '%s\n' "env['ir.attachment'].force_storage()" | "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${target_db}" shell --no-http; then
+    if printf '%s\n' "env['ir.attachment'].force_storage()" | python3 "$SCRIPT_DIR/odoo-bin" shell "${DB_ARGS[@]}" -d "${target_db}" --no-http; then
         print_info "Migración de adjuntos completada en '${target_db}'."
     else
         print_warn "force_storage() falló en '${target_db}'; revisa los logs. Los adjuntos pueden seguir referenciando rutas de filestore inexistentes."
@@ -351,11 +351,19 @@ provision_banner_s3() {
     if [ -z "$banner_bucket" ]; then
         return 0
     fi
-    print_info "Sincronizando fs.storage S3 para banners en '${target_db}' (bucket=${banner_bucket})..."
-    if printf '%s\n' "from odoo.addons.order_bridge import hooks as obhooks" "obhooks.provision_banner_fs_storage(env)" | "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${target_db}" shell --no-http; then
-        print_info "Provision banners S3 completada en '${target_db}'."
+    local mt_flag="${ODOO_MULTI_TENANT:-}"
+    local mt_label="single-tenant (directory_path=${banner_bucket})"
+    case "$(printf '%s' "$mt_flag" | tr '[:upper:]' '[:lower:]')" in
+        1|true|yes|on) mt_label="multi-tenant (directory_path=${banner_bucket}/{db_name})" ;;
+    esac
+    print_info "Sincronizando fs.storage S3 (banners + imágenes) en '${target_db}' bucket=${banner_bucket} ${mt_label}..."
+    if printf '%s\n' \
+        "from odoo.addons.order_bridge import hooks as obhooks" \
+        "obhooks.provision_media_fs_storage(env)" \
+        | python3 "$SCRIPT_DIR/odoo-bin" shell "${DB_ARGS[@]}" -d "${target_db}" --no-http; then
+        print_info "Provision S3 media (fs.storage ${banner_bucket}) completada en '${target_db}'."
     else
-        print_warn "Provision banners S3 falló en '${target_db}'; revisa credenciales y que fs_attachment esté instalado."
+        print_warn "Provision S3 media falló en '${target_db}'; revisa credenciales y que fs_attachment + order_bridge estén instalados."
     fi
 }
 

@@ -109,7 +109,7 @@ ODOO_TENANT_DATABASES=cliente1,cliente2
 
 GUNICORN_WORKERS=2
 
-# Shared banner bucket (order_bridge); prefixes = <bucket>/{db_name}
+# Shared S3 bucket for Tienda Apk media (banners + image fields); prefixes = <bucket>/{db_name}
 ODOO_ATTACHMENT_STORAGE=s3
 ORDER_BRIDGE_BANNER_S3_BUCKET=mi-odoo-mt-banners
 # ODOO_S3_BUCKET=mi-odoo-mt-banners  # fallback if ORDER_BRIDGE_BANNER_S3_BUCKET unset
@@ -117,6 +117,7 @@ ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
 ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
 ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
 ODOO_EXTRA_INIT_MODULES=fs_attachment
+# Verify after deploy: ./scripts/verify_s3_storage.sh <tenant_db>
 ```
 
 | Variable | Role |
@@ -127,10 +128,10 @@ ODOO_EXTRA_INIT_MODULES=fs_attachment
 | `ODOO_PROXY_MODE` | Trust Railway `X-Forwarded-*` headers |
 | `ODOO_TENANT_DATABASES` | Explicit list for deploy-time `-u base` |
 | `ODOO_TENANT_DOMAIN_MAP` | Custom host → DB; handled by [`own_modules/tenant_routing`](../own_modules/tenant_routing) |
-| `ORDER_BRIDGE_BANNER_S3_BUCKET` | Shared S3 bucket for banners; with multi-tenant, path is `<bucket>/{db_name}`. Falls back to `ODOO_S3_BUCKET` if unset. |
+| `ORDER_BRIDGE_BANNER_S3_BUCKET` | Shared S3 bucket for banners + product/image fields; with multi-tenant, path is `<bucket>/{db_name}`. Falls back to `ODOO_S3_BUCKET` if unset. |
 | `ORDER_BRIDGE_BANNER_S3_*` / `AWS_*` | Credentials (and optional region/endpoint) for that bucket |
 | `ODOO_ATTACHMENT_STORAGE` | Set `s3` on multi-tenant so deploys/provision do not force `ir_attachment.location=db` |
-| `ODOO_EXTRA_INIT_MODULES` | e.g. `fs_attachment` so banner S3 provisioning can run |
+| `ODOO_EXTRA_INIT_MODULES` | e.g. `fs_attachment` so media S3 provisioning can run |
 
 Web UI to create tenants (after deploy): `/tenant/provision` (in `tenant_routing`) — requires master password; streams logs via SSE.
 
@@ -171,8 +172,8 @@ Provisioning alone is not enough for the Railway default URL: without `ODOO_TENA
 
 ### How the code behaves
 
-- **Single-tenant** (`ODOO_MULTI_TENANT` unset): unchanged — init/upgrade the DB named in `DATABASE_URL`. Banner S3 uses a dedicated bucket at root (`directory_path=<bucket>`).
-- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module via `root.initialize()` in [`odoo-wsgi.py`](../odoo-wsgi.py). Banner S3 may share one bucket with per-DB prefixes (`directory_path=<bucket>/{db_name}` via [`order_bridge` hooks](../own_modules/order_bridge/hooks.py)).
+- **Single-tenant** (`ODOO_MULTI_TENANT` unset): unchanged — init/upgrade the DB named in `DATABASE_URL`. Media S3 uses a dedicated bucket at root (`directory_path=<bucket>`). Verify with `./scripts/verify_s3_storage.sh <db_name>`.
+- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module via `root.initialize()` in [`odoo-wsgi.py`](../odoo-wsgi.py). Media S3 may share one bucket with per-DB prefixes (`directory_path=<bucket>/{db_name}` via [`order_bridge` hooks](../own_modules/order_bridge/hooks.py)). Verify with `./scripts/verify_s3_storage.sh <tenant>`.
 
 ---
 

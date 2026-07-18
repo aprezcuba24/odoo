@@ -15,7 +15,8 @@
 #   ODOO_EXTRA_INIT_MODULES=order_bridge ./scripts/provision_tenant.sh cliente2
 #
 # If ORDER_BRIDGE_BANNER_S3_BUCKET or ODOO_S3_BUCKET is set, the script also
-# installs fs_attachment+order_bridge (if missing) and provisions fs.storage.
+# installs fs_attachment+order_bridge (if missing) and provisions fs.storage
+# for banners + image attachment fields (provision_media_fs_storage).
 #
 # Requires DATABASE_URL or PGHOST/PGUSER/PGPASSWORD (same as production).
 # After provisioning, add TENANT_NAME to ODOO_TENANT_DATABASES on the Railway
@@ -26,10 +27,10 @@
 #
 # Force recreate even if ready: PROVISION_FORCE_RECREATE=true ./scripts/provision_tenant.sh demo
 #
-# Banner S3: if ORDER_BRIDGE_BANNER_S3_BUCKET or ODOO_S3_BUCKET is set, installs
+# Media S3: if ORDER_BRIDGE_BANNER_S3_BUCKET or ODOO_S3_BUCKET is set, installs
 # fs_attachment+order_bridge (merged into EXTRA_MODULES) and runs
-# provision_banner_fs_storage. Prefer ODOO_ATTACHMENT_STORAGE=s3 so attachments
-# are not forced to PostgreSQL.
+# provision_media_fs_storage (banners + image fields). Prefer
+# ODOO_ATTACHMENT_STORAGE=s3 so attachments are not forced to PostgreSQL.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -307,11 +308,18 @@ provision_banner_s3() {
     if [ -z "${BANNER_S3_BUCKET:-}" ]; then
         return 0
     fi
-    print_info "Sincronizando fs.storage S3 para banners en '${TENANT_NAME}' (bucket=${BANNER_S3_BUCKET})..."
-    if printf '%s\n' "from odoo.addons.order_bridge import hooks as obhooks" "obhooks.provision_banner_fs_storage(env)" | "${REPO_ROOT}/odoo-bin" "${DB_ARGS[@]}" -d "${TENANT_NAME}" shell --no-http; then
-        print_info "Provision banners S3 completada en '${TENANT_NAME}'."
+    local mt_label="single-tenant (directory_path=${BANNER_S3_BUCKET})"
+    case "$(printf '%s' "${ODOO_MULTI_TENANT:-}" | tr '[:upper:]' '[:lower:]')" in
+        1|true|yes|on) mt_label="multi-tenant (directory_path=${BANNER_S3_BUCKET}/{db_name})" ;;
+    esac
+    print_info "Sincronizando fs.storage S3 (banners + imágenes) en '${TENANT_NAME}' bucket=${BANNER_S3_BUCKET} ${mt_label}..."
+    if printf '%s\n' \
+        "from odoo.addons.order_bridge import hooks as obhooks" \
+        "obhooks.provision_media_fs_storage(env)" \
+        | python3 "${REPO_ROOT}/odoo-bin" shell "${DB_ARGS[@]}" -d "${TENANT_NAME}" --no-http; then
+        print_info "Provision S3 media completada en '${TENANT_NAME}'."
     else
-        print_warn "Provision banners S3 falló en '${TENANT_NAME}'; revisa credenciales y que fs_attachment + order_bridge estén instalados."
+        print_warn "Provision S3 media falló en '${TENANT_NAME}'; revisa credenciales y que fs_attachment + order_bridge estén instalados."
     fi
 }
 

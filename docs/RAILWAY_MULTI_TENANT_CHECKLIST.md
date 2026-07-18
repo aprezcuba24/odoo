@@ -116,7 +116,7 @@ ODOO_TENANT_DOMAIN_MAP={"odoo-production-xxxx.up.railway.app":"cliente2"}
 
 ### Banners / imágenes en S3 (multi-tenant)
 
-Sin esto, las imágenes de banners se guardan en Postgres y **no** aparecen en el bucket.
+Sin esto, las imágenes de banners y productos se guardan en Postgres y **no** aparecen en el bucket.
 
 Variables obligatorias en el servicio MT:
 
@@ -133,22 +133,36 @@ ODOO_EXTRA_INIT_MODULES=fs_attachment    # order_bridge se añade al provision s
 
 Layout: `s3://<bucket>/<nombre_tenant>/...` (`directory_path=<bucket>/{db_name}`).
 
+El hook `provision_media_fs_storage` (alias: `provision_banner_fs_storage`) crea/actualiza `fs.storage` code `s3_order_bridge_banners` con:
+
+- `model_xmlids=order_bridge.model_order_bridge_banner` (OCA resuelve por `model_xmlids` / `field_xmlids`, **no** por `ir.model.storage_id`)
+- `field_xmlids` auto-descubiertos en cada tenant: campos binarios `attachment=True` cuyo nombre contiene `image`
+- `use_as_default_for_attachments=False` (assets JS/CSS siguen en DB)
+
 Tras provision o redeploy:
 
-1. En Odoo del tenant: Settings / FS Storage → registro `s3_order_bridge_banners` con `directory_path` tipo `mi-bucket/{db_name}`
-2. Sube un banner **nuevo** (o re-guarda uno antiguo) y comprueba el objeto en S3 bajo el prefijo del tenant
-3. Imágenes creadas **antes** de configurar S3 quedan en DB hasta re-guardarlas
+1. Verificación rápida: `./scripts/verify_s3_storage.sh <tenant>`
+2. En Odoo del tenant: Settings / FS Storage → registro `s3_order_bridge_banners` con `directory_path` tipo `mi-bucket/{db_name}`
+3. Sube un banner **nuevo** y una imagen de producto **nueva** (o re-guarda) y comprueba el objeto en S3 bajo el prefijo del tenant
+4. Imágenes creadas **antes** de configurar S3 quedan en DB hasta re-guardarlas
 
 Remediación en un tenant ya existente (Railway shell), después de setear Variables y tener módulos instalados:
 
 ```bash
+./scripts/verify_s3_storage.sh demo
+
+# forzar crear/actualizar fs.storage (imprime traceback si falla):
+./scripts/provision_s3_storage.sh demo
+
+# o a mano:
 printf '%s\n' \
   "from odoo.addons.order_bridge import hooks as obhooks" \
-  "obhooks.provision_banner_fs_storage(env)" \
-| python3 odoo-bin shell -d demo --db_host="$PGHOST" --db_port="$PGPORT" -r "$PGUSER" -w "$PGPASSWORD" --no-http
+  "obhooks.provision_media_fs_storage(env)" \
+  "env.cr.commit()" \
+| python3 odoo-bin shell -d demo --db_host="$PGHOST" --db_port="${PGPORT:-5432}" -r "$PGUSER" -w "$PGPASSWORD" --no-http
 ```
 
-(o un redeploy: el entrypoint corre `provision_banner_s3` sobre cada BD en `ODOO_TENANT_DATABASES`).
+(o un redeploy: el entrypoint corre `provision_banner_s3` → `provision_media_fs_storage` sobre cada BD en `ODOO_TENANT_DATABASES`).
 
 ### Contraseñas (importante)
 
