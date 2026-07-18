@@ -58,21 +58,36 @@ Production single-tenant keeps its **own** `ORDER_BRIDGE_BANNER_S3_BUCKET` (dedi
 - [ ] Add wildcard `*.tuplataforma.com` on the Odoo service ([docs](https://docs.railway.com/networking/domains/working-with-domains))
 - [ ] Configure DNS CNAME + verification TXT at your registrar
 - [ ] For each custom domain: add in Railway Settings and in `ODOO_TENANT_DOMAIN_MAP`
+- [ ] For the Railway default URL (`*.up.railway.app`): set `ODOO_TENANT_DOMAIN_MAP` (dbfilter `%d` will not match that host to a short tenant name like `demo`)
+
+## Post-deploy health check (do this first)
+
+If **every** URL returns 404 (including `/web/health`), server-wide modules did not load. After a good deploy, Railway **Logs** should show:
+
+- `odoo-wsgi ready: MULTI_TENANT=True …`
+- `tenant_routing: patching http.db_filter …`
+
+Then:
+
+- [ ] `https://<host>/web/health` → **200** (not 404)
+- [ ] `https://<host>/tenant/provision` → provision form (or login if a DB is already mapped)
+
+`ODOO_TENANT_DOMAIN_MAP` only works when `tenant_routing` is loaded (via `root.initialize()` in `odoo-wsgi.py`). Provisioning a DB alone does not fix 404 on the Railway default URL without that map + a healthy deploy.
 
 ## First tenant (recommended: web UI on the server)
 
-After the multi-tenant service is up with the new code:
+After `/web/health` returns 200:
 
 1. Open `https://<tu-servicio.up.railway.app>/tenant/provision`
 2. Enter master password (`DB_PASSWORD_ADMIN`), tenant name (e.g. `demo`), optional modules
 3. Watch live logs until **Completado**
-4. Set `ODOO_TENANT_DATABASES=demo` and map the Railway host if needed:
+4. Set `ODOO_TENANT_DATABASES=demo` and map the Railway host:
 
 ```bash
 ODOO_TENANT_DOMAIN_MAP={"tu-servicio.up.railway.app":"demo"}
 ```
 
-5. Redeploy and open the service URL
+5. Redeploy and open the service URL (should reach Odoo login for `demo`)
 
 CLI alternative (prefer Railway shell + internal `DATABASE_URL`; public proxy often hangs):
 
@@ -81,6 +96,8 @@ export DATABASE_URL='...'
 export DB_PASSWORD_ADMIN='...'
 ./scripts/provision_tenant.sh demo
 ```
+
+After CLI provision, you still need `ODOO_TENANT_DATABASES`, `ODOO_TENANT_DOMAIN_MAP` for the Railway URL, and a deploy that loads `tenant_routing`.
 
 The script/UI are **idempotent**: incomplete DBs are recreated; ready DBs skip init. Force: checkbox in UI or `PROVISION_FORCE_RECREATE=true`.
 

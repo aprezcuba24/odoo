@@ -132,18 +132,29 @@ ODOO_EXTRA_INIT_MODULES=fs_attachment
 
 Web UI to create tenants (after deploy): `/tenant/provision` (in `tenant_routing`) — requires master password; streams logs via SSE.
 
+### Bootstrap / diagnose 404
+
+Railway default hosts (`*.up.railway.app`) do **not** match `ODOO_DBFILTER=^%d$` against a tenant DB name (e.g. host `odoo-production-14fc…` looks for DB `odoo-production-14fc`, not `demo`). Map the host with `ODOO_TENANT_DOMAIN_MAP`.
+
+[`odoo-wsgi.py`](../odoo-wsgi.py) calls `root.initialize()` so Gunicorn loads server-wide modules (`web`, `tenant_routing`). Without that, `/web/health` and `/tenant/provision` return **404**, and the domain map never applies.
+
+After deploy, check logs for `tenant_routing: patching http.db_filter` and `odoo-wsgi ready: MULTI_TENANT=True`. Then:
+
+1. `GET /web/health` → **200** (if 404, server-wide modules did not load)
+2. With `ODOO_TENANT_DOMAIN_MAP` pointing the Railway host at a provisioned DB → `/` opens login for that tenant
+
 ### Routing
 
 | Host | Mechanism | Database |
 |------|-----------|----------|
 | `cliente1.plataforma.com` | `dbfilter` `%d` | `cliente1` |
-| `tienda.com` | `ODOO_TENANT_DOMAIN_MAP` + `tenant_routing` | mapped name (e.g. `cliente1`) |
+| `tienda.com` or `*.up.railway.app` | `ODOO_TENANT_DOMAIN_MAP` + `tenant_routing` | mapped name (e.g. `demo`) |
 
-Convention: **database name = subdomain** for the wildcard case.
+Convention: **database name = subdomain** for the wildcard case. The Railway default URL always needs `ODOO_TENANT_DOMAIN_MAP`.
 
 ### Adding a tenant
 
-**Recommended:** open `https://<service-host>/tenant/provision` (master password = `DB_PASSWORD_ADMIN`). Live logs stream in the page. Then append the DB name to `ODOO_TENANT_DATABASES` (and `ODOO_TENANT_DOMAIN_MAP` if needed) and redeploy.
+**Recommended:** open `https://<service-host>/tenant/provision` (master password = `DB_PASSWORD_ADMIN`). Live logs stream in the page. Then append the DB name to `ODOO_TENANT_DATABASES` (and `ODOO_TENANT_DOMAIN_MAP` if using the Railway default URL or a custom domain) and redeploy.
 
 CLI (Railway shell preferred):
 
@@ -151,13 +162,15 @@ CLI (Railway shell preferred):
 ./scripts/provision_tenant.sh nuevo_cliente
 # Then on Railway multi-tenant service:
 # - Append nuevo_cliente to ODOO_TENANT_DATABASES
-# - For custom domain: add domain in Railway + entry in ODOO_TENANT_DOMAIN_MAP
+# - For Railway default URL or custom domain: entry in ODOO_TENANT_DOMAIN_MAP
 ```
+
+Provisioning alone is not enough for the Railway default URL: without `ODOO_TENANT_DOMAIN_MAP` (and a healthy deploy that logs `tenant_routing: patching http.db_filter`), `/` stays 404.
 
 ### How the code behaves
 
 - **Single-tenant** (`ODOO_MULTI_TENANT` unset): unchanged — init/upgrade the DB named in `DATABASE_URL`. Banner S3 uses a dedicated bucket at root (`directory_path=<bucket>`).
-- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module. Banner S3 may share one bucket with per-DB prefixes (`directory_path=<bucket>/{db_name}` via [`order_bridge` hooks](../own_modules/order_bridge/hooks.py)).
+- **Multi-tenant**: does **not** init the Railway default DB (`railway`); upgrades each tenant DB; loads `tenant_routing` as a server-wide module via `root.initialize()` in [`odoo-wsgi.py`](../odoo-wsgi.py). Banner S3 may share one bucket with per-DB prefixes (`directory_path=<bucket>/{db_name}` via [`order_bridge` hooks](../own_modules/order_bridge/hooks.py)).
 
 ---
 

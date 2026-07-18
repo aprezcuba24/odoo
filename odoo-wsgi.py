@@ -81,21 +81,33 @@ http_port = int(os.getenv('GUNICORN_BIND', '0.0.0.0:8069').split(':')[-1])
 conf['gevent_port'] = http_port
 conf['http_port'] = http_port
 
-# Path to the Odoo Addons repository (comma-separated for multiple locations)
-# Default: './odoo/addons,./addons'
-# Uncomment and adjust if needed:
-# conf['addons_path'] = './odoo/addons,./addons'
-
-# Other Odoo configuration options
-# conf['logfile'] = '/var/log/odoo/odoo.log'
-# conf['log_level'] = 'info'
+# Ensure own_modules (tenant_routing, etc.) are on the addons path for Gunicorn.
+# docker-entrypoint.sh exports ODOO_ADDONS_PATH; apply it explicitly before initialize().
+addons_path_env = os.getenv('ODOO_ADDONS_PATH', '').strip()
+if addons_path_env:
+    conf['addons_path'] = addons_path_env
 
 # ----------------------------------------------------------
 # WSGI Application Wrapper para Gunicorn con gevent
 # ----------------------------------------------------------
 
-# Importar la aplicación de Odoo
+import logging
+
 from odoo.http import root
+
+_logger = logging.getLogger(__name__)
+
+# Required for Gunicorn: load server-wide modules (web, tenant_routing, …)
+# so nodb routes (/web/health, /tenant/provision) and ODOO_TENANT_DOMAIN_MAP work.
+# See setup/odoo-wsgi.example.py — this is not automatic under Gunicorn.
+root.initialize()
+
+_logger.info(
+    'odoo-wsgi ready: MULTI_TENANT=%s dbfilter=%r server_wide_modules=%s',
+    MULTI_TENANT,
+    conf.get('dbfilter') or '',
+    conf.get('server_wide_modules'),
+)
 
 
 class WebSocketMiddleware:
@@ -131,7 +143,5 @@ class WebSocketMiddleware:
 # Crear la aplicación envuelta con el middleware
 # El handler personalizado de Gunicorn (gunicorn_gevent_handler.py) debería
 # añadir el socket al environ, pero el middleware actúa como respaldo
+# Con preload_app=False, cada worker importa este módulo e inicializa su propia instancia
 application = WebSocketMiddleware(root)
-
-# Nota: application.initialize() se llamará automáticamente cuando sea necesario
-# Con preload_app=False, cada worker inicializará su propia instancia
