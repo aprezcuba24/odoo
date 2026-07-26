@@ -36,6 +36,7 @@ class BiProfitabilityReport(models.Model):
         'pos.order.line': [
             'product_id',
             'qty',
+            'price_unit',
             'price_subtotal',
             'total_cost',
         ],
@@ -156,7 +157,7 @@ class BiProfitabilityReport(models.Model):
                         SELECT
                             o.company_id AS company_id,
                             %s AS period_date,
-                            l.price_subtotal AS sale_amount,
+                            (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) AS sale_amount,
                             COALESCE(l.total_cost, 0) AS product_cost_amount
                         FROM pos_order_line l
                         JOIN pos_order o ON o.id = l.order_id

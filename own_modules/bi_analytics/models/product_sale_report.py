@@ -35,6 +35,7 @@ class BiProductSaleReport(models.Model):
         'pos.order.line': [
             'product_id',
             'qty',
+            'price_unit',
             'price_subtotal',
             'total_cost',
         ],
@@ -91,9 +92,9 @@ class BiProductSaleReport(models.Model):
                     c.currency_id AS currency_id,
                     o.date_order AS date_order,
                     l.qty AS qty_sold,
-                    l.price_subtotal AS sale_amount,
+                    (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) AS sale_amount,
                     COALESCE(l.total_cost, 0) AS cost_amount,
-                    l.price_subtotal - COALESCE(l.total_cost, 0) AS profit_amount
+                    (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) - COALESCE(l.total_cost, 0) AS profit_amount
                 FROM pos_order_line l
                 JOIN pos_order o ON o.id = l.order_id
                 JOIN res_company c ON c.id = o.company_id

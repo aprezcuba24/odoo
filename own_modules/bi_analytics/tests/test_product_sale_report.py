@@ -59,15 +59,18 @@ class TestBiProductSaleReport(TransactionCase):
             order.date_order = date_order
         return order
 
-    def _create_paid_pos_order(self, qty, price_unit, total_cost, date_order=None):
+    def _create_paid_pos_order(self, qty, price_unit, total_cost, date_order=None, price_subtotal=None):
         if not self.pos_config.current_session_id:
             self.pos_config.open_ui()
 
-        price_subtotal = price_unit * qty
+        # POS refund lines keep a positive subtotal with negative qty.
+        if price_subtotal is None:
+            price_subtotal = abs(price_unit * qty) if qty < 0 else price_unit * qty
+        payment_amount = -price_subtotal if qty < 0 else price_subtotal
         order = self.env['pos.order'].create({
             'company_id': self.env.company.id,
             'session_id': self.pos_config.current_session_id.id,
-            'amount_total': price_subtotal,
+            'amount_total': payment_amount,
             'amount_tax': 0.0,
             'amount_paid': 0.0,
             'amount_return': 0.0,
@@ -84,7 +87,7 @@ class TestBiProductSaleReport(TransactionCase):
         payment_context = {'active_ids': order.ids, 'active_id': order.id}
         payment = self.env['pos.make.payment'].with_context(**payment_context).create({
             'payment_method_id': self.pos_payment_method.id,
-            'amount': price_subtotal,
+            'amount': payment_amount,
         })
         payment.with_context(**payment_context).check()
         if date_order:
@@ -158,6 +161,25 @@ class TestBiProductSaleReport(TransactionCase):
         self.assertAlmostEqual(report.sale_amount, 20.0)
         self.assertAlmostEqual(report.cost_amount, 8.0)
         self.assertAlmostEqual(report.profit_amount, 12.0)
+
+    def test_product_sale_report_signs_pos_refund_line(self):
+        """POS refunds store negative qty and positive price_subtotal."""
+        order = self._create_paid_pos_order(
+            -1.0, 10.0, total_cost=-4.0, price_subtotal=10.0,
+        )
+        self.assertIn(order.state, ('paid', 'done'))
+        self.assertEqual(order.lines.qty, -1.0)
+        self.assertAlmostEqual(order.lines.price_subtotal, 10.0)
+        self.assertAlmostEqual(order.lines.total_cost, -4.0)
+
+        report = self.env['bi.product.sale.report'].search([
+            ('product_id', '=', self.pos_product.id),
+        ])
+        self.assertEqual(len(report), 1)
+        self.assertEqual(report.qty_sold, -1.0)
+        self.assertAlmostEqual(report.sale_amount, -10.0)
+        self.assertAlmostEqual(report.cost_amount, -4.0)
+        self.assertAlmostEqual(report.profit_amount, -6.0)
 
     def test_product_sale_report_excludes_draft_pos_order(self):
         if not self.pos_config.current_session_id:
