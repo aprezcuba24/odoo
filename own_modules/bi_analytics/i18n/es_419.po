@@ -63,6 +63,11 @@ msgid "Fecha del pedido"
 msgstr "Fecha del pedido"
 
 #. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__order_ref
+msgid "Referencia del pedido"
+msgstr "Referencia del pedido"
+
+#. module: bi_analytics
 #: model:ir.actions.act_window,name:bi_analytics.action_bi_product_sale_report
 #: model:ir.ui.menu,name:bi_analytics.menu_bi_product_sale_report
 #: model_terms:ir.ui.view,arch_db:bi_analytics.view_bi_product_sale_report_list
@@ -169,6 +174,11 @@ msgstr "Ganancia"
 #: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__date_order
 msgid "Order Date"
 msgstr "Fecha del pedido"
+
+#. module: bi_analytics
+#: model:ir.model.fields,field_description:bi_analytics.field_bi_product_sale_report__order_ref
+msgid "Order Reference"
+msgstr "Referencia del pedido"
 
 #. module: bi_analytics
 #: model:ir.model,name:bi_analytics.model_bi_product_sale_report

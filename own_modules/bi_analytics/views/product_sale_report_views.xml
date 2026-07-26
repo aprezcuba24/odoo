@@ -7,6 +7,7 @@
             <list string="Reportes de productos" default_group_by="product_id">
                 <field name="product_id"/>
                 <field name="sale_origin"/>
+                <field name="order_ref"/>
                 <field name="categ_id" optional="show"/>
                 <field name="qty_sold"/>
                 <field name="cost_amount" sum="Importe total de costo"/>
@@ -27,6 +28,7 @@
                 <field name="product_id"/>
                 <field name="categ_id"/>
                 <field name="sale_origin"/>
+                <field name="order_ref"/>
                 <filter name="filter_date" date="date_order" default_period="month"/>
                 <separator/>
                 <filter string="Apk" name="filter_origin_apk" domain="[('sale_origin', '=', 'apk')]"/>

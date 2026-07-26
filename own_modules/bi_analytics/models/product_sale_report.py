@@ -17,6 +17,7 @@ class BiProductSaleReport(models.Model):
     company_id = fields.Many2one('res.company', string='Compañía', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Moneda', readonly=True)
     date_order = fields.Datetime(string='Fecha del pedido', readonly=True)
+    order_ref = fields.Char(string='Referencia del pedido', readonly=True)
     sale_origin = fields.Selection(
         selection=[
             ('apk', 'Apk'),
@@ -32,7 +33,7 @@ class BiProductSaleReport(models.Model):
     profit_amount = fields.Monetary(string='Ganancia', readonly=True)
 
     _depends = {
-        'sale.order': ['state', 'company_id', 'date_order'],
+        'sale.order': ['state', 'company_id', 'date_order', 'name'],
         'sale.order.line': [
             'product_id',
             'product_uom_qty',
@@ -42,7 +43,7 @@ class BiProductSaleReport(models.Model):
             'display_type',
         ],
         'stock.move': ['sale_line_id', 'state', 'origin_returned_move_id'],
-        'pos.order': ['state', 'company_id', 'date_order'],
+        'pos.order': ['state', 'company_id', 'date_order', 'name'],
         'pos.order.line': [
             'product_id',
             'qty',
@@ -83,6 +84,7 @@ class BiProductSaleReport(models.Model):
                     s.company_id AS company_id,
                     c.currency_id AS currency_id,
                     s.date_order AS date_order,
+                    s.name AS order_ref,
                     %s AS sale_origin,
                     CASE
                         WHEN l.qty_delivered > 0 THEN l.qty_delivered
@@ -142,6 +144,7 @@ class BiProductSaleReport(models.Model):
                     o.company_id AS company_id,
                     c.currency_id AS currency_id,
                     o.date_order AS date_order,
+                    o.name AS order_ref,
                     'pos' AS sale_origin,
                     l.qty AS qty_sold,
                     (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) AS sale_amount,
