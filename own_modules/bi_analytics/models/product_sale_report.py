@@ -27,10 +27,12 @@ class BiProductSaleReport(models.Model):
         'sale.order.line': [
             'product_id',
             'product_uom_qty',
+            'qty_delivered',
             'price_unit',
             'purchase_price',
             'display_type',
         ],
+        'stock.move': ['sale_line_id', 'state', 'origin_returned_move_id'],
         'pos.order': ['state', 'company_id', 'date_order'],
         'pos.order.line': [
             'product_id',
@@ -52,6 +54,9 @@ class BiProductSaleReport(models.Model):
         )
 
     def _sale_order_query(self) -> SQL:
+        # Use net delivered qty when stock moves exist; keep ordered qty for
+        # confirmed lines not yet delivered. Exclude fully returned lines
+        # (qty_delivered = 0 after a done outgoing move).
         return SQL(
             """
                 SELECT
@@ -62,10 +67,28 @@ class BiProductSaleReport(models.Model):
                     s.company_id AS company_id,
                     c.currency_id AS currency_id,
                     s.date_order AS date_order,
-                    l.product_uom_qty AS qty_sold,
-                    l.price_unit * l.product_uom_qty AS sale_amount,
-                    l.purchase_price * l.product_uom_qty AS cost_amount,
-                    (l.price_unit - l.purchase_price) * l.product_uom_qty AS profit_amount
+                    CASE
+                        WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                        ELSE l.product_uom_qty
+                    END AS qty_sold,
+                    l.price_unit * (
+                        CASE
+                            WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                            ELSE l.product_uom_qty
+                        END
+                    ) AS sale_amount,
+                    l.purchase_price * (
+                        CASE
+                            WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                            ELSE l.product_uom_qty
+                        END
+                    ) AS cost_amount,
+                    (l.price_unit - l.purchase_price) * (
+                        CASE
+                            WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                            ELSE l.product_uom_qty
+                        END
+                    ) AS profit_amount
                 FROM sale_order_line l
                 JOIN sale_order s ON s.id = l.order_id
                 JOIN res_company c ON c.id = s.company_id
@@ -74,6 +97,16 @@ class BiProductSaleReport(models.Model):
                 WHERE s.state = 'sale'
                   AND l.display_type IS NULL
                   AND l.product_id IS NOT NULL
+                  AND NOT (
+                      l.qty_delivered = 0
+                      AND EXISTS (
+                          SELECT 1
+                          FROM stock_move sm
+                          WHERE sm.sale_line_id = l.id
+                            AND sm.state = 'done'
+                            AND sm.origin_returned_move_id IS NULL
+                      )
+                  )
             """,
         )
 

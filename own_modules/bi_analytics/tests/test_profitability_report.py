@@ -8,6 +8,7 @@ from odoo import fields
 from odoo.fields import Command
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
+from odoo.tools.float_utils import float_is_zero
 
 
 @tagged('post_install', '-at_install')
@@ -29,6 +30,23 @@ class TestBiProfitabilityReport(TransactionCase):
             'list_price': 10.0,
             'standard_price': 4.0,
         })
+        cls.storable_product = cls.env['product.product'].with_company(cls.profitability_company).create({
+            'name': 'BI Profitability Storable Product',
+            'sale_ok': True,
+            'is_storable': True,
+            'list_price': 10.0,
+            'standard_price': 4.0,
+        })
+        wh = cls.env['stock.warehouse'].search(
+            [('company_id', '=', cls.profitability_company.id)], limit=1,
+        )
+        cls.env['stock.quant'].with_company(cls.profitability_company).with_context(
+            inventory_mode=True,
+        ).create({
+            'product_id': cls.storable_product.id,
+            'location_id': wh.lot_stock_id.id,
+            'inventory_quantity': 50.0,
+        }).action_apply_inventory()
         cls.pos_product = cls.env['product.product'].create({
             'name': 'BI Profitability POS Product',
             'sale_ok': True,
@@ -53,11 +71,12 @@ class TestBiProfitabilityReport(TransactionCase):
         })
         cls.fixed_category = cls.env.ref('bi_analytics.cost_category_fixed')
 
-    def _create_confirmed_order(self, qty, price_unit, date_order=None):
+    def _create_confirmed_order(self, qty, price_unit, date_order=None, product=None):
+        product = product or self.product
         order = self.env['sale.order'].with_company(self.profitability_company).create({
             'partner_id': self.partner.id,
             'order_line': [(0, 0, {
-                'product_id': self.product.id,
+                'product_id': product.id,
                 'product_uom_qty': qty,
                 'price_unit': price_unit,
             })],
@@ -66,6 +85,37 @@ class TestBiProfitabilityReport(TransactionCase):
         if date_order:
             order.date_order = date_order
         return order
+
+    def _validate_outgoing_picking(self, order):
+        picking = order.picking_ids.filtered(
+            lambda p: p.picking_type_id.code == 'outgoing' and p.state != 'done',
+        )[:1]
+        self.assertTrue(picking)
+        picking.action_assign()
+        for move in picking.move_ids:
+            move.quantity = move.product_uom_qty
+            move.picked = True
+        picking.button_validate()
+        return picking
+
+    def _return_picking(self, picking, qty):
+        return_wiz = self.env['stock.return.picking'].with_context(
+            active_id=picking.id,
+            active_model='stock.picking',
+        ).create({})
+        for ret_line in return_wiz.product_return_moves:
+            ret_line.quantity = qty
+        res = return_wiz.action_create_returns()
+        return_picking = self.env['stock.picking'].browse(res['res_id'])
+        return_picking.action_confirm()
+        return_picking.action_assign()
+        for move in return_picking.move_ids:
+            mlines = move.move_line_ids
+            if mlines:
+                mlines.quantity = move.product_uom_qty
+            move.picked = True
+        return_picking.button_validate()
+        return return_picking
 
     def _create_paid_pos_order(self, qty, price_unit, total_cost, date_order=None, price_subtotal=None):
         if not self.pos_config.current_session_id:
@@ -328,3 +378,35 @@ class TestBiProfitabilityReport(TransactionCase):
         summary.action_next_month()
         self.assertEqual(summary.date_from, fields.Date.to_date('2018-08-01'))
         self.assertEqual(summary.date_to, fields.Date.to_date('2018-08-31'))
+
+    def test_profitability_report_excludes_full_delivery_return(self):
+        """Fully returned deliveries must not count toward daily sales."""
+        sale_day = fields.Date.to_date('2018-09-12')
+        sale_datetime = fields.Datetime.to_datetime(sale_day).replace(hour=12)
+
+        order = self._create_confirmed_order(
+            2.0, 10.0, date_order=sale_datetime, product=self.storable_product,
+        )
+        picking = self._validate_outgoing_picking(order)
+        line = order.order_line
+        self.assertAlmostEqual(line.qty_delivered, 2.0)
+        self.env.flush_all()
+
+        report_before = self._search_report([('date', '=', sale_day)])
+        self.assertEqual(len(report_before), 1)
+        self.assertAlmostEqual(report_before.sale_amount, 20.0)
+
+        self._return_picking(picking, 2.0)
+        self.assertTrue(
+            float_is_zero(line.qty_delivered, precision_rounding=line.product_uom_id.rounding),
+        )
+        self.env.flush_all()
+        # Report row ids are deterministic (company + date); clear cache so the
+        # post-return search does not reuse the pre-return sale_amount.
+        self.env.invalidate_all()
+
+        report_after = self._search_report([('date', '=', sale_day)])
+        self.assertTrue(report_after)
+        self.assertAlmostEqual(report_after.sale_amount, 0.0)
+        self.assertAlmostEqual(report_after.product_cost_amount, 0.0)
+        self.assertAlmostEqual(report_after.gross_profit_amount, 0.0)
