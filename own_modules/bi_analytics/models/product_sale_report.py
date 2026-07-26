@@ -17,6 +17,15 @@ class BiProductSaleReport(models.Model):
     company_id = fields.Many2one('res.company', string='Compañía', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Moneda', readonly=True)
     date_order = fields.Datetime(string='Fecha del pedido', readonly=True)
+    sale_origin = fields.Selection(
+        selection=[
+            ('apk', 'Apk'),
+            ('pos', 'POS'),
+            ('sale', 'Venta'),
+        ],
+        string='Origen de venta',
+        readonly=True,
+    )
     qty_sold = fields.Float(string='Cantidad', readonly=True)
     sale_amount = fields.Monetary(string='Venta', readonly=True)
     cost_amount = fields.Monetary(string='Costo', readonly=True)
@@ -27,14 +36,17 @@ class BiProductSaleReport(models.Model):
         'sale.order.line': [
             'product_id',
             'product_uom_qty',
+            'qty_delivered',
             'price_unit',
             'purchase_price',
             'display_type',
         ],
+        'stock.move': ['sale_line_id', 'state', 'origin_returned_move_id'],
         'pos.order': ['state', 'company_id', 'date_order'],
         'pos.order.line': [
             'product_id',
             'qty',
+            'price_unit',
             'price_subtotal',
             'total_cost',
         ],
@@ -50,7 +62,17 @@ class BiProductSaleReport(models.Model):
             self._pos_order_query(),
         )
 
+    def _sale_origin_sql(self) -> SQL:
+        if 'order_bridge_origin' in self.env['sale.order']._fields:
+            return SQL(
+                "CASE WHEN s.order_bridge_origin IS NOT NULL THEN 'apk' ELSE 'sale' END",
+            )
+        return SQL("'sale'")
+
     def _sale_order_query(self) -> SQL:
+        # Use net delivered qty when stock moves exist; keep ordered qty for
+        # confirmed lines not yet delivered. Exclude fully returned lines
+        # (qty_delivered = 0 after a done outgoing move).
         return SQL(
             """
                 SELECT
@@ -61,10 +83,29 @@ class BiProductSaleReport(models.Model):
                     s.company_id AS company_id,
                     c.currency_id AS currency_id,
                     s.date_order AS date_order,
-                    l.product_uom_qty AS qty_sold,
-                    l.price_unit * l.product_uom_qty AS sale_amount,
-                    l.purchase_price * l.product_uom_qty AS cost_amount,
-                    (l.price_unit - l.purchase_price) * l.product_uom_qty AS profit_amount
+                    %s AS sale_origin,
+                    CASE
+                        WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                        ELSE l.product_uom_qty
+                    END AS qty_sold,
+                    l.price_unit * (
+                        CASE
+                            WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                            ELSE l.product_uom_qty
+                        END
+                    ) AS sale_amount,
+                    l.purchase_price * (
+                        CASE
+                            WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                            ELSE l.product_uom_qty
+                        END
+                    ) AS cost_amount,
+                    (l.price_unit - l.purchase_price) * (
+                        CASE
+                            WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                            ELSE l.product_uom_qty
+                        END
+                    ) AS profit_amount
                 FROM sale_order_line l
                 JOIN sale_order s ON s.id = l.order_id
                 JOIN res_company c ON c.id = s.company_id
@@ -73,7 +114,18 @@ class BiProductSaleReport(models.Model):
                 WHERE s.state = 'sale'
                   AND l.display_type IS NULL
                   AND l.product_id IS NOT NULL
+                  AND NOT (
+                      l.qty_delivered = 0
+                      AND EXISTS (
+                          SELECT 1
+                          FROM stock_move sm
+                          WHERE sm.sale_line_id = l.id
+                            AND sm.state = 'done'
+                            AND sm.origin_returned_move_id IS NULL
+                      )
+                  )
             """,
+            self._sale_origin_sql(),
         )
 
     def _pos_order_query(self) -> SQL:
@@ -90,10 +142,11 @@ class BiProductSaleReport(models.Model):
                     o.company_id AS company_id,
                     c.currency_id AS currency_id,
                     o.date_order AS date_order,
+                    'pos' AS sale_origin,
                     l.qty AS qty_sold,
-                    l.price_subtotal AS sale_amount,
+                    (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) AS sale_amount,
                     COALESCE(l.total_cost, 0) AS cost_amount,
-                    l.price_subtotal - COALESCE(l.total_cost, 0) AS profit_amount
+                    (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) - COALESCE(l.total_cost, 0) AS profit_amount
                 FROM pos_order_line l
                 JOIN pos_order o ON o.id = l.order_id
                 JOIN res_company c ON c.id = o.company_id
@@ -105,3 +158,4 @@ class BiProductSaleReport(models.Model):
             """,
             exclude_linked,
         )
+

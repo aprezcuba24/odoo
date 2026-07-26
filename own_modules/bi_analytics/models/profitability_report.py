@@ -28,14 +28,17 @@ class BiProfitabilityReport(models.Model):
         'sale.order.line': [
             'product_id',
             'product_uom_qty',
+            'qty_delivered',
             'price_unit',
             'purchase_price',
             'display_type',
         ],
+        'stock.move': ['sale_line_id', 'state', 'origin_returned_move_id'],
         'pos.order': ['state', 'company_id', 'date_order'],
         'pos.order.line': [
             'product_id',
             'qty',
+            'price_unit',
             'price_subtotal',
             'total_cost',
         ],
@@ -145,18 +148,38 @@ class BiProfitabilityReport(models.Model):
                         SELECT
                             s.company_id AS company_id,
                             %s AS period_date,
-                            l.price_unit * l.product_uom_qty AS sale_amount,
-                            l.purchase_price * l.product_uom_qty AS product_cost_amount
+                            l.price_unit * (
+                                CASE
+                                    WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                                    ELSE l.product_uom_qty
+                                END
+                            ) AS sale_amount,
+                            l.purchase_price * (
+                                CASE
+                                    WHEN l.qty_delivered > 0 THEN l.qty_delivered
+                                    ELSE l.product_uom_qty
+                                END
+                            ) AS product_cost_amount
                         FROM sale_order_line l
                         JOIN sale_order s ON s.id = l.order_id
                         WHERE s.state = 'sale'
                           AND l.display_type IS NULL
                           AND l.product_id IS NOT NULL
+                          AND NOT (
+                              l.qty_delivered = 0
+                              AND EXISTS (
+                                  SELECT 1
+                                  FROM stock_move sm
+                                  WHERE sm.sale_line_id = l.id
+                                    AND sm.state = 'done'
+                                    AND sm.origin_returned_move_id IS NULL
+                              )
+                          )
                         UNION ALL
                         SELECT
                             o.company_id AS company_id,
                             %s AS period_date,
-                            l.price_subtotal AS sale_amount,
+                            (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) AS sale_amount,
                             COALESCE(l.total_cost, 0) AS product_cost_amount
                         FROM pos_order_line l
                         JOIN pos_order o ON o.id = l.order_id

@@ -12,7 +12,7 @@ Inteligencia de Negocio
 Reportes analíticos sobre ventas confirmadas (incl. TPV), gastos y rentabilidad.
 Incluye catálogo de insumos y registro de consumos.
     """,
-    'depends': ['sale', 'sale_margin', 'point_of_sale'],
+    'depends': ['sale', 'sale_margin', 'sale_stock', 'point_of_sale'],
     'data': [
         'security/ir.model.access.csv',
         'data/cost_category_data.xml',
