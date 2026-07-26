@@ -17,6 +17,15 @@ class BiProductSaleReport(models.Model):
     company_id = fields.Many2one('res.company', string='Compañía', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Moneda', readonly=True)
     date_order = fields.Datetime(string='Fecha del pedido', readonly=True)
+    sale_origin = fields.Selection(
+        selection=[
+            ('apk', 'Apk'),
+            ('pos', 'POS'),
+            ('sale', 'Venta'),
+        ],
+        string='Origen de venta',
+        readonly=True,
+    )
     qty_sold = fields.Float(string='Cantidad', readonly=True)
     sale_amount = fields.Monetary(string='Venta', readonly=True)
     cost_amount = fields.Monetary(string='Costo', readonly=True)
@@ -53,6 +62,13 @@ class BiProductSaleReport(models.Model):
             self._pos_order_query(),
         )
 
+    def _sale_origin_sql(self) -> SQL:
+        if 'order_bridge_origin' in self.env['sale.order']._fields:
+            return SQL(
+                "CASE WHEN s.order_bridge_origin IS NOT NULL THEN 'apk' ELSE 'sale' END",
+            )
+        return SQL("'sale'")
+
     def _sale_order_query(self) -> SQL:
         # Use net delivered qty when stock moves exist; keep ordered qty for
         # confirmed lines not yet delivered. Exclude fully returned lines
@@ -67,6 +83,7 @@ class BiProductSaleReport(models.Model):
                     s.company_id AS company_id,
                     c.currency_id AS currency_id,
                     s.date_order AS date_order,
+                    %s AS sale_origin,
                     CASE
                         WHEN l.qty_delivered > 0 THEN l.qty_delivered
                         ELSE l.product_uom_qty
@@ -108,6 +125,7 @@ class BiProductSaleReport(models.Model):
                       )
                   )
             """,
+            self._sale_origin_sql(),
         )
 
     def _pos_order_query(self) -> SQL:
@@ -124,6 +142,7 @@ class BiProductSaleReport(models.Model):
                     o.company_id AS company_id,
                     c.currency_id AS currency_id,
                     o.date_order AS date_order,
+                    'pos' AS sale_origin,
                     l.qty AS qty_sold,
                     (SIGN(l.qty) * SIGN(l.price_unit) * ABS(l.price_subtotal)) AS sale_amount,
                     COALESCE(l.total_cost, 0) AS cost_amount,
@@ -139,3 +158,4 @@ class BiProductSaleReport(models.Model):
             """,
             exclude_linked,
         )
+

@@ -309,3 +309,39 @@ class TestBiProductSaleReport(TransactionCase):
         self.assertAlmostEqual(report.sale_amount, 30.0)
         self.assertAlmostEqual(report.cost_amount, line.purchase_price * 3.0)
         self.assertAlmostEqual(report.profit_amount, report.sale_amount - report.cost_amount)
+
+    def test_product_sale_report_sale_origin_sale(self):
+        self._create_confirmed_order(2.0, 10.0)
+        report = self.env['bi.product.sale.report'].search([
+            ('product_id', '=', self.product.id),
+        ])
+        self.assertEqual(len(report), 1)
+        self.assertEqual(report.sale_origin, 'sale')
+
+    def test_product_sale_report_sale_origin_pos(self):
+        self._create_paid_pos_order(2.0, 10.0, total_cost=8.0)
+        report = self.env['bi.product.sale.report'].search([
+            ('product_id', '=', self.pos_product.id),
+        ])
+        self.assertEqual(len(report), 1)
+        self.assertEqual(report.sale_origin, 'pos')
+
+    def test_product_sale_report_sale_origin_apk(self):
+        if 'order_bridge_origin' not in self.env['sale.order']._fields:
+            self.skipTest('order_bridge not installed')
+        order = self.env['sale.order'].create({
+            'partner_id': self.partner.id,
+            'order_bridge_origin': 'app',
+            'order_line': [(0, 0, {
+                'product_id': self.product.id,
+                'product_uom_qty': 2.0,
+                'price_unit': 10.0,
+            })],
+        })
+        # order_bridge auto-confirms on create when origin is set
+        self.assertEqual(order.state, 'sale')
+        report = self.env['bi.product.sale.report'].search([
+            ('product_id', '=', self.product.id),
+        ])
+        self.assertEqual(len(report), 1)
+        self.assertEqual(report.sale_origin, 'apk')
