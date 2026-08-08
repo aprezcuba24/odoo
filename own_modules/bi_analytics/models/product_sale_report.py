@@ -27,9 +27,9 @@ class BiProductSaleReport(models.Model):
         string='Origen de venta',
         readonly=True,
     )
-    qty_sold = fields.Float(string='Cantidad', readonly=True)
-    sale_amount = fields.Monetary(string='Venta', readonly=True)
-    cost_amount = fields.Monetary(string='Costo', readonly=True)
+    qty_sold = fields.Float(string='Ventas', readonly=True)
+    sale_amount = fields.Monetary(string='Importe de venta', readonly=True)
+    cost_amount = fields.Monetary(string='Costo de venta', readonly=True)
     profit_amount = fields.Monetary(string='Ganancia', readonly=True)
 
     _depends = {

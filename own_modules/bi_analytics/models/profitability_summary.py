@@ -10,7 +10,7 @@ from odoo.fields import Command
 
 class BiProfitabilitySummary(models.TransientModel):
     _name = 'bi.profitability.summary'
-    _description = 'IPV'
+    _description = 'Estado de resultados'
     _rec_name = 'date_from'
 
     date_from = fields.Date(string='Periodo', required=True)
@@ -31,17 +31,17 @@ class BiProfitabilitySummary(models.TransientModel):
         'summary_id',
         string='Detalle diario',
     )
-    sale_amount = fields.Monetary(string='Ventas', readonly=True)
-    product_cost_amount = fields.Monetary(string='Costo de productos', readonly=True)
-    other_cost_amount = fields.Monetary(string='Otros costos', readonly=True)
-    total_cost_amount = fields.Monetary(string='Costo total', readonly=True)
+    sale_amount = fields.Monetary(string='Importe de venta', readonly=True)
+    product_cost_amount = fields.Monetary(string='Costo de venta', readonly=True)
+    other_cost_amount = fields.Monetary(string='Otros gastos', readonly=True)
+    total_cost_amount = fields.Monetary(string='Gasto total', readonly=True)
     cost_per_sale_pct = fields.Float(
-        string='Costo por peso de venta (%)',
+        string='Gasto por peso de venta (%)',
         readonly=True,
         digits=(16, 2),
     )
     total_cost_index_pct = fields.Float(
-        string='Índice de costo total (%)',
+        string='Índice de gasto total (%)',
         readonly=True,
         digits=(16, 2),
     )
@@ -50,7 +50,7 @@ class BiProfitabilitySummary(models.TransientModel):
         readonly=True,
         digits=(16, 2),
     )
-    profit_amount = fields.Monetary(string='Utilidad en valor', readonly=True)
+    profit_amount = fields.Monetary(string='Ganancia', readonly=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -68,7 +68,7 @@ class BiProfitabilitySummary(models.TransientModel):
         summary = self.create({})
         summary._reload_data()
         return {
-            'name': _('IPV'),
+            'name': _('Estado de resultados'),
             'type': 'ir.actions.act_window',
             'res_model': self._name,
             'res_id': summary.id,
@@ -165,6 +165,6 @@ class BiProfitabilitySummaryLine(models.TransientModel):
     )
     date = fields.Date(string='Fecha', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Moneda', readonly=True)
-    sale_amount = fields.Monetary(string='Ventas', readonly=True)
-    product_cost_amount = fields.Monetary(string='Costo de productos', readonly=True)
-    gross_profit_amount = fields.Monetary(string='Margen bruto', readonly=True)
+    sale_amount = fields.Monetary(string='Importe de venta', readonly=True)
+    product_cost_amount = fields.Monetary(string='Costo de venta', readonly=True)
+    gross_profit_amount = fields.Monetary(string='Ganancia', readonly=True)
