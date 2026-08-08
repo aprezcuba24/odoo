@@ -15,7 +15,7 @@
 
     <menuitem
         id="menu_bi_product_sale_report"
-        name="Reportes de productos"
+        name="IPV"
         parent="menu_bi_analytics_reports"
         action="action_bi_product_sale_report"
         sequence="10"
@@ -31,7 +31,7 @@
 
     <menuitem
         id="menu_bi_profitability_report"
-        name="IPV"
+        name="Estado de resultados"
         parent="menu_bi_analytics_reports"
         action="action_bi_profitability_summary"
         sequence="30"

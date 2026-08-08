@@ -149,6 +149,7 @@ class TestBiProductSaleReport(TransactionCase):
             ('product_id', '=', self.product.id),
         ])
         self.assertEqual(len(report), 1)
+        self.assertEqual(report.order_ref, order.name)
         self.assertEqual(report.qty_sold, 2.0)
         self.assertAlmostEqual(report.sale_amount, 10.0 * 2.0)
         self.assertAlmostEqual(report.cost_amount, line.purchase_price * 2.0)
@@ -205,6 +206,7 @@ class TestBiProductSaleReport(TransactionCase):
             ('product_id', '=', self.pos_product.id),
         ])
         self.assertEqual(len(report), 1)
+        self.assertEqual(report.order_ref, order.name)
         self.assertEqual(report.qty_sold, 2.0)
         self.assertAlmostEqual(report.sale_amount, 20.0)
         self.assertAlmostEqual(report.cost_amount, 8.0)

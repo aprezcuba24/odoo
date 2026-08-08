@@ -16,11 +16,11 @@ class BiProfitabilityReport(models.Model):
     company_id = fields.Many2one('res.company', string='Compañía', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Moneda', readonly=True)
     date = fields.Date(string='Fecha', readonly=True)
-    sale_amount = fields.Monetary(string='Ventas', readonly=True)
-    product_cost_amount = fields.Monetary(string='Costo de productos', readonly=True)
-    gross_profit_amount = fields.Monetary(string='Margen bruto', readonly=True)
-    other_cost_amount = fields.Monetary(string='Otros costos', readonly=True)
-    total_cost_amount = fields.Monetary(string='Costo total', readonly=True)
+    sale_amount = fields.Monetary(string='Importe de venta', readonly=True)
+    product_cost_amount = fields.Monetary(string='Costo de venta', readonly=True)
+    gross_profit_amount = fields.Monetary(string='Ganancia', readonly=True)
+    other_cost_amount = fields.Monetary(string='Otros gastos', readonly=True)
+    total_cost_amount = fields.Monetary(string='Gasto total', readonly=True)
     profit_amount = fields.Monetary(string='Utilidad', readonly=True)
 
     _depends = {
