@@ -11,7 +11,6 @@ from odoo.fields import Command
 class BiProfitabilitySummary(models.TransientModel):
     _name = 'bi.profitability.summary'
     _description = 'Estado de resultados'
-    _rec_name = 'date_from'
 
     date_from = fields.Date(string='Periodo', required=True)
     date_to = fields.Date(string='Hasta', required=True)
@@ -51,6 +50,10 @@ class BiProfitabilitySummary(models.TransientModel):
         digits=(16, 2),
     )
     profit_amount = fields.Monetary(string='Ganancia', readonly=True)
+    display_name = fields.Char(
+        compute='_compute_display_name',
+        store=False,
+    )
 
     @api.model
     def default_get(self, fields_list):
@@ -62,6 +65,11 @@ class BiProfitabilitySummary(models.TransientModel):
         defaults.setdefault('date_to', month_end)
         defaults.setdefault('company_id', self.env.company.id)
         return defaults
+
+    @api.depends('date_from')
+    def _compute_display_name(self):
+        for record in self:
+            record.display_name = _("Resumen de rentabilidad: %s") % (record.date_from or "")
 
     @api.model
     def action_open(self):
