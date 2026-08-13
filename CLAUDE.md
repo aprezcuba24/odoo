@@ -102,3 +102,4 @@ The custom handler in `gunicorn_gevent_handler.py` exists specifically to solve 
 - **Health checks**: The Dockerfile includes a healthcheck on `/web/health`. Railway uses this during deploys when configured.
 - **Logs**: All logs go to stdout/stderr and appear in the Railway dashboard. No file-based logging in production.
 - **Multi-tenant**: Implemented as a **separate Railway project** (`ODOO_MULTI_TENANT=true`, `dbfilter`, `tenant_routing` for domain map + `/tenant/provision`, `scripts/provision_tenant.sh`). See `docs/RAILWAY.md`. The current production project remains single-tenant (do not set that env var there).
+- **Multi-company** (alternative, also a **separate** Railway project): one PostgreSQL DB, many `res.company`; self-service via `company_onboarding`; API uses `company_slug` / `X-Company-Slug`. See `docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md`. Do not enable on single-tenant production.

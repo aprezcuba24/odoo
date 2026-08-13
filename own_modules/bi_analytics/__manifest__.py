@@ -15,6 +15,7 @@ Incluye catálogo de insumos y registro de consumos.
     'depends': ['sale', 'sale_margin', 'sale_stock', 'point_of_sale'],
     'data': [
         'security/ir.model.access.csv',
+        'security/bi_analytics_security.xml',
         'data/cost_category_data.xml',
         'views/cost_category_views.xml',
         'views/supply_views.xml',

@@ -247,7 +247,8 @@ class SaleOrder(models.Model):
         seq = self.env['ir.sequence'].sudo()
         for vals in vals_list:
             if vals.get('order_bridge_origin') and not vals.get('order_bridge_ref'):
-                ref = seq.next_by_code('order_bridge.order.ref')
+                company_id = vals.get('company_id') or self.env.company.id
+                ref = seq.with_company(company_id).next_by_code('order_bridge.order.ref')
                 if ref:
                     vals['order_bridge_ref'] = ref
         records = super().create(vals_list)

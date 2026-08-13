@@ -17,6 +17,13 @@ class RegisterBody(BaseModel):
     device_key: str = Field(..., min_length=1)
     phone: str | None = None
     device_info: str | None = None
+    company_slug: str | None = Field(
+        default=None,
+        description=(
+            'Slug público de la compañía (opcional si se envía X-Company-Slug, '
+            'subdominio, o hay una sola compañía en la BD).'
+        ),
+    )
 
     @field_validator('phone')
     @classmethod
@@ -25,6 +32,14 @@ class RegisterBody(BaseModel):
         if not s.isdigit() or len(s) != 8:
             raise ValueError('El teléfono debe tener 8 dígitos')
         return s
+
+    @field_validator('company_slug')
+    @classmethod
+    def company_slug_normalized(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip().lower()
+        return s or None
 
 
 class AddressFull(BaseModel):

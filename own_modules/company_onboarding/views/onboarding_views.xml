@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_company_onboarding_wizard_form" model="ir.ui.view">
+        <field name="name">company.onboarding.wizard.form</field>
+        <field name="model">company.onboarding.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Crear mi compañía">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Bienvenido</h1>
+                        <p>Crea tu compañía para empezar a usar la plataforma. Tus datos quedarán separados de los de otros negocios.</p>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="company_name" placeholder="Mi Tienda"/>
+                            <field name="order_bridge_slug" placeholder="mi-tienda"/>
+                            <field name="phone"/>
+                        </group>
+                        <group>
+                            <field name="country_id"/>
+                            <field name="currency_id"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_create_company" type="object" string="Crear compañía" class="btn-primary" data-hotkey="q"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_company_onboarding_wizard" model="ir.actions.act_window">
+        <field name="name">Crear mi compañía</field>
+        <field name="res_model">company.onboarding.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="view_id" ref="view_company_onboarding_wizard_form"/>
+    </record>
+</odoo>

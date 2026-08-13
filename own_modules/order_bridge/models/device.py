@@ -11,12 +11,12 @@ from odoo.addons.phone_validation.tools import phone_validation as phone_validat
 _logger = logging.getLogger(__name__)
 
 
-def normalize_phone_for_registration(env, phone_raw):
+def normalize_phone_for_registration(env, phone_raw, company=None):
     """Return a normalized phone string (E.164 when possible)."""
     if not phone_raw or not str(phone_raw).strip():
         return ''
     phone_raw = str(phone_raw).strip()
-    company = env.company
+    company = company or env.company
     country = company.country_id
     country_code = country.code if country else None
     phone_code = country.phone_code if country and country.phone_code else None
@@ -33,9 +33,24 @@ class OrderBridgeDevice(models.Model):
     _name = 'order_bridge.device'
     _description = 'Dispositivo cliente API registrado'
     _order = 'registration_date desc, id desc'
+    _check_company_auto = True
 
     device_key = fields.Char(required=True, index='btree', readonly=True)
-    partner_id = fields.Many2one('res.partner', required=True, ondelete='cascade', index=True)
+    partner_id = fields.Many2one(
+        'res.partner',
+        required=True,
+        ondelete='cascade',
+        index=True,
+        check_company=True,
+    )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Compañía',
+        required=True,
+        ondelete='cascade',
+        index=True,
+        default=lambda self: self.env.company,
+    )
     phone = fields.Char(required=True, index=True)
     phone_validated = fields.Boolean(
         string='Teléfono validado',
@@ -74,9 +89,13 @@ class OrderBridgeDevice(models.Model):
         if device and device.apk_version != apk_version:
             device.write({'apk_version': apk_version})
 
-    def _deactivate_other_devices_for_phone(self, normalized_phone, keep_key=None):
-        """One phone = one active device. Deactivate others with same normalized phone."""
-        domain = [('phone', '=', normalized_phone), ('active', '=', True)]
+    def _deactivate_other_devices_for_phone(self, normalized_phone, company, keep_key=None):
+        """One phone = one active device per company. Deactivate others with same phone."""
+        domain = [
+            ('phone', '=', normalized_phone),
+            ('active', '=', True),
+            ('company_id', '=', company.id),
+        ]
         if keep_key:
             domain.append(('device_key', '!=', keep_key))
         others = self.sudo().search(domain)
@@ -84,8 +103,12 @@ class OrderBridgeDevice(models.Model):
             others.write({'active': False})
 
     @api.model
-    def register_or_get(self, phone_raw, device_key, device_info=None):
-        """Register device or return existing state (idempotent on same device_key)."""
+    def register_or_get(self, phone_raw, device_key, device_info=None, company=None):
+        """Register device or return existing state (idempotent on same device_key).
+
+        ``company`` is required when registering a new device (multi-company).
+        Existing devices are returned without re-checking company.
+        """
         self = self.sudo()
         if not device_key or not str(device_key).strip():
             raise UserError(_('La clave del dispositivo es obligatoria.'))
@@ -97,29 +120,43 @@ class OrderBridgeDevice(models.Model):
                 'created': False,
                 'partner': existing.partner_id,
             }
-        normalized = normalize_phone_for_registration(self.env, phone_raw)
+        if not company:
+            raise UserError(_('La compañía (company_slug) es obligatoria para registrar un dispositivo.'))
+        company = company.sudo()
+        normalized = normalize_phone_for_registration(self.env, phone_raw, company=company)
         if not normalized:
             raise UserError(_('El teléfono es obligatorio.'))
         Partner = self.env['res.partner'].sudo()
         partner = Partner.search(
-            ['|', ('phone', '=', normalized), ('phone_sanitized', '=', normalized)],
+            [
+                '|',
+                ('phone', '=', normalized),
+                ('phone_sanitized', '=', normalized),
+                '|',
+                ('company_id', '=', company.id),
+                ('company_id', '=', False),
+            ],
             limit=1,
         )
         if not partner:
             partner = Partner.create({
                 'name': normalized,
                 'phone': normalized,
+                'company_id': company.id,
             })
         else:
             vals = {}
             if partner.phone != normalized:
                 vals['phone'] = normalized
+            if not partner.company_id:
+                vals['company_id'] = company.id
             if vals:
                 partner.write(vals)
-        self._deactivate_other_devices_for_phone(normalized, keep_key=None)
+        self._deactivate_other_devices_for_phone(normalized, company, keep_key=None)
         device = self.create({
             'device_key': device_key,
             'partner_id': partner.id,
+            'company_id': company.id,
             'phone': normalized,
             'phone_validated': False,
             'active': True,

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bi_other_cost_company_rule" model="ir.rule">
+        <field name="name">Gasto BI: multi-company</field>
+        <field name="model_id" ref="model_bi_other_cost"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="bi_supply_company_rule" model="ir.rule">
+        <field name="name">Insumo BI: multi-company</field>
+        <field name="model_id" ref="model_bi_supply"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="bi_supply_entry_company_rule" model="ir.rule">
+        <field name="name">Entrada de insumo BI: multi-company</field>
+        <field name="model_id" ref="model_bi_supply_entry"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="bi_profitability_summary_company_rule" model="ir.rule">
+        <field name="name">Resumen rentabilidad BI: multi-company</field>
+        <field name="model_id" ref="model_bi_profitability_summary"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- SQL reports are multi-company by company_id column; rules still apply when browsed -->
+    <record id="bi_product_sale_report_company_rule" model="ir.rule">
+        <field name="name">Informe ventas producto BI: multi-company</field>
+        <field name="model_id" ref="model_bi_product_sale_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="bi_other_cost_report_company_rule" model="ir.rule">
+        <field name="name">Informe gastos BI: multi-company</field>
+        <field name="model_id" ref="model_bi_other_cost_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="bi_profitability_report_company_rule" model="ir.rule">
+        <field name="name">Informe rentabilidad BI: multi-company</field>
+        <field name="model_id" ref="model_bi_profitability_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+</odoo>

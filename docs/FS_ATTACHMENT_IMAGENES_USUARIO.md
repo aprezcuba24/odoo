@@ -38,15 +38,17 @@ Comprueba: modo (`ODOO_MULTI_TENANT`), `directory_path`, `model_xmlids` / `field
 
 | Modo | Prefijo esperado en S3 |
 |---|---|
-| Single-tenant (`ODOO_MULTI_TENANT` unset) | raíz del bucket |
-| Multi-tenant | `<bucket>/<db_name>/` |
+| Single-tenant (`ODOO_MULTI_TENANT` unset, `ODOO_MULTI_COMPANY_S3` unset) | raíz del bucket |
+| Multi-tenant BD (`ODOO_MULTI_TENANT=true`) | `<bucket>/<db_name>/` |
+| Multi-company (`ODOO_MULTI_COMPANY_S3=true`) | `<bucket>/{company_id}/` |
 
 Checklist:
 
 1. `ODOO_ATTACHMENT_STORAGE=s3` + bucket (`ORDER_BRIDGE_BANNER_S3_BUCKET` o `ODOO_S3_BUCKET`) + credenciales
 2. MT: `ODOO_MULTI_TENANT=true` y tenant en `ODOO_TENANT_DATABASES`
-3. Subir imagen **nueva** de producto y banner; comprobar objeto en S3
-4. Imágenes antiguas (pre-S3) requieren re-guardar
+3. Multi-company: `ODOO_MULTI_COMPANY_S3=true` (sin `ODOO_MULTI_TENANT`)
+4. Subir imagen **nueva** de producto y banner; comprobar objeto en S3
+5. Imágenes antiguas (pre-S3) requieren re-guardar
 
 ## Regla principal
 

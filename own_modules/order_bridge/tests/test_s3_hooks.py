@@ -22,12 +22,29 @@ class TestOrderBridgeS3Hooks(TransactionCase):
             self.assertFalse(obhooks._multi_tenant_enabled())
 
     def test_directory_path_single_vs_multi_tenant(self):
-        with patch.dict("os.environ", {"ODOO_MULTI_TENANT": ""}, clear=False):
+        with patch.dict(
+            "os.environ",
+            {"ODOO_MULTI_TENANT": "", "ODOO_MULTI_COMPANY_S3": ""},
+            clear=False,
+        ):
             self.assertEqual(obhooks._media_directory_path("my-bucket"), "my-bucket")
-        with patch.dict("os.environ", {"ODOO_MULTI_TENANT": "true"}, clear=False):
+        with patch.dict(
+            "os.environ",
+            {"ODOO_MULTI_TENANT": "true", "ODOO_MULTI_COMPANY_S3": ""},
+            clear=False,
+        ):
             self.assertEqual(
                 obhooks._media_directory_path("my-bucket"),
                 "my-bucket/{db_name}",
+            )
+        with patch.dict(
+            "os.environ",
+            {"ODOO_MULTI_TENANT": "", "ODOO_MULTI_COMPANY_S3": "true"},
+            clear=False,
+        ):
+            self.assertEqual(
+                obhooks._media_directory_path("my-bucket"),
+                "my-bucket/{company_id}",
             )
 
     def test_discover_image_attachment_field_xmlids_includes_product(self):

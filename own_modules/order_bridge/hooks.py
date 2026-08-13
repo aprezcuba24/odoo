@@ -19,11 +19,15 @@ Bucket name (first match wins):
 
 S3 layout:
 
-- **Single-tenant** (production; ``ODOO_MULTI_TENANT`` unset):
-  ``directory_path = <bucket>`` — objects at bucket root.
-- **Multi-tenant** (``ODOO_MULTI_TENANT=true``):
+- **Single-tenant** (production; ``ODOO_MULTI_TENANT`` unset and
+  ``ODOO_MULTI_COMPANY_S3`` unset): ``directory_path = <bucket>`` —
+  objects at bucket root.
+- **Multi-database tenant** (``ODOO_MULTI_TENANT=true``):
   ``directory_path = <bucket>/{db_name}`` — shared bucket, one prefix per
   database (OCA substitutes ``{db_name}`` at runtime).
+- **Multi-company** (``ODOO_MULTI_COMPANY_S3=true``, same BD, several
+  ``res.company``): ``directory_path = <bucket>/{company_id}`` — shared
+  bucket, one prefix per company id (OCA substitutes ``{company_id}``).
 
 ``use_as_default_for_attachments`` stays False so regenerable assets
 (JS/CSS) stay in DB/filestore.
@@ -56,6 +60,15 @@ def _multi_tenant_enabled() -> bool:
     )
 
 
+def _multi_company_s3_enabled() -> bool:
+    return os.environ.get("ODOO_MULTI_COMPANY_S3", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 def _media_s3_bucket() -> str:
     """Preferred ``ORDER_BRIDGE_BANNER_S3_BUCKET``, else ``ODOO_S3_BUCKET``."""
     return (
@@ -70,9 +83,11 @@ _banner_s3_bucket = _media_s3_bucket
 
 
 def _media_directory_path(bucket: str) -> str:
-    """Bucket root in single-tenant; ``bucket/{db_name}`` when multi-tenant."""
+    """Bucket root, ``bucket/{db_name}``, or ``bucket/{company_id}``."""
     if _multi_tenant_enabled():
         return f"{bucket}/{{db_name}}"
+    if _multi_company_s3_enabled():
+        return f"{bucket}/{{company_id}}"
     return bucket
 
 
@@ -184,6 +199,7 @@ def provision_media_fs_storage(env):
     field_xmlids = _discover_image_attachment_field_xmlids(env)
     directory_path = _media_directory_path(bucket)
     multi_tenant = _multi_tenant_enabled()
+    multi_company_s3 = _multi_company_s3_enabled()
     options = _s3_options(access_key, secret_key)
 
     Storage = env["fs.storage"].sudo()
@@ -211,10 +227,11 @@ def provision_media_fs_storage(env):
 
     _logger.info(
         "order_bridge: fs.storage %s directory_path=%s multi_tenant=%s "
-        "model_xmlids=%s field_xmlids_count=%s",
+        "multi_company_s3=%s model_xmlids=%s field_xmlids_count=%s",
         MEDIA_FS_STORAGE_CODE,
         directory_path,
         multi_tenant,
+        multi_company_s3,
         BANNER_MODEL_XMLID,
         len(field_xmlids),
     )
@@ -237,6 +254,25 @@ def provision_media_fs_storage(env):
 provision_banner_fs_storage = provision_media_fs_storage
 
 
+def ensure_order_bridge_sequences(env):
+    """Create per-company OB reference sequences when missing."""
+    Sequence = env["ir.sequence"].sudo()
+    for company in env["res.company"].sudo().search([]):
+        if Sequence.search_count([
+            ("code", "=", "order_bridge.order.ref"),
+            ("company_id", "=", company.id),
+        ]):
+            continue
+        Sequence.create({
+            "name": f"Referencia Tienda Apk ({company.name})",
+            "code": "order_bridge.order.ref",
+            "prefix": "OB-",
+            "padding": 5,
+            "company_id": company.id,
+        })
+
+
 def post_init_hook(env):
     """Odoo 19 passes ``env`` to ``post_init_hook`` (see odoo/modules/loading.py)."""
+    ensure_order_bridge_sequences(env)
     provision_media_fs_storage(env)

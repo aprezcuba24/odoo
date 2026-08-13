@@ -61,12 +61,19 @@ Production runs on [Railway](https://railway.com/) as a **Docker** web service w
 - **Deploy upgrades**: Each deploy runs `odoo-bin -u base` before Gunicorn starts (2–5 minutes). The Dockerfile healthcheck uses a long `start-period` for this.
 - **Logs**: stdout/stderr appear in the Railway service **Logs** tab.
 - **Multi-tenant**: Use a **separate Railway project** (see below). The current production project stays single-tenant — do **not** set `ODOO_MULTI_TENANT` there.
+- **Multi-company** (1 BD, many `res.company`): also a **separate** Railway project — see [`docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md`](docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md). Do **not** enable on single-tenant production.
 
 ### Multi-tenant (proyecto Railway aparte)
 
 Una instancia, muchas BD. **No** actives `ODOO_MULTI_TENANT` en producción single-tenant.
 
 Guía: [`docs/RAILWAY_MULTI_TENANT_CHECKLIST.md`](docs/RAILWAY_MULTI_TENANT_CHECKLIST.md)
+
+### Multi-company (proyecto Railway aparte)
+
+Una instancia, **una** BD, muchas compañías. Onboarding self-service (`company_onboarding`). Sin `ODOO_MULTI_TENANT`.
+
+Guía: [`docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md`](docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md)
 
 | | |
 |-|-|
