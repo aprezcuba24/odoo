@@ -80,7 +80,9 @@ No actives `ODOO_MULTI_TENANT` en el proyecto single-tenant de producción.
 
 Proyecto Railway **aparte** (Postgres propio). Varias `res.company` en la misma base. Onboarding self-service vía módulo `company_onboarding`.
 
-**[`RAILWAY_MULTI_COMPANY_CHECKLIST.md`](RAILWAY_MULTI_COMPANY_CHECKLIST.md)**
+**Guía paso a paso (proteger producción single-tenant):** [`DESPLIEGUE_MULTI_COMPANY.md`](DESPLIEGUE_MULTI_COMPANY.md)
+
+**[`RAILWAY_MULTI_COMPANY_CHECKLIST.md`](RAILWAY_MULTI_COMPANY_CHECKLIST.md)** — checklist técnico.
 
 No actives `ODOO_MULTI_TENANT` aquí. No uses este modo en el single-tenant de producción.
 
