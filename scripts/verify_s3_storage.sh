@@ -1,19 +1,16 @@
 #!/bin/bash
 # Verify OCA fs.storage S3 provisioning for Tienda Apk media (banners + images).
 #
-# Works for single-tenant and multi-tenant: pass the database name to check.
+# Pass the database name to check (path of DATABASE_URL, e.g. railway).
 #
 # Usage:
 #   ./scripts/verify_s3_storage.sh <db_name>
 #
 # Examples:
-#   # Multi-tenant tenant DB
-#   ./scripts/verify_s3_storage.sh cliente1
-#
-#   # Single-tenant production DB (often the DATABASE_URL path, e.g. railway)
 #   ./scripts/verify_s3_storage.sh railway
+#   ./scripts/verify_s3_storage.sh odoo
 #
-# Reads ORDER_BRIDGE_* / ODOO_S3_* / AWS_* / ODOO_MULTI_TENANT from the environment.
+# Reads ORDER_BRIDGE_BANNER_S3_BUCKET / ODOO_S3_* / AWS_* / ODOO_MULTI_COMPANY_S3 from the environment.
 # Does not print secrets.
 set -euo pipefail
 
@@ -30,7 +27,7 @@ print_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 usage() {
-    sed -n '2,18p' "$0" | sed 's/^# \?//'
+    sed -n '2,15p' "$0" | sed 's/^# \?//'
     exit "${1:-0}"
 }
 
@@ -81,18 +78,18 @@ VERIFY_PY="$(cat <<'PY'
 from odoo.addons.order_bridge import hooks as obhooks
 
 bucket = obhooks._media_s3_bucket()
-mt = obhooks._multi_tenant_enabled()
+mc = obhooks._multi_company_s3_enabled()
 expected_path = obhooks._media_directory_path(bucket) if bucket else "(no bucket)"
 access, secret = obhooks._s3_credentials()
 
 print("=== Env / expected layout ===")
-print(f"ODOO_MULTI_TENANT={mt}")
+print(f"ODOO_MULTI_COMPANY_S3={mc}")
 print(f"bucket={bucket or '(unset)'}")
 print(f"directory_path_template={expected_path}")
 print(f"credentials_present={bool(access and secret)}")
 print(f"db_name={env.cr.dbname}")
-if mt and bucket:
-    print(f"resolved_prefix={bucket}/{env.cr.dbname}/")
+if mc and bucket:
+    print(f"resolved_prefix={bucket}/{{company_id}}/")
 elif bucket:
     print(f"resolved_prefix={bucket}/ (bucket root)")
 
@@ -164,7 +161,7 @@ print("=== Checklist ===")
 print("1. ODOO_ATTACHMENT_STORAGE=s3 (so entrypoint does not force DB)")
 print("2. Bucket + credentials set; fs_attachment + order_bridge installed")
 print("3. Upload a NEW product image and banner; old ones stay in DB until re-saved")
-print("4. ST: objects at bucket root | MT: objects under <bucket>/<db_name>/")
+print("4. ST: objects at bucket root | MC: objects under <bucket>/{company_id}/")
 PY
 )"
 

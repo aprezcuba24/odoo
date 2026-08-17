@@ -19,12 +19,8 @@ Bucket name (first match wins):
 
 S3 layout:
 
-- **Single-tenant** (production; ``ODOO_MULTI_TENANT`` unset and
-  ``ODOO_MULTI_COMPANY_S3`` unset): ``directory_path = <bucket>`` —
-  objects at bucket root.
-- **Multi-database tenant** (``ODOO_MULTI_TENANT=true``):
-  ``directory_path = <bucket>/{db_name}`` — shared bucket, one prefix per
-  database (OCA substitutes ``{db_name}`` at runtime).
+- **Single-tenant** (production; ``ODOO_MULTI_COMPANY_S3`` unset):
+  ``directory_path = <bucket>`` — objects at bucket root.
 - **Multi-company** (``ODOO_MULTI_COMPANY_S3=true``, same BD, several
   ``res.company``): ``directory_path = <bucket>/{company_id}`` — shared
   bucket, one prefix per company id (OCA substitutes ``{company_id}``).
@@ -51,15 +47,6 @@ BANNER_FS_STORAGE_CODE = MEDIA_FS_STORAGE_CODE
 BANNER_MODEL_XMLID = "order_bridge.model_order_bridge_banner"
 
 
-def _multi_tenant_enabled() -> bool:
-    return os.environ.get("ODOO_MULTI_TENANT", "").strip().lower() in (
-        "1",
-        "true",
-        "yes",
-        "on",
-    )
-
-
 def _multi_company_s3_enabled() -> bool:
     return os.environ.get("ODOO_MULTI_COMPANY_S3", "").strip().lower() in (
         "1",
@@ -83,9 +70,7 @@ _banner_s3_bucket = _media_s3_bucket
 
 
 def _media_directory_path(bucket: str) -> str:
-    """Bucket root, ``bucket/{db_name}``, or ``bucket/{company_id}``."""
-    if _multi_tenant_enabled():
-        return f"{bucket}/{{db_name}}"
+    """Bucket root, or ``bucket/{company_id}`` when multi-company S3 is on."""
     if _multi_company_s3_enabled():
         return f"{bucket}/{{company_id}}"
     return bucket
@@ -96,16 +81,8 @@ _banner_directory_path = _media_directory_path
 
 
 def _s3_credentials() -> tuple[str, str]:
-    access_key = (
-        os.environ.get("ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID")
-        or os.environ.get("AWS_ACCESS_KEY_ID")
-        or ""
-    ).strip()
-    secret_key = (
-        os.environ.get("ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY")
-        or os.environ.get("AWS_SECRET_ACCESS_KEY")
-        or ""
-    ).strip()
+    access_key = (os.environ.get("AWS_ACCESS_KEY_ID") or "").strip()
+    secret_key = (os.environ.get("AWS_SECRET_ACCESS_KEY") or "").strip()
     return access_key, secret_key
 
 
@@ -116,11 +93,7 @@ def _s3_options(access_key: str, secret_key: str) -> dict:
         or os.environ.get("AWS_ENDPOINT_URL")
         or ""
     ).strip()
-    region = (
-        os.environ.get("ORDER_BRIDGE_BANNER_S3_REGION")
-        or os.environ.get("AWS_DEFAULT_REGION")
-        or ""
-    ).strip()
+    region = (os.environ.get("AWS_DEFAULT_REGION") or "").strip()
     client_kwargs: dict = {}
     if region:
         client_kwargs["region_name"] = region
@@ -191,14 +164,13 @@ def provision_media_fs_storage(env):
     if not access_key or not secret_key:
         _logger.warning(
             "order_bridge: S3 bucket set (%s) but access key/secret "
-            "missing (ORDER_BRIDGE_* or AWS_*); skip fs.storage provisioning",
+            "missing (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY); skip fs.storage provisioning",
             bucket,
         )
         return
 
     field_xmlids = _discover_image_attachment_field_xmlids(env)
     directory_path = _media_directory_path(bucket)
-    multi_tenant = _multi_tenant_enabled()
     multi_company_s3 = _multi_company_s3_enabled()
     options = _s3_options(access_key, secret_key)
 
@@ -226,11 +198,10 @@ def provision_media_fs_storage(env):
         storage = Storage.create(vals)
 
     _logger.info(
-        "order_bridge: fs.storage %s directory_path=%s multi_tenant=%s "
+        "order_bridge: fs.storage %s directory_path=%s "
         "multi_company_s3=%s model_xmlids=%s field_xmlids_count=%s",
         MEDIA_FS_STORAGE_CODE,
         directory_path,
-        multi_tenant,
         multi_company_s3,
         BANNER_MODEL_XMLID,
         len(field_xmlids),
@@ -250,7 +221,7 @@ def provision_media_fs_storage(env):
     return storage
 
 
-# Backward-compatible alias used by docker-entrypoint / provision_tenant.sh.
+# Backward-compatible alias used by docker-entrypoint / S3 scripts.
 provision_banner_fs_storage = provision_media_fs_storage
 
 

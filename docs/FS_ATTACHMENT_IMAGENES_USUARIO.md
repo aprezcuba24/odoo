@@ -12,43 +12,35 @@ En este repo, `order_bridge.hooks.provision_media_fs_storage` (alias `provision_
 | `field_xmlids` | Auto-descubiertos por BD: binary store + nombre contiene `image` + `registry.field.attachment=True` (Odoo 19 no tiene columna `ir.model.fields.attachment`) |
 | `use_as_default_for_attachments` | `False` |
 | `directory_path` (single-tenant) | `<bucket>` |
-| `directory_path` (multi-tenant) | `<bucket>/{db_name}` |
+| `directory_path` (multi-company) | `<bucket>/{company_id}` |
 
 **Importante:** OCA resuelve el storage desde `model_xmlids` / `field_xmlids` en `fs.storage`. Escribir solo `ir.model.storage_id` **no** basta para que los adjuntos vayan a S3.
 
 Se ejecuta en:
 
 - `post_init_hook` de `order_bridge`
-- `docker-entrypoint.sh` → `prepare_tenant_database` (cada deploy)
-- `scripts/provision_tenant.sh` (al crear/reprovisionar un tenant)
+- `docker-entrypoint.sh` → `prepare_database` (cada deploy)
 
-## Verificación (single-tenant y multi-tenant)
-
-Un solo script para ambas instancias:
+## Verificación
 
 ```bash
-# Multi-tenant
-./scripts/verify_s3_storage.sh cliente1
-
-# Single-tenant (nombre de la BD de producción, p. ej. path de DATABASE_URL)
+# Nombre de la BD (path de DATABASE_URL)
 ./scripts/verify_s3_storage.sh railway
 ```
 
-Comprueba: modo (`ODOO_MULTI_TENANT`), `directory_path`, `model_xmlids` / `field_xmlids`, conexión S3, y adjuntos recientes (`fs_storage_code` debe ser `s3_order_bridge_banners`).
+Comprueba: modo (`ODOO_MULTI_COMPANY_S3`), `directory_path`, `model_xmlids` / `field_xmlids`, conexión S3, y adjuntos recientes (`fs_storage_code` debe ser `s3_order_bridge_banners`).
 
 | Modo | Prefijo esperado en S3 |
 |---|---|
-| Single-tenant (`ODOO_MULTI_TENANT` unset, `ODOO_MULTI_COMPANY_S3` unset) | raíz del bucket |
-| Multi-tenant BD (`ODOO_MULTI_TENANT=true`) | `<bucket>/<db_name>/` |
+| Single-tenant (`ODOO_MULTI_COMPANY_S3` unset) | raíz del bucket |
 | Multi-company (`ODOO_MULTI_COMPANY_S3=true`) | `<bucket>/{company_id}/` |
 
 Checklist:
 
 1. `ODOO_ATTACHMENT_STORAGE=s3` + bucket (`ORDER_BRIDGE_BANNER_S3_BUCKET` o `ODOO_S3_BUCKET`) + credenciales
-2. MT: `ODOO_MULTI_TENANT=true` y tenant en `ODOO_TENANT_DATABASES`
-3. Multi-company: `ODOO_MULTI_COMPANY_S3=true` (sin `ODOO_MULTI_TENANT`)
-4. Subir imagen **nueva** de producto y banner; comprobar objeto en S3
-5. Imágenes antiguas (pre-S3) requieren re-guardar
+2. Multi-company: `ODOO_MULTI_COMPANY_S3=true`
+3. Subir imagen **nueva** de producto y banner; comprobar objeto en S3
+4. Imágenes antiguas (pre-S3) requieren re-guardar
 
 ## Regla principal
 

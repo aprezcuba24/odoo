@@ -21,8 +21,6 @@ def _env_truthy(name, default=False):
     return raw.strip().lower() in ('1', 'true', 'yes', 'on')
 
 
-MULTI_TENANT = _env_truthy('ODOO_MULTI_TENANT')
-
 # Configurar base de datos desde DATABASE_URL o variables de entorno PostgreSQL estándar
 database_url = os.getenv('DATABASE_URL')
 if database_url:
@@ -38,11 +36,7 @@ if database_url:
         params = dict(up.parse_qsl(parsed.query))
         if 'sslmode' in params:
             conf['db_sslmode'] = params['sslmode']
-    if MULTI_TENANT:
-        # Multi-tenant: route DBs by hostname (dbfilter); do not pin db_name.
-        conf['db_name'] = []
-    else:
-        conf['db_name'] = parsed.path.lstrip('/')
+    conf['db_name'] = parsed.path.lstrip('/')
 else:
     if os.getenv('PGHOST'):
         conf['db_host'] = os.getenv('PGHOST')
@@ -52,23 +46,13 @@ else:
         conf['db_user'] = os.getenv('PGUSER')
     if os.getenv('PGPASSWORD'):
         conf['db_password'] = os.getenv('PGPASSWORD')
-    if MULTI_TENANT:
-        conf['db_name'] = []
-    elif os.getenv('PGDATABASE'):
+    if os.getenv('PGDATABASE'):
         conf['db_name'] = os.getenv('PGDATABASE')
 
-if MULTI_TENANT:
-    conf['dbfilter'] = os.getenv('ODOO_DBFILTER', r'^%d$')
-    conf['list_db'] = _env_truthy('ODOO_LIST_DB', default=False)
-    conf['proxy_mode'] = _env_truthy('ODOO_PROXY_MODE', default=True)
-    # Load tenant_routing (domain map + /tenant/provision UI) as server-wide.
-    wide = list(conf.get('server_wide_modules') or [])
-    if not wide:
-        wide = ['base', 'rpc', 'web']
-    if 'tenant_routing' not in wide:
-        wide.append('tenant_routing')
-    conf['server_wide_modules'] = wide
-elif _env_truthy('ODOO_PROXY_MODE'):
+if os.getenv('ODOO_LIST_DB') is not None:
+    conf['list_db'] = _env_truthy('ODOO_LIST_DB')
+
+if _env_truthy('ODOO_PROXY_MODE'):
     conf['proxy_mode'] = True
 
 admin_passwd = os.getenv('DB_PASSWORD_ADMIN')
@@ -81,7 +65,7 @@ http_port = int(os.getenv('GUNICORN_BIND', '0.0.0.0:8069').split(':')[-1])
 conf['gevent_port'] = http_port
 conf['http_port'] = http_port
 
-# Ensure own_modules (tenant_routing, etc.) are on the addons path for Gunicorn.
+# Ensure own_modules are on the addons path for Gunicorn.
 # docker-entrypoint.sh exports ODOO_ADDONS_PATH; apply it explicitly before initialize().
 addons_path_env = os.getenv('ODOO_ADDONS_PATH', '').strip()
 if addons_path_env:
@@ -97,15 +81,15 @@ from odoo.http import root
 
 _logger = logging.getLogger(__name__)
 
-# Required for Gunicorn: load server-wide modules (web, tenant_routing, …)
-# so nodb routes (/web/health, /tenant/provision) and ODOO_TENANT_DOMAIN_MAP work.
+# Required for Gunicorn: load server-wide modules (web, …)
+# so nodb routes (/web/health) work.
 # See setup/odoo-wsgi.example.py — this is not automatic under Gunicorn.
 root.initialize()
 
 _logger.info(
-    'odoo-wsgi ready: MULTI_TENANT=%s dbfilter=%r server_wide_modules=%s',
-    MULTI_TENANT,
-    conf.get('dbfilter') or '',
+    'odoo-wsgi ready: db_name=%r proxy_mode=%s server_wide_modules=%s',
+    conf.get('db_name') or '',
+    conf.get('proxy_mode'),
     conf.get('server_wide_modules'),
 )
 

@@ -60,26 +60,13 @@ Production runs on [Railway](https://railway.com/) as a **Docker** web service w
 - **Ephemeral filesystem**: Container disk is not durable across deploys. Use database attachment storage (default in [`docker-entrypoint.sh`](docker-entrypoint.sh)) or S3 via `fs_attachment` (see `.env.example`).
 - **Deploy upgrades**: Each deploy runs `odoo-bin -u base` before Gunicorn starts (2–5 minutes). The Dockerfile healthcheck uses a long `start-period` for this.
 - **Logs**: stdout/stderr appear in the Railway service **Logs** tab.
-- **Multi-tenant**: Use a **separate Railway project** (see below). The current production project stays single-tenant — do **not** set `ODOO_MULTI_TENANT` there.
-- **Multi-company** (1 BD, many `res.company`): also a **separate** Railway project — see [`docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md`](docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md). Do **not** enable on single-tenant production.
-
-### Multi-tenant (proyecto Railway aparte)
-
-Una instancia, muchas BD. **No** actives `ODOO_MULTI_TENANT` en producción single-tenant.
-
-Guía: [`docs/RAILWAY_MULTI_TENANT_CHECKLIST.md`](docs/RAILWAY_MULTI_TENANT_CHECKLIST.md)
+- **Multi-company** (1 BD, many `res.company`): a **separate** Railway project — see [`docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md`](docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md). Do **not** enable on single-tenant production.
 
 ### Multi-company (proyecto Railway aparte)
 
-Una instancia, **una** BD, muchas compañías. Onboarding self-service (`company_onboarding`). Sin `ODOO_MULTI_TENANT`.
+Una instancia, **una** BD, muchas compañías. Onboarding self-service (`company_onboarding`).
 
 Guía: [`docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md`](docs/RAILWAY_MULTI_COMPANY_CHECKLIST.md)
-
-| | |
-|-|-|
-| Subdominio | `cliente1.plataforma.com` → BD `cliente1` |
-| Dominio custom / URL Railway | `ODOO_TENANT_DOMAIN_MAP` |
-| Nuevo tenant | `/tenant/provision` o `scripts/provision_tenant.sh` → `ODOO_TENANT_DATABASES` |
 
 ### Other PaaS
 

@@ -64,7 +64,7 @@ import traceback
 from odoo.addons.order_bridge import hooks as h
 
 print(f"bucket={h._media_s3_bucket()!r}")
-print(f"multi_tenant={h._multi_tenant_enabled()}")
+print(f"multi_company_s3={h._multi_company_s3_enabled()}")
 print(f"directory_path={h._media_directory_path(h._media_s3_bucket()) if h._media_s3_bucket() else None!r}")
 ak, sk = h._s3_credentials()
 print(f"credentials_present={bool(ak and sk)}")

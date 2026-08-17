@@ -11,35 +11,16 @@ from odoo.addons.order_bridge import hooks as obhooks
 
 @tagged("post_install", "-at_install")
 class TestOrderBridgeS3Hooks(TransactionCase):
-    def test_multi_tenant_enabled(self):
-        with patch.dict("os.environ", {"ODOO_MULTI_TENANT": "true"}, clear=False):
-            self.assertTrue(obhooks._multi_tenant_enabled())
-        with patch.dict("os.environ", {"ODOO_MULTI_TENANT": "1"}, clear=False):
-            self.assertTrue(obhooks._multi_tenant_enabled())
-        with patch.dict("os.environ", {"ODOO_MULTI_TENANT": ""}, clear=False):
-            self.assertFalse(obhooks._multi_tenant_enabled())
-        with patch.dict("os.environ", {"ODOO_MULTI_TENANT": "false"}, clear=False):
-            self.assertFalse(obhooks._multi_tenant_enabled())
-
-    def test_directory_path_single_vs_multi_tenant(self):
+    def test_directory_path_single_vs_multi_company(self):
         with patch.dict(
             "os.environ",
-            {"ODOO_MULTI_TENANT": "", "ODOO_MULTI_COMPANY_S3": ""},
+            {"ODOO_MULTI_COMPANY_S3": ""},
             clear=False,
         ):
             self.assertEqual(obhooks._media_directory_path("my-bucket"), "my-bucket")
         with patch.dict(
             "os.environ",
-            {"ODOO_MULTI_TENANT": "true", "ODOO_MULTI_COMPANY_S3": ""},
-            clear=False,
-        ):
-            self.assertEqual(
-                obhooks._media_directory_path("my-bucket"),
-                "my-bucket/{db_name}",
-            )
-        with patch.dict(
-            "os.environ",
-            {"ODOO_MULTI_TENANT": "", "ODOO_MULTI_COMPANY_S3": "true"},
+            {"ODOO_MULTI_COMPANY_S3": "true"},
             clear=False,
         ):
             self.assertEqual(
@@ -68,14 +49,14 @@ class TestOrderBridgeS3Hooks(TransactionCase):
             "AWS_ACCESS_KEY_ID": "AKIA_TEST",
             "AWS_SECRET_ACCESS_KEY": "secret_test",
             "AWS_DEFAULT_REGION": "us-east-1",
-            "ODOO_MULTI_TENANT": "true",
+            "ODOO_MULTI_COMPANY_S3": "",
         }
         with patch.dict("os.environ", env_patch, clear=False):
             storage = obhooks.provision_media_fs_storage(self.env)
 
         self.assertTrue(storage)
         self.assertEqual(storage.code, obhooks.MEDIA_FS_STORAGE_CODE)
-        self.assertEqual(storage.directory_path, "test-odoo-media-bucket/{db_name}")
+        self.assertEqual(storage.directory_path, "test-odoo-media-bucket")
         self.assertEqual(storage.model_xmlids, obhooks.BANNER_MODEL_XMLID)
         self.assertFalse(storage.use_as_default_for_attachments)
         self.assertIn(

@@ -10,7 +10,7 @@ This repository runs in production on [Railway](https://railway.com/) — an all
 - **Managed PostgreSQL**: Add a Postgres service; reference `DATABASE_URL` in the Odoo service.
 - **Private networking**: Services in the same project reach each other without public exposure.
 - **WebSockets**: HTTP, TCP, and WebSocket traffic handled automatically (required for Odoo Discuss and live updates).
-- **Custom domains**: Per-service domains, including [wildcard domains](https://docs.railway.com/networking/domains/working-with-domains) for multi-tenant subdomains.
+- **Custom domains**: Per-service domains, including [wildcard domains](https://docs.railway.com/networking/domains/working-with-domains) for optional multi-company API subdomains.
 
 ## Project layout (current production — single-tenant)
 
@@ -19,7 +19,7 @@ This repository runs in production on [Railway](https://railway.com/) — an all
 | Web service (Docker) | Odoo + Gunicorn gevent on port **8069** |
 | PostgreSQL | Single Odoo database (single-tenant) |
 
-**Do not set `ODOO_MULTI_TENANT` on this project.** After merging multi-tenant code, this project stays single-tenant as long as that env var is unset.
+**Do not set `ODOO_MULTI_COMPANY_S3` or install `company_onboarding` on this project.** Production stays single-tenant.
 
 Environment variables: see [`.env.example`](../.env.example) and the tables below (copy values into Railway **Variables**, not committed to git).
 
@@ -59,23 +59,6 @@ Environment variables: see [`.env.example`](../.env.example) and the tables belo
 
 ---
 
-## Multi-tenant (varias BD)
-
-Proyecto Railway **aparte** (Postgres propio). Guía operativa:
-
-**[`RAILWAY_MULTI_TENANT_CHECKLIST.md`](RAILWAY_MULTI_TENANT_CHECKLIST.md)** — dos secciones: montar el entorno y añadir un tenant.
-
-No actives `ODOO_MULTI_TENANT` en el proyecto single-tenant de producción.
-
-| Pieza | Detalle |
-|-------|---------|
-| Modo | `ODOO_MULTI_TENANT=true` |
-| Routing | Subdominio → BD (`ODOO_DBFILTER=^%d$`); dominio custom / URL Railway → `ODOO_TENANT_DOMAIN_MAP` |
-| Tenants | UI `/tenant/provision` o `scripts/provision_tenant.sh`; luego `ODOO_TENANT_DATABASES` |
-| S3 | Un bucket; prefijo = nombre de BD. Ver guía. |
-
----
-
 ## Multi-company (una sola BD)
 
 Proyecto Railway **aparte** (Postgres propio). Varias `res.company` en la misma base. Onboarding self-service vía módulo `company_onboarding`.
@@ -84,11 +67,11 @@ Proyecto Railway **aparte** (Postgres propio). Varias `res.company` en la misma 
 
 **[`RAILWAY_MULTI_COMPANY_CHECKLIST.md`](RAILWAY_MULTI_COMPANY_CHECKLIST.md)** — checklist técnico.
 
-No actives `ODOO_MULTI_TENANT` aquí. No uses este modo en el single-tenant de producción.
+No uses este modo en el single-tenant de producción.
 
 | Pieza | Detalle |
 |-------|---------|
-| Modo | Una BD; sin `dbfilter` por cliente |
+| Modo | Una BD; muchas `res.company` |
 | Acceso web | Un dominio; aislamiento por usuario (`company_ids`) |
 | Acceso API | `company_slug` / `X-Company-Slug` / subdominio |
 | Onboarding | `/web/signup` + wizard «Crear mi compañía» |
@@ -99,7 +82,6 @@ No actives `ODOO_MULTI_TENANT` aquí. No uses este modo en el single-tenant de p
 ## Other platforms
 
 - [`RAILWAY_MULTI_COMPANY_CHECKLIST.md`](RAILWAY_MULTI_COMPANY_CHECKLIST.md) — multi-company (1 BD)
-- [`RAILWAY_MULTI_TENANT_CHECKLIST.md`](RAILWAY_MULTI_TENANT_CHECKLIST.md) — guía multi-tenant (N BD)
 - [`SEENODE_DEPLOYMENT.md`](../SEENODE_DEPLOYMENT.md) — legacy Seenode
 - [`WEBSOCKET_SERVERLESS.md`](WEBSOCKET_SERVERLESS.md) — WebSockets en PaaS
 

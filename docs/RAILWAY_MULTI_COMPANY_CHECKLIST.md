@@ -1,10 +1,9 @@
 # Multi-company en Railway (una sola BD)
 
-Proyecto **aparte** del single-tenant de producción y **aparte** del multi-tenant multi-BD.
+Proyecto **aparte** del single-tenant de producción.
 
 Una instancia Odoo → **una** base PostgreSQL → muchas `res.company` (una por negocio).
 
-**No pongas** `ODOO_MULTI_TENANT` ni instales `tenant_routing` en este proyecto.
 **No toques** el proyecto single-tenant de producción.
 
 Guía de aislamiento: cada usuario entra por el **mismo dominio**; tras login, Odoo filtra por `company_ids`. La API Tienda Apk usa `company_slug` / header `X-Company-Slug` / subdominio.
@@ -18,7 +17,6 @@ Guía de aislamiento: cada usuario entra por el **mismo dominio**; tras login, O
 3. Variables del servicio:
 
 ```bash
-# NO uses ODOO_MULTI_TENANT
 ODOO_LIST_DB=false
 ODOO_PROXY_MODE=true
 DB_PASSWORD_ADMIN=<secreto-fuerte>
@@ -33,9 +31,9 @@ ODOO_EXTRA_INIT_MODULES=order_bridge,bi_analytics,company_onboarding,fs_attachme
 ODOO_ATTACHMENT_STORAGE=s3
 ODOO_MULTI_COMPANY_S3=true
 ORDER_BRIDGE_BANNER_S3_BUCKET=<bucket>
-ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
-ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
-ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=us-east-1
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
 ```
 
 4. Dominio único para el backend, p. ej. `app.tuplataforma.com`.
@@ -75,20 +73,8 @@ Slug: minúsculas, números y guiones (`mi-tienda`). Se usa en:
 ## 4. Checklist rápido
 
 - [ ] Proyecto Railway nuevo (no producción single-tenant)
-- [ ] Sin `ODOO_MULTI_TENANT`
 - [ ] `company_onboarding` instalado
 - [ ] Signup + wizard OK (2 compañías de prueba)
 - [ ] Usuario A no ve pedidos/dispositivos/gastos de B
 - [ ] API (`ODOO_MULTI_COMPANY_S3=true`): sin slug y varias compañías → `company_slug_required`
 - [ ] S3: `ODOO_MULTI_COMPANY_S3=true` → `directory_path=<bucket>/{company_id}`
-
----
-
-## 5. Relación con multi-tenant multi-BD
-
-| | Multi-company (este doc) | Multi-BD ([checklist](RAILWAY_MULTI_TENANT_CHECKLIST.md)) |
-|--|--------------------------|-------------------------------------------------------------|
-| Aislamiento | Lógico (`company_id`) | Físico (BD separada) |
-| Costo | Más bajo | Medio |
-| Provisionado | Signup + wizard | `/tenant/provision` |
-| Env | `ODOO_MULTI_COMPANY_S3` | `ODOO_MULTI_TENANT=true` |

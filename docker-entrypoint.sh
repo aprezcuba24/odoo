@@ -1,8 +1,6 @@
 #!/bin/bash
 # Script de entrada para Docker o runtime PaaS (Railway, etc.)
-# Inicializa/actualiza la(s) base(s) de datos y luego inicia Gunicorn.
-# Single-tenant (default): una BD desde DATABASE_URL / PGDATABASE.
-# Multi-tenant (ODOO_MULTI_TENANT=true): upgrade de tenants listados o detectados; sin init de la BD del path de DATABASE_URL.
+# Inicializa/actualiza la base de datos (DATABASE_URL / PGDATABASE) y luego inicia Gunicorn.
 set -e
 
 # Resolve the directory that contains this script so paths work both in Docker
@@ -30,13 +28,6 @@ print_warn() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
-}
-
-is_multi_tenant() {
-    case "$(printf '%s' "${ODOO_MULTI_TENANT:-}" | tr '[:upper:]' '[:lower:]')" in
-        true|1|yes|on) return 0 ;;
-        *) return 1 ;;
-    esac
 }
 
 # If DATABASE_URL is provided, parse it into individual PG* variables
@@ -127,91 +118,6 @@ except psycopg2.OperationalError as e:
     sys.exit(1)
 except Exception as e:
     print(f"Error verificando base de datos: {e}", file=sys.stderr)
-    sys.exit(1)
-EOF
-}
-
-# Listar bases Odoo del servidor PG (excluye templates y BD default de Railway).
-# Si ODOO_TENANT_DATABASES está definida, usa esa lista (coma-separada).
-list_tenant_databases() {
-    if [ -n "${ODOO_TENANT_DATABASES:-}" ]; then
-        echo "${ODOO_TENANT_DATABASES}" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
-        return 0
-    fi
-
-    python3 << 'EOF'
-import os
-import sys
-from urllib.parse import urlparse, urlunparse
-
-import psycopg2
-
-EXCLUDE = {"postgres", "template0", "template1", "railway"}
-
-try:
-    db_url = os.environ.get("DATABASE_URL")
-    if db_url:
-        parsed = urlparse(db_url)
-        conn = psycopg2.connect(urlunparse(parsed._replace(path="/postgres")))
-    else:
-        conn = psycopg2.connect(
-            host=os.environ.get("PGHOST", "localhost"),
-            port=int(os.environ.get("PGPORT", "5432")),
-            database="postgres",
-            user=os.environ.get("PGUSER", "odoo"),
-            password=os.environ.get("PGPASSWORD", ""),
-        )
-    conn.autocommit = True
-    cur = conn.cursor()
-    cur.execute(
-        """
-        SELECT datname FROM pg_database
-        WHERE datallowconn
-          AND NOT datistemplate
-          AND datname <> ALL(%s)
-        ORDER BY datname
-        """,
-        (list(EXCLUDE),),
-    )
-    names = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
-
-    odoo_dbs = []
-    for name in names:
-        try:
-            if db_url:
-                parsed = urlparse(db_url)
-                c = psycopg2.connect(urlunparse(parsed._replace(path=f"/{name}")))
-            else:
-                c = psycopg2.connect(
-                    host=os.environ.get("PGHOST", "localhost"),
-                    port=int(os.environ.get("PGPORT", "5432")),
-                    database=name,
-                    user=os.environ.get("PGUSER", "odoo"),
-                    password=os.environ.get("PGPASSWORD", ""),
-                )
-            cur2 = c.cursor()
-            cur2.execute(
-                """
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                      AND table_name = 'ir_module_module'
-                );
-                """
-            )
-            if cur2.fetchone()[0]:
-                odoo_dbs.append(name)
-            cur2.close()
-            c.close()
-        except Exception:
-            continue
-
-    for name in odoo_dbs:
-        print(name)
-except Exception as e:
-    print(f"Error listando bases tenant: {e}", file=sys.stderr)
     sys.exit(1)
 EOF
 }
@@ -351,12 +257,11 @@ provision_banner_s3() {
     if [ -z "$banner_bucket" ]; then
         return 0
     fi
-    local mt_flag="${ODOO_MULTI_TENANT:-}"
-    local mt_label="single-tenant (directory_path=${banner_bucket})"
-    case "$(printf '%s' "$mt_flag" | tr '[:upper:]' '[:lower:]')" in
-        1|true|yes|on) mt_label="multi-tenant (directory_path=${banner_bucket}/{db_name})" ;;
+    local s3_label="single-tenant (directory_path=${banner_bucket})"
+    case "$(printf '%s' "${ODOO_MULTI_COMPANY_S3:-}" | tr '[:upper:]' '[:lower:]')" in
+        1|true|yes|on) s3_label="multi-company (directory_path=${banner_bucket}/{company_id})" ;;
     esac
-    print_info "Sincronizando fs.storage S3 (banners + imágenes) en '${target_db}' bucket=${banner_bucket} ${mt_label}..."
+    print_info "Sincronizando fs.storage S3 (banners + imágenes) en '${target_db}' bucket=${banner_bucket} ${s3_label}..."
     if printf '%s\n' \
         "from odoo.addons.order_bridge import hooks as obhooks" \
         "obhooks.provision_media_fs_storage(env)" \
@@ -367,7 +272,7 @@ provision_banner_s3() {
     fi
 }
 
-prepare_tenant_database() {
+prepare_database() {
     local target_db="$1"
     ATTACHMENT_STORAGE_MODE="${ODOO_ATTACHMENT_STORAGE:-db}"
     if [ "$ATTACHMENT_STORAGE_MODE" = "s3" ]; then
@@ -393,56 +298,29 @@ skip_db_upgrade() {
 # ---------------------------------------------------------------------------
 print_info "Iniciando proceso de inicialización/actualización de base de datos..."
 
-if is_multi_tenant; then
-    print_info "Modo multi-tenant (ODOO_MULTI_TENANT=true). No se inicializa la BD del path de DATABASE_URL."
-    mapfile -t TENANT_DBS < <(list_tenant_databases)
-    if [ "${#TENANT_DBS[@]}" -eq 0 ]; then
-        print_warn "No hay bases tenant para actualizar."
-        print_warn "Provisiona al menos una con scripts/provision_tenant.sh y/o define ODOO_TENANT_DATABASES."
+if check_database_initialized 2>/dev/null; then
+    print_info "La base de datos '${PGDATABASE}' ya existe y está inicializada."
+    if skip_db_upgrade; then
+        print_warn "SKIP_DB_UPGRADE activado: se omite odoo-bin -u base en este arranque."
+        print_warn "Ejecuta el upgrade manualmente contra esta misma base (odoo-bin -u base) con RAM suficiente."
     else
-        print_info "Bases tenant: ${TENANT_DBS[*]}"
-        for tenant_db in "${TENANT_DBS[@]}"; do
-            if ! check_database_initialized "${tenant_db}" 2>/dev/null; then
-                print_warn "La base '${tenant_db}' no está inicializada como Odoo; se omite (usa scripts/provision_tenant.sh)."
-                continue
-            fi
-            if skip_db_upgrade; then
-                print_warn "SKIP_DB_UPGRADE activado: se omite -u base en '${tenant_db}'."
-            else
-                if ! update_database "${tenant_db}"; then
-                    print_warn "Error al actualizar '${tenant_db}'. Continuando con las demás..."
-                fi
-            fi
-            prepare_tenant_database "${tenant_db}"
-        done
+        print_info "Actualizando esquema de la base de datos (esto se ejecuta en cada deploy)..."
+        if ! update_database; then
+            print_warn "Error al actualizar la base de datos. Continuando de todas formas..."
+            print_warn "La aplicación se iniciará pero puede que el esquema no esté actualizado."
+        fi
     fi
-    print_info "Multi-tenant listo. Iniciando Gunicorn..."
 else
-    # Single-tenant (comportamiento histórico)
-    if check_database_initialized 2>/dev/null; then
-        print_info "La base de datos '${PGDATABASE}' ya existe y está inicializada."
-        if skip_db_upgrade; then
-            print_warn "SKIP_DB_UPGRADE activado: se omite odoo-bin -u base en este arranque."
-            print_warn "Ejecuta el upgrade manualmente contra esta misma base (odoo-bin -u base) con RAM suficiente."
-        else
-            print_info "Actualizando esquema de la base de datos (esto se ejecuta en cada deploy)..."
-            if ! update_database; then
-                print_warn "Error al actualizar la base de datos. Continuando de todas formas..."
-                print_warn "La aplicación se iniciará pero puede que el esquema no esté actualizado."
-            fi
-        fi
-    else
-        print_warn "La base de datos '${PGDATABASE}' no está inicializada o no existe."
-        print_info "Inicializando base de datos desde cero (primera vez)..."
-        if ! init_database; then
-            print_error "Error al inicializar la base de datos. Abortando."
-            exit 1
-        fi
+    print_warn "La base de datos '${PGDATABASE}' no está inicializada o no existe."
+    print_info "Inicializando base de datos desde cero (primera vez)..."
+    if ! init_database; then
+        print_error "Error al inicializar la base de datos. Abortando."
+        exit 1
     fi
-
-    prepare_tenant_database "${PGDATABASE}"
-    print_info "Base de datos lista. Iniciando Gunicorn..."
 fi
+
+prepare_database "${PGDATABASE}"
+print_info "Base de datos lista. Iniciando Gunicorn..."
 
 # Ejecutar Gunicorn (reemplaza el proceso actual)
 # Usar odoo-wsgi:application que tiene la configuración correcta para websockets

@@ -37,9 +37,7 @@ No modifiques el proyecto Railway actual ni su Postgres. En concreto:
 
 | Variable / acción | En producción single-tenant |
 |-------------------|----------------------------|
-| `ODOO_MULTI_TENANT` | **No definir** (o `false`) |
 | `ODOO_MULTI_COMPANY_S3` | **No definir** |
-| `ODOO_DBFILTER`, `ODOO_TENANT_DOMAIN_MAP`, `ODOO_TENANT_DATABASES` | **No definir** |
 | `ODOO_EXTRA_INIT_MODULES` con `company_onboarding` | **No usar** |
 | Compartir `DATABASE_URL` con el proyecto nuevo | **No** |
 | Mismo dominio para ambos proyectos | **No** |
@@ -71,7 +69,7 @@ GUNICORN_WORKERS=2
 
 - [ ] No he tocado variables del proyecto Railway de producción.
 - [ ] No he enlazado el Postgres de producción al proyecto nuevo.
-- [ ] No he puesto `ODOO_MULTI_TENANT` ni `ODOO_MULTI_COMPANY_S3` en producción.
+- [ ] No he puesto `ODOO_MULTI_COMPANY_S3` en producción.
 - [ ] Tras un deploy de prueba en producción: `/web/health` → 200 y login normal.
 
 ### Dispositivos existentes (single-tenant)
@@ -145,7 +143,7 @@ DB_LANGUAGE=es_ES
 DB_USERNAME=admin
 DB_WITH_DEMO=false
 
-# Modo single-DB multi-company (NO multi-tenant)
+# Modo multi-company (una BD, muchas compañías)
 ODOO_LIST_DB=false
 ODOO_PROXY_MODE=true
 GUNICORN_WORKERS=2
@@ -157,12 +155,10 @@ ODOO_EXTRA_INIT_MODULES=order_bridge,bi_analytics,company_onboarding,fs_attachme
 ODOO_ATTACHMENT_STORAGE=s3
 ODOO_MULTI_COMPANY_S3=true
 ORDER_BRIDGE_BANNER_S3_BUCKET=<bucket-nuevo-o-dedicado>
-ORDER_BRIDGE_BANNER_S3_REGION=us-east-1
-ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID=...
-ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=us-east-1
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
 ```
-
-**Importante:** en este proyecto **no** definas `ODOO_MULTI_TENANT`.
 
 ### Paso 3 — Dominio
 
@@ -192,10 +188,8 @@ ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY=...
 | Variable | Producción single-tenant | Proyecto multi-company |
 |----------|--------------------------|------------------------|
 | `DATABASE_URL` | Postgres **A** | Postgres **B** (nuevo) |
-| `ODOO_MULTI_TENANT` | No | No |
 | `ODOO_MULTI_COMPANY_S3` | No | `true` (si usas S3) |
 | `ODOO_EXTRA_INIT_MODULES` | No incluir `company_onboarding` | Incluir `company_onboarding` |
-| `ODOO_DBFILTER` | No | No |
 | Dominio | El actual (p. ej. `tienda.cliente.com`) | Nuevo (p. ej. `app.tuplataforma.com`) |
 | Onboarding clientes | Manual / como ahora | Self-service `/web/signup` |
 
@@ -237,7 +231,6 @@ No hace falta desplegar ambos a la vez; son proyectos independientes.
 | Signup público en producción | Instalado `company_onboarding` o `auth_signup.invitation_scope=b2c` | No instales `company_onboarding` en producción |
 | Datos mezclados entre clientes | Mismo proyecto/BD para ambos modos | Proyecto y Postgres **separados** |
 | S3 sobrescribe archivos | Mismo bucket sin prefijo en multi-company | `ODOO_MULTI_COMPANY_S3=true` en el proyecto nuevo |
-| `/tenant/provision` activo | `ODOO_MULTI_TENANT=true` | No usar en multi-company; es otro modo (varias BD) |
 
 ---
 
@@ -247,11 +240,10 @@ No hace falta desplegar ambos a la vez; son proyectos independientes.
 |-----------|-----------|
 | [RAILWAY_MULTI_COMPANY_CHECKLIST.md](RAILWAY_MULTI_COMPANY_CHECKLIST.md) | Checklist técnico multi-company |
 | [RAILWAY.md](RAILWAY.md) | Despliegue general en Railway |
-| [RAILWAY_MULTI_TENANT_CHECKLIST.md](RAILWAY_MULTI_TENANT_CHECKLIST.md) | Modo alternativo: **varias BD** (no es este despliegue) |
 | [.env.example](../.env.example) | Plantilla de variables |
 
 ---
 
 ## Resumen en una frase
 
-**Deja producción como está** (mismo proyecto Railway, mismo Postgres, sin `ODOO_MULTI_TENANT` ni `company_onboarding`); **crea un proyecto Railway nuevo** con Postgres nuevo, dominio nuevo y las variables de la Parte 2 para la plataforma multi-company.
+**Deja producción como está** (mismo proyecto Railway, mismo Postgres, sin `ODOO_MULTI_COMPANY_S3` ni `company_onboarding`); **crea un proyecto Railway nuevo** con Postgres nuevo, dominio nuevo y las variables de la Parte 2 para la plataforma multi-company.
