@@ -3,7 +3,9 @@
 """HTTP isolation: catalog/register resolve company via company_slug."""
 
 import json
+import os
 import uuid
+from unittest.mock import patch
 
 from odoo.tests.common import HttpCase, tagged
 
@@ -26,9 +28,23 @@ class TestOrderBridgeMultiCompanyApi(HttpCase):
             'order_bridge_slug': 'temp-api-co',
         })
         try:
-            res = self.url_open('/api/order_bridge/products', timeout=60)
+            with patch.dict(os.environ, {'ODOO_MULTI_COMPANY_S3': 'true'}, clear=False):
+                res = self.url_open('/api/order_bridge/products', timeout=60)
             self.assertEqual(res.status_code, 400, res.text)
             self.assertEqual(json.loads(res.text).get('error'), 'company_slug_required')
+        finally:
+            extra.active = False
+
+    def test_anonymous_catalog_defaults_to_main_company_single_tenant(self):
+        extra = self.env['res.company'].create({
+            'name': 'Temp ST Co',
+            'order_bridge_slug': 'temp-st-co',
+        })
+        try:
+            with patch.dict(os.environ, {'ODOO_MULTI_COMPANY_S3': ''}, clear=False):
+                res = self.url_open('/api/order_bridge/products', timeout=60)
+            self.assertEqual(res.status_code, 200, res.text)
+            self.assertNotEqual(json.loads(res.text).get('error'), 'company_slug_required')
         finally:
             extra.active = False
 
@@ -89,3 +105,29 @@ class TestOrderBridgeMultiCompanyApi(HttpCase):
         device = self.env['order_bridge.device'].search([('device_key', '=', key)], limit=1)
         self.assertEqual(device.company_id, self.main_company)
         self.assertEqual(device.partner_id.company_id, self.main_company)
+
+    def test_register_without_slug_defaults_to_main_company_single_tenant(self):
+        extra = self.env['res.company'].create({
+            'name': 'Temp ST Register Co',
+            'order_bridge_slug': 'temp-st-register',
+        })
+        key = str(uuid.uuid4())
+        try:
+            with patch.dict(os.environ, {'ODOO_MULTI_COMPANY_S3': ''}, clear=False):
+                res = self.url_open(
+                    '/api/order_bridge/register',
+                    data=json.dumps({
+                        'phone': '60033355',
+                        'device_key': key,
+                    }),
+                    headers={'Content-Type': 'application/json'},
+                    timeout=60,
+                )
+            self.assertEqual(res.status_code, 200, res.text)
+            device = self.env['order_bridge.device'].search(
+                [('device_key', '=', key)], limit=1,
+            )
+            self.assertEqual(device.company_id, self.main_company)
+            self.assertEqual(device.partner_id.company_id, self.main_company)
+        finally:
+            extra.active = False

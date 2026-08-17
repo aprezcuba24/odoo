@@ -147,7 +147,7 @@ def _order_bridge_request_context(
         partner = None
         fallback_company = None
         if inject_catalog_domain:
-            company, err, status = resolve_request_company(required_when_multi=True)
+            company, err, status = resolve_request_company()
             if err:
                 return api_json_response(SimpleErrorResponse(**err), status)
             fallback_company = company
@@ -197,9 +197,10 @@ def api_access(endpoint):
     """Inject catalog company/domain; Bearer device key optional.
 
     Without a valid device key, the catalog company comes from
-    ``X-Company-Slug`` / ``company_slug`` / subdomain, or the only company
-    in the database. With a valid key, ``last_activity`` is updated and the
-    device's company (or partner company) is used.
+    ``X-Company-Slug`` / ``company_slug`` / subdomain, the only company in
+    the database, or ``base.main_company`` in single-tenant. With a valid
+    key, ``last_activity`` is updated and the device's company (or partner
+    company) is used.
     """
 
     @functools.wraps(endpoint)

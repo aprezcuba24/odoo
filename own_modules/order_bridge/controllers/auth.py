@@ -31,7 +31,6 @@ class DeviceAuthController(http.Controller):
         else:
             company, err, status = resolve_request_company(
                 body.company_slug if body else None,
-                required_when_multi=True,
             )
             if err:
                 return api_json_response(SimpleErrorResponse(**err), status)

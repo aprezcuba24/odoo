@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from odoo.http import request
 
+from ..hooks import _multi_company_s3_enabled
+
 _RESERVED_SUBDOMAINS = frozenset({
     'www', 'app', 'api', 'admin', 'mail', 'smtp', 'ftp', 'web', 'odoo',
     'static', 'assets', 'health', 'status',
@@ -34,15 +36,23 @@ def company_slug_from_request(body_slug=None):
     return None
 
 
-def resolve_request_company(body_slug=None, *, required_when_multi=True):
+def resolve_request_company(body_slug=None, *, required_when_multi=None):
     """Resolve ``res.company`` for public API routes.
 
     Resolution order: body slug → ``X-Company-Slug`` → query → subdomain →
-    single-company DB fallback → ``request.env.company``.
+    single-company DB fallback → ``base.main_company`` (single-tenant) →
+    ``request.env.company``.
+
+    When ``required_when_multi`` is ``None`` (default), it follows
+    ``ODOO_MULTI_COMPANY_S3``: the multi-company project requires a slug if
+    several companies exist; single-tenant (APK legacy, no slug) falls back
+    to ``base.main_company``.
 
     Returns ``(company, error_payload_or_None, http_status)``.
     ``error_payload`` is a dict suitable for ``SimpleErrorResponse`` when set.
     """
+    if required_when_multi is None:
+        required_when_multi = _multi_company_s3_enabled()
     Company = request.env['res.company'].sudo()
     slug = company_slug_from_request(body_slug)
     if slug:
@@ -56,4 +66,6 @@ def resolve_request_company(body_slug=None, *, required_when_multi=True):
         return companies, None, 200
     if required_when_multi and len(companies) > 1:
         return Company.browse(), {'error': 'company_slug_required'}, 400
+    if len(companies) > 1:
+        return request.env.ref('base.main_company').sudo(), None, 200
     return request.env.company.sudo(), None, 200

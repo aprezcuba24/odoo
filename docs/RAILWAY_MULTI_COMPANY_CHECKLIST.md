@@ -67,7 +67,7 @@ Slug: minúsculas, números y guiones (`mi-tienda`). Se usa en:
 | Canal | Cómo se elige la compañía |
 |-------|---------------------------|
 | Backend web (`/odoo`) | Usuario autenticado → `company_ids` / `env.company` |
-| API Tienda Apk | `company_slug` / header / subdominio; tras registro, el `device` guarda `company_id` |
+| API Tienda Apk | Con `ODOO_MULTI_COMPANY_S3=true`: slug / header / subdominio (sin slug → `company_slug_required`). Tras registro, el `device` guarda `company_id` |
 | MCP JSON-2 | API key del usuario → su única compañía |
 
 ---
@@ -79,7 +79,7 @@ Slug: minúsculas, números y guiones (`mi-tienda`). Se usa en:
 - [ ] `company_onboarding` instalado
 - [ ] Signup + wizard OK (2 compañías de prueba)
 - [ ] Usuario A no ve pedidos/dispositivos/gastos de B
-- [ ] API: sin slug y varias compañías → `company_slug_required`
+- [ ] API (`ODOO_MULTI_COMPANY_S3=true`): sin slug y varias compañías → `company_slug_required`
 - [ ] S3: `ODOO_MULTI_COMPANY_S3=true` → `directory_path=<bucket>/{company_id}`
 
 ---

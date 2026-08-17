@@ -65,7 +65,7 @@ GUNICORN_WORKERS=2
 
 - Un solo `DATABASE_URL` → una sola BD (como ahora).
 - `docker-entrypoint.sh` hace `db init` / `-u base` solo sobre **esa** BD.
-- Los cambios en `order_bridge` / `bi_analytics` son compatibles con una sola compañía (no exigen `company_slug` si solo hay una compañía en la BD).
+- Los cambios en `order_bridge` / `bi_analytics` son compatibles con la APK legacy: **no** exigen `company_slug` mientras `ODOO_MULTI_COMPANY_S3` no esté definido (fallback a `base.main_company` aunque haya más de una compañía activa).
 
 ### Checklist rápido — producción intacta
 
@@ -76,7 +76,15 @@ GUNICORN_WORKERS=2
 
 ### Dispositivos existentes (single-tenant)
 
-El APK **no necesita** header ni `company_slug` mientras haya **una sola** compañía en la BD. Register, catálogo y pedidos con `device_key` siguen igual (`sudo()` ignora las reglas de compañía).
+La APK de producción **no se actualiza**: no envía `company_slug` ni `X-Company-Slug`. Mientras `ODOO_MULTI_COMPANY_S3` **no** esté definido, register y catálogo anónimo usan `base.main_company` aunque existan varias `res.company` activas. El error `company_slug_required` **solo** aplica en el proyecto multi-company (`ODOO_MULTI_COMPANY_S3=true`). Pedidos y status con `device_key` usan `device.company_id` (`sudo()` ignora las reglas de compañía).
+
+Si ves `{"error": "company_slug_required"}` en single-tenant **antes** de este fix, suele ser porque hay más de una compañía activa:
+
+```sql
+SELECT id, name, active FROM res_company WHERE active = true;
+```
+
+Tras el deploy con el fallback, esa query es informativa (la APK ya no falla). En Railway, confirma que el servicio de producción **no** tiene `ODOO_MULTI_COMPANY_S3=true`.
 
 El riesgo está en el **backend**: Tienda Apk → Dispositivos (filtro «Pendiente de validación»). La `ir.rule` `company_id in company_ids` **oculta** filas con `company_id` vacío. El cliente sigue comprando en la app, pero el admin no puede validar el teléfono.
 
@@ -101,9 +109,10 @@ Tras el deploy (`-u order_bridge` o el entrypoint con `-u base`): esas queries d
 Checklist post-deploy single-tenant:
 
 - [ ] No instalar `company_onboarding` ni definir `ODOO_MULTI_COMPANY_S3`.
+- [ ] Railway: `ODOO_MULTI_COMPANY_S3` **ausente** (no `true`).
 - [ ] 0 dispositivos con `company_id IS NULL`.
 - [ ] Tienda Apk → Dispositivos → «Pendiente de validación»: aparecen los mismos que antes.
-- [ ] APK: registro / status / pedido sin cambios (sin header).
+- [ ] APK: registro / catálogo / status / pedido sin header ni slug → 200.
 
 Plan B (shell Odoo, solo si hay **una** compañía y la migración no corrió):
 

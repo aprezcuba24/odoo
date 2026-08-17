@@ -21,7 +21,7 @@ class RegisterBody(BaseModel):
         default=None,
         description=(
             'Slug público de la compañía (opcional si se envía X-Company-Slug, '
-            'subdominio, o hay una sola compañía en la BD).'
+            'subdominio, hay una sola compañía, o el despliegue es single-tenant).'
         ),
     )
 
