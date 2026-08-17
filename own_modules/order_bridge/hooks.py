@@ -272,7 +272,57 @@ def ensure_order_bridge_sequences(env):
         })
 
 
+def _company_for_device_backfill(env):
+    """Main company, else the only ``res.company``. Empty recordset if ambiguous."""
+    company = env.ref("base.main_company", raise_if_not_found=False)
+    if company:
+        return company
+    companies = env["res.company"].sudo().search([], order="id", limit=2)
+    if len(companies) == 1:
+        return companies
+    return env["res.company"]
+
+
+def backfill_order_bridge_company_ids(env):
+    """Assign ``company_id`` on legacy devices (and their partners) that have none.
+
+    After adding required ``company_id`` and the multi-company ``ir.rule``, rows
+    with NULL ``company_id`` disappear from Tienda Apk → Dispositivos. Fill them
+    with the main company (typical single-tenant) so pending validations stay
+    visible in the backend.
+    """
+    Device = env["order_bridge.device"].sudo()
+    if "company_id" not in Device._fields:
+        return 0
+
+    company = _company_for_device_backfill(env)
+    if not company:
+        _logger.warning(
+            "order_bridge: skip company_id backfill; need base.main_company "
+            "or exactly one res.company"
+        )
+        return 0
+
+    devices = Device.search([("company_id", "=", False)])
+    if not devices:
+        _logger.info("order_bridge: no devices missing company_id")
+        return 0
+
+    devices.write({"company_id": company.id})
+    partners = devices.mapped("partner_id").filtered(lambda p: not p.company_id)
+    if partners:
+        partners.write({"company_id": company.id})
+    _logger.info(
+        "order_bridge: backfilled company_id=%s on %s device(s), %s partner(s)",
+        company.id,
+        len(devices),
+        len(partners),
+    )
+    return len(devices)
+
+
 def post_init_hook(env):
     """Odoo 19 passes ``env`` to ``post_init_hook`` (see odoo/modules/loading.py)."""
     ensure_order_bridge_sequences(env)
+    backfill_order_bridge_company_ids(env)
     provision_media_fs_storage(env)

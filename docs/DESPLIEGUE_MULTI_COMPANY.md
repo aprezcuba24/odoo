@@ -74,6 +74,44 @@ GUNICORN_WORKERS=2
 - [ ] No he puesto `ODOO_MULTI_TENANT` ni `ODOO_MULTI_COMPANY_S3` en producción.
 - [ ] Tras un deploy de prueba en producción: `/web/health` → 200 y login normal.
 
+### Dispositivos existentes (single-tenant)
+
+El APK **no necesita** header ni `company_slug` mientras haya **una sola** compañía en la BD. Register, catálogo y pedidos con `device_key` siguen igual (`sudo()` ignora las reglas de compañía).
+
+El riesgo está en el **backend**: Tienda Apk → Dispositivos (filtro «Pendiente de validación»). La `ir.rule` `company_id in company_ids` **oculta** filas con `company_id` vacío. El cliente sigue comprando en la app, pero el admin no puede validar el teléfono.
+
+Al actualizar `order_bridge` a **19.0.1.1.0**, el script [`migrations/19.0.1.1.0/post-migrate.py`](../own_modules/order_bridge/migrations/19.0.1.1.0/post-migrate.py) asigna `base.main_company` a dispositivos (y partners vinculados) sin compañía.
+
+Comprobar **antes** (copia de BD o staging):
+
+```sql
+SELECT id, phone, phone_validated, active, company_id
+FROM order_bridge_device
+WHERE company_id IS NULL;
+
+SELECT id, phone
+FROM order_bridge_device
+WHERE company_id IS NULL
+  AND phone_validated = false
+  AND active = true;
+```
+
+Tras el deploy (`-u order_bridge` o el entrypoint con `-u base`): esas queries deben devolver **0 filas**.
+
+Checklist post-deploy single-tenant:
+
+- [ ] No instalar `company_onboarding` ni definir `ODOO_MULTI_COMPANY_S3`.
+- [ ] 0 dispositivos con `company_id IS NULL`.
+- [ ] Tienda Apk → Dispositivos → «Pendiente de validación»: aparecen los mismos que antes.
+- [ ] APK: registro / status / pedido sin cambios (sin header).
+
+Plan B (shell Odoo, solo si hay **una** compañía y la migración no corrió):
+
+```python
+company = env.ref('base.main_company')
+env['order_bridge.device'].sudo().search([('company_id', '=', False)]).write({'company_id': company.id})
+```
+
 ---
 
 ## Parte 2 — Crear el proyecto multi-company (nuevo)
