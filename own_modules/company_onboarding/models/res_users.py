@@ -30,19 +30,5 @@ class ResUsers(models.Model):
             'company_onboarding_state': 'pending',
             'group_ids': [(6, 0, [group_user.id])],
             'share': False,
-            'action_id': self.env.ref(
-                'company_onboarding.action_company_onboarding_wizard'
-            ).id,
         })
         return user
-
-    def _on_webclient_bootstrap(self):
-        super()._on_webclient_bootstrap()
-        # Soft gate: keep home action pointed at the wizard while pending.
-        if self._is_company_onboarding_pending():
-            action = self.env.ref(
-                'company_onboarding.action_company_onboarding_wizard',
-                raise_if_not_found=False,
-            )
-            if action and self.action_id != action:
-                self.sudo().write({'action_id': action.id})
