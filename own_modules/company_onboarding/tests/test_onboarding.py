@@ -46,6 +46,10 @@ class TestCompanyOnboarding(TransactionCase):
             'name': 'Producto onboarding',
         })
         self.assertTrue(product.id)
+        self.assertEqual(product.company_id, user.company_id)
+        admin = self.env.ref('base.user_admin')
+        admin.invalidate_recordset(['company_ids'])
+        self.assertNotIn(user.company_id, admin.company_ids)
         settings = self.env['order_bridge.general_settings'].search([
             ('company_id', '=', user.company_id.id),
         ], limit=1)
