@@ -8,9 +8,9 @@ and credentials are set, creates or updates ``fs.storage`` code
 
 - ``model_xmlids`` for ``order_bridge.banner`` (OCA resolves storage via
   ``model_xmlids`` / ``field_xmlids``, not ``ir.model.storage_id``)
-- ``field_xmlids`` auto-discovered per database: stored binary fields whose
-  name contains ``image`` and whose registry field has ``attachment=True``
-  (Odoo 19: ``attachment`` is not a searchable column on ``ir.model.fields``)
+- ``field_xmlids`` auto-discovered per database: stored binary/Image fields with
+  ``attachment=True`` (``fields.Image``, or name hints like logo/favicon/cover;
+  Odoo 19: ``attachment`` is not a searchable column on ``ir.model.fields``)
 
 Bucket name (first match wins):
 
@@ -37,6 +37,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+
+from odoo import fields as odoo_fields
 
 _logger = logging.getLogger(__name__)
 
@@ -104,13 +106,41 @@ def _s3_options(access_key: str, secret_key: str) -> dict:
     return options
 
 
+# Substrings matched against ``ir.model.fields.name`` (lowercase) for user media
+# stored as ``ir.attachment``. Excludes generic EDI/PDF binaries (e.g.
+# ``l10n_*_attachment_file``) while covering logo, favicon, cover, etc.
+_USER_MEDIA_FIELD_NAME_HINTS = (
+    "image",
+    "logo",
+    "favicon",
+    "photo",
+    "picture",
+    "banner",
+    "avatar",
+    "signature",
+    "background",
+    "cover",
+)
+
+
+def _is_user_media_attachment_field(model_field) -> bool:
+    """True for Image fields or binary attachment fields that hold user media."""
+    if model_field is None or not getattr(model_field, "attachment", False):
+        return False
+    if isinstance(model_field, odoo_fields.Image):
+        return True
+    name = model_field.name.lower()
+    return any(hint in name for hint in _USER_MEDIA_FIELD_NAME_HINTS)
+
+
 def _discover_image_attachment_field_xmlids(env) -> list[str]:
-    """Return XML IDs of stored binary fields whose name looks like an image.
+    """Return XML IDs of user-media binary fields stored as attachments.
 
     In Odoo 19 ``ir.model.fields`` has no searchable ``attachment`` column; the
-    Binary/Image ``attachment`` flag lives on the registry field. We search
-    stored binary fields with ``image`` in the name, then keep those whose
-    registry field has ``attachment=True``. Excludes ``__export__`` XML IDs.
+    Binary/Image ``attachment`` flag lives on the registry field. We search all
+    stored binary fields on non-transient models, then keep ``fields.Image`` and
+    other attachment binaries whose name looks like user media (image, logo,
+    favicon, cover, …). Excludes ``__export__`` XML IDs.
     """
     Field = env["ir.model.fields"].sudo()
     candidates = Field.search(
@@ -118,7 +148,6 @@ def _discover_image_attachment_field_xmlids(env) -> list[str]:
             ("ttype", "=", "binary"),
             ("store", "=", True),
             ("model_id.transient", "=", False),
-            ("name", "ilike", "image"),
         ]
     )
     keep = Field.browse()
@@ -127,7 +156,7 @@ def _discover_image_attachment_field_xmlids(env) -> list[str]:
         if model_name not in env:
             continue
         model_field = env[model_name]._fields.get(irec.name)
-        if model_field is not None and getattr(model_field, "attachment", False):
+        if _is_user_media_attachment_field(model_field):
             keep |= irec
     xmlids_map = keep.get_external_id()
     return sorted(

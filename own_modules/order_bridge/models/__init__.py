@@ -2,6 +2,7 @@
 
 from . import banner
 from . import device
+from . import fs_storage_hook
 from . import dispatch_mixin
 from . import fcm
 from . import general_settings
