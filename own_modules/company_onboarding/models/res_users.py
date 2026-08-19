@@ -26,9 +26,13 @@ class ResUsers(models.Model):
         """Crear usuario interno pendiente de onboarding (no portal)."""
         user = super()._signup_create_user(values)
         group_user = self.env.ref('base.group_user')
-        user.sudo().write({
+        write_vals = {
             'company_onboarding_state': 'pending',
             'group_ids': [(6, 0, [group_user.id])],
             'share': False,
-        })
+        }
+        lang_code = self.env['res.company']._company_onboarding_lang_code()
+        if lang_code:
+            write_vals['lang'] = lang_code
+        user.sudo().write(write_vals)
         return user

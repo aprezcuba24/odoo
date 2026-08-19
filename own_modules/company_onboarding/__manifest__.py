@@ -37,6 +37,7 @@ El proyecto Railway single-tenant de producción no debe instalar este módulo.
         'security/ir.model.access.csv',
         'security/company_onboarding_security.xml',
         'data/ir_config_parameter.xml',
+        'data/default_lang.xml',
         'views/onboarding_templates.xml',
     ],
     'license': 'LGPL-3',

@@ -65,6 +65,64 @@ class TestCompanyOnboarding(TransactionCase):
         with self.assertRaises(UserError):
             wiz2.action_create_company()
 
+    def test_company_partner_gets_spanish_lang(self):
+        self.env['res.lang']._activate_lang('es_ES')
+        company = self.env['res.company'].sudo().create({
+            'name': 'Lang Test Co',
+            'order_bridge_slug': 'lang-test-co',
+        })
+        self.assertEqual(company.partner_id.lang, 'es_ES')
+
+    def test_company_create_does_not_fail_without_spanish(self):
+        """If es_ES is not active, company creation must not crash."""
+        company = self.env['res.company'].sudo().create({
+            'name': 'No Spanish Co',
+            'order_bridge_slug': 'no-spanish-co',
+        })
+        self.assertTrue(company.id)
+
+    def test_signup_user_gets_spanish_lang(self):
+        self.env['res.lang']._activate_lang('es_ES')
+        Users = self.env['res.users'].with_context(no_reset_password=True)
+        user = Users.create({
+            'name': 'Signup Lang',
+            'login': 'signup_lang_test',
+            'password': 'signup_lang_test',
+            'company_onboarding_state': 'pending',
+            'group_ids': [(6, 0, [self.env.ref('base.group_user').id])],
+        })
+        wiz = self.env['company.onboarding.wizard'].with_user(user).create({
+            'company_name': 'Spanish Shop',
+            'order_bridge_slug': 'spanish-shop',
+            'country_id': self.env.company.country_id.id or self.env.ref('base.us').id,
+            'currency_id': self.env.company.currency_id.id,
+        })
+        wiz.action_create_company()
+        user.invalidate_recordset()
+        self.assertEqual(user.company_id.partner_id.lang, 'es_ES')
+
+    def test_wizard_does_not_overwrite_user_lang(self):
+        """The wizard must not change a user's lang if already set."""
+        self.env['res.lang']._activate_lang('es_ES')
+        Users = self.env['res.users'].with_context(no_reset_password=True)
+        user = Users.create({
+            'name': 'Keep Lang',
+            'login': 'keep_lang_test',
+            'password': 'keep_lang_test',
+            'lang': 'en_US',
+            'company_onboarding_state': 'pending',
+            'group_ids': [(6, 0, [self.env.ref('base.group_user').id])],
+        })
+        wiz = self.env['company.onboarding.wizard'].with_user(user).create({
+            'company_name': 'Keep Lang Shop',
+            'order_bridge_slug': 'keep-lang-shop',
+            'country_id': self.env.company.country_id.id or self.env.ref('base.us').id,
+            'currency_id': self.env.company.currency_id.id,
+        })
+        wiz.action_create_company()
+        user.invalidate_recordset()
+        self.assertEqual(user.lang, 'en_US')
+
 
 @tagged('post_install', '-at_install')
 class TestCompanyOnboardingHttp(HttpCase):
