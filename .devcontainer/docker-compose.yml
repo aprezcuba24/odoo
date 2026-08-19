@@ -9,7 +9,8 @@ services:
       - ..:/app:cached
     ports:
       - "8069:8069"
-    # Inyecta variables de /app/.env (p. ej. ORDER_BRIDGE_FCM_*) hacia el entorno del contenedor; Odoo lee os.environ, no lee .env directamente.
+    # Fallback al crear el contenedor: inyecta /app/.env en el entorno del servicio.
+    # order_bridge también recarga .env al arrancar odoo-bin (solo local); basta reiniciar Odoo.
     env_file:
       - path: ../.env
         required: false
