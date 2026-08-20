@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extra global rules (AND with Odoo's). No shared catalog: company_id must belong to the user. -->
+    <record id="product_template_own_company_rule" model="ir.rule">
+        <field name="name">Product template: only own company</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="product_product_own_company_rule" model="ir.rule">
+        <field name="name">Product variant: only own company</field>
+        <field name="model_id" ref="product.model_product_product"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="product_pricelist_own_company_rule" model="ir.rule">
+        <field name="name">Pricelist: only own company</field>
+        <field name="model_id" ref="product.model_product_pricelist"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="product_pricelist_item_own_company_rule" model="ir.rule">
+        <field name="name">Pricelist item: only own company</field>
+        <field name="model_id" ref="product.model_product_pricelist_item"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="product_supplierinfo_own_company_rule" model="ir.rule">
+        <field name="name">Supplier info: only own company</field>
+        <field name="model_id" ref="product.model_product_supplierinfo"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="product_combo_own_company_rule" model="ir.rule">
+        <field name="name">Product combo: only own company</field>
+        <field name="model_id" ref="product.model_product_combo"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="product_document_own_company_rule" model="ir.rule">
+        <field name="name">Product document: only own company</field>
+        <field name="model_id" ref="product.model_product_document"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- System categories (company_id empty) stay shared; tenant-created ones are isolated. -->
+    <record id="product_category_own_company_rule" model="ir.rule">
+        <field name="name">Product category: own company or shared</field>
+        <field name="model_id" ref="product.model_product_category"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="pos_category_own_company_rule" model="ir.rule">
+        <field name="name">PoS category: own company or shared</field>
+        <field name="model_id" ref="point_of_sale.model_pos_category"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+</odoo>

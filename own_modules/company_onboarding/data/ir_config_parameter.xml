@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Public signup (B2C). Safe for the dedicated multi-company Railway project only. -->
+    <function model="ir.config_parameter" name="set_param">
+        <value>auth_signup.invitation_scope</value>
+        <value>b2c</value>
+    </function>
+</odoo>

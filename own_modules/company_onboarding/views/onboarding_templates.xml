@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="wizard_steps" name="Onboarding wizard steps">
+        <p class="text-center text-muted small mb-3">
+            Paso <t t-esc="onboarding_step"/> de 2 · <t t-esc="onboarding_step_label"/>
+        </p>
+    </template>
+
+    <template id="signup_onboarding_steps" inherit_id="auth_signup.signup">
+        <xpath expr="//form[hasclass('oe_signup_form')]" position="before">
+            <t t-if="not token">
+                <t t-call="company_onboarding.wizard_steps">
+                    <t t-set="onboarding_step" t-value="1"/>
+                    <t t-set="onboarding_step_label">Cuenta</t>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="company_form" name="Onboarding company form">
+        <t t-call="web.login_layout">
+            <t t-call="company_onboarding.wizard_steps">
+                <t t-set="onboarding_step" t-value="2"/>
+                <t t-set="onboarding_step_label">Compañía</t>
+            </t>
+            <form class="oe_signup_form" role="form" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                <div class="mb-3 field-company-name">
+                    <label for="company_name" class="form-label">Nombre de la empresa</label>
+                    <input type="text" name="company_name" t-att-value="company_name" id="company_name"
+                        class="form-control" placeholder="Mi Tienda" autofocus="autofocus" required="required"/>
+                </div>
+
+                <div class="mb-3 field-order-bridge-slug">
+                    <label for="order_bridge_slug" class="form-label">Slug Tienda Apk</label>
+                    <input type="text" name="order_bridge_slug" t-att-value="order_bridge_slug" id="order_bridge_slug"
+                        class="form-control" placeholder="mi-tienda" required="required" autocapitalize="off"
+                        autocomplete="off"/>
+                    <div class="form-text">Minúsculas, números y guiones. Identifica tu tienda en la app.</div>
+                </div>
+
+                <div class="mb-3 field-phone">
+                    <label for="phone" class="form-label">Teléfono de la tienda</label>
+                    <input type="text" name="phone" t-att-value="phone" id="phone" class="form-control"
+                        placeholder="55512345"/>
+                </div>
+
+                <div class="mb-3 field-country">
+                    <label for="country_id" class="form-label">País</label>
+                    <select name="country_id" id="country_id" class="form-control" required="required">
+                        <option value="">País...</option>
+                        <t t-foreach="countries" t-as="country">
+                            <option t-att-value="country.id" t-att-selected="country.id == country_id or None">
+                                <t t-esc="country.name"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+
+                <div class="mb-3 field-currency">
+                    <label for="currency_id" class="form-label">Moneda</label>
+                    <select name="currency_id" id="currency_id" class="form-control" required="required">
+                        <option value="">Moneda...</option>
+                        <t t-foreach="currencies" t-as="currency">
+                            <option t-att-value="currency.id" t-att-selected="currency.id == currency_id or None">
+                                <t t-esc="currency.name"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+
+                <p class="alert alert-danger" t-if="error" role="alert">
+                    <t t-esc="error"/>
+                </p>
+
+                <div class="text-center oe_login_buttons d-grid pt-3">
+                    <button type="submit" class="btn btn-primary mb-1">Crear compañía</button>
+                    <a href="/web/session/logout" class="btn btn-link btn-sm mt-2" role="button">Cerrar sesión</a>
+                </div>
+            </form>
+        </t>
+    </template>
+</odoo>

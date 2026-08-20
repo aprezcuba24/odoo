@@ -18,6 +18,7 @@ from ..schemas.responses import (
     UnauthorizedErrorResponse,
     ValidationErrorResponse,
 )
+from ..utils.company_context import resolve_request_company
 from ..utils.constant import API_LANG
 from ..utils.order_stock import InsufficientStockError
 
@@ -27,7 +28,10 @@ _LAST_ACTIVITY_WRITE_INTERVAL = timedelta(seconds=60)
 
 CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
-    ('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-App-Version'),
+    (
+        'Access-Control-Allow-Headers',
+        'Authorization, Content-Type, X-App-Version, X-Company-Slug',
+    ),
     ('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS'),
     ('Access-Control-Max-Age', '86400'),
 ]
@@ -84,14 +88,16 @@ def resolve_api_device():
     return device
 
 
-def catalog_context_for_partner(partner):
+def catalog_context_for_partner(partner, fallback_company=None):
     """Return (catalog_company, product_domain).
 
-    ``partner`` may be falsy for anonymous catalog (uses request env company).
+    ``partner`` may be falsy for anonymous catalog. Prefer the partner's company,
+    then ``fallback_company``, then ``request.env.company``.
     """
     Company = request.env['res.company'].sudo()
+    env_company = fallback_company or request.env.company.sudo()
     catalog_company = Company._order_bridge_catalog_company_for_partner(
-        partner, request.env.company.sudo()
+        partner, env_company
     )
     product_domain = catalog_company._order_bridge_product_domain()
     return catalog_company, product_domain
@@ -102,7 +108,9 @@ def order_create_body_validation_context(kwargs):
     partner = kwargs.get('api_partner')
     if not partner:
         return None
-    catalog_company, product_domain = catalog_context_for_partner(partner)
+    device = kwargs.get('api_device')
+    fallback = device.company_id if device else None
+    catalog_company, product_domain = catalog_context_for_partner(partner, fallback)
     return {
         'env': request.env,
         'catalog_company': catalog_company,
@@ -137,6 +145,12 @@ def _order_bridge_request_context(
         kwargs['api_device'] = None
         kwargs['api_partner'] = None
         partner = None
+        fallback_company = None
+        if inject_catalog_domain:
+            company, err, status = resolve_request_company()
+            if err:
+                return api_json_response(SimpleErrorResponse(**err), status)
+            fallback_company = company
     else:
         now = fields.Datetime.now()
         if not device.last_activity or (now - device.last_activity) > _LAST_ACTIVITY_WRITE_INTERVAL:
@@ -144,8 +158,11 @@ def _order_bridge_request_context(
         kwargs['api_device'] = device
         kwargs['api_partner'] = device.partner_id
         partner = device.partner_id
+        fallback_company = device.company_id
     if inject_catalog_domain:
-        catalog_company, product_domain = catalog_context_for_partner(partner)
+        catalog_company, product_domain = catalog_context_for_partner(
+            partner, fallback_company,
+        )
         kwargs['catalog_company'] = catalog_company
         kwargs['product_domain'] = product_domain
     return None
@@ -179,9 +196,11 @@ def api_device_auth(_func=None, *, inject_catalog_domain=False):
 def api_access(endpoint):
     """Inject catalog company/domain; Bearer device key optional.
 
-    Without a valid device key, the catalog uses ``request.env.company`` (same as
-    anonymous public website). With a valid key, ``last_activity`` is updated and
-    the partner's company is used when set.
+    Without a valid device key, the catalog company comes from
+    ``X-Company-Slug`` / ``company_slug`` / subdomain, the only company in
+    the database, or ``base.main_company`` in single-tenant. With a valid
+    key, ``last_activity`` is updated and the device's company (or partner
+    company) is used.
     """
 
     @functools.wraps(endpoint)

@@ -8,9 +8,9 @@ and credentials are set, creates or updates ``fs.storage`` code
 
 - ``model_xmlids`` for ``order_bridge.banner`` (OCA resolves storage via
   ``model_xmlids`` / ``field_xmlids``, not ``ir.model.storage_id``)
-- ``field_xmlids`` auto-discovered per database: stored binary fields whose
-  name contains ``image`` and whose registry field has ``attachment=True``
-  (Odoo 19: ``attachment`` is not a searchable column on ``ir.model.fields``)
+- ``field_xmlids`` auto-discovered per database: stored binary/Image fields with
+  ``attachment=True`` (``fields.Image``, or name hints like logo/favicon/cover;
+  Odoo 19: ``attachment`` is not a searchable column on ``ir.model.fields``)
 
 Bucket name (first match wins):
 
@@ -19,11 +19,11 @@ Bucket name (first match wins):
 
 S3 layout:
 
-- **Single-tenant** (production; ``ODOO_MULTI_TENANT`` unset):
+- **Single-tenant** (production; ``ODOO_MULTI_COMPANY_S3`` unset):
   ``directory_path = <bucket>`` — objects at bucket root.
-- **Multi-tenant** (``ODOO_MULTI_TENANT=true``):
-  ``directory_path = <bucket>/{db_name}`` — shared bucket, one prefix per
-  database (OCA substitutes ``{db_name}`` at runtime).
+- **Multi-company** (``ODOO_MULTI_COMPANY_S3=true``, same BD, several
+  ``res.company``): ``directory_path = <bucket>/{company_id}`` — shared
+  bucket, one prefix per company id (OCA substitutes ``{company_id}``).
 
 ``use_as_default_for_attachments`` stays False so regenerable assets
 (JS/CSS) stay in DB/filestore.
@@ -38,6 +38,8 @@ import json
 import logging
 import os
 
+from odoo import fields as odoo_fields
+
 _logger = logging.getLogger(__name__)
 
 MEDIA_FS_STORAGE_CODE = "s3_order_bridge_banners"
@@ -47,8 +49,8 @@ BANNER_FS_STORAGE_CODE = MEDIA_FS_STORAGE_CODE
 BANNER_MODEL_XMLID = "order_bridge.model_order_bridge_banner"
 
 
-def _multi_tenant_enabled() -> bool:
-    return os.environ.get("ODOO_MULTI_TENANT", "").strip().lower() in (
+def _multi_company_s3_enabled() -> bool:
+    return os.environ.get("ODOO_MULTI_COMPANY_S3", "").strip().lower() in (
         "1",
         "true",
         "yes",
@@ -70,9 +72,9 @@ _banner_s3_bucket = _media_s3_bucket
 
 
 def _media_directory_path(bucket: str) -> str:
-    """Bucket root in single-tenant; ``bucket/{db_name}`` when multi-tenant."""
-    if _multi_tenant_enabled():
-        return f"{bucket}/{{db_name}}"
+    """Bucket root, or ``bucket/{company_id}`` when multi-company S3 is on."""
+    if _multi_company_s3_enabled():
+        return f"{bucket}/{{company_id}}"
     return bucket
 
 
@@ -81,16 +83,8 @@ _banner_directory_path = _media_directory_path
 
 
 def _s3_credentials() -> tuple[str, str]:
-    access_key = (
-        os.environ.get("ORDER_BRIDGE_BANNER_S3_ACCESS_KEY_ID")
-        or os.environ.get("AWS_ACCESS_KEY_ID")
-        or ""
-    ).strip()
-    secret_key = (
-        os.environ.get("ORDER_BRIDGE_BANNER_S3_SECRET_ACCESS_KEY")
-        or os.environ.get("AWS_SECRET_ACCESS_KEY")
-        or ""
-    ).strip()
+    access_key = (os.environ.get("AWS_ACCESS_KEY_ID") or "").strip()
+    secret_key = (os.environ.get("AWS_SECRET_ACCESS_KEY") or "").strip()
     return access_key, secret_key
 
 
@@ -101,11 +95,7 @@ def _s3_options(access_key: str, secret_key: str) -> dict:
         or os.environ.get("AWS_ENDPOINT_URL")
         or ""
     ).strip()
-    region = (
-        os.environ.get("ORDER_BRIDGE_BANNER_S3_REGION")
-        or os.environ.get("AWS_DEFAULT_REGION")
-        or ""
-    ).strip()
+    region = (os.environ.get("AWS_DEFAULT_REGION") or "").strip()
     client_kwargs: dict = {}
     if region:
         client_kwargs["region_name"] = region
@@ -116,13 +106,41 @@ def _s3_options(access_key: str, secret_key: str) -> dict:
     return options
 
 
+# Substrings matched against ``ir.model.fields.name`` (lowercase) for user media
+# stored as ``ir.attachment``. Excludes generic EDI/PDF binaries (e.g.
+# ``l10n_*_attachment_file``) while covering logo, favicon, cover, etc.
+_USER_MEDIA_FIELD_NAME_HINTS = (
+    "image",
+    "logo",
+    "favicon",
+    "photo",
+    "picture",
+    "banner",
+    "avatar",
+    "signature",
+    "background",
+    "cover",
+)
+
+
+def _is_user_media_attachment_field(model_field) -> bool:
+    """True for Image fields or binary attachment fields that hold user media."""
+    if model_field is None or not getattr(model_field, "attachment", False):
+        return False
+    if isinstance(model_field, odoo_fields.Image):
+        return True
+    name = model_field.name.lower()
+    return any(hint in name for hint in _USER_MEDIA_FIELD_NAME_HINTS)
+
+
 def _discover_image_attachment_field_xmlids(env) -> list[str]:
-    """Return XML IDs of stored binary fields whose name looks like an image.
+    """Return XML IDs of user-media binary fields stored as attachments.
 
     In Odoo 19 ``ir.model.fields`` has no searchable ``attachment`` column; the
-    Binary/Image ``attachment`` flag lives on the registry field. We search
-    stored binary fields with ``image`` in the name, then keep those whose
-    registry field has ``attachment=True``. Excludes ``__export__`` XML IDs.
+    Binary/Image ``attachment`` flag lives on the registry field. We search all
+    stored binary fields on non-transient models, then keep ``fields.Image`` and
+    other attachment binaries whose name looks like user media (image, logo,
+    favicon, cover, …). Excludes ``__export__`` XML IDs.
     """
     Field = env["ir.model.fields"].sudo()
     candidates = Field.search(
@@ -130,7 +148,6 @@ def _discover_image_attachment_field_xmlids(env) -> list[str]:
             ("ttype", "=", "binary"),
             ("store", "=", True),
             ("model_id.transient", "=", False),
-            ("name", "ilike", "image"),
         ]
     )
     keep = Field.browse()
@@ -139,7 +156,7 @@ def _discover_image_attachment_field_xmlids(env) -> list[str]:
         if model_name not in env:
             continue
         model_field = env[model_name]._fields.get(irec.name)
-        if model_field is not None and getattr(model_field, "attachment", False):
+        if _is_user_media_attachment_field(model_field):
             keep |= irec
     xmlids_map = keep.get_external_id()
     return sorted(
@@ -176,14 +193,14 @@ def provision_media_fs_storage(env):
     if not access_key or not secret_key:
         _logger.warning(
             "order_bridge: S3 bucket set (%s) but access key/secret "
-            "missing (ORDER_BRIDGE_* or AWS_*); skip fs.storage provisioning",
+            "missing (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY); skip fs.storage provisioning",
             bucket,
         )
         return
 
     field_xmlids = _discover_image_attachment_field_xmlids(env)
     directory_path = _media_directory_path(bucket)
-    multi_tenant = _multi_tenant_enabled()
+    multi_company_s3 = _multi_company_s3_enabled()
     options = _s3_options(access_key, secret_key)
 
     Storage = env["fs.storage"].sudo()
@@ -210,11 +227,11 @@ def provision_media_fs_storage(env):
         storage = Storage.create(vals)
 
     _logger.info(
-        "order_bridge: fs.storage %s directory_path=%s multi_tenant=%s "
-        "model_xmlids=%s field_xmlids_count=%s",
+        "order_bridge: fs.storage %s directory_path=%s "
+        "multi_company_s3=%s model_xmlids=%s field_xmlids_count=%s",
         MEDIA_FS_STORAGE_CODE,
         directory_path,
-        multi_tenant,
+        multi_company_s3,
         BANNER_MODEL_XMLID,
         len(field_xmlids),
     )
@@ -233,10 +250,79 @@ def provision_media_fs_storage(env):
     return storage
 
 
-# Backward-compatible alias used by docker-entrypoint / provision_tenant.sh.
+# Backward-compatible alias used by docker-entrypoint / S3 scripts.
 provision_banner_fs_storage = provision_media_fs_storage
+
+
+def ensure_order_bridge_sequences(env):
+    """Create per-company OB reference sequences when missing."""
+    Sequence = env["ir.sequence"].sudo()
+    for company in env["res.company"].sudo().search([]):
+        if Sequence.search_count([
+            ("code", "=", "order_bridge.order.ref"),
+            ("company_id", "=", company.id),
+        ]):
+            continue
+        Sequence.create({
+            "name": f"Referencia Tienda Apk ({company.name})",
+            "code": "order_bridge.order.ref",
+            "prefix": "OB-",
+            "padding": 5,
+            "company_id": company.id,
+        })
+
+
+def _company_for_device_backfill(env):
+    """Main company, else the only ``res.company``. Empty recordset if ambiguous."""
+    company = env.ref("base.main_company", raise_if_not_found=False)
+    if company:
+        return company
+    companies = env["res.company"].sudo().search([], order="id", limit=2)
+    if len(companies) == 1:
+        return companies
+    return env["res.company"]
+
+
+def backfill_order_bridge_company_ids(env):
+    """Assign ``company_id`` on legacy devices (and their partners) that have none.
+
+    After adding required ``company_id`` and the multi-company ``ir.rule``, rows
+    with NULL ``company_id`` disappear from Tienda Apk → Dispositivos. Fill them
+    with the main company (typical single-tenant) so pending validations stay
+    visible in the backend.
+    """
+    Device = env["order_bridge.device"].sudo()
+    if "company_id" not in Device._fields:
+        return 0
+
+    company = _company_for_device_backfill(env)
+    if not company:
+        _logger.warning(
+            "order_bridge: skip company_id backfill; need base.main_company "
+            "or exactly one res.company"
+        )
+        return 0
+
+    devices = Device.search([("company_id", "=", False)])
+    if not devices:
+        _logger.info("order_bridge: no devices missing company_id")
+        return 0
+
+    devices.write({"company_id": company.id})
+    partners = devices.mapped("partner_id").filtered(lambda p: not p.company_id)
+    if partners:
+        partners.write({"company_id": company.id})
+    _logger.info(
+        "order_bridge: backfilled company_id=%s on %s device(s), %s partner(s)",
+        company.id,
+        len(devices),
+        len(partners),
+    )
+    return len(devices)
 
 
 def post_init_hook(env):
     """Odoo 19 passes ``env`` to ``post_init_hook`` (see odoo/modules/loading.py)."""
+    ensure_order_bridge_sequences(env)
+    backfill_order_bridge_company_ids(env)
     provision_media_fs_storage(env)

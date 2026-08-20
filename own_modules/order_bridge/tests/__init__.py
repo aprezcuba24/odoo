@@ -1,7 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from . import test_backfill_company
 from . import test_fcm_send_wizard
+from . import test_local_dotenv
+from . import test_multi_company_isolation
 from . import test_order_bridge_api
+from . import test_order_bridge_multi_company_api
 from . import test_order_bridge_openapi
 from . import test_order_bridge_order_created_listener
 from . import test_order_bridge_push

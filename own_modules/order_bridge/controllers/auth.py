@@ -9,7 +9,8 @@ from ..schemas import (
     ProfilePutBody,
     RegisterBody,
 )
-from ..schemas.responses import MessageErrorResponse, RegisterOkResponse, StatusResponse
+from ..schemas.responses import MessageErrorResponse, RegisterOkResponse, SimpleErrorResponse, StatusResponse
+from ..utils.company_context import resolve_request_company
 from ..utils.decorators import (
     api_cors_preflight,
     api_device_auth,
@@ -23,11 +24,22 @@ class DeviceAuthController(http.Controller):
     @http.route('/api/order_bridge/register', type='http', auth='public', methods=['POST', 'OPTIONS'], csrf=False)
     @api_validated_json_body(RegisterBody)
     def register(self, body=None, **kwargs):
+        Device = request.env['order_bridge.device'].sudo()
+        existing = Device.search([('device_key', '=', body.device_key)], limit=1)
+        if existing:
+            company = existing.company_id
+        else:
+            company, err, status = resolve_request_company(
+                body.company_slug if body else None,
+            )
+            if err:
+                return api_json_response(SimpleErrorResponse(**err), status)
         try:
-            result = request.env['order_bridge.device'].register_or_get(
+            result = Device.register_or_get(
                 body.phone,
                 body.device_key,
                 body.device_info,
+                company=company,
             )
         except UserError as e:
             return api_json_response(
@@ -36,7 +48,7 @@ class DeviceAuthController(http.Controller):
             )
         device = result['device']
         partner = result['partner']
-        request.env['order_bridge.device'].order_bridge_sync_apk_version(
+        Device.order_bridge_sync_apk_version(
             body.device_key,
             request.httprequest.headers.get('X-App-Version'),
         )

@@ -7,6 +7,7 @@
             <list string="Dispositivos API" decoration-muted="not active" decoration-warning="active and not phone_validated">
                 <field name="phone"/>
                 <field name="partner_id"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
                 <field name="phone_validated" widget="boolean"/>
                 <field name="active" widget="boolean"/>
                 <field name="registration_date"/>
@@ -38,6 +39,7 @@
                         </group>
                         <group>
                             <field name="partner_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
                             <field name="registration_date"/>
                             <field name="last_activity"/>
                             <field name="device_info"/>
