@@ -51,15 +51,15 @@ Tras hacer merge del código multi-company al repo, la producción single-tenant
 DATABASE_URL=<tu Postgres de producción>
 DB_PASSWORD_ADMIN=<tu secreto actual>
 DB_LANGUAGE=es_ES
-DB_USERNAME=admin
 DB_WITH_DEMO=false
-ODOO_LIST_DB=false
 ODOO_PROXY_MODE=true
-GUNICORN_WORKERS=2
+ODOO_LIST_DB=false
 # S3 opcional, sin ODOO_MULTI_COMPANY_S3:
 # ODOO_ATTACHMENT_STORAGE=s3
 # ORDER_BRIDGE_BANNER_S3_BUCKET=...
 ```
+
+`DB_USERNAME` y `GUNICORN_WORKERS` no hace falta definirlos: el entrypoint usa `admin` y la imagen Docker ya arranca con 2 workers.
 
 - Un solo `DATABASE_URL` → una sola BD (como ahora).
 - `docker-entrypoint.sh` hace `db init` / `-u base` solo sobre **esa** BD.
@@ -136,29 +136,33 @@ env['order_bridge.device'].sudo().search([('company_id', '=', False)]).write({'c
 Copia en Railway **Variables** del servicio Odoo (valores nuevos, no reutilices los de producción):
 
 ```bash
-# Obligatorias
+# Obligatorias (init de BD)
 DATABASE_URL=<referencia al Postgres DE ESTE proyecto>
 DB_PASSWORD_ADMIN=<secreto-fuerte NUEVO>
 DB_LANGUAGE=es_ES
-DB_USERNAME=admin
 DB_WITH_DEMO=false
 
-# Modo multi-company (una BD, muchas compañías)
-ODOO_LIST_DB=false
-ODOO_PROXY_MODE=true
-GUNICORN_WORKERS=2
-
-# Módulos a instalar en el primer init (y en upgrades si los añades después)
-ODOO_EXTRA_INIT_MODULES=order_bridge,bi_analytics,company_onboarding,fs_attachment
+# Lo que distingue este proyecto del single-tenant
+# ODOO_MULTI_COMPANY_S3 activa slug obligatorio en la API y el prefijo S3 {company_id}
+ODOO_MULTI_COMPANY_S3=true
+# Primer boot: instala módulos que db init no trae. company_onboarding
+# instala order_bridge como dependencia. bi_analytics es el stack de reportes
+# (opcional para el aislamiento; sí lo quieres en la plataforma).
+ODOO_EXTRA_INIT_MODULES=company_onboarding,fs_attachment,bi_analytics
 
 # S3 compartido con prefijo por compañía (recomendado)
 ODOO_ATTACHMENT_STORAGE=s3
-ODOO_MULTI_COMPANY_S3=true
 ORDER_BRIDGE_BANNER_S3_BUCKET=<bucket-nuevo-o-dedicado>
 AWS_DEFAULT_REGION=us-east-1
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
+
+# Railway (mismo criterio que producción; no cambian el modo)
+ODOO_PROXY_MODE=true
+ODOO_LIST_DB=false
 ```
+
+No copies `DB_USERNAME` ni `GUNICORN_WORKERS`: defaults `admin` y `2`. `ODOO_LIST_DB` / `ODOO_PROXY_MODE` son de proxy/seguridad en PaaS, no el interruptor multi-company.
 
 ### Paso 3 — Dominio
 
@@ -176,7 +180,7 @@ AWS_SECRET_ACCESS_KEY=...
 ### Paso 5 — Verificación funcional
 
 1. Abre `https://<tu-dominio-nuevo>/web/signup` y crea un usuario de prueba.
-2. Completa el wizard **Crear mi compañía** (nombre + slug, p. ej. `demo`).
+2. Completa el formulario de compañía en `/web/onboarding/company` (nombre, slug, país, moneda; p. ej. slug `demo`).
 3. Entra al backend: solo debes ver datos de esa compañía.
 4. Repite con un segundo usuario/compañía y confirma que no se mezclan datos.
 5. API (opcional): `GET /api/order_bridge/products` con header `X-Company-Slug: demo`.
@@ -188,8 +192,9 @@ AWS_SECRET_ACCESS_KEY=...
 | Variable | Producción single-tenant | Proyecto multi-company |
 |----------|--------------------------|------------------------|
 | `DATABASE_URL` | Postgres **A** | Postgres **B** (nuevo) |
-| `ODOO_MULTI_COMPANY_S3` | No | `true` (si usas S3) |
-| `ODOO_EXTRA_INIT_MODULES` | No incluir `company_onboarding` | Incluir `company_onboarding` |
+| `ODOO_MULTI_COMPANY_S3` | No definir | `true` (API exige slug **y** prefijo S3 `{company_id}`) |
+| `ODOO_EXTRA_INIT_MODULES` | No incluir `company_onboarding` | `company_onboarding` (y `fs_attachment` si usas S3) |
+| `ODOO_LIST_DB` / `ODOO_PROXY_MODE` / `GUNICORN_WORKERS` | Igual en ambos (PaaS); no cambian el modo | Igual |
 | Dominio | El actual (p. ej. `tienda.cliente.com`) | Nuevo (p. ej. `app.tuplataforma.com`) |
 | Onboarding clientes | Manual / como ahora | Self-service `/web/signup` |
 
@@ -200,13 +205,13 @@ AWS_SECRET_ACCESS_KEY=...
 ### Alta de un nuevo negocio (multi-company)
 
 1. El usuario se registra en `/web/signup`.
-2. Completa el wizard (nombre empresa, slug, país, moneda).
+2. Completa el formulario de compañía (nombre, slug, país, moneda, teléfono).
 3. Opera en el backend con su compañía aislada.
 4. Invita empleados asignándoles **solo** esa compañía.
 
 ### API Tienda Apk (app móvil)
 
-Cada tienda necesita su `order_bridge_slug` (definido en el wizard o en Ajustes → Compañías):
+Cada tienda necesita su `order_bridge_slug` (definido en el onboarding o en Ajustes → Compañías):
 
 - Header: `X-Company-Slug: mi-tienda`
 - Registro: `POST /api/order_bridge/register` con `"company_slug": "mi-tienda"`
@@ -227,7 +232,7 @@ No hace falta desplegar ambos a la vez; son proyectos independientes.
 
 | Error | Causa | Solución |
 |-------|--------|----------|
-| Producción pide `company_slug` en la API | Hay **varias** `res.company` en la BD de producción | En producción debe haber **una** compañía; no uses el proyecto multi-company en esa BD |
+| Producción pide `company_slug` en la API | `ODOO_MULTI_COMPANY_S3=true` en el proyecto single-tenant | Quita esa variable de producción. Varias `res.company` **sin** el flag ya caen a `base.main_company` |
 | Signup público en producción | Instalado `company_onboarding` o `auth_signup.invitation_scope=b2c` | No instales `company_onboarding` en producción |
 | Datos mezclados entre clientes | Mismo proyecto/BD para ambos modos | Proyecto y Postgres **separados** |
 | S3 sobrescribe archivos | Mismo bucket sin prefijo en multi-company | `ODOO_MULTI_COMPANY_S3=true` en el proyecto nuevo |

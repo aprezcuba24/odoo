@@ -17,24 +17,26 @@ Guía de aislamiento: cada usuario entra por el **mismo dominio**; tras login, O
 3. Variables del servicio:
 
 ```bash
-ODOO_LIST_DB=false
-ODOO_PROXY_MODE=true
 DB_PASSWORD_ADMIN=<secreto-fuerte>
 DB_LANGUAGE=es_ES
 DB_WITH_DEMO=false
-GUNICORN_WORKERS=2
+ODOO_PROXY_MODE=true
+ODOO_LIST_DB=false
 
-# Módulos a instalar en el init / upgrade (ajusta según tu stack)
-ODOO_EXTRA_INIT_MODULES=order_bridge,bi_analytics,company_onboarding,fs_attachment
+# Lo que distingue este proyecto: slug en API + prefijo S3 {company_id}
+ODOO_MULTI_COMPANY_S3=true
+# company_onboarding instala order_bridge. bi_analytics es reportes (opcional para el modo).
+ODOO_EXTRA_INIT_MODULES=company_onboarding,fs_attachment,bi_analytics
 
 # S3: prefijo por compañía (company_id) en un bucket compartido
 ODOO_ATTACHMENT_STORAGE=s3
-ODOO_MULTI_COMPANY_S3=true
 ORDER_BRIDGE_BANNER_S3_BUCKET=<bucket>
 AWS_DEFAULT_REGION=us-east-1
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 ```
+
+`DB_USERNAME` y `GUNICORN_WORKERS` no hacen falta (defaults `admin` / `2`). `ODOO_LIST_DB` y `ODOO_PROXY_MODE` son de PaaS, no el interruptor de modo.
 
 4. Dominio único para el backend, p. ej. `app.tuplataforma.com`.
    Opcional: wildcard `*.tuplataforma.com` si la app móvil usa subdominio = `order_bridge_slug`.
