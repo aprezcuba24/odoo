@@ -290,6 +290,9 @@ def backfill_order_bridge_company_ids(env):
     with NULL ``company_id`` disappear from Tienda Apk → Dispositivos. Fill them
     with the main company (typical single-tenant) so pending validations stay
     visible in the backend.
+
+    Uses SQL: Odoo 19 domain optimization strips ``company_id = False`` on
+    required NOT NULL fields, so ORM ``search`` never finds legacy NULL rows.
     """
     Device = env["order_bridge.device"].sudo()
     if "company_id" not in Device._fields:
@@ -303,22 +306,45 @@ def backfill_order_bridge_company_ids(env):
         )
         return 0
 
-    devices = Device.search([("company_id", "=", False)])
-    if not devices:
+    Device.flush_model(["company_id"])
+    env.cr.execute(
+        """
+        UPDATE order_bridge_device
+           SET company_id = %s
+         WHERE company_id IS NULL
+     RETURNING id, partner_id
+        """,
+        [company.id],
+    )
+    rows = env.cr.fetchall()
+    if not rows:
         _logger.info("order_bridge: no devices missing company_id")
         return 0
 
-    devices.write({"company_id": company.id})
-    partners = devices.mapped("partner_id").filtered(lambda p: not p.company_id)
-    if partners:
-        partners.write({"company_id": company.id})
+    partner_ids = list({partner_id for _id, partner_id in rows if partner_id})
+    partner_count = 0
+    if partner_ids:
+        env["res.partner"].flush_model(["company_id"])
+        env.cr.execute(
+            """
+            UPDATE res_partner
+               SET company_id = %s
+             WHERE id = ANY(%s)
+               AND company_id IS NULL
+            """,
+            [company.id, partner_ids],
+        )
+        partner_count = env.cr.rowcount
+
+    Device.invalidate_model(["company_id"])
+    env["res.partner"].invalidate_model(["company_id"])
     _logger.info(
         "order_bridge: backfilled company_id=%s on %s device(s), %s partner(s)",
         company.id,
-        len(devices),
-        len(partners),
+        len(rows),
+        partner_count,
     )
-    return len(devices)
+    return len(rows)
 
 
 def post_init_hook(env):
