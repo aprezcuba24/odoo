@@ -3,12 +3,10 @@
 import functools
 import json
 import logging
-from datetime import timedelta
 
 from psycopg2 import IntegrityError
 from pydantic import BaseModel, ValidationError
 
-from odoo import fields
 from odoo.http import request
 
 from ..schemas.errors import pydantic_errors_to_api_body
@@ -23,8 +21,6 @@ from ..utils.constant import API_LANG
 from ..utils.order_stock import InsufficientStockError
 
 _logger = logging.getLogger(__name__)
-
-_LAST_ACTIVITY_WRITE_INTERVAL = timedelta(seconds=60)
 
 CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
@@ -152,9 +148,7 @@ def _order_bridge_request_context(
                 return api_json_response(SimpleErrorResponse(**err), status)
             fallback_company = company
     else:
-        now = fields.Datetime.now()
-        if not device.last_activity or (now - device.last_activity) > _LAST_ACTIVITY_WRITE_INTERVAL:
-            device.sudo().write({'last_activity': now})
+        device.sudo().order_bridge_touch_last_activity()
         kwargs['api_device'] = device
         kwargs['api_partner'] = device.partner_id
         partner = device.partner_id
