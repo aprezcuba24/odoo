@@ -23,6 +23,11 @@ class TestBackfillOrderBridgeCompanyIds(TransactionCase):
             'phone_validated': False,
             'active': True,
         })
+        # Simulate pre-migration rows. company_id is required (SQL NOT NULL), so
+        # drop the constraint in this test transaction before setting NULL.
+        self.env.cr.execute(
+            'ALTER TABLE order_bridge_device ALTER COLUMN company_id DROP NOT NULL'
+        )
         self.env.cr.execute(
             'UPDATE order_bridge_device SET company_id = NULL WHERE id = %s',
             [device.id],

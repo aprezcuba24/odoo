@@ -1253,6 +1253,19 @@
       },
       "RegisterBody": {
         "properties": {
+          "company_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Slug p\u00fablico de la compa\u00f1\u00eda (opcional si se env\u00eda X-Company-Slug, subdominio, hay una sola compa\u00f1\u00eda, o el despliegue es single-tenant).",
+            "title": "Company Slug"
+          },
           "device_info": {
             "anyOf": [
               {

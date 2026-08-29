@@ -76,9 +76,41 @@ class OrderBridgeDevice(models.Model):
     def action_revoke_validation(self):
         self.write({'phone_validated': False})
 
+    def order_bridge_touch_last_activity(self, min_interval_seconds=60):
+        """Best-effort last_activity update; skip if row is locked or recently touched.
+
+        Uses ``FOR NO KEY UPDATE SKIP LOCKED`` so parallel API calls on the same
+        device do not raise SerializationFailure and abort the request transaction.
+        ``last_activity`` is telemetry only (inactivity cron); a skipped write is fine.
+        """
+        self.ensure_one()
+        self.env.cr.execute(
+            """
+            UPDATE order_bridge_device
+               SET last_activity = (now() AT TIME ZONE 'UTC'),
+                   write_date = (now() AT TIME ZONE 'UTC')
+             WHERE id IN (
+                SELECT id FROM order_bridge_device
+                 WHERE id = %s
+                   AND (
+                        last_activity IS NULL
+                        OR last_activity < (now() AT TIME ZONE 'UTC')
+                           - make_interval(secs => %s)
+                   )
+                 FOR NO KEY UPDATE SKIP LOCKED
+             )
+            """,
+            (self.id, int(min_interval_seconds)),
+            log_exceptions=False,
+        )
+
     @api.model
     def order_bridge_sync_apk_version(self, device_key, apk_version):
-        """Persist X-App-Version when it changes for the given device_key."""
+        """Persist X-App-Version when it changes for the given device_key.
+
+        Best-effort: skips the write if another transaction holds the row lock,
+        avoiding SerializationFailure on concurrent last_activity / apk updates.
+        """
         if not device_key or not apk_version:
             return
         device_key = str(device_key).strip()
@@ -86,8 +118,23 @@ class OrderBridgeDevice(models.Model):
         if not device_key or not apk_version:
             return
         device = self.sudo().search([('device_key', '=', device_key)], limit=1)
-        if device and device.apk_version != apk_version:
-            device.write({'apk_version': apk_version})
+        if not device or device.apk_version == apk_version:
+            return
+        self.env.cr.execute(
+            """
+            UPDATE order_bridge_device
+               SET apk_version = %s,
+                   write_date = (now() AT TIME ZONE 'UTC')
+             WHERE id IN (
+                SELECT id FROM order_bridge_device
+                 WHERE id = %s
+                   AND (apk_version IS DISTINCT FROM %s)
+                 FOR NO KEY UPDATE SKIP LOCKED
+             )
+            """,
+            (apk_version, device.id, apk_version),
+            log_exceptions=False,
+        )
 
     def _deactivate_other_devices_for_phone(self, normalized_phone, company, keep_key=None):
         """One phone = one active device per company. Deactivate others with same phone."""
