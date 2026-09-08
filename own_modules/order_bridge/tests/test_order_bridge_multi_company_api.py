@@ -48,6 +48,17 @@ class TestOrderBridgeMultiCompanyApi(HttpCase):
         finally:
             extra.active = False
 
+    def test_anonymous_catalog_ignores_railway_host_single_tenant(self):
+        """PaaS Host must not become a fake company_slug when multi-company is off."""
+        with patch.dict(os.environ, {'ODOO_MULTI_COMPANY_S3': ''}, clear=False):
+            res = self.url_open(
+                '/api/order_bridge/products',
+                headers={'Host': 'odoo-production-d509.up.railway.app'},
+                timeout=60,
+            )
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertNotEqual(json.loads(res.text).get('error'), 'company_not_found')
+
     def test_anonymous_catalog_filtered_by_slug(self):
         company_b = self.env['res.company'].create({
             'name': 'API Co B Http',

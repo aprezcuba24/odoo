@@ -15,7 +15,12 @@ _RESERVED_SUBDOMAINS = frozenset({
 
 
 def company_slug_from_request(body_slug=None):
-    """Return a slug string from body, header, query, or Host subdomain (or None)."""
+    """Return a slug string from body, header, query, or Host subdomain (or None).
+
+    Host subdomain is only used when ``ODOO_MULTI_COMPANY_S3`` is enabled.
+    Single-tenant (APK legacy) must ignore PaaS hostnames like
+    ``odoo-production-….up.railway.app`` so they do not become false slugs.
+    """
     if body_slug is not None and str(body_slug).strip():
         return str(body_slug).strip().lower()
     header = request.httprequest.headers.get('X-Company-Slug') or ''
@@ -24,6 +29,8 @@ def company_slug_from_request(body_slug=None):
     query = request.params.get('company_slug') or ''
     if str(query).strip():
         return str(query).strip().lower()
+    if not _multi_company_s3_enabled():
+        return None
     host = (request.httprequest.host or '').split(':')[0].lower()
     # Skip bare IPs (e.g. 127.0.0.1) — dots look like subdomains.
     if not host or host.replace('.', '').isdigit():
@@ -39,14 +46,14 @@ def company_slug_from_request(body_slug=None):
 def resolve_request_company(body_slug=None, *, required_when_multi=None):
     """Resolve ``res.company`` for public API routes.
 
-    Resolution order: body slug → ``X-Company-Slug`` → query → subdomain →
-    single-company DB fallback → ``base.main_company`` (single-tenant) →
-    ``request.env.company``.
+    Resolution order: body slug → ``X-Company-Slug`` → query →
+    subdomain (multi-company only) → single-company DB fallback →
+    ``base.main_company`` (single-tenant) → ``request.env.company``.
 
     When ``required_when_multi`` is ``None`` (default), it follows
     ``ODOO_MULTI_COMPANY_S3``: the multi-company project requires a slug if
     several companies exist; single-tenant (APK legacy, no slug) falls back
-    to ``base.main_company``.
+    to ``base.main_company`` and never treats Host as a slug.
 
     Returns ``(company, error_payload_or_None, http_status)``.
     ``error_payload`` is a dict suitable for ``SimpleErrorResponse`` when set.
