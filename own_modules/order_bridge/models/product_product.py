@@ -53,6 +53,7 @@ class ProductProduct(models.Model):
             rows.append({
                 'id': product.id,
                 'name': product.display_name,
+                'uom_name': product.uom_id.name if product.uom_id else False,
                 'default_code': product.default_code or False,
                 'barcode': product.barcode or False,
                 'list_price': float(product.lst_price),

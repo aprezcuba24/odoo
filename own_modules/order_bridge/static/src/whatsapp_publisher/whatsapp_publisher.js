@@ -8,6 +8,107 @@ import { standardActionServiceProps } from "@web/webclient/actions/action_servic
 import { formatMonetary } from "@web/views/fields/formatters";
 import { Component, onWillStart, useState } from "@odoo/owl";
 
+const MESSAGE_SOURCE = "odoo-product-publisher";
+const RESPONSE_TIMEOUT_MS = 500;
+
+/**
+ * Download a same-origin product image and return base64 + mime for the extension.
+ */
+async function fetchImagePayload(imageUrl) {
+    if (!imageUrl) {
+        return { imageBase64: null, imageMime: null };
+    }
+    const path = imageUrl.replace("/image_128", "/image_512");
+    const absolute = path.startsWith("http")
+        ? path
+        : `${window.location.origin}${path}`;
+    try {
+        const response = await fetch(absolute, { credentials: "same-origin" });
+        if (!response.ok) {
+            return { imageBase64: null, imageMime: null };
+        }
+        const blob = await response.blob();
+        const mime = blob.type || "image/jpeg";
+        const buffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return { imageBase64: btoa(binary), imageMime: mime };
+    } catch {
+        return { imageBase64: null, imageMime: null };
+    }
+}
+
+/**
+ * Ask the Chrome extension to store the publish queue (name, price, image).
+ */
+function startProductPublish(products) {
+    const message = {
+        source: MESSAGE_SOURCE,
+        type: "START_PUBLISH",
+        products,
+    };
+
+    return new Promise((resolve) => {
+        let timeout = null;
+        let resolved = false;
+
+        const handleResponse = (event) => {
+            if (event.origin !== window.location.origin) {
+                return;
+            }
+            const response = event.data;
+            if (
+                !response ||
+                typeof response !== "object" ||
+                response.source !== MESSAGE_SOURCE ||
+                response.type !== "START_PUBLISH_RESPONSE"
+            ) {
+                return;
+            }
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            window.removeEventListener("message", handleResponse);
+            if (resolved) {
+                return;
+            }
+            resolved = true;
+            if (response.ok) {
+                resolve({ ok: true });
+            } else {
+                resolve({
+                    ok: false,
+                    error:
+                        typeof response.error === "string"
+                            ? response.error
+                            : _t("La extensión no pudo iniciar la publicación."),
+                });
+            }
+        };
+
+        window.addEventListener("message", handleResponse);
+        window.postMessage(message, window.location.origin);
+
+        timeout = setTimeout(() => {
+            window.removeEventListener("message", handleResponse);
+            if (resolved) {
+                return;
+            }
+            resolved = true;
+            resolve({
+                ok: false,
+                error: _t(
+                    "La extensión no respondió. Verifica que esté instalada y recargada.",
+                ),
+            });
+        }, RESPONSE_TIMEOUT_MS);
+    });
+}
+
 export class WhatsappPublisherAction extends Component {
     static template = "order_bridge.WhatsappPublisherAction";
     static components = { Layout };
@@ -22,6 +123,8 @@ export class WhatsappPublisherAction extends Component {
             search: "",
             onlyVisibleApk: true,
             loading: true,
+            sending: false,
+            cupCurrencyId: null,
         });
         this.display = {
             controlPanel: {},
@@ -31,11 +134,12 @@ export class WhatsappPublisherAction extends Component {
     }
 
     async loadProducts() {
-        const rows = await this.orm.call(
-            "product.product",
-            "get_whatsapp_publisher_products",
-            [],
-        );
+        const [rows, cupCurrencies] = await Promise.all([
+            this.orm.call("product.product", "get_whatsapp_publisher_products", []),
+            this.orm.searchRead("res.currency", [["name", "=", "CUP"]], ["id"], {
+                limit: 1,
+            }),
+        ]);
         const selectedIds = {};
         for (const product of rows) {
             if (product.order_bridge_visible) {
@@ -44,6 +148,7 @@ export class WhatsappPublisherAction extends Component {
         }
         this.state.products = rows;
         this.state.selectedIds = selectedIds;
+        this.state.cupCurrencyId = cupCurrencies[0]?.id || null;
         this.state.loading = false;
     }
 
@@ -94,12 +199,27 @@ export class WhatsappPublisherAction extends Component {
     }
 
     formatPrice(product) {
-        return formatMonetary(product.list_price, {
+        if (this.state.cupCurrencyId) {
+            return formatMonetary(product.list_price, {
+                currencyId: this.state.cupCurrencyId,
+            });
+        }
+        const amount = formatMonetary(product.list_price, {
             currencyId: product.currency_id,
         });
+        return amount.includes("CUP") ? amount : `${amount} CUP`;
     }
 
-    onSendToWhatsapp() {
+    formatProductLabel(product) {
+        const name = (product.name || "").trim();
+        const uom = (product.uom_name || "").trim();
+        return uom ? `${name} (${uom})` : name;
+    }
+
+    async onSendToWhatsapp() {
+        if (this.state.sending) {
+            return;
+        }
         const selected = this.state.products.filter((p) => this.state.selectedIds[p.id]);
         if (!selected.length) {
             this.notification.add(_t("Seleccione al menos un producto."), {
@@ -107,17 +227,35 @@ export class WhatsappPublisherAction extends Component {
             });
             return;
         }
-        const payload = selected.map((p) => ({
-            id: p.id,
-            name: p.name,
-            default_code: p.default_code,
-            list_price: p.list_price,
-            free_qty: p.free_qty,
-        }));
-        console.log("Whatsapp publicador — productos seleccionados:", payload);
-        this.notification.add(_t("Ya está listo"), {
-            type: "success",
-        });
+
+        this.state.sending = true;
+        try {
+            const products = [];
+            for (const product of selected) {
+                const image = await fetchImagePayload(product.image_url);
+                products.push({
+                    id: String(product.id),
+                    name: this.formatProductLabel(product),
+                    price: this.formatPrice(product),
+                    imageBase64: image.imageBase64,
+                    imageMime: image.imageMime,
+                });
+            }
+
+            console.log("Whatsapp publicador — productos seleccionados:", products);
+
+            const result = await startProductPublish(products);
+            if (!result.ok) {
+                this.notification.add(result.error, { type: "danger" });
+                return;
+            }
+            this.notification.add(
+                _t("Cola lista. Abre WhatsApp Web y publica desde el panel."),
+                { type: "success" },
+            );
+        } finally {
+            this.state.sending = false;
+        }
     }
 }
 

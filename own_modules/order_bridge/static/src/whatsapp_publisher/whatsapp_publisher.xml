@@ -7,9 +7,11 @@
                     <button
                         type="button"
                         class="btn btn-primary"
+                        t-att-disabled="state.sending"
                         t-on-click="onSendToWhatsapp"
                     >
-                        Mandar a WhatsApp
+                        <t t-if="state.sending">Preparando…</t>
+                        <t t-else="">Mandar a WhatsApp</t>
                     </button>
                 </t>
 
@@ -87,7 +89,7 @@
                                             <i class="fa fa-picture-o"/>
                                         </div>
                                     </td>
-                                    <td t-esc="product.name"/>
+                                    <td t-esc="formatProductLabel(product)"/>
                                     <td t-esc="product.default_code or ''"/>
                                     <td class="text-end" t-esc="formatPrice(product)"/>
                                     <td class="text-end" t-esc="product.free_qty"/>

@@ -44,6 +44,7 @@ class TestWhatsappPublisherProducts(TransactionCase):
         self.assertIn(visible.id, by_id)
         self.assertTrue(by_id[visible.id]['order_bridge_visible'])
         self.assertEqual(by_id[visible.id]['default_code'], 'WA-VIS')
+        self.assertTrue(by_id[visible.id]['uom_name'])
         self.assertGreater(by_id[visible.id]['free_qty'], 0)
 
         self.assertIn(hidden.id, by_id)
