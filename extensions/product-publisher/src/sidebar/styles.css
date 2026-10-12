@@ -13,41 +13,44 @@
   box-sizing: border-box;
 }
 
+/* Odoo Community brand: #71639e (primary_variables.scss $o-community-color) */
 .panel[data-theme='light'],
 .fab-show[data-theme='light'] {
-  --v-bg: hsl(210 20% 98%);
-  --v-chrome: #f0f4f7;
+  --v-bg: #f8f9fa;
+  --v-chrome: #71639e;
   --v-card: #ffffff;
-  --v-on-surface: #2a3439;
-  --v-on-surface-variant: #566166;
-  --v-border: rgba(42, 52, 57, 0.12);
-  --v-border-soft: rgba(42, 52, 57, 0.08);
-  --v-primary: #1877f2;
+  --v-on-surface: #212529;
+  --v-on-surface-variant: #6c757d;
+  --v-border: rgba(33, 37, 41, 0.12);
+  --v-border-soft: rgba(33, 37, 41, 0.08);
+  --v-primary: #71639e;
   --v-on-primary: #ffffff;
-  --v-error: #b42318;
-  --v-error-bg: #fef3f2;
-  --v-success: #027a48;
-  --v-success-bg: #ecfdf3;
-  --v-font-headline: Manrope, Inter, system-ui, sans-serif;
+  --v-on-chrome: #ffffff;
+  --v-error: #d23f3a;
+  --v-error-bg: #fcebeb;
+  --v-success: #017e84;
+  --v-success-bg: #e6f4f4;
+  --v-font-headline: Inter, system-ui, sans-serif;
   --v-font-body: Inter, system-ui, sans-serif;
 }
 
 .panel[data-theme='dark'],
 .fab-show[data-theme='dark'] {
-  --v-bg: #111b21;
-  --v-chrome: #1a242a;
-  --v-card: #1e282e;
-  --v-on-surface: #e8eef1;
-  --v-on-surface-variant: #9aa5ab;
-  --v-border: rgba(232, 238, 241, 0.12);
-  --v-border-soft: rgba(232, 238, 241, 0.08);
-  --v-primary: #4b9bff;
-  --v-on-primary: #061528;
+  --v-bg: #1a1625;
+  --v-chrome: #2a2340;
+  --v-card: #241e33;
+  --v-on-surface: #f0eef5;
+  --v-on-surface-variant: #b0a8c0;
+  --v-border: rgba(240, 238, 245, 0.14);
+  --v-border-soft: rgba(240, 238, 245, 0.08);
+  --v-primary: #a89fd4;
+  --v-on-primary: #1a1625;
+  --v-on-chrome: #f0eef5;
   --v-error: #f97066;
   --v-error-bg: #3b1511;
-  --v-success: #75e0a7;
-  --v-success-bg: #053321;
-  --v-font-headline: Manrope, Inter, system-ui, sans-serif;
+  --v-success: #5ec4c8;
+  --v-success-bg: #0a2e30;
+  --v-font-headline: Inter, system-ui, sans-serif;
   --v-font-body: Inter, system-ui, sans-serif;
 }
 
@@ -64,6 +67,7 @@
 .header {
   padding: 14px 14px 14px 16px;
   background: var(--v-chrome);
+  color: var(--v-on-chrome);
   border-bottom: 1px solid var(--v-border-soft);
 }
 
@@ -87,8 +91,8 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--v-primary);
-  color: var(--v-on-primary);
+  background: color-mix(in srgb, var(--v-on-chrome) 18%, transparent);
+  color: var(--v-on-chrome);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,6 +104,7 @@
   font-size: 16px;
   font-weight: 800;
   line-height: 1.2;
+  color: var(--v-on-chrome);
 }
 
 .brand-subtitle {
@@ -108,7 +113,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--v-primary);
+  color: color-mix(in srgb, var(--v-on-chrome) 75%, transparent);
 }
 
 .header-actions {
@@ -123,7 +128,7 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--v-on-surface-variant);
+  color: color-mix(in srgb, var(--v-on-chrome) 80%, transparent);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -132,8 +137,8 @@
 
 .btn-hide:hover,
 .btn-logout:hover {
-  background: color-mix(in srgb, var(--v-border) 50%, transparent);
-  color: var(--v-on-surface);
+  background: color-mix(in srgb, var(--v-on-chrome) 16%, transparent);
+  color: var(--v-on-chrome);
 }
 
 .header-org {
@@ -158,13 +163,18 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  border: 3px solid var(--v-border);
+  border: none;
+  background: var(--v-primary);
   color: var(--v-on-primary);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(113, 99, 158, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.fab-show:hover {
+  filter: brightness(1.08);
 }
 
 .gate {

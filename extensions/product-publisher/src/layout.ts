@@ -49,7 +49,7 @@ export function syncSidebarChrome(open: boolean): void {
     Object.assign(host.style, {
       position: 'fixed',
       top: 'auto',
-      bottom: '80px',
+      bottom: '150px',
       right: '20px',
       width: 'auto',
       height: 'auto',
