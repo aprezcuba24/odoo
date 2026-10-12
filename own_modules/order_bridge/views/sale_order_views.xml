@@ -107,6 +107,9 @@
         <field name="inherit_id" ref="sale.view_order_tree"/>
         <field name="mode">primary</field>
         <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="js_class">order_bridge_store_order_list</attribute>
+            </xpath>
             <xpath expr="//list" position="inside">
                 <field name="order_bridge_origin"/>
                 <field name="order_bridge_ref"/>
