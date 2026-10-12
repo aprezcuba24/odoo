@@ -56,6 +56,12 @@ package-lock.json
 package.json
 .husky
 
+# Keep the product-publisher extension package files trackable
+!extensions/**/package.json
+!extensions/**/package-lock.json
+!extensions/**/tsconfig.json
+extensions/**/dist/
+
 # various virtualenv
 /bin/
 /build/
@@ -68,3 +74,5 @@ package.json
 
 venv/
 google-push.json
+
+temp

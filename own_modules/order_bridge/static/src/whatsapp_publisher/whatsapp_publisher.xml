@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="order_bridge.WhatsappPublisherAction">
+        <div class="o_action o_order_bridge_whatsapp_publisher h-100">
+            <Layout display="display" className="'o_content'">
+                <t t-set-slot="layout-buttons">
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        t-att-disabled="state.sending"
+                        t-on-click="onSendToWhatsapp"
+                    >
+                        <t t-if="state.sending">Preparando…</t>
+                        <t t-else="">Mandar a WhatsApp</t>
+                    </button>
+                </t>
+
+                <div class="p-3">
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                        <input
+                            type="search"
+                            class="form-control"
+                            style="max-width: 280px;"
+                            placeholder="Filtrar productos..."
+                            t-att-value="state.search"
+                            t-on-input="onSearchInput"
+                        />
+                        <div class="form-check mb-0">
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                id="ob_wa_only_visible_apk"
+                                t-att-checked="state.onlyVisibleApk"
+                                t-on-change="onOnlyVisibleApkChange"
+                            />
+                            <label class="form-check-label" for="ob_wa_only_visible_apk">
+                                Visibles en Tienda Apk
+                            </label>
+                        </div>
+                        <span class="text-muted small" t-if="!state.loading">
+                            <t t-esc="selectedCount"/> seleccionados ·
+                            <t t-esc="filteredProducts.length"/> visibles
+                        </span>
+                    </div>
+
+                    <div t-if="state.loading" class="text-center text-muted py-5">
+                        Cargando productos...
+                    </div>
+                    <t t-elif="!filteredProducts.length">
+                        <div class="text-center text-muted py-5">
+                            No hay productos que coincidan con el filtro.
+                        </div>
+                    </t>
+                    <div t-else="" class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 2.5rem;"/>
+                                    <th style="width: 3.5rem;"/>
+                                    <th>Nombre</th>
+                                    <th>Referencia</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-end">Cantidad libre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="filteredProducts" t-as="product" t-key="product.id">
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            t-att-checked="isSelected(product.id)"
+                                            t-on-change="() => this.toggleProduct(product.id)"
+                                        />
+                                    </td>
+                                    <td>
+                                        <img
+                                            t-if="product.image_url"
+                                            t-att-src="product.image_url"
+                                            alt=""
+                                            class="rounded"
+                                            style="width: 40px; height: 40px; object-fit: cover;"
+                                        />
+                                        <div
+                                            t-else=""
+                                            class="bg-secondary-subtle rounded d-flex align-items-center justify-content-center text-muted"
+                                            style="width: 40px; height: 40px;"
+                                        >
+                                            <i class="fa fa-picture-o"/>
+                                        </div>
+                                    </td>
+                                    <td t-esc="formatProductLabel(product)"/>
+                                    <td t-esc="product.default_code or ''"/>
+                                    <td class="text-end" t-esc="formatPrice(product)"/>
+                                    <td class="text-end" t-esc="product.free_qty"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </Layout>
+        </div>
+    </t>
+</templates>
