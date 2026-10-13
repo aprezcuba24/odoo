@@ -48,6 +48,47 @@ class TestOrderBridgeOrderCreatedListener(TransactionCase):
         })
         mock_schedule.assert_called_once()
 
+    def test_admin_menu_context_sets_origin_and_confirms(self):
+        """Pedidos creados desde Pedidos Tienda Apk entran al flujo de tienda."""
+        partner = self.env['res.partner'].create({
+            'name': 'Cliente admin menu',
+            'phone': '+529991112233',
+        })
+        product = self.env['product.product'].create({
+            'name': 'Producto admin menu',
+            'sale_ok': True,
+            'list_price': 5.0,
+        })
+        order = self.env['sale.order'].with_context(
+            order_bridge_admin_create=True,
+            default_order_bridge_origin='admin',
+        ).create({
+            'partner_id': partner.id,
+            # Origen omitido a propósito: el cliente web no envía campos readonly.
+            'order_line': [Command.create({'product_id': product.id, 'product_uom_qty': 1.0})],
+        })
+        self.assertEqual(order.order_bridge_origin, 'admin')
+        self.assertEqual(order.order_bridge_store_state, 'reviewing')
+        self.assertTrue(order.order_bridge_ref)
+        self.assertEqual(order.state, 'sale')
+
+    def test_admin_default_origin_context_alone_sets_origin(self):
+        """Solo default_order_bridge_origin basta (el web client suele mandar solo eso)."""
+        partner = self.env['res.partner'].create({'name': 'Cliente default origin'})
+        order = self.env['sale.order'].with_context(
+            default_order_bridge_origin='admin',
+        ).create({'partner_id': partner.id})
+        self.assertEqual(order.order_bridge_origin, 'admin')
+
+    def test_admin_menu_context_without_lines_stays_draft(self):
+        partner = self.env['res.partner'].create({'name': 'Cliente sin líneas'})
+        order = self.env['sale.order'].with_context(order_bridge_admin_create=True).create({
+            'partner_id': partner.id,
+        })
+        self.assertEqual(order.order_bridge_origin, 'admin')
+        self.assertEqual(order.order_bridge_store_state, 'reviewing')
+        self.assertEqual(order.state, 'draft')
+
     @patch.object(
         sale_order_module.SaleOrder,
         '_order_bridge_schedule_order_created_notification',

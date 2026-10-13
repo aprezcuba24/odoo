@@ -6,7 +6,9 @@
         <field name="view_mode">list,kanban,form,calendar,graph,pivot</field>
         <field name="view_id" ref="view_order_tree_order_bridge_store"/>
         <field name="domain">[('order_bridge_origin', '!=', False)]</field>
-        <field name="context">{}</field>
+        <!-- cache=False: evita que el navegador reutilice una acción vieja sin este context -->
+        <field name="cache" eval="False"/>
+        <field name="context" eval="{'default_order_bridge_origin': 'admin', 'order_bridge_admin_create': True}"/>
         <field name="search_view_id" ref="sale.view_sales_order_filter"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Aún no hay pedidos desde la tienda.</p>

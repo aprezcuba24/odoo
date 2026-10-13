@@ -302,6 +302,12 @@ class SaleOrder(models.Model):
     def create(self, vals_list):
         seq = self.env['ir.sequence'].sudo()
         for vals in vals_list:
+            # Readonly origin is omitted by the web client unless force_save; restore from context.
+            if not vals.get('order_bridge_origin') and (
+                self.env.context.get('order_bridge_admin_create')
+                or self.env.context.get('default_order_bridge_origin') == 'admin'
+            ):
+                vals['order_bridge_origin'] = 'admin'
             if vals.get('order_bridge_origin') and not vals.get('order_bridge_ref'):
                 company_id = vals.get('company_id') or self.env.company.id
                 ref = seq.with_company(company_id).next_by_code('order_bridge.order.ref')
