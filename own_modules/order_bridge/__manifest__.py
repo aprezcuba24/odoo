@@ -37,6 +37,8 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'security/ir.model.access.csv',
         'data/order_bridge_data.xml',
         'data/order_bridge_general_settings.xml',
+        'report/messaging_guide_report.xml',
+        'report/messaging_guide_templates.xml',
         'views/general_settings_views.xml',
         'views/banner_views.xml',
         'views/municipality_views.xml',
@@ -58,6 +60,8 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
             'order_bridge/static/src/scss/store_state_colors.scss',
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.js',
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.xml',
+            'order_bridge/static/src/store_order_list/store_order_list_controller.js',
+            'order_bridge/static/src/store_order_list/store_order_list.xml',
         ],
     },
 }

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_messaging_guide">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <div class="page o_order_bridge_messaging_guide">
+                    <style>
+                        .o_order_bridge_messaging_guide {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                            font-size: 16px;
+                            color: #212529;
+                            line-height: 1.4;
+                        }
+                        .o_ob_mg_card {
+                            page-break-inside: avoid;
+                            border: 1px solid #dee2e6;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            margin-bottom: 8px;
+                        }
+                        .o_ob_mg_header {
+                            background: #343a40;
+                            color: #fff;
+                            padding: 10px 12px;
+                        }
+                        .o_ob_mg_header .o_ob_mg_ref {
+                            font-size: 17px;
+                            font-weight: 700;
+                            letter-spacing: 0.02em;
+                        }
+                        .o_ob_mg_body {
+                            padding: 12px;
+                        }
+                        .o_ob_mg_section {
+                            padding: 8px 0;
+                            border-bottom: 1px solid #ced4da;
+                        }
+                        .o_ob_mg_section:last-child {
+                            border-bottom: none;
+                            padding-bottom: 0;
+                        }
+                        .o_ob_mg_client {
+                            font-size: 20px;
+                            font-weight: 700;
+                        }
+                        .o_ob_mg_phone {
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #0d6efd;
+                        }
+                        .o_ob_mg_address {
+                            font-size: 17px;
+                            color: #212529;
+                            line-height: 1.45;
+                        }
+                        .o_ob_mg_products {
+                            padding: 4px 0 8px;
+                            border-bottom: 1px solid #ced4da;
+                        }
+                        .o_ob_mg_line {
+                            padding: 8px 0;
+                            border-bottom: 1px dashed #adb5bd;
+                        }
+                        .o_ob_mg_products .o_ob_mg_line:last-child {
+                            border-bottom: none;
+                            padding-bottom: 0;
+                        }
+                        .o_ob_mg_line_name {
+                            font-weight: 700;
+                            font-size: 17px;
+                            line-height: 1.35;
+                        }
+                        /* Evitar tablas HTML: algunos visores de PDF dibujan bordes por defecto. */
+                        .o_ob_mg_line_meta {
+                            width: 100%;
+                            margin-top: 4px;
+                            font-size: 16px;
+                            color: #212529;
+                            overflow: hidden;
+                        }
+                        .o_ob_mg_line_qty {
+                            float: left;
+                        }
+                        .o_ob_mg_line_subtotal {
+                            float: right;
+                            font-weight: 700;
+                            white-space: nowrap;
+                        }
+                        .o_ob_mg_total_box {
+                            margin-top: 10px;
+                            background: #198754;
+                            color: #fff;
+                            border-radius: 6px;
+                            padding: 10px 12px;
+                            width: 100%;
+                            font-weight: 700;
+                            font-size: 17px;
+                            overflow: hidden;
+                            border: none;
+                        }
+                        .o_ob_mg_total_label {
+                            float: left;
+                            color: #fff;
+                        }
+                        .o_ob_mg_total_amount {
+                            float: right;
+                            font-size: 20px;
+                            color: #fff;
+                            white-space: nowrap;
+                        }
+                        .o_ob_mg_discount {
+                            font-size: 15px;
+                            color: #198754;
+                            margin-top: 6px;
+                        }
+                        .o_ob_mg_cut {
+                            border: none;
+                            border-top: 2px dashed #adb5bd;
+                            margin: 14px 0 16px;
+                        }
+                        .o_ob_mg_doc_header {
+                            margin-bottom: 14px;
+                            padding-bottom: 10px;
+                            border-bottom: 2px solid #343a40;
+                        }
+                        .o_ob_mg_doc_company {
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #212529;
+                            line-height: 1.3;
+                        }
+                        .o_ob_mg_doc_title {
+                            font-size: 17px;
+                            font-weight: 700;
+                            color: #343a40;
+                            margin-top: 4px;
+                        }
+                        .o_ob_mg_doc_datetime {
+                            font-size: 15px;
+                            color: #495057;
+                            margin-top: 4px;
+                        }
+                    </style>
+
+                    <t t-set="mg_company" t-value="docs[:1].company_id if docs else env.company"/>
+                    <div class="o_ob_mg_doc_header">
+                        <div class="o_ob_mg_doc_company" t-esc="mg_company.name or ''"/>
+                        <div class="o_ob_mg_doc_title">Guía de mensajería</div>
+                        <div class="o_ob_mg_doc_datetime" t-if="generated_at">
+                            <t t-esc="generated_at"/>
+                        </div>
+                    </div>
+
+                    <t t-foreach="docs" t-as="doc">
+                        <t t-set="product_lines" t-value="doc.order_bridge_report_product_lines()"/>
+                        <div class="o_ob_mg_card">
+                            <div class="o_ob_mg_header">
+                                <div class="o_ob_mg_ref">
+                                    <t t-esc="doc.name"/>
+                                </div>
+                            </div>
+                            <div class="o_ob_mg_body">
+                                <div class="o_ob_mg_section o_ob_mg_client" t-esc="doc.partner_id.name or ''"/>
+
+                                <div class="o_ob_mg_section o_ob_mg_phone" t-esc="doc.order_bridge_report_phone() or '—'"/>
+
+                                <div class="o_ob_mg_section o_ob_mg_address" t-esc="doc.order_bridge_report_address() or '—'"/>
+
+                                <div class="o_ob_mg_products">
+                                    <t t-foreach="product_lines" t-as="line">
+                                        <div class="o_ob_mg_line">
+                                            <div class="o_ob_mg_line_name"
+                                                 t-esc="line.product_id.with_context(display_default_code=False).display_name"/>
+                                            <div class="o_ob_mg_line_meta">
+                                                <span class="o_ob_mg_line_qty">
+                                                    <span t-field="line.product_uom_qty"/>
+                                                    ×
+                                                    <span t-field="line.price_unit"
+                                                          t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                                </span>
+                                                <span class="o_ob_mg_line_subtotal"
+                                                      t-field="line.price_subtotal"
+                                                      t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <t t-if="doc.order_bridge_promo_code or doc.reward_amount">
+                                    <div class="o_ob_mg_section o_ob_mg_discount">
+                                        <t t-if="doc.order_bridge_promo_code">
+                                            Cupón: <t t-esc="doc.order_bridge_promo_code"/>
+                                        </t>
+                                        <t t-if="doc.reward_amount">
+                                            · Descuento:
+                                            <span t-out="abs(doc.reward_amount)"
+                                                  t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </t>
+                                    </div>
+                                </t>
+
+                                <div class="o_ob_mg_section">
+                                    <div class="o_ob_mg_total_box">
+                                        <span class="o_ob_mg_total_label">Total a pagar</span>
+                                        <span class="o_ob_mg_total_amount"
+                                              t-field="doc.amount_total"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr t-if="not doc_last" class="o_ob_mg_cut"/>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

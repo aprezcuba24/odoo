@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
 import logging
 
 from odoo import SUPERUSER_ID, _, api, fields, models
@@ -15,8 +16,13 @@ from odoo.addons.order_bridge.utils.constant import (
     STATE_DELIVERED,
     STATE_NEGOTIATING,
     STATE_READY_FOR_DELIVERY,
+    STATE_REVIEWING,
     STORE_STATE_VALID_CHOICES,
     ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
+)
+from odoo.addons.order_bridge.utils.order_contact import (
+    delivery_address_text,
+    order_phone,
 )
 from odoo.addons.order_bridge.listeners.order_created_listener import order_bridge_order_created
 from odoo.addons.order_bridge.listeners.store_state_listener import order_bridge_store_state_changed
@@ -227,6 +233,56 @@ class SaleOrder(models.Model):
     def action_order_bridge_cancel_store(self):
         self.write({'order_bridge_store_state': STATE_CANCELED})
         return True
+
+    def action_order_bridge_prepare_messaging(self):
+        """Mark selected store orders ready for delivery and return the messaging guide PDF."""
+        if not self:
+            raise UserError(_('Seleccione al menos un pedido.'))
+        allowed_states = {STATE_REVIEWING, STATE_NEGOTIATING}
+        for order in self:
+            if order.order_bridge_origin not in ('app', 'admin'):
+                raise UserError(
+                    _(
+                        'El pedido %(name)s no es un pedido de Tienda Apk.',
+                        name=order.display_name,
+                    )
+                )
+            if order.order_bridge_store_state not in allowed_states:
+                raise UserError(
+                    _(
+                        'El pedido %(name)s debe estar en Revisando o Negociando '
+                        'para preparar la mensajería.',
+                        name=order.display_name,
+                    )
+                )
+        self.action_order_bridge_ready_for_delivery()
+        report = self.env.ref('order_bridge.action_report_messaging_guide')
+        local_dt = fields.Datetime.context_timestamp(self, fields.Datetime.now())
+        generated_at = local_dt.strftime('%d/%m/%Y %H:%M')
+        pdf_content, _report_format = self.env['ir.actions.report']._render_qweb_pdf(
+            report.report_name,
+            res_ids=self.ids,
+            data={'generated_at': generated_at},
+        )
+        filename = local_dt.strftime('Guia_mensajeria_%Y-%m-%d_%H-%M.pdf')
+        return {
+            'pdf_base64': base64.b64encode(pdf_content).decode(),
+            'filename': filename,
+            'mimetype': 'application/pdf',
+        }
+
+    def order_bridge_report_phone(self):
+        self.ensure_one()
+        return order_phone(self)
+
+    def order_bridge_report_address(self):
+        self.ensure_one()
+        return delivery_address_text(self)
+
+    def order_bridge_report_product_lines(self):
+        """Product lines for the messaging guide (no sections/notes)."""
+        self.ensure_one()
+        return self.order_line.filtered(lambda l: not l.display_type and l.product_id)
 
     def write(self, vals):
         if 'order_bridge_store_state' in vals:
