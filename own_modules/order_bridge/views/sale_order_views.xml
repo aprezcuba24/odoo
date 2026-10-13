@@ -14,12 +14,27 @@
                 <attribute name="string">Crear factura</attribute>
             </xpath>
             <xpath expr="//header/button[@id='quotation_send_primary']" position="attributes">
-                <attribute name="invisible">state != 'draft' and not order_bridge_origin</attribute>
+                <attribute name="invisible">order_bridge_origin or state != 'draft'</attribute>
                 <attribute name="string">Enviar</attribute>
             </xpath>
             <xpath expr="//header/button[@id='quotation_send']" position="attributes">
                 <attribute name="invisible">order_bridge_origin or state not in ('sent', 'sale')</attribute>
                 <attribute name="string">Enviar</attribute>
+            </xpath>
+            <xpath expr="//header/button[@id='send_proforma_primary']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state != 'draft' or invoice_count &gt;= 1</attribute>
+            </xpath>
+            <xpath expr="//header/button[@id='send_proforma']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state == 'draft' or invoice_count &gt;= 1</attribute>
+            </xpath>
+            <xpath expr="//header/button[@id='action_confirm']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state != 'sent'</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_confirm'][not(@id)]" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state != 'draft'</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_draft']" position="attributes">
+                <attribute name="invisible">order_bridge_origin or state != 'cancel'</attribute>
             </xpath>
             <xpath expr="//header/button[@name='action_preview_sale_order']" position="attributes">
                 <attribute name="string">Vista previa</attribute>
@@ -31,7 +46,7 @@
                 <attribute name="invisible">order_bridge_origin</attribute>
             </xpath>
             <xpath expr="//header/field[@name='state']" position="before">
-                <field name="order_bridge_origin" invisible="1"/>
+                <field name="order_bridge_origin" invisible="1" force_save="1"/>
                 <button
                     name="action_order_bridge_negotiate"
                     string="Negociar"
@@ -90,6 +105,9 @@
                     />
                     <div invisible="order_bridge_origin != 'app'" colspan="2" class="text-muted">
                         Compra realizada desde la APK.
+                    </div>
+                    <div invisible="order_bridge_origin != 'admin'" colspan="2" class="text-muted">
+                        Pedido creado por el administrador.
                     </div>
                     <field name="order_bridge_ref" readonly="1"/>
                     <field name="order_bridge_client_order_id" readonly="1" optional="hide"/>

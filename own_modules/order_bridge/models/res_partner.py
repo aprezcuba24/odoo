@@ -92,6 +92,11 @@ class ResPartner(models.Model):
             'res_model': 'sale.order',
             'views': [(list_view.id, 'list'), (False, 'form')],
             'domain': self._order_bridge_store_order_domain(),
+            'context': {
+                'default_partner_id': self.id,
+                'default_order_bridge_origin': 'admin',
+                'order_bridge_admin_create': True,
+            },
         }
 
     def action_order_bridge_fcm_send_wizard(self):

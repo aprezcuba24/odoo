@@ -24,3 +24,6 @@ class TestResPartnerOrderBridgeOrders(TransactionCase):
 
         list_view = self.env.ref('order_bridge.view_order_tree_order_bridge_store')
         self.assertEqual(action['views'], [(list_view.id, 'list'), (False, 'form')])
+        self.assertEqual(action['context']['default_partner_id'], partner.id)
+        self.assertEqual(action['context']['default_order_bridge_origin'], 'admin')
+        self.assertTrue(action['context']['order_bridge_admin_create'])

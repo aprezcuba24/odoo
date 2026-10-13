@@ -28,6 +28,11 @@ export class StoreOrderListController extends ListController {
 
     setup() {
         super.setup();
+        // Force admin-create context even if /web/action/load disk-cached an old action.
+        Object.assign(this.props.context, {
+            default_order_bridge_origin: "admin",
+            order_bridge_admin_create: true,
+        });
         this.notification = useService("notification");
         this.prepareMessaging = useState({
             active: false,
@@ -37,6 +42,14 @@ export class StoreOrderListController extends ListController {
             generating: false,
         });
         useSubEnv({ orderBridgePrepareMessaging: this.prepareMessaging });
+    }
+
+    async createRecord(params) {
+        Object.assign(this.props.context, {
+            default_order_bridge_origin: "admin",
+            order_bridge_admin_create: true,
+        });
+        return super.createRecord(params);
     }
 
     async onPrepareMessaging() {
