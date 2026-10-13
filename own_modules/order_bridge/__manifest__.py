@@ -26,11 +26,19 @@ Para que un producto gestione existencias y siga el flujo estándar de ventas co
 
 Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas como en una venta normal. La **cantidad a mano** suele **disminuir al validar el albarán de entrega** (transferencia *hecha*), no únicamente al confirmar el pedido (donde puede quedar reservado). Servicios y bienes sin *Rastrear inventario* no descuentan stock físico.
 
-**Depende de:** ventas (sale), ventas e inventario (sale_stock), producto (product), validación de teléfono (phone_validation), cupones en ventas (sale_loyalty).
+**Depende de:** ventas (sale), ventas e inventario (sale_stock), punto de venta (point_of_sale), producto (product), validación de teléfono (phone_validation), cupones en ventas (sale_loyalty).
 
 **Cupones:** ``POST /api/order_bridge/orders`` acepta un campo opcional ``promo_code``. Requiere programas de fidelización/cupones configurados en Odoo.
     """,
-    'depends': ['sale', 'sale_management', 'sale_stock', 'product', 'phone_validation', 'sale_loyalty'],
+    'depends': [
+        'sale',
+        'sale_management',
+        'sale_stock',
+        'point_of_sale',
+        'product',
+        'phone_validation',
+        'sale_loyalty',
+    ],
     'external_dependencies': {'python': ['firebase_admin']},
     'data': [
         'security/order_bridge_security.xml',
@@ -62,6 +70,12 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.xml',
             'order_bridge/static/src/store_order_list/store_order_list_controller.js',
             'order_bridge/static/src/store_order_list/store_order_list.xml',
+        ],
+        'point_of_sale._assets_pos': [
+            'order_bridge/static/src/pos/stock_check.js',
+            'order_bridge/static/src/pos/pos_store_stock.js',
+            'order_bridge/static/src/pos/order_summary_stock.js',
+            'order_bridge/static/src/pos/order_payment_validation_stock.js',
         ],
     },
 }

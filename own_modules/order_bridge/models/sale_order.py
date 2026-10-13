@@ -2,6 +2,7 @@
 
 import base64
 import logging
+from collections import defaultdict
 
 from odoo import SUPERUSER_ID, _, api, fields, models
 from odoo.exceptions import UserError
@@ -157,6 +158,83 @@ class SaleOrder(models.Model):
                         remaining,
                     )
 
+    def _order_bridge_product_lines(self):
+        """Product lines that consume stock for Tienda Apk checks."""
+        self.ensure_one()
+        return self.order_line.filtered(
+            lambda l: not l.display_type and not l.is_downpayment and l.product_id
+        )
+
+    def _order_bridge_storable_qty_by_product(self):
+        """Return ``{product: qty_in_product_uom}`` for storable lines."""
+        self.ensure_one()
+        qty_by_product = defaultdict(float)
+        for line in self._order_bridge_product_lines():
+            product = line.product_id
+            if product.type == 'service' or not product.is_storable:
+                continue
+            qty = line.product_uom_id._compute_quantity(
+                line.product_uom_qty, product.uom_id, round=False,
+            )
+            qty_by_product[product] += qty
+        return qty_by_product
+
+    def _order_bridge_reserved_qty_by_product(self, warehouse):
+        """Qty already reserved by this order under ``warehouse`` (product UoM)."""
+        self.ensure_one()
+        reserved = defaultdict(float)
+        if not warehouse:
+            return reserved
+        stock_locs = self.env['stock.location'].search([
+            ('id', 'child_of', warehouse.view_location_id.id),
+        ])
+        moves = self.picking_ids.move_ids.filtered(
+            lambda m: m.product_id.is_storable
+            and m.state not in ('done', 'cancel')
+            and m.location_id in stock_locs,
+        )
+        for move in moves:
+            reserved[move.product_id] += move.quantity
+        return reserved
+
+    def _order_bridge_assert_stock_available(self):
+        """Raise UserError if warehouse free_qty cannot cover storable lines.
+
+        For confirmed orders, free_qty already excludes this order's reservation; that
+        reserved quantity is added back so edits can keep or increase lines within stock.
+        """
+        self.ensure_one()
+        if self.order_bridge_origin not in ('app', 'admin'):
+            return
+        warehouse = self.warehouse_id or order_stock.get_order_bridge_warehouse(
+            self.env, self.company_id,
+        )
+        if not warehouse:
+            raise UserError(_('No hay almacén configurado para la compañía.'))
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
+        qty_by_product = self._order_bridge_storable_qty_by_product()
+        if not qty_by_product:
+            return
+        reserved_by_product = self._order_bridge_reserved_qty_by_product(warehouse)
+        shortages = []
+        for product, need in qty_by_product.items():
+            if float_compare(need, 0.0, precision_digits=precision) <= 0:
+                continue
+            free = product.with_context(warehouse_id=warehouse.id).free_qty
+            available = free + reserved_by_product.get(product, 0.0)
+            if float_compare(available, need, precision_digits=precision) < 0:
+                shortages.append(
+                    _(
+                        '%(product)s (disponible: %(available)s)',
+                        product=product.display_name,
+                        available=available,
+                    )
+                )
+        if shortages:
+            raise UserError(
+                _('Stock insuficiente: %(details)s', details=', '.join(shortages))
+            )
+
     def _order_bridge_apply_promo_code(self, code):
         """Apply coupon/promo code via sale_loyalty. Raises UserError on failure."""
         self.ensure_one()
@@ -189,12 +267,31 @@ class SaleOrder(models.Model):
             or self.locked
         ):
             return
-        lines = self.order_line.filtered(
-            lambda l: not l.display_type and not l.is_downpayment and l.product_id
-        )
+        lines = self._order_bridge_product_lines()
         if not lines:
             return
+        storable = lines.mapped('product_id').filtered('is_storable')
+        if storable:
+            order_stock.lock_products_for_stock(self.env, storable)
+        self._order_bridge_assert_stock_available()
         self.action_confirm()
+        self._order_bridge_reserve_stock_moves()
+
+    def _order_bridge_sync_stock_after_line_write(self):
+        """Confirm/reserve after lines change, or re-check stock on confirmed orders."""
+        self.ensure_one()
+        if self.order_bridge_origin not in ('app', 'admin') or self.locked:
+            return
+        if self.state in ('draft', 'sent'):
+            self._order_bridge_try_confirm()
+            return
+        if self.state != 'sale':
+            return
+        lines = self._order_bridge_product_lines()
+        storable = lines.mapped('product_id').filtered('is_storable')
+        if storable:
+            order_stock.lock_products_for_stock(self.env, storable)
+        self._order_bridge_assert_stock_available()
         self._order_bridge_reserve_stock_moves()
 
     def _order_bridge_check_store_state_transition(self, old_ss, new_ss):
@@ -293,6 +390,9 @@ class SaleOrder(models.Model):
                 )
         previous_by_id = {o.id: o.read()[0] for o in self}
         res = super().write(vals)
+        if vals.get('order_line'):
+            for order in self:
+                order._order_bridge_sync_stock_after_line_write()
         for order in self:
             old = previous_by_id.get(order.id)
             order.on_event('order_bridge_sale_changed', old, order)
