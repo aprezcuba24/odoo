@@ -120,3 +120,108 @@ def warehouse_locations_by_free_qty(env, product, warehouse):
     ]
     free.sort(key=lambda item: item[1], reverse=True)
     return free
+
+
+def lock_products_for_stock(env, products):
+    """Take transaction-scoped advisory locks for ``products`` (sorted by id)."""
+    from odoo.addons.order_bridge.utils.concurrency import pg_advisory_xact_lock_products
+
+    pg_advisory_xact_lock_products(env.cr, products.ids)
+
+
+def location_free_qty(env, product, location):
+    """Free qty on ``location`` only (no child locations)."""
+    env = env(su=True)
+    if not product or not location:
+        return 0.0
+    return float(env['stock.quant']._get_available_quantity(
+        product, location, strict=True,
+    ))
+
+
+def pos_pending_paid_qty(env, product, location, exclude_order_ids=None):
+    """Qty on paid POS orders for ``location`` not yet done or reserved on stock moves.
+
+    Covers session-closing stock updates and pickings that failed validation: the sale is
+    already paid but the source location quant has not decreased yet.
+    """
+    env = env(su=True)
+    if 'pos.order.line' not in env or not location or not product:
+        return 0.0
+    domain = [
+        ('product_id', '=', product.id),
+        ('qty', '>', 0),
+        ('order_id.state', 'in', ('paid', 'done', 'invoiced')),
+        ('order_id.config_id.picking_type_id.default_location_src_id', '=', location.id),
+    ]
+    if exclude_order_ids:
+        domain.append(('order_id', 'not in', list(exclude_order_ids)))
+    lines = env['pos.order.line'].search(domain)
+    if not lines:
+        return 0.0
+
+    precision = env['decimal.precision'].precision_get('Product Unit')
+    pending = 0.0
+    for order in lines.order_id:
+        ordered = sum(lines.filtered(lambda l, o=order: l.order_id == o).mapped('qty'))
+        moves = order.picking_ids.move_ids.filtered(
+            lambda m: m.product_id == product and m.location_id == location,
+        )
+        done_qty = sum(moves.filtered(lambda m: m.state == 'done').mapped('quantity'))
+        reserved_qty = sum(
+            moves.filtered(lambda m: m.state not in ('done', 'cancel')).mapped(
+                lambda m: sum(m.move_line_ids.mapped('quantity_product_uom'))
+            )
+        )
+        leftover = ordered - done_qty - reserved_qty
+        if float_compare(leftover, 0.0, precision_digits=precision) > 0:
+            pending += leftover
+    return pending
+
+
+def pos_available_qty(env, product, location, exclude_order_ids=None):
+    """Free quantity the POS may sell for ``product`` on its source ``location`` only."""
+    env = env(su=True)
+    if not product or not product.is_storable or not location:
+        return float('inf')
+    free = location_free_qty(env, product, location) - pos_pending_paid_qty(
+        env, product, location, exclude_order_ids=exclude_order_ids,
+    )
+    precision = env['decimal.precision'].precision_get('Product Unit')
+    if float_compare(free, 0.0, precision_digits=precision) < 0:
+        return 0.0
+    return float(free)
+
+
+def check_pos_lines_stock(env, location, qty_by_product, exclude_order_ids=None):
+    """Return shortages for storable products in ``qty_by_product`` (id -> qty).
+
+    Checks free stock on ``location`` only (POS source), not child shelves.
+    Locks products first. Non-storable / service products are skipped.
+    Each shortage dict has ``product_id``, ``display_name``, ``available_qty``, ``requested_qty``.
+    """
+    env = env(su=True)
+    if not location or not qty_by_product:
+        return []
+    Product = env['product.product']
+    products = Product.browse(list(qty_by_product.keys())).exists()
+    lock_products_for_stock(env, products)
+    precision = env['decimal.precision'].precision_get('Product Unit')
+    insufficient = []
+    for product in products:
+        need = qty_by_product.get(product.id, 0.0)
+        if float_compare(need, 0.0, precision_digits=precision) <= 0:
+            continue
+        if product.type == 'service' or not product.is_storable:
+            continue
+        available = pos_available_qty(
+            env, product, location, exclude_order_ids=exclude_order_ids,
+        )
+        if float_compare(available, need, precision_digits=precision) < 0:
+            insufficient.append({
+                'product_id': product.id,
+                'display_name': product.display_name,
+                'available_qty': float(available),
+                'requested_qty': float(need),
+            })
+    return insufficient

@@ -194,6 +194,9 @@ class SaleOrder(models.Model):
         )
         if not lines:
             return
+        storable = lines.mapped('product_id').filtered('is_storable')
+        if storable:
+            order_stock.lock_products_for_stock(self.env, storable)
         self.action_confirm()
         self._order_bridge_reserve_stock_moves()
 

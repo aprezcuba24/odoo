@@ -13,6 +13,7 @@ from . import test_order_bridge_push
 from . import test_order_bridge_snapshot
 from . import test_order_bridge_store_state
 from . import test_order_bridge_store_state_push_listener
+from . import test_pos_stock
 from . import test_res_partner_order_bridge_orders
 from . import test_s3_hooks
 from . import test_telegram_order_notification
