@@ -23,6 +23,13 @@
         <field name="act_window_id" ref="action_order_bridge_sale_orders"/>
     </record>
 
+    <record id="action_order_bridge_sale_orders_view_kanban" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">kanban</field>
+        <field name="view_id" ref="view_order_kanban_order_bridge_store"/>
+        <field name="act_window_id" ref="action_order_bridge_sale_orders"/>
+    </record>
+
     <record id="action_order_bridge_partners" model="ir.actions.act_window">
         <field name="name">Clientes Tienda Apk</field>
         <field name="res_model">res.partner</field>
