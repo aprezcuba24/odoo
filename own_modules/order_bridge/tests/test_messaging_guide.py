@@ -2,6 +2,7 @@
 
 import base64
 
+from odoo import fields
 from odoo.exceptions import UserError
 from odoo.fields import Command
 from odoo.tests.common import TransactionCase, tagged
@@ -19,7 +20,9 @@ from odoo.addons.order_bridge.utils.order_contact import (
 
 @tagged('post_install', '-at_install')
 class TestOrderBridgeMessagingGuide(TransactionCase):
-    def _create_store_order(self, *, device_key, phone, street='Calle 1', qty=1.0, list_price=100.0):
+    def _create_store_order(
+        self, *, device_key, phone, street='Calle 1', qty=1.0, list_price=100.0, origin='app',
+    ):
         partner = self.env['res.partner'].create({
             'name': f'Cliente {phone}',
             'phone': phone,
@@ -48,7 +51,7 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
         })
         order = self.env['sale.order'].create({
             'partner_id': partner.id,
-            'order_bridge_origin': 'app',
+            'order_bridge_origin': origin,
             'order_bridge_device_id': device.id,
             'order_line': [
                 Command.create({'product_id': product.id, 'product_uom_qty': qty}),
@@ -136,3 +139,22 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
         self.assertIn(product.name, html)
         self.assertIn('Total a pagar', html)
         self.assertIn(str(order.amount_total).split('.')[0], html)
+        self.assertIn('Creado:', html)
+        created_at = fields.Datetime.context_timestamp(order, order.create_date)
+        self.assertIn(created_at.strftime('%d/%m/%Y %H:%M'), html)
+        self.assertNotIn('Pedido creado por el administrador.', html)
+
+        admin_order, _admin_product = self._create_store_order(
+            device_key='mg-admin',
+            phone='+53555000552',
+            origin='admin',
+        )
+        admin_html = self.env['ir.actions.report']._render_qweb_html(
+            'order_bridge.report_messaging_guide',
+            admin_order.ids,
+            data={'generated_at': '13/10/2026 11:16'},
+        )[0]
+        if isinstance(admin_html, bytes):
+            admin_html = admin_html.decode()
+        self.assertIn('Pedido creado por el administrador.', admin_html)
+        self.assertIn('Creado:', admin_html)

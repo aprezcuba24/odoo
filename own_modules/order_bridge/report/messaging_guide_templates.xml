@@ -28,6 +28,16 @@
                             font-weight: 700;
                             letter-spacing: 0.02em;
                         }
+                        .o_ob_mg_header .o_ob_mg_created {
+                            font-size: 14px;
+                            margin-top: 4px;
+                            opacity: 0.9;
+                        }
+                        .o_ob_mg_header .o_ob_mg_admin {
+                            font-size: 14px;
+                            margin-top: 2px;
+                            opacity: 0.9;
+                        }
                         .o_ob_mg_body {
                             padding: 12px;
                         }
@@ -157,6 +167,14 @@
                             <div class="o_ob_mg_header">
                                 <div class="o_ob_mg_ref">
                                     <t t-esc="doc.name"/>
+                                </div>
+                                <div class="o_ob_mg_created">
+                                    Creado:
+                                    <span t-field="doc.create_date"
+                                          t-options='{"format": "dd/MM/yyyy HH:mm"}'/>
+                                </div>
+                                <div t-if="doc.order_bridge_origin == 'admin'" class="o_ob_mg_admin">
+                                    Pedido creado por el administrador.
                                 </div>
                             </div>
                             <div class="o_ob_mg_body">
