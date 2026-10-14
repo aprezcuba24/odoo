@@ -10,7 +10,7 @@ import { ListRenderer } from "@web/views/list/list_renderer";
 import { useState, useSubEnv } from "@odoo/owl";
 
 const MESSAGING_DOMAIN = [
-    ["order_bridge_store_state", "in", ["reviewing", "negotiating"]],
+    ["order_bridge_store_state", "=", "ready_for_delivery"],
 ];
 const MAX_SELECT_LIMIT = 200;
 
@@ -61,7 +61,7 @@ export class StoreOrderListController extends ListController {
         const filterSearchItemId = searchModel.nextId;
         searchModel.createNewFilters([
             {
-                description: _t("Revisando o Negociando"),
+                description: _t("Listo para entrega"),
                 domain: MESSAGING_DOMAIN,
             },
         ]);

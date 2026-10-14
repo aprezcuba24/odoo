@@ -17,7 +17,6 @@ from odoo.addons.order_bridge.utils.constant import (
     STATE_DELIVERED,
     STATE_NEGOTIATING,
     STATE_READY_FOR_DELIVERY,
-    STATE_REVIEWING,
     STORE_STATE_VALID_CHOICES,
     ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
 )
@@ -338,10 +337,9 @@ class SaleOrder(models.Model):
         return True
 
     def action_order_bridge_prepare_messaging(self):
-        """Mark selected store orders ready for delivery and return the messaging guide PDF."""
+        """Return the messaging guide PDF for selected ready-for-delivery store orders."""
         if not self:
             raise UserError(_('Seleccione al menos un pedido.'))
-        allowed_states = {STATE_REVIEWING, STATE_NEGOTIATING}
         for order in self:
             if order.order_bridge_origin not in ('app', 'admin'):
                 raise UserError(
@@ -350,15 +348,14 @@ class SaleOrder(models.Model):
                         name=order.display_name,
                     )
                 )
-            if order.order_bridge_store_state not in allowed_states:
+            if order.order_bridge_store_state != STATE_READY_FOR_DELIVERY:
                 raise UserError(
                     _(
-                        'El pedido %(name)s debe estar en Revisando o Negociando '
+                        'El pedido %(name)s debe estar en Listo para entrega '
                         'para preparar la mensajería.',
                         name=order.display_name,
                     )
                 )
-        self.action_order_bridge_ready_for_delivery()
         report = self.env.ref('order_bridge.action_report_messaging_guide')
         local_dt = fields.Datetime.context_timestamp(self, fields.Datetime.now())
         generated_at = local_dt.strftime('%d/%m/%Y %H:%M')

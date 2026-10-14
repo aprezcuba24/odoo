@@ -21,7 +21,7 @@
                 t-on-click="onDownloadMessagingGuide"
             >
                 <t t-if="prepareMessaging.generating">Generando…</t>
-                <t t-else="">Generar PDF y Poner "Listo para entrega"</t>
+                <t t-else="">Generar PDF</t>
             </button>
             <button
                 t-if="prepareMessaging.active"
