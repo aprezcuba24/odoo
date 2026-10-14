@@ -261,6 +261,10 @@ class SaleOrder(models.Model):
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""
         self.ensure_one()
+        # sale_loyalty writes reward lines from action_confirm while the order is still
+        # draft. Those writes must not start another confirmation.
+        if self.env.context.get('order_bridge_confirming'):
+            return
         if (
             self.order_bridge_origin not in ('app', 'admin')
             or self.state not in ('draft', 'sent')
@@ -274,12 +278,14 @@ class SaleOrder(models.Model):
         if storable:
             order_stock.lock_products_for_stock(self.env, storable)
         self._order_bridge_assert_stock_available()
-        self.action_confirm()
+        self.with_context(order_bridge_confirming=True).action_confirm()
         self._order_bridge_reserve_stock_moves()
 
     def _order_bridge_sync_stock_after_line_write(self):
         """Confirm/reserve after lines change, or re-check stock on confirmed orders."""
         self.ensure_one()
+        if self.env.context.get('order_bridge_confirming'):
+            return
         if self.order_bridge_origin not in ('app', 'admin') or self.locked:
             return
         if self.state in ('draft', 'sent'):
@@ -390,7 +396,7 @@ class SaleOrder(models.Model):
                 )
         previous_by_id = {o.id: o.read()[0] for o in self}
         res = super().write(vals)
-        if vals.get('order_line'):
+        if vals.get('order_line') and not self.env.context.get('order_bridge_confirming'):
             for order in self:
                 order._order_bridge_sync_stock_after_line_write()
         for order in self:
