@@ -154,6 +154,18 @@
             <xpath expr="//kanban" position="attributes">
                 <attribute name="js_class">order_bridge_store_order_kanban</attribute>
             </xpath>
+            <xpath expr="//field[@name='state']" position="replace">
+                <field
+                    name="order_bridge_store_state"
+                    widget="badge"
+                    decoration-muted="order_bridge_store_state == 'reviewing'"
+                    decoration-warning="order_bridge_store_state == 'negotiating'"
+                    decoration-info="order_bridge_store_state == 'ready_for_delivery'"
+                    decoration-success="order_bridge_store_state == 'delivered'"
+                    decoration-danger="order_bridge_store_state == 'canceled'"
+                    class="ms-auto"
+                />
+            </xpath>
         </field>
     </record>
 </odoo>
