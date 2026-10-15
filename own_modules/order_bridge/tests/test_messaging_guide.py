@@ -2,6 +2,7 @@
 
 import base64
 
+from odoo import fields
 from odoo.exceptions import UserError
 from odoo.fields import Command
 from odoo.tests.common import TransactionCase, tagged
@@ -19,7 +20,9 @@ from odoo.addons.order_bridge.utils.order_contact import (
 
 @tagged('post_install', '-at_install')
 class TestOrderBridgeMessagingGuide(TransactionCase):
-    def _create_store_order(self, *, device_key, phone, street='Calle 1', qty=1.0, list_price=100.0):
+    def _create_store_order(
+        self, *, device_key, phone, street='Calle 1', qty=1.0, list_price=100.0, origin='app',
+    ):
         partner = self.env['res.partner'].create({
             'name': f'Cliente {phone}',
             'phone': phone,
@@ -48,7 +51,7 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
         })
         order = self.env['sale.order'].create({
             'partner_id': partner.id,
-            'order_bridge_origin': 'app',
+            'order_bridge_origin': origin,
             'order_bridge_device_id': device.id,
             'order_line': [
                 Command.create({'product_id': product.id, 'product_uom_qty': qty}),
@@ -68,11 +71,11 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
         self.assertIn('Barrio mg-contact. Mun mg-contact', address)
         self.assertIn('La Habana', address)
 
-    def test_prepare_messaging_moves_selected_to_ready(self):
+    def test_prepare_messaging_generates_pdf_without_state_change(self):
         order_a, _ = self._create_store_order(device_key='mg-a', phone='+53555000221')
         order_b, _ = self._create_store_order(device_key='mg-b', phone='+53555000222')
-        order_b.write({'order_bridge_store_state': STATE_NEGOTIATING})
         order_c, _ = self._create_store_order(device_key='mg-c', phone='+53555000223')
+        (order_a | order_b).write({'order_bridge_store_state': STATE_READY_FOR_DELIVERY})
 
         result = (order_a | order_b).action_order_bridge_prepare_messaging()
         self.assertIn('pdf_base64', result)
@@ -89,14 +92,14 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
         self.assertEqual(order_c.order_bridge_store_state, STATE_REVIEWING)
 
     def test_prepare_messaging_rejects_invalid_state(self):
-        order_ok, _ = self._create_store_order(device_key='mg-ok', phone='+53555000331')
-        order_bad, _ = self._create_store_order(device_key='mg-bad', phone='+53555000332')
-        order_bad.write({'order_bridge_store_state': STATE_READY_FOR_DELIVERY})
+        order_reviewing, _ = self._create_store_order(device_key='mg-ok', phone='+53555000331')
+        order_negotiating, _ = self._create_store_order(device_key='mg-bad', phone='+53555000332')
+        order_negotiating.write({'order_bridge_store_state': STATE_NEGOTIATING})
 
         with self.assertRaises(UserError):
-            (order_ok | order_bad).action_order_bridge_prepare_messaging()
-        self.assertEqual(order_ok.order_bridge_store_state, STATE_REVIEWING)
-        self.assertEqual(order_bad.order_bridge_store_state, STATE_READY_FOR_DELIVERY)
+            (order_reviewing | order_negotiating).action_order_bridge_prepare_messaging()
+        self.assertEqual(order_reviewing.order_bridge_store_state, STATE_REVIEWING)
+        self.assertEqual(order_negotiating.order_bridge_store_state, STATE_NEGOTIATING)
 
     def test_prepare_messaging_rejects_non_store_order(self):
         partner = self.env['res.partner'].create({'name': 'Sin tienda', 'phone': '+53555000441'})
@@ -129,10 +132,29 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
             html = html.decode()
         self.assertIn(order.company_id.name, html)
         self.assertIn('Guía de mensajería', html)
-        self.assertIn('Generado: 13/10/2026 11:16', html)
+        self.assertIn('13/10/2026 11:16', html)
         self.assertIn(order.partner_id.name, html)
         self.assertIn('+53555000551', html)
         self.assertIn('Avenida Central 5', html)
         self.assertIn(product.name, html)
         self.assertIn('Total a pagar', html)
         self.assertIn(str(order.amount_total).split('.')[0], html)
+        self.assertIn('Creado:', html)
+        created_at = fields.Datetime.context_timestamp(order, order.create_date)
+        self.assertIn(created_at.strftime('%d/%m/%Y %H:%M'), html)
+        self.assertNotIn('Pedido creado por el administrador.', html)
+
+        admin_order, _admin_product = self._create_store_order(
+            device_key='mg-admin',
+            phone='+53555000552',
+            origin='admin',
+        )
+        admin_html = self.env['ir.actions.report']._render_qweb_html(
+            'order_bridge.report_messaging_guide',
+            admin_order.ids,
+            data={'generated_at': '13/10/2026 11:16'},
+        )[0]
+        if isinstance(admin_html, bytes):
+            admin_html = admin_html.decode()
+        self.assertIn('Pedido creado por el administrador.', admin_html)
+        self.assertIn('Creado:', admin_html)

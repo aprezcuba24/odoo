@@ -17,7 +17,6 @@ from odoo.addons.order_bridge.utils.constant import (
     STATE_DELIVERED,
     STATE_NEGOTIATING,
     STATE_READY_FOR_DELIVERY,
-    STATE_REVIEWING,
     STORE_STATE_VALID_CHOICES,
     ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
 )
@@ -261,6 +260,10 @@ class SaleOrder(models.Model):
     def _order_bridge_try_confirm(self):
         """Confirm Tienda Apk orders so sale_stock creates reservations (draft/sent only)."""
         self.ensure_one()
+        # sale_loyalty writes reward lines from action_confirm while the order is still
+        # draft. Those writes must not start another confirmation.
+        if self.env.context.get('order_bridge_confirming'):
+            return
         if (
             self.order_bridge_origin not in ('app', 'admin')
             or self.state not in ('draft', 'sent')
@@ -274,12 +277,14 @@ class SaleOrder(models.Model):
         if storable:
             order_stock.lock_products_for_stock(self.env, storable)
         self._order_bridge_assert_stock_available()
-        self.action_confirm()
+        self.with_context(order_bridge_confirming=True).action_confirm()
         self._order_bridge_reserve_stock_moves()
 
     def _order_bridge_sync_stock_after_line_write(self):
         """Confirm/reserve after lines change, or re-check stock on confirmed orders."""
         self.ensure_one()
+        if self.env.context.get('order_bridge_confirming'):
+            return
         if self.order_bridge_origin not in ('app', 'admin') or self.locked:
             return
         if self.state in ('draft', 'sent'):
@@ -332,10 +337,9 @@ class SaleOrder(models.Model):
         return True
 
     def action_order_bridge_prepare_messaging(self):
-        """Mark selected store orders ready for delivery and return the messaging guide PDF."""
+        """Return the messaging guide PDF for selected ready-for-delivery store orders."""
         if not self:
             raise UserError(_('Seleccione al menos un pedido.'))
-        allowed_states = {STATE_REVIEWING, STATE_NEGOTIATING}
         for order in self:
             if order.order_bridge_origin not in ('app', 'admin'):
                 raise UserError(
@@ -344,15 +348,14 @@ class SaleOrder(models.Model):
                         name=order.display_name,
                     )
                 )
-            if order.order_bridge_store_state not in allowed_states:
+            if order.order_bridge_store_state != STATE_READY_FOR_DELIVERY:
                 raise UserError(
                     _(
-                        'El pedido %(name)s debe estar en Revisando o Negociando '
+                        'El pedido %(name)s debe estar en Listo para entrega '
                         'para preparar la mensajería.',
                         name=order.display_name,
                     )
                 )
-        self.action_order_bridge_ready_for_delivery()
         report = self.env.ref('order_bridge.action_report_messaging_guide')
         local_dt = fields.Datetime.context_timestamp(self, fields.Datetime.now())
         generated_at = local_dt.strftime('%d/%m/%Y %H:%M')
@@ -390,7 +393,7 @@ class SaleOrder(models.Model):
                 )
         previous_by_id = {o.id: o.read()[0] for o in self}
         res = super().write(vals)
-        if vals.get('order_line'):
+        if vals.get('order_line') and not self.env.context.get('order_bridge_confirming'):
             for order in self:
                 order._order_bridge_sync_stock_after_line_write()
         for order in self:

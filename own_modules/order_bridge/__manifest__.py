@@ -68,7 +68,9 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
             'order_bridge/static/src/scss/store_state_colors.scss',
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.js',
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.xml',
+            'order_bridge/static/src/store_order_list/prepare_messaging.js',
             'order_bridge/static/src/store_order_list/store_order_list_controller.js',
+            'order_bridge/static/src/store_order_list/store_order_kanban_controller.js',
             'order_bridge/static/src/store_order_list/store_order_list.xml',
         ],
         'point_of_sale._assets_pos': [

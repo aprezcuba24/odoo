@@ -144,4 +144,45 @@
             </xpath>
         </field>
     </record>
+
+    <record id="view_order_kanban_order_bridge_store" model="ir.ui.view">
+        <field name="name">sale.order.kanban.order.bridge.store</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sale_order_kanban"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="js_class">order_bridge_store_order_kanban</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="replace">
+                <field
+                    name="order_bridge_store_state"
+                    widget="badge"
+                    decoration-muted="order_bridge_store_state == 'reviewing'"
+                    decoration-warning="order_bridge_store_state == 'negotiating'"
+                    decoration-info="order_bridge_store_state == 'ready_for_delivery'"
+                    decoration-success="order_bridge_store_state == 'delivered'"
+                    decoration-danger="order_bridge_store_state == 'canceled'"
+                    class="ms-auto"
+                />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sales_order_filter_order_bridge" model="ir.ui.view">
+        <field name="name">sale.order.list.select.order.bridge</field>
+        <field name="model">sale.order</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <filter name="my_sale_orders_filter" position="after">
+                <separator/>
+                <filter
+                    name="filter_packing"
+                    string="Packing"
+                    domain="[('order_bridge_store_state', 'in', ('reviewing', 'negotiating'))]"
+                />
+            </filter>
+        </field>
+    </record>
 </odoo>

@@ -9,7 +9,7 @@
         <!-- cache=False: evita que el navegador reutilice una acción vieja sin este context -->
         <field name="cache" eval="False"/>
         <field name="context" eval="{'default_order_bridge_origin': 'admin', 'order_bridge_admin_create': True}"/>
-        <field name="search_view_id" ref="sale.view_sales_order_filter"/>
+        <field name="search_view_id" ref="view_sales_order_filter_order_bridge"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Aún no hay pedidos desde la tienda.</p>
             <p>Los pedidos creados desde la API externa o marcados como administrador aparecen aquí.</p>
@@ -20,6 +20,13 @@
         <field name="sequence" eval="1"/>
         <field name="view_mode">list</field>
         <field name="view_id" ref="view_order_tree_order_bridge_store"/>
+        <field name="act_window_id" ref="action_order_bridge_sale_orders"/>
+    </record>
+
+    <record id="action_order_bridge_sale_orders_view_kanban" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">kanban</field>
+        <field name="view_id" ref="view_order_kanban_order_bridge_store"/>
         <field name="act_window_id" ref="action_order_bridge_sale_orders"/>
     </record>
 

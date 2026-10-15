@@ -1,37 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
+    <t t-name="order_bridge.PrepareMessagingButtons">
+        <button
+            t-if="!prepareMessaging.active"
+            type="button"
+            class="btn btn-primary o_order_bridge_prepare_messaging"
+            t-att-disabled="prepareMessaging.selecting"
+            t-on-click="onPrepareMessaging"
+        >
+            Preparar Mensajería
+        </button>
+        <button
+            t-if="prepareMessaging.active"
+            type="button"
+            class="btn btn-success o_order_bridge_generate_messaging_pdf"
+            t-att-disabled="prepareMessaging.generating or prepareMessaging.selecting"
+            t-on-click="onDownloadMessagingGuide"
+        >
+            <t t-if="prepareMessaging.generating">Generando…</t>
+            <t t-else="">Generar PDF</t>
+        </button>
+        <button
+            t-if="prepareMessaging.active"
+            type="button"
+            class="btn btn-secondary o_order_bridge_cancel_prepare_messaging"
+            t-att-disabled="prepareMessaging.generating"
+            t-on-click="onCancelPrepareMessaging"
+        >
+            Cancelar
+        </button>
+    </t>
+
     <t t-name="order_bridge.StoreOrderListView" t-inherit="web.ListView" t-inherit-mode="primary"/>
 
     <t t-name="order_bridge.StoreOrderListView.Buttons" t-inherit="web.ListView.Buttons" t-inherit-mode="primary">
         <xpath expr="." position="inside">
-            <button
-                t-if="!prepareMessaging.active"
-                type="button"
-                class="btn btn-primary"
-                t-att-disabled="prepareMessaging.selecting"
-                t-on-click="onPrepareMessaging"
-            >
-                Preparar Mensajería
-            </button>
-            <button
-                t-if="prepareMessaging.active"
-                type="button"
-                class="btn btn-success"
-                t-att-disabled="prepareMessaging.generating or prepareMessaging.selecting"
-                t-on-click="onDownloadMessagingGuide"
-            >
-                <t t-if="prepareMessaging.generating">Generando…</t>
-                <t t-else="">Generar PDF y Poner "Listo para entrega"</t>
-            </button>
-            <button
-                t-if="prepareMessaging.active"
-                type="button"
-                class="btn btn-secondary"
-                t-att-disabled="prepareMessaging.generating"
-                t-on-click="onCancelPrepareMessaging"
-            >
-                Cancelar
-            </button>
+            <t t-call="order_bridge.PrepareMessagingButtons"/>
+        </xpath>
+    </t>
+
+    <!-- Kanban: place next to "New" in create-button slot (layout-buttons alone was not showing). -->
+    <t t-name="order_bridge.StoreOrderKanbanView" t-inherit="web.KanbanView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='control-panel-create-button']" position="inside">
+            <t t-if="props.showButtons" t-call="order_bridge.PrepareMessagingButtons"/>
         </xpath>
     </t>
 </templates>
