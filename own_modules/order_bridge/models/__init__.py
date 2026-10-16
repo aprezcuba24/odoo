@@ -10,6 +10,7 @@ from . import ir_http
 from . import municipality
 from . import partner_address
 from . import push_token
+from . import product_category
 from . import product_product
 from . import product_template
 from . import pos_order

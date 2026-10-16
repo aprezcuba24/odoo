@@ -769,6 +769,11 @@
             ],
             "default": null,
             "title": "Parent Id"
+          },
+          "sequence": {
+            "default": 10,
+            "title": "Sequence",
+            "type": "integer"
           }
         },
         "required": [

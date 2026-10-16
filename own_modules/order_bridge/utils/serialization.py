@@ -50,6 +50,7 @@ def _category_from_template(tmpl):
         id=c.id,
         name=c.name,
         parent_id=c.parent_id.id if c.parent_id else None,
+        sequence=c.order_bridge_sequence if c.order_bridge_sequence is not False else 10,
     )
 
 
@@ -58,6 +59,7 @@ def product_category_to_response(category):
         id=category.id,
         name=category.name,
         parent_id=category.parent_id.id if category.parent_id else None,
+        sequence=category.order_bridge_sequence if category.order_bridge_sequence is not False else 10,
     )
 
 

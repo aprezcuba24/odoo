@@ -90,6 +90,7 @@ class ProductCategoryRow(BaseModel):
     id: int
     name: str
     parent_id: int | None = None
+    sequence: int = 10
 
 
 class CategoriesListResponse(BaseModel):
