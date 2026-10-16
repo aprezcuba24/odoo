@@ -5,7 +5,7 @@ from odoo.addons.order_bridge.utils.telegram_order_message import format_order_c
 
 
 def order_bridge_order_created(order, old_entity, new_entity):
-    if order.order_bridge_origin not in ('app', 'admin'):
+    if order.order_bridge_origin != 'app':
         return
     text = format_order_created_message(order)
     send_message(text, order_ref=order.name)
