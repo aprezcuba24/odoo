@@ -100,6 +100,7 @@ Tras la instalación, acceda a la aplicación **Tienda Apk** desde el menú prin
 | **Configuración → Datos generales** | Teléfono de contacto de la tienda (visible en la app vía API) |
 | **Configuración → Categorías** | Árbol de categorías de productos visibles en la app |
 | **Configuración → Banners publicitarios** | Carrusel promocional en la app |
+| **Configuración → WhatsApp Mensajes** | Textos (con emojis) al inicio o al final al publicar en WhatsApp |
 | **Configuración → Municipios** | Zonas de entrega (nivel municipio) |
 | **Configuración → Barrios** | Zonas de entrega (nivel barrio dentro del municipio) |
 

@@ -8,6 +8,8 @@ import { standardActionServiceProps } from "@web/webclient/actions/action_servic
 import { formatMonetary } from "@web/views/fields/formatters";
 import { Component, onWillStart, useState } from "@odoo/owl";
 
+import { WhatsappMessagesDialog } from "./whatsapp_messages_dialog";
+
 const MESSAGE_SOURCE = "odoo-product-publisher";
 const RESPONSE_TIMEOUT_MS = 500;
 
@@ -119,6 +121,19 @@ function startProductPublish(items) {
     });
 }
 
+/**
+ * Convert a configured generic message into a queue block item.
+ */
+function messageToBlockItem(msg) {
+    return {
+        type: "block",
+        id: `block-msg-${msg.id}`,
+        label: msg.name || "",
+        kind: "text",
+        text: msg.text || "",
+    };
+}
+
 export class WhatsappPublisherAction extends Component {
     static template = "order_bridge.WhatsappPublisherAction";
     static components = { Layout };
@@ -127,6 +142,7 @@ export class WhatsappPublisherAction extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.dialog = useService("dialog");
         this.state = useState({
             products: [],
             selectedIds: {},
@@ -226,6 +242,66 @@ export class WhatsappPublisherAction extends Component {
         return uom ? `${name} (${uom})` : name;
     }
 
+    /**
+     * Ask which configured messages to include; returns selected ids or null if cancelled.
+     * Skips the dialog when there are no messages.
+     */
+    pickMessagesToPublish(messages) {
+        if (!messages.length) {
+            return Promise.resolve([]);
+        }
+        return new Promise((resolve) => {
+            let settled = false;
+            const settle = (value) => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                resolve(value);
+            };
+            this.dialog.add(
+                WhatsappMessagesDialog,
+                {
+                    messages,
+                    confirm: (selectedIds) => settle(selectedIds),
+                    cancel: () => settle(null),
+                },
+                {
+                    onClose: () => settle(null),
+                },
+            );
+        });
+    }
+
+    async buildCatalogItems(selected) {
+        const items = [];
+        let lastCategId = null;
+        for (const product of selected) {
+            const categId = product.category_id || null;
+            if (categId !== lastCategId) {
+                lastCategId = categId;
+                if (product.category_name) {
+                    items.push({
+                        type: "block",
+                        id: `block-categ-${categId}`,
+                        kind: "text",
+                        text: formatCategoryText(product.category_name),
+                    });
+                }
+            }
+            const image = await fetchImagePayload(product.image_url);
+            items.push({
+                type: "product",
+                id: String(product.id),
+                name: this.formatProductLabel(product),
+                price: this.formatPrice(product),
+                imageBase64: image.imageBase64,
+                imageMime: image.imageMime,
+            });
+        }
+        return items;
+    }
+
     async onSendToWhatsapp() {
         if (this.state.sending) {
             return;
@@ -240,35 +316,26 @@ export class WhatsappPublisherAction extends Component {
 
         this.state.sending = true;
         try {
-            // Build an ordered list of items: a text block per category change,
-            // followed by the products belonging to that category.
-            // Products come from the server already sorted by category sequence then
-            // name, so iterating in order preserves that grouping.
-            const items = [];
-            let lastCategId = null;
-            for (const product of selected) {
-                const categId = product.category_id || null;
-                if (categId !== lastCategId) {
-                    lastCategId = categId;
-                    if (product.category_name) {
-                        items.push({
-                            type: "block",
-                            id: `block-categ-${categId}`,
-                            kind: "text",
-                            text: formatCategoryText(product.category_name),
-                        });
-                    }
-                }
-                const image = await fetchImagePayload(product.image_url);
-                items.push({
-                    type: "product",
-                    id: String(product.id),
-                    name: this.formatProductLabel(product),
-                    price: this.formatPrice(product),
-                    imageBase64: image.imageBase64,
-                    imageMime: image.imageMime,
-                });
+            const messages = await this.orm.call(
+                "order_bridge.whatsapp.message",
+                "get_whatsapp_publisher_messages",
+                [],
+            );
+            const selectedMessageIds = await this.pickMessagesToPublish(messages);
+            if (selectedMessageIds === null) {
+                return;
             }
+
+            const selectedSet = new Set(selectedMessageIds);
+            const startBlocks = messages
+                .filter((m) => m.position === "start" && selectedSet.has(m.id))
+                .map(messageToBlockItem);
+            const endBlocks = messages
+                .filter((m) => m.position === "end" && selectedSet.has(m.id))
+                .map(messageToBlockItem);
+
+            const catalogItems = await this.buildCatalogItems(selected);
+            const items = [...startBlocks, ...catalogItems, ...endBlocks];
 
             console.log("Whatsapp publicador — cola de items:", items);
 

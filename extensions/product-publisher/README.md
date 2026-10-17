@@ -25,7 +25,7 @@ Salida: `dist/` (incluye `manifest.json`, `content.js`, `background.js`, `odoo-b
 2. Abre `chrome://extensions`
 3. Activa **Developer mode**
 4. **Load unpacked** → selecciona `extensions/product-publisher/dist`
-5. En Odoo: **Tienda Apk → Operaciones → Whatsapp** → selecciona productos → **Mandar a WhatsApp**
+5. En Odoo: **Tienda Apk → Operaciones → Whatsapp** → selecciona productos → **Mandar a WhatsApp** (si hay mensajes en **Configuración → WhatsApp Mensajes**, elige cuáles incluir)
 6. Abre WhatsApp Web, entra a un chat o grupo y pulsa **Publicar** en el panel
 
 Si cambias el origen de Odoo, actualiza `.env`, vuelve a compilar y recarga la extensión.

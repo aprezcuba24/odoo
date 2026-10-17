@@ -40,6 +40,13 @@
         <field name="global" eval="True"/>
     </record>
 
+    <record id="order_bridge_whatsapp_message_company_rule" model="ir.rule">
+        <field name="name">Mensaje WhatsApp Tienda Apk: multi-company</field>
+        <field name="model_id" ref="model_order_bridge_whatsapp_message"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
     <record id="order_bridge_general_settings_company_rule" model="ir.rule">
         <field name="name">Configuración general Tienda Apk: multi-company</field>
         <field name="model_id" ref="model_order_bridge_general_settings"/>

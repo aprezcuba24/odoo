@@ -150,6 +150,14 @@
         groups="sales_team.group_sale_salesman"/>
 
     <menuitem
+        id="menu_order_bridge_whatsapp_messages"
+        name="WhatsApp Mensajes"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_whatsapp_message"
+        sequence="35"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
         id="menu_order_bridge_municipalities"
         name="Municipios"
         parent="menu_order_bridge_config_group"

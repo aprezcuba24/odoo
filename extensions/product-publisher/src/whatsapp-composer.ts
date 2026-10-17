@@ -152,8 +152,10 @@ function base64ToFile(base64: string, mime: string): File {
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i)
   }
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
   const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg'
-  return new File([bytes], `product.${ext}`, { type: mime })
+  return new File([copy], `product.${ext}`, { type: mime })
 }
 
 /** Same path as pasting a photo into the message box: image plus caption field. */
@@ -195,7 +197,7 @@ export async function fillWhatsAppComposer(
   if (hasImage && message.imageBase64 && message.imageMime) {
     pasteImageIntoComposer(message.imageBase64, message.imageMime, footer)
 
-    // Sticker / image-only block: no caption text needed.
+    // Image-only block: no caption text needed.
     if (!message.text.trim()) {
       await sleep(500)
       return { ok: true, filled: true, imageAttached: true }

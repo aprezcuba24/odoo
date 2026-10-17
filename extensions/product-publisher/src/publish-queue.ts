@@ -9,9 +9,13 @@ export type ProductItem = {
   imageMime: string | null
 }
 
-export type BlockItem =
-  | { type: 'block'; id: string; kind: 'text'; text: string }
-  | { type: 'block'; id: string; kind: 'sticker'; imageBase64: string; imageMime: string }
+export type BlockItem = {
+  type: 'block'
+  id: string
+  kind: 'text'
+  text: string
+  label?: string
+}
 
 export type QueueItem = ProductItem | BlockItem
 
@@ -35,14 +39,16 @@ function isProductItem(value: unknown): value is ProductItem {
   )
 }
 
+function isOptionalLabel(value: unknown): boolean {
+  return value === undefined || typeof value === 'string'
+}
+
 function isBlockItem(value: unknown): value is BlockItem {
   if (!value || typeof value !== 'object') return false
   const item = value as Record<string, unknown>
   if (item.type !== 'block' || typeof item.id !== 'string') return false
-  if (item.kind === 'text') return typeof item.text === 'string'
-  if (item.kind === 'sticker')
-    return typeof item.imageBase64 === 'string' && typeof item.imageMime === 'string'
-  return false
+  if (!isOptionalLabel(item.label)) return false
+  return item.kind === 'text' && typeof item.text === 'string'
 }
 
 export function isQueueItem(value: unknown): value is QueueItem {

@@ -19,4 +19,5 @@ from . import test_pos_stock
 from . import test_res_partner_order_bridge_orders
 from . import test_s3_hooks
 from . import test_telegram_order_notification
+from . import test_whatsapp_messages
 from . import test_whatsapp_publisher

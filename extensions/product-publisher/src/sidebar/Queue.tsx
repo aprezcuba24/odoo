@@ -142,17 +142,12 @@ export function Queue() {
               return (
                 <li key={item.id} className="queue-item queue-item--block">
                   <div className="queue-item-main">
-                    {item.kind === 'sticker' ? (
-                      <ProductThumb imageBase64={item.imageBase64} imageMime={item.imageMime} />
-                    ) : (
-                      <div className="block-thumb" aria-hidden>
-                        <span className="block-thumb-icon">#</span>
-                      </div>
-                    )}
+                    <div className="block-thumb" aria-hidden>
+                      <span className="block-thumb-icon">#</span>
+                    </div>
                     <div className="queue-item-info">
-                      <p className="block-label">
-                        {item.kind === 'text' ? item.text : 'Sticker'}
-                      </p>
+                      <p className="block-label">{item.label ? item.label : item.text}</p>
+                      {item.label ? <p className="product-code">{item.text}</p> : null}
                       {ready ? <span className="queue-ready">Listo</span> : null}
                     </div>
                   </div>

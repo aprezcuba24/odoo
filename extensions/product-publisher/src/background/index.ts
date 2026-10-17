@@ -74,21 +74,13 @@ async function handleFillWhatsAppItem(
       imageBase64: item.imageBase64,
       imageMime: item.imageMime,
     }
-  } else if (item.kind === 'text') {
-    // Block with plain text (e.g. a category header, an emoji)
+  } else {
+    // Block with plain text (e.g. a category header or generic message)
     composerMessage = {
       type: 'FILL_WHATSAPP_COMPOSER',
       text: item.text,
       imageBase64: null,
       imageMime: null,
-    }
-  } else {
-    // Block with sticker image only
-    composerMessage = {
-      type: 'FILL_WHATSAPP_COMPOSER',
-      text: '',
-      imageBase64: item.imageBase64,
-      imageMime: item.imageMime,
     }
   }
 
