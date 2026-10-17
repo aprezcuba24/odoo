@@ -24,7 +24,7 @@
                 </li>
                 <li>
                     <strong>Validar dispositivos en el backend</strong> — tras <code>POST /api/order_bridge/register</code>
-                    con teléfono y clave de dispositivo, el personal abre <em>Ventas → Tienda Apk → Dispositivos</em> (o la pestaña
+                    con teléfono y clave de dispositivo, el personal abre <em>Tienda Apk → Clientes → Dispositivos</em> (o la pestaña
                     <em>Tienda Apk</em> del contacto) y valida el teléfono cuando corresponda. Los pedidos pueden crearse antes de la
                     validación; quedan marcados en el pedido de venta para revisión.
                 </li>
@@ -46,9 +46,8 @@
         <div class="oe_span12">
             <p>
                 Este módulo <strong>depende de la aplicación Ventas</strong> (<code>sale</code>): Ventas se instala automáticamente
-                con Tienda Apk y <strong>debe permanecer instalada</strong>. Los menús de dispositivos, pedidos y clientes de la tienda
-                están bajo <strong>Ventas</strong>: <em>Ventas → Tienda Apk</em>
-                (<em>Dispositivos</em>, <em>Pedidos Tienda Apk</em>, <em>Clientes Tienda Apk</em>).
+                con Tienda Apk y <strong>debe permanecer instalada</strong>. La aplicación <strong>Tienda Apk</strong> aparece como
+                app de primer nivel en Odoo, con los menús <em>Pedidos</em>, <em>Clientes</em>, <em>Operaciones</em> y <em>Configuración</em>.
             </p>
             <p class="oe_mt16">
                 Solo los usuarios con acceso de <strong>comercial</strong> (o un grupo de seguridad que lo incluya) ven esos menús

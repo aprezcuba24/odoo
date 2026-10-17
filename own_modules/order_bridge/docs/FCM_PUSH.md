@@ -53,7 +53,7 @@ Requieren un usuario con permisos de **vendedor** o **gestor** de Order Bridge (
 
 Usuarios con permisos adecuados (vendedor / gestor Tienda Apk) pueden enviar notificaciones desde el backend con el asistente transitorio **Enviar notificación push** (`order_bridge.fcm.send.wizard`):
 
-- **Ventas → Tienda Apk → Enviar notificación push** — elige el modo (un contacto, varios contactos o un topic FCM) y rellena título y mensaje; opcionalmente un objeto JSON de datos.
+- **Tienda Apk → Operaciones → Enviar Notificaciones Push** — elige el modo (un contacto, varios contactos o un topic FCM) y rellena título y mensaje; opcionalmente un objeto JSON de datos.
 - **Contactos (lista) → Acción → Enviar notificación push a contactos** — rellena la selección múltiple con los contactos activos.
 - **Ficha de contacto → pestaña Tienda Apk → Enviar notificación push** — abre el asistente con ese contacto como destino único.
 
