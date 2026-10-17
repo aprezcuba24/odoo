@@ -195,6 +195,12 @@ export async function fillWhatsAppComposer(
   if (hasImage && message.imageBase64 && message.imageMime) {
     pasteImageIntoComposer(message.imageBase64, message.imageMime, footer)
 
+    // Sticker / image-only block: no caption text needed.
+    if (!message.text.trim()) {
+      await sleep(500)
+      return { ok: true, filled: true, imageAttached: true }
+    }
+
     const caption = await waitForCaptionComposer(footer)
     if (!caption) {
       return {

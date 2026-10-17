@@ -1,6 +1,7 @@
 import { PUBLISH_QUEUE_STORAGE_KEY } from './constants'
 
-export type PublishQueueProduct = {
+export type ProductItem = {
+  type: 'product'
   id: string
   name: string
   price: string
@@ -8,23 +9,44 @@ export type PublishQueueProduct = {
   imageMime: string | null
 }
 
+export type BlockItem =
+  | { type: 'block'; id: string; kind: 'text'; text: string }
+  | { type: 'block'; id: string; kind: 'sticker'; imageBase64: string; imageMime: string }
+
+export type QueueItem = ProductItem | BlockItem
+
 export type PublishQueue = {
-  products: PublishQueueProduct[]
+  items: QueueItem[]
   startedAt: number
-  /** Product ids marked as published ("Listo"). Survives sidebar close/reopen. */
+  /** Item ids marked as published ("Listo"). Survives sidebar close/reopen. */
   readyIds: string[]
 }
 
-function isProduct(value: unknown): value is PublishQueueProduct {
+function isProductItem(value: unknown): value is ProductItem {
   if (!value || typeof value !== 'object') return false
   const item = value as Record<string, unknown>
   return (
+    item.type === 'product' &&
     typeof item.id === 'string' &&
     typeof item.name === 'string' &&
     typeof item.price === 'string' &&
     (item.imageBase64 === null || typeof item.imageBase64 === 'string') &&
     (item.imageMime === null || typeof item.imageMime === 'string')
   )
+}
+
+function isBlockItem(value: unknown): value is BlockItem {
+  if (!value || typeof value !== 'object') return false
+  const item = value as Record<string, unknown>
+  if (item.type !== 'block' || typeof item.id !== 'string') return false
+  if (item.kind === 'text') return typeof item.text === 'string'
+  if (item.kind === 'sticker')
+    return typeof item.imageBase64 === 'string' && typeof item.imageMime === 'string'
+  return false
+}
+
+export function isQueueItem(value: unknown): value is QueueItem {
+  return isProductItem(value) || isBlockItem(value)
 }
 
 function parseReadyIds(value: unknown): string[] {
@@ -35,10 +57,10 @@ function parseReadyIds(value: unknown): string[] {
 export function parsePublishQueue(value: unknown): PublishQueue | null {
   if (!value || typeof value !== 'object') return null
   const raw = value as Record<string, unknown>
-  if (!Array.isArray(raw.products) || typeof raw.startedAt !== 'number') return null
-  if (!raw.products.every(isProduct)) return null
+  if (!Array.isArray(raw.items) || typeof raw.startedAt !== 'number') return null
+  if (!raw.items.every(isQueueItem)) return null
   return {
-    products: raw.products,
+    items: raw.items,
     startedAt: raw.startedAt,
     readyIds: parseReadyIds(raw.readyIds),
   }
@@ -53,13 +75,13 @@ export async function writePublishQueue(queue: PublishQueue): Promise<void> {
   await chrome.storage.local.set({ [PUBLISH_QUEUE_STORAGE_KEY]: queue })
 }
 
-export async function markProductReady(productId: string): Promise<void> {
+export async function markItemReady(itemId: string): Promise<void> {
   const queue = await readPublishQueue()
   if (!queue) return
-  if (queue.readyIds.includes(productId)) return
+  if (queue.readyIds.includes(itemId)) return
   await writePublishQueue({
     ...queue,
-    readyIds: [...queue.readyIds, productId],
+    readyIds: [...queue.readyIds, itemId],
   })
 }
 

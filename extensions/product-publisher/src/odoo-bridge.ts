@@ -12,7 +12,7 @@ const START_PUBLISH_RESPONSE = 'START_PUBLISH_RESPONSE'
 interface PublishMessage {
   source: typeof MESSAGE_SOURCE
   type: typeof START_PUBLISH_REQUEST
-  products: unknown
+  items: unknown
 }
 
 interface PublishResponse {
@@ -35,7 +35,7 @@ window.addEventListener('message', (event) => {
   chrome.runtime.sendMessage(
     {
       type: START_PUBLISH_REQUEST,
-      products: event.data.products,
+      items: event.data.items,
     },
     (response) => {
       const bridgeResponse: PublishResponse = {

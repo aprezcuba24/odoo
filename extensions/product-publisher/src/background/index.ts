@@ -2,37 +2,26 @@ import type { ExtensionMessage, ExtensionResponse } from '../messaging'
 import {
   clearPublishQueue,
   clearReadyIds,
-  markProductReady,
+  isQueueItem,
+  markItemReady,
   parsePublishQueue,
   readPublishQueue,
   writePublishQueue,
 } from '../publish-queue'
 import { buildProductPostText } from '../post-text'
 
-function isProductRow(value: unknown): boolean {
-  if (!value || typeof value !== 'object') return false
-  const item = value as Record<string, unknown>
-  return (
-    typeof item.id === 'string' &&
-    typeof item.name === 'string' &&
-    typeof item.price === 'string' &&
-    (item.imageBase64 === null || typeof item.imageBase64 === 'string') &&
-    (item.imageMime === null || typeof item.imageMime === 'string')
-  )
-}
-
 async function handleStartPublish(message: {
-  products: unknown
+  items: unknown
 }): Promise<ExtensionResponse> {
-  if (!Array.isArray(message.products) || !message.products.every(isProductRow)) {
-    return { ok: false, error: 'Productos inválidos' }
+  if (!Array.isArray(message.items) || !message.items.every(isQueueItem)) {
+    return { ok: false, error: 'Items inválidos' }
   }
-  if (message.products.length === 0) {
-    return { ok: false, error: 'Selecciona al menos un producto' }
+  if (message.items.length === 0) {
+    return { ok: false, error: 'Selecciona al menos un item' }
   }
 
   const queue = parsePublishQueue({
-    products: message.products,
+    items: message.items,
     startedAt: Date.now(),
     readyIds: [],
   })
@@ -54,8 +43,8 @@ async function handleClearPublishQueue(): Promise<ExtensionResponse> {
   return { ok: true }
 }
 
-async function handleFillWhatsAppProduct(
-  productId: string,
+async function handleFillWhatsAppItem(
+  itemId: string,
   senderTabId: number | undefined,
 ): Promise<ExtensionResponse> {
   if (senderTabId == null) {
@@ -63,30 +52,56 @@ async function handleFillWhatsAppProduct(
   }
 
   const queue = await readPublishQueue()
-  if (!queue || queue.products.length === 0) {
+  if (!queue || queue.items.length === 0) {
     return { ok: false, error: 'No hay cola de publicación' }
   }
-  const product = queue.products.find((row) => row.id === productId)
-  if (!product) {
-    return { ok: false, error: 'Producto no encontrado en la cola' }
+  const item = queue.items.find((row) => row.id === itemId)
+  if (!item) {
+    return { ok: false, error: 'Item no encontrado en la cola' }
   }
 
-  const text = buildProductPostText(product.name, product.price)
+  let composerMessage: {
+    type: 'FILL_WHATSAPP_COMPOSER'
+    text: string
+    imageBase64: string | null
+    imageMime: string | null
+  }
+
+  if (item.type === 'product') {
+    composerMessage = {
+      type: 'FILL_WHATSAPP_COMPOSER',
+      text: buildProductPostText(item.name, item.price),
+      imageBase64: item.imageBase64,
+      imageMime: item.imageMime,
+    }
+  } else if (item.kind === 'text') {
+    // Block with plain text (e.g. a category header, an emoji)
+    composerMessage = {
+      type: 'FILL_WHATSAPP_COMPOSER',
+      text: item.text,
+      imageBase64: null,
+      imageMime: null,
+    }
+  } else {
+    // Block with sticker image only
+    composerMessage = {
+      type: 'FILL_WHATSAPP_COMPOSER',
+      text: '',
+      imageBase64: item.imageBase64,
+      imageMime: item.imageMime,
+    }
+  }
+
   let lastError: string | null = null
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const result = (await chrome.tabs.sendMessage(senderTabId, {
-        type: 'FILL_WHATSAPP_COMPOSER',
-        text,
-        imageBase64: product.imageBase64,
-        imageMime: product.imageMime,
-      })) as ExtensionResponse
+      const result = (await chrome.tabs.sendMessage(senderTabId, composerMessage)) as ExtensionResponse
 
       if (result && typeof result === 'object' && 'ok' in result) {
         if (!result.ok) return result
         if ('filled' in result && result.filled) {
-          await markProductReady(productId)
+          await markItemReady(itemId)
           return {
             ok: true,
             filled: result.filled,
@@ -119,8 +134,8 @@ async function dispatch(
       return handleClearPublishQueue()
     case 'CLEAR_READY_IDS':
       return handleClearReadyIds()
-    case 'FILL_WHATSAPP_PRODUCT':
-      return handleFillWhatsAppProduct(message.productId, senderTabId)
+    case 'FILL_WHATSAPP_ITEM':
+      return handleFillWhatsAppItem(message.itemId, senderTabId)
     default:
       return { ok: false, error: 'Mensaje desconocido' }
   }

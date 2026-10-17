@@ -12,6 +12,15 @@ const MESSAGE_SOURCE = "odoo-product-publisher";
 const RESPONSE_TIMEOUT_MS = 500;
 
 /**
+ * Format a category name for WhatsApp:
+ *   🏷️ *NOMBRE EN MAYÚSCULAS* 🏷️
+ */
+function formatCategoryText(name) {
+    const upper = (name || "").trim().toUpperCase();
+    return `🏷️ *${upper}* 🏷️`;
+}
+
+/**
  * Download a same-origin product image and return base64 + mime for the extension.
  */
 async function fetchImagePayload(imageUrl) {
@@ -42,13 +51,14 @@ async function fetchImagePayload(imageUrl) {
 }
 
 /**
- * Ask the Chrome extension to store the publish queue (name, price, image).
+ * Ask the Chrome extension to store the publish queue.
+ * @param {Array} items  Ordered list of product and block items ready to publish.
  */
-function startProductPublish(products) {
+function startProductPublish(items) {
     const message = {
         source: MESSAGE_SOURCE,
         type: "START_PUBLISH",
-        products,
+        items,
     };
 
     return new Promise((resolve) => {
@@ -230,10 +240,28 @@ export class WhatsappPublisherAction extends Component {
 
         this.state.sending = true;
         try {
-            const products = [];
+            // Build an ordered list of items: a text block per category change,
+            // followed by the products belonging to that category.
+            // Products come from the server already sorted by category sequence then
+            // name, so iterating in order preserves that grouping.
+            const items = [];
+            let lastCategId = null;
             for (const product of selected) {
+                const categId = product.category_id || null;
+                if (categId !== lastCategId) {
+                    lastCategId = categId;
+                    if (product.category_name) {
+                        items.push({
+                            type: "block",
+                            id: `block-categ-${categId}`,
+                            kind: "text",
+                            text: formatCategoryText(product.category_name),
+                        });
+                    }
+                }
                 const image = await fetchImagePayload(product.image_url);
-                products.push({
+                items.push({
+                    type: "product",
                     id: String(product.id),
                     name: this.formatProductLabel(product),
                     price: this.formatPrice(product),
@@ -242,9 +270,9 @@ export class WhatsappPublisherAction extends Component {
                 });
             }
 
-            console.log("Whatsapp publicador — productos seleccionados:", products);
+            console.log("Whatsapp publicador — cola de items:", items);
 
-            const result = await startProductPublish(products);
+            const result = await startProductPublish(items);
             if (!result.ok) {
                 this.notification.add(result.error, { type: "danger" });
                 return;

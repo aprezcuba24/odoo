@@ -58,6 +58,7 @@
                                     <th style="width: 2.5rem;"/>
                                     <th style="width: 3.5rem;"/>
                                     <th>Nombre</th>
+                                    <th>Categoría</th>
                                     <th>Referencia</th>
                                     <th class="text-end">Precio</th>
                                     <th class="text-end">Cantidad libre</th>
@@ -90,6 +91,7 @@
                                         </div>
                                     </td>
                                     <td t-esc="formatProductLabel(product)"/>
+                                    <td class="text-muted small" t-esc="product.category_name or ''"/>
                                     <td t-esc="product.default_code or ''"/>
                                     <td class="text-end" t-esc="formatPrice(product)"/>
                                     <td class="text-end" t-esc="product.free_qty"/>
