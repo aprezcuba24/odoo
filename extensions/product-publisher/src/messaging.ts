@@ -6,9 +6,10 @@ export type ExtensionMessage =
   | { type: 'CLEAR_PUBLISH_QUEUE' }
   | { type: 'CLEAR_READY_IDS' }
   | { type: 'FILL_WHATSAPP_ITEM'; itemId: string }
+  | { type: 'PUBLISH_WHATSAPP_ITEM'; itemId: string }
 
 export type ExtensionResponse =
-  | { ok: true; filled?: boolean; imageAttached?: boolean }
+  | { ok: true; filled?: boolean; imageAttached?: boolean; sent?: boolean }
   | { ok: false; error: string }
 
 export function sendMessage(message: ExtensionMessage): Promise<ExtensionResponse> {

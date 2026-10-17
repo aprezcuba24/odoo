@@ -425,6 +425,24 @@
   text-decoration: none;
 }
 
+.btn-auto {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--v-primary);
+  color: var(--v-on-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-auto:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .details-toggle {
   width: 100%;
   padding: 8px 10px;

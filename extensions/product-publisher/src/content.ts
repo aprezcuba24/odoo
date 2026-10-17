@@ -1,12 +1,14 @@
 /**
- * WhatsApp Web content script: sidebar + FILL_WHATSAPP_COMPOSER handler.
+ * WhatsApp Web content script: sidebar + WhatsApp composer handlers.
  * Facebook fill lives in facebook-composer.ts (not wired in this build).
  */
 
 import { mountSidebar } from './sidebar/mount'
 import {
   fillWhatsAppComposer,
+  publishWhatsAppComposer,
   type FillWhatsAppComposerMessage,
+  type PublishWhatsAppComposerMessage,
 } from './whatsapp-composer'
 
 let booted = false
@@ -24,6 +26,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   if (message.type === 'FILL_WHATSAPP_COMPOSER') {
     void fillWhatsAppComposer(message as FillWhatsAppComposerMessage).then(sendResponse)
+    return true
+  }
+  if (message.type === 'PUBLISH_WHATSAPP_COMPOSER') {
+    void publishWhatsAppComposer(message as PublishWhatsAppComposerMessage).then(sendResponse)
     return true
   }
   return false

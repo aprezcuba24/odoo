@@ -7,6 +7,7 @@ import {
   parsePublishQueue,
   readPublishQueue,
   writePublishQueue,
+  type QueueItem,
 } from '../publish-queue'
 import { buildProductPostText } from '../post-text'
 
@@ -43,6 +44,87 @@ async function handleClearPublishQueue(): Promise<ExtensionResponse> {
   return { ok: true }
 }
 
+function buildComposerPayload(
+  item: QueueItem,
+  mode: 'fill' | 'publish',
+):
+  | {
+      type: 'FILL_WHATSAPP_COMPOSER'
+      text: string
+      imageBase64: string | null
+      imageMime: string | null
+    }
+  | {
+      type: 'PUBLISH_WHATSAPP_COMPOSER'
+      text: string
+      imageBase64: string | null
+      imageMime: string | null
+    } {
+  const text =
+    item.type === 'product' ? buildProductPostText(item.name, item.price) : item.text
+  const imageBase64 = item.type === 'product' ? item.imageBase64 : null
+  const imageMime = item.type === 'product' ? item.imageMime : null
+
+  if (mode === 'publish') {
+    return {
+      type: 'PUBLISH_WHATSAPP_COMPOSER',
+      text,
+      imageBase64,
+      imageMime,
+    }
+  }
+  return {
+    type: 'FILL_WHATSAPP_COMPOSER',
+    text,
+    imageBase64,
+    imageMime,
+  }
+}
+
+async function sendComposerToTab(
+  senderTabId: number,
+  composerMessage: ReturnType<typeof buildComposerPayload>,
+  options: { markReadyOn: 'filled' | 'sent'; failHint: string },
+  itemId: string,
+): Promise<ExtensionResponse> {
+  let lastError: string | null = null
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const result = (await chrome.tabs.sendMessage(
+        senderTabId,
+        composerMessage,
+      )) as ExtensionResponse
+
+      if (result && typeof result === 'object' && 'ok' in result) {
+        if (!result.ok) return result
+        const filled = 'filled' in result && Boolean(result.filled)
+        const sent = 'sent' in result && Boolean(result.sent)
+        const success = options.markReadyOn === 'sent' ? sent : filled
+        if (success) {
+          await markItemReady(itemId)
+          return {
+            ok: true,
+            filled: filled || sent,
+            imageAttached:
+              'imageAttached' in result ? Boolean(result.imageAttached) : false,
+            sent: options.markReadyOn === 'sent' ? true : undefined,
+          }
+        }
+      }
+      break
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : 'No se pudo contactar la pestaña'
+      await new Promise((resolve) => setTimeout(resolve, 800))
+    }
+  }
+
+  return {
+    ok: false,
+    error: lastError ?? options.failHint,
+  }
+}
+
 async function handleFillWhatsAppItem(
   itemId: string,
   senderTabId: number | undefined,
@@ -60,59 +142,43 @@ async function handleFillWhatsAppItem(
     return { ok: false, error: 'Item no encontrado en la cola' }
   }
 
-  let composerMessage: {
-    type: 'FILL_WHATSAPP_COMPOSER'
-    text: string
-    imageBase64: string | null
-    imageMime: string | null
+  return sendComposerToTab(
+    senderTabId,
+    buildComposerPayload(item, 'fill'),
+    {
+      markReadyOn: 'filled',
+      failHint: 'No se pudo rellenar el chat de WhatsApp. Vuelve a pulsar Publicar.',
+    },
+    itemId,
+  )
+}
+
+async function handlePublishWhatsAppItem(
+  itemId: string,
+  senderTabId: number | undefined,
+): Promise<ExtensionResponse> {
+  if (senderTabId == null) {
+    return { ok: false, error: 'No hay pestaña activa' }
   }
 
-  if (item.type === 'product') {
-    composerMessage = {
-      type: 'FILL_WHATSAPP_COMPOSER',
-      text: buildProductPostText(item.name, item.price),
-      imageBase64: item.imageBase64,
-      imageMime: item.imageMime,
-    }
-  } else {
-    // Block with plain text (e.g. a category header or generic message)
-    composerMessage = {
-      type: 'FILL_WHATSAPP_COMPOSER',
-      text: item.text,
-      imageBase64: null,
-      imageMime: null,
-    }
+  const queue = await readPublishQueue()
+  if (!queue || queue.items.length === 0) {
+    return { ok: false, error: 'No hay cola de publicación' }
+  }
+  const item = queue.items.find((row) => row.id === itemId)
+  if (!item) {
+    return { ok: false, error: 'Item no encontrado en la cola' }
   }
 
-  let lastError: string | null = null
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const result = (await chrome.tabs.sendMessage(senderTabId, composerMessage)) as ExtensionResponse
-
-      if (result && typeof result === 'object' && 'ok' in result) {
-        if (!result.ok) return result
-        if ('filled' in result && result.filled) {
-          await markItemReady(itemId)
-          return {
-            ok: true,
-            filled: result.filled,
-            imageAttached:
-              'imageAttached' in result ? Boolean(result.imageAttached) : false,
-          }
-        }
-      }
-      break
-    } catch (err) {
-      lastError = err instanceof Error ? err.message : 'No se pudo contactar la pestaña'
-      await new Promise((resolve) => setTimeout(resolve, 800))
-    }
-  }
-
-  return {
-    ok: false,
-    error: lastError ?? 'No se pudo rellenar el chat de WhatsApp. Vuelve a pulsar Publicar.',
-  }
+  return sendComposerToTab(
+    senderTabId,
+    buildComposerPayload(item, 'publish'),
+    {
+      markReadyOn: 'sent',
+      failHint: 'No se pudo enviar el mensaje. Reanuda con Automático.',
+    },
+    itemId,
+  )
 }
 
 async function dispatch(
@@ -128,6 +194,8 @@ async function dispatch(
       return handleClearReadyIds()
     case 'FILL_WHATSAPP_ITEM':
       return handleFillWhatsAppItem(message.itemId, senderTabId)
+    case 'PUBLISH_WHATSAPP_ITEM':
+      return handlePublishWhatsAppItem(message.itemId, senderTabId)
     default:
       return { ok: false, error: 'Mensaje desconocido' }
   }
