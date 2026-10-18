@@ -2,37 +2,27 @@ import type { ExtensionMessage, ExtensionResponse } from '../messaging'
 import {
   clearPublishQueue,
   clearReadyIds,
-  markProductReady,
+  isQueueItem,
+  markItemReady,
   parsePublishQueue,
   readPublishQueue,
   writePublishQueue,
+  type QueueItem,
 } from '../publish-queue'
 import { buildProductPostText } from '../post-text'
 
-function isProductRow(value: unknown): boolean {
-  if (!value || typeof value !== 'object') return false
-  const item = value as Record<string, unknown>
-  return (
-    typeof item.id === 'string' &&
-    typeof item.name === 'string' &&
-    typeof item.price === 'string' &&
-    (item.imageBase64 === null || typeof item.imageBase64 === 'string') &&
-    (item.imageMime === null || typeof item.imageMime === 'string')
-  )
-}
-
 async function handleStartPublish(message: {
-  products: unknown
+  items: unknown
 }): Promise<ExtensionResponse> {
-  if (!Array.isArray(message.products) || !message.products.every(isProductRow)) {
-    return { ok: false, error: 'Productos inválidos' }
+  if (!Array.isArray(message.items) || !message.items.every(isQueueItem)) {
+    return { ok: false, error: 'Items inválidos' }
   }
-  if (message.products.length === 0) {
-    return { ok: false, error: 'Selecciona al menos un producto' }
+  if (message.items.length === 0) {
+    return { ok: false, error: 'Selecciona al menos un item' }
   }
 
   const queue = parsePublishQueue({
-    products: message.products,
+    items: message.items,
     startedAt: Date.now(),
     readyIds: [],
   })
@@ -54,44 +44,71 @@ async function handleClearPublishQueue(): Promise<ExtensionResponse> {
   return { ok: true }
 }
 
-async function handleFillWhatsAppProduct(
-  productId: string,
-  senderTabId: number | undefined,
+function buildComposerPayload(
+  item: QueueItem,
+  mode: 'fill' | 'publish',
+):
+  | {
+      type: 'FILL_WHATSAPP_COMPOSER'
+      text: string
+      imageBase64: string | null
+      imageMime: string | null
+    }
+  | {
+      type: 'PUBLISH_WHATSAPP_COMPOSER'
+      text: string
+      imageBase64: string | null
+      imageMime: string | null
+    } {
+  const text =
+    item.type === 'product' ? buildProductPostText(item.name, item.price) : item.text
+  const imageBase64 = item.type === 'product' ? item.imageBase64 : null
+  const imageMime = item.type === 'product' ? item.imageMime : null
+
+  if (mode === 'publish') {
+    return {
+      type: 'PUBLISH_WHATSAPP_COMPOSER',
+      text,
+      imageBase64,
+      imageMime,
+    }
+  }
+  return {
+    type: 'FILL_WHATSAPP_COMPOSER',
+    text,
+    imageBase64,
+    imageMime,
+  }
+}
+
+async function sendComposerToTab(
+  senderTabId: number,
+  composerMessage: ReturnType<typeof buildComposerPayload>,
+  options: { markReadyOn: 'filled' | 'sent'; failHint: string },
+  itemId: string,
 ): Promise<ExtensionResponse> {
-  if (senderTabId == null) {
-    return { ok: false, error: 'No hay pestaña activa' }
-  }
-
-  const queue = await readPublishQueue()
-  if (!queue || queue.products.length === 0) {
-    return { ok: false, error: 'No hay cola de publicación' }
-  }
-  const product = queue.products.find((row) => row.id === productId)
-  if (!product) {
-    return { ok: false, error: 'Producto no encontrado en la cola' }
-  }
-
-  const text = buildProductPostText(product.name, product.price)
   let lastError: string | null = null
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const result = (await chrome.tabs.sendMessage(senderTabId, {
-        type: 'FILL_WHATSAPP_COMPOSER',
-        text,
-        imageBase64: product.imageBase64,
-        imageMime: product.imageMime,
-      })) as ExtensionResponse
+      const result = (await chrome.tabs.sendMessage(
+        senderTabId,
+        composerMessage,
+      )) as ExtensionResponse
 
       if (result && typeof result === 'object' && 'ok' in result) {
         if (!result.ok) return result
-        if ('filled' in result && result.filled) {
-          await markProductReady(productId)
+        const filled = 'filled' in result && Boolean(result.filled)
+        const sent = 'sent' in result && Boolean(result.sent)
+        const success = options.markReadyOn === 'sent' ? sent : filled
+        if (success) {
+          await markItemReady(itemId)
           return {
             ok: true,
-            filled: result.filled,
+            filled: filled || sent,
             imageAttached:
               'imageAttached' in result ? Boolean(result.imageAttached) : false,
+            sent: options.markReadyOn === 'sent' ? true : undefined,
           }
         }
       }
@@ -104,8 +121,64 @@ async function handleFillWhatsAppProduct(
 
   return {
     ok: false,
-    error: lastError ?? 'No se pudo rellenar el chat de WhatsApp. Vuelve a pulsar Publicar.',
+    error: lastError ?? options.failHint,
   }
+}
+
+async function handleFillWhatsAppItem(
+  itemId: string,
+  senderTabId: number | undefined,
+): Promise<ExtensionResponse> {
+  if (senderTabId == null) {
+    return { ok: false, error: 'No hay pestaña activa' }
+  }
+
+  const queue = await readPublishQueue()
+  if (!queue || queue.items.length === 0) {
+    return { ok: false, error: 'No hay cola de publicación' }
+  }
+  const item = queue.items.find((row) => row.id === itemId)
+  if (!item) {
+    return { ok: false, error: 'Item no encontrado en la cola' }
+  }
+
+  return sendComposerToTab(
+    senderTabId,
+    buildComposerPayload(item, 'fill'),
+    {
+      markReadyOn: 'filled',
+      failHint: 'No se pudo rellenar el chat de WhatsApp. Vuelve a pulsar Publicar.',
+    },
+    itemId,
+  )
+}
+
+async function handlePublishWhatsAppItem(
+  itemId: string,
+  senderTabId: number | undefined,
+): Promise<ExtensionResponse> {
+  if (senderTabId == null) {
+    return { ok: false, error: 'No hay pestaña activa' }
+  }
+
+  const queue = await readPublishQueue()
+  if (!queue || queue.items.length === 0) {
+    return { ok: false, error: 'No hay cola de publicación' }
+  }
+  const item = queue.items.find((row) => row.id === itemId)
+  if (!item) {
+    return { ok: false, error: 'Item no encontrado en la cola' }
+  }
+
+  return sendComposerToTab(
+    senderTabId,
+    buildComposerPayload(item, 'publish'),
+    {
+      markReadyOn: 'sent',
+      failHint: 'No se pudo enviar el mensaje. Reanuda con Automático.',
+    },
+    itemId,
+  )
 }
 
 async function dispatch(
@@ -119,8 +192,10 @@ async function dispatch(
       return handleClearPublishQueue()
     case 'CLEAR_READY_IDS':
       return handleClearReadyIds()
-    case 'FILL_WHATSAPP_PRODUCT':
-      return handleFillWhatsAppProduct(message.productId, senderTabId)
+    case 'FILL_WHATSAPP_ITEM':
+      return handleFillWhatsAppItem(message.itemId, senderTabId)
+    case 'PUBLISH_WHATSAPP_ITEM':
+      return handlePublishWhatsAppItem(message.itemId, senderTabId)
     default:
       return { ok: false, error: 'Mensaje desconocido' }
   }

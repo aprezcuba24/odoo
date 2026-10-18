@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_bridge_whatsapp_message_tree" model="ir.ui.view">
+        <field name="name">order_bridge.whatsapp.message.list</field>
+        <field name="model">order_bridge.whatsapp.message</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Mensajes">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="position"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_whatsapp_message_form" model="ir.ui.view">
+        <field name="name">order_bridge.whatsapp.message.form</field>
+        <field name="model">order_bridge.whatsapp.message</field>
+        <field name="arch" type="xml">
+            <form string="Mensaje WhatsApp">
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="position"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field
+                                name="body"
+                                placeholder="Texto con emojis…"
+                            />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_whatsapp_message_search" model="ir.ui.view">
+        <field name="name">order_bridge.whatsapp.message.search</field>
+        <field name="model">order_bridge.whatsapp.message</field>
+        <field name="arch" type="xml">
+            <search string="WhatsApp Mensajes">
+                <field name="name"/>
+                <filter name="start" string="Al inicio" domain="[('position', '=', 'start')]"/>
+                <filter name="end" string="Al final" domain="[('position', '=', 'end')]"/>
+                <separator/>
+                <filter name="active" string="Activos" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Archivados" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_position" string="Posición" context="{'group_by': 'position'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_order_bridge_whatsapp_message" model="ir.actions.act_window">
+        <field name="name">WhatsApp Mensajes</field>
+        <field name="res_model">order_bridge.whatsapp.message</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_order_bridge_whatsapp_message_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Cree mensajes de texto para publicar al inicio o al final en WhatsApp.</p>
+            <p>Pueden incluir emojis. Al publicar productos podrá excluirlos de esa publicación.</p>
+        </field>
+    </record>
+</odoo>

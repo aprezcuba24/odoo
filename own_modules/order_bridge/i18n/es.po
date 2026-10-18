@@ -15,8 +15,8 @@ msgstr "Enviar notificación push FCM"
 #. module: order_bridge
 #: model:ir.actions.act_window,name:order_bridge.action_order_bridge_fcm_send_wizard
 #: model:ir.ui.menu,name:order_bridge.menu_order_bridge_fcm_send
-msgid "Enviar notificación push"
-msgstr "Enviar notificación push"
+msgid "Enviar Notificaciones Push"
+msgstr "Enviar Notificaciones Push"
 
 #. module: order_bridge
 #: model_terms:ir.ui.view,arch_db:order_bridge.view_order_bridge_fcm_send_wizard_form

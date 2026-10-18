@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ── Acciones ──────────────────────────────────────────────── -->
+
     <record id="action_order_bridge_sale_orders" model="ir.actions.act_window">
-        <field name="name">Pedidos de venta (Tienda Apk)</field>
+        <field name="name">Pedidos</field>
         <field name="res_model">sale.order</field>
         <field name="view_mode">list,kanban,form,calendar,graph,pivot</field>
         <field name="view_id" ref="view_order_tree_order_bridge_store"/>
@@ -31,7 +33,7 @@
     </record>
 
     <record id="action_order_bridge_partners" model="ir.actions.act_window">
-        <field name="name">Clientes Tienda Apk</field>
+        <field name="name">Clientes</field>
         <field name="res_model">res.partner</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="domain">[('order_bridge_registered', '=', True)]</field>
@@ -40,87 +42,134 @@
     </record>
 
     <record id="action_order_bridge_whatsapp_publisher" model="ir.actions.client">
-        <field name="name">Whatsapp publicador</field>
+        <field name="name">Whatsapp</field>
         <field name="tag">order_bridge_whatsapp_publisher</field>
         <field name="target">current</field>
     </record>
 
+    <!-- ── Menú raíz (aplicación de primer nivel) ───────────────── -->
+
     <menuitem
         id="menu_order_bridge_root"
         name="Tienda Apk"
-        parent="sale.sale_menu_root"
-        sequence="26"
+        sequence="31"
+        web_icon="fa fa-mobile,#FFFFFF,#714B67"
         groups="sales_team.group_sale_salesman,base.group_system"/>
 
-    <menuitem
-        id="menu_order_bridge_whatsapp_publisher"
-        name="Whatsapp publicador"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_whatsapp_publisher"
-        sequence="2"
-        groups="sales_team.group_sale_salesman"/>
-
-    <menuitem
-        id="menu_order_bridge_general_settings"
-        name="Datos generales"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_general_settings"
-        sequence="3"
-        groups="order_bridge.group_order_bridge_manager,base.group_system"/>
-
-    <menuitem
-        id="menu_order_bridge_banners"
-        name="Banners publicitarios"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_banner"
-        sequence="4"
-        groups="sales_team.group_sale_salesman"/>
-
-    <menuitem
-        id="menu_order_bridge_municipalities"
-        name="Municipios"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_municipality"
-        sequence="5"
-        groups="sales_team.group_sale_salesman"/>
-
-    <menuitem
-        id="menu_order_bridge_neighborhoods"
-        name="Barrios"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_neighborhood"
-        sequence="6"
-        groups="sales_team.group_sale_salesman"/>
-
-    <menuitem
-        id="menu_order_bridge_devices"
-        name="Dispositivos"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_device"
-        sequence="10"
-        groups="sales_team.group_sale_salesman"/>
-
-    <menuitem
-        id="menu_order_bridge_fcm_send"
-        name="Enviar notificación push"
-        parent="menu_order_bridge_root"
-        action="action_order_bridge_fcm_send_wizard"
-        sequence="15"
-        groups="sales_team.group_sale_salesman"/>
+    <!-- ── Pedidos (primer ítem → pantalla de entrada) ──────────── -->
 
     <menuitem
         id="menu_order_bridge_orders"
-        name="Pedidos Tienda Apk"
+        name="Pedidos"
         parent="menu_order_bridge_root"
         action="action_order_bridge_sale_orders"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <!-- ── Clientes ──────────────────────────────────────────────── -->
+
+    <menuitem
+        id="menu_order_bridge_clientes_group"
+        name="Clientes"
+        parent="menu_order_bridge_root"
         sequence="20"
         groups="sales_team.group_sale_salesman"/>
 
     <menuitem
         id="menu_order_bridge_customers"
-        name="Clientes Tienda Apk"
-        parent="menu_order_bridge_root"
+        name="Clientes"
+        parent="menu_order_bridge_clientes_group"
         action="action_order_bridge_partners"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_devices"
+        name="Dispositivos"
+        parent="menu_order_bridge_clientes_group"
+        action="action_order_bridge_device"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <!-- ── Operaciones ───────────────────────────────────────────── -->
+
+    <menuitem
+        id="menu_order_bridge_operaciones_group"
+        name="Operaciones"
+        parent="menu_order_bridge_root"
         sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_whatsapp_publisher"
+        name="Whatsapp"
+        parent="menu_order_bridge_operaciones_group"
+        action="action_order_bridge_whatsapp_publisher"
+        sequence="10"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_fcm_send"
+        name="Enviar Notificaciones Push"
+        parent="menu_order_bridge_operaciones_group"
+        action="action_order_bridge_fcm_send_wizard"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <!-- ── Configuración ─────────────────────────────────────────── -->
+
+    <menuitem
+        id="menu_order_bridge_config_group"
+        name="Configuración"
+        parent="menu_order_bridge_root"
+        sequence="40"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_general_settings"
+        name="Datos generales"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_general_settings"
+        sequence="10"
+        groups="order_bridge.group_order_bridge_manager,base.group_system"/>
+
+    <menuitem
+        id="menu_order_bridge_categories"
+        name="Categorías"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_product_category"
+        sequence="20"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_banners"
+        name="Banners publicitarios"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_banner"
+        sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_whatsapp_messages"
+        name="WhatsApp Mensajes"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_whatsapp_message"
+        sequence="35"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_municipalities"
+        name="Municipios"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_municipality"
+        sequence="40"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_neighborhoods"
+        name="Barrios"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_neighborhood"
+        sequence="50"
         groups="sales_team.group_sale_salesman"/>
 </odoo>

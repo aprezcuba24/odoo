@@ -16,7 +16,7 @@ Para detalle técnico de la API, consulte la documentación interna del módulo 
 | **Odoo (backend)** | Su equipo comercial | Catálogo, inventario, pedidos, validación de clientes y operación diaria |
 | **API REST** | App e integraciones | Sincroniza catálogo, perfil, pedidos y notificaciones |
 
-Los compradores **no necesitan usuario de Odoo**. Se identifican con su teléfono y una clave de dispositivo generada por la app. Su personal gestiona todo desde Odoo, en el menú **Ventas → Tienda Apk**.
+Los compradores **no necesitan usuario de Odoo**. Se identifican con su teléfono y una clave de dispositivo generada por la app. Su personal gestiona todo desde Odoo, en la aplicación **Tienda Apk**.
 
 ---
 
@@ -88,21 +88,25 @@ Opcional pero recomendable:
 
 ## Primeros pasos en Odoo
 
-Tras la instalación, el menú principal está en **Ventas → Tienda Apk**:
+Tras la instalación, acceda a la aplicación **Tienda Apk** desde el menú principal de Odoo:
 
 | Menú | Uso |
 |------|-----|
-| **Datos generales** | Teléfono de contacto de la tienda (visible en la app vía API) |
-| **Banners publicitarios** | Carrusel promocional en la app |
-| **Municipios / Barrios** | Zona de entrega para direcciones de clientes |
-| **Dispositivos** | Registro y validación de teléfonos de la app |
-| **Pedidos Tienda Apk** | Listado filtrado de pedidos del canal móvil |
-| **Clientes Tienda Apk** | Contactos registrados desde la app |
-| **Enviar notificación push** | Campañas o avisos puntuales a clientes o a todos |
+| **Pedidos** | Listado filtrado de pedidos del canal móvil |
+| **Clientes → Clientes** | Contactos registrados desde la app |
+| **Clientes → Dispositivos** | Registro y validación de teléfonos de la app |
+| **Operaciones → Whatsapp** | Publicador de productos a WhatsApp Web |
+| **Operaciones → Enviar Notificaciones Push** | Campañas o avisos puntuales a clientes o a todos |
+| **Configuración → Datos generales** | Teléfono de contacto de la tienda (visible en la app vía API) |
+| **Configuración → Categorías** | Árbol de categorías de productos visibles en la app |
+| **Configuración → Banners publicitarios** | Carrusel promocional en la app |
+| **Configuración → WhatsApp Mensajes** | Textos (con emojis) al inicio o al final al publicar en WhatsApp |
+| **Configuración → Municipios** | Zonas de entrega (nivel municipio) |
+| **Configuración → Barrios** | Zonas de entrega (nivel barrio dentro del municipio) |
 
 ### Datos generales
 
-En **Ventas → Tienda Apk → Datos generales** indique el **teléfono de la tienda** (por ejemplo, atención al cliente o WhatsApp comercial). La app lo consulta con `GET /api/order_bridge/settings`.
+En **Tienda Apk → Configuración → Datos generales** indique el **teléfono de la tienda** (por ejemplo, atención al cliente o WhatsApp comercial). La app lo consulta con `GET /api/order_bridge/settings`.
 
 ### Municipios y barrios
 
@@ -147,7 +151,7 @@ La app agrupa productos por las **categorías internas de producto** de Odoo (`p
 
 ## Banners publicitarios
 
-En **Ventas → Tienda Apk → Banners publicitarios** puede crear piezas para la home de la app:
+En **Tienda Apk → Configuración → Banners publicitarios** puede crear piezas para la home de la app:
 
 - **Título**, subtítulo, colores de fondo y texto.
 - **Imagen** (recomendada para impacto visual).
@@ -171,7 +175,7 @@ Cuando un cliente abre la app por primera vez:
 
 ### Validación (recomendada)
 
-En **Ventas → Tienda Apk → Dispositivos** (filtro por defecto: *Pendiente de validación*):
+En **Tienda Apk → Clientes → Dispositivos** (filtro por defecto: *Pendiente de validación*):
 
 - Revise teléfono, contacto y última actividad.
 - Pulse **Validar teléfono** cuando confíe en ese cliente.
@@ -200,7 +204,7 @@ Odoo guarda una **instantánea de la dirección** en cada pedido, de modo que un
 
 ### Dónde verlos
 
-- **Ventas → Tienda Apk → Pedidos Tienda Apk** — vista dedicada al canal.
+- **Tienda Apk → Pedidos** — vista dedicada al canal.
 - **Ventas → Pedidos** — mismos registros, con campos adicionales de Tienda Apk en el formulario.
 
 Cada pedido del canal incluye:
@@ -268,7 +272,7 @@ Permite avisar al cliente cuando cambia el estado de su pedido o enviar **campa�
 **Envío desde Odoo:**
 
 - Automático al cambiar **estado tienda**.
-- Manual: **Ventas → Tienda Apk → Enviar notificación push** (un contacto, varios o difusión global).
+- Manual: **Tienda Apk → Operaciones → Enviar Notificaciones Push** (un contacto, varios o difusión global).
 
 Detalle técnico: `own_modules/order_bridge/docs/FCM_PUSH.md`.
 

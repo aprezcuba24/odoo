@@ -70,3 +70,67 @@ class TestWhatsappPublisherProducts(TransactionCase):
         self.assertNotIn(no_stock.id, ids)
         self.assertNotIn(service.id, ids)
         self.assertNotIn(not_sale.id, ids)
+
+    def test_rows_include_category_fields(self):
+        """Each row exposes category_id, category_name and category_sequence."""
+        categ = self.env['product.category'].sudo().create({
+            'name': 'WA categ fields test',
+            'order_bridge_sequence': 7,
+        })
+        product = self._create_storable(
+            'WA categ fields product', categ_id=categ.id,
+        )
+        rows = self.env['product.product'].get_whatsapp_publisher_products()
+        by_id = {row['id']: row for row in rows}
+
+        self.assertIn(product.id, by_id)
+        row = by_id[product.id]
+        self.assertEqual(row['category_id'], categ.id)
+        self.assertEqual(row['category_name'], categ.name)
+        self.assertEqual(row['category_sequence'], 7)
+
+    def test_products_ordered_by_category_sequence(self):
+        """Products come out sorted by category order_bridge_sequence, then name."""
+        categ_first = self.env['product.category'].sudo().create({
+            'name': 'WA order categ first',
+            'order_bridge_sequence': 1,
+        })
+        categ_last = self.env['product.category'].sudo().create({
+            'name': 'WA order categ last',
+            'order_bridge_sequence': 99,
+        })
+        p_in_last = self._create_storable(
+            'WA order last categ product', categ_id=categ_last.id,
+        )
+        p_in_first = self._create_storable(
+            'WA order first categ product', categ_id=categ_first.id,
+        )
+        rows = self.env['product.product'].get_whatsapp_publisher_products()
+        ids = [row['id'] for row in rows]
+
+        self.assertIn(p_in_first.id, ids)
+        self.assertIn(p_in_last.id, ids)
+        self.assertLess(
+            ids.index(p_in_first.id),
+            ids.index(p_in_last.id),
+            'El producto de la categoría con menor secuencia debe aparecer antes',
+        )
+
+    def test_products_within_same_category_ordered_by_name(self):
+        """Within one category products are sorted alphabetically by name."""
+        categ = self.env['product.category'].sudo().create({
+            'name': 'WA same categ order',
+            'order_bridge_sequence': 5,
+        })
+        p_b = self._create_storable('WA name B product', categ_id=categ.id)
+        p_a = self._create_storable('WA name A product', categ_id=categ.id)
+        rows = self.env['product.product'].get_whatsapp_publisher_products()
+        ids = [row['id'] for row in rows]
+
+        self.assertIn(p_a.id, ids)
+        self.assertIn(p_b.id, ids)
+        self.assertLess(
+            ids.index(p_a.id),
+            ids.index(p_b.id),
+            'El producto con nombre "A" debe aparecer antes que el "B" dentro de la misma categoría',
+        )

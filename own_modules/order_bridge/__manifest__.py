@@ -48,7 +48,9 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'report/messaging_guide_report.xml',
         'report/messaging_guide_templates.xml',
         'views/general_settings_views.xml',
+        'views/product_category_views.xml',
         'views/banner_views.xml',
+        'views/whatsapp_message_views.xml',
         'views/municipality_views.xml',
         'views/device_views.xml',
         'views/res_company_views.xml',
@@ -66,6 +68,8 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
     'assets': {
         'web.assets_backend': [
             'order_bridge/static/src/scss/store_state_colors.scss',
+            'order_bridge/static/src/whatsapp_publisher/whatsapp_messages_dialog.js',
+            'order_bridge/static/src/whatsapp_publisher/whatsapp_messages_dialog.xml',
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.js',
             'order_bridge/static/src/whatsapp_publisher/whatsapp_publisher.xml',
             'order_bridge/static/src/store_order_list/prepare_messaging.js',

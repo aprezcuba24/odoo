@@ -7,6 +7,7 @@ from . import test_messaging_guide
 from . import test_multi_company_isolation
 from . import test_order_bridge_admin_stock
 from . import test_order_bridge_api
+from . import test_order_bridge_categories
 from . import test_order_bridge_multi_company_api
 from . import test_order_bridge_openapi
 from . import test_order_bridge_order_created_listener
@@ -18,4 +19,5 @@ from . import test_pos_stock
 from . import test_res_partner_order_bridge_orders
 from . import test_s3_hooks
 from . import test_telegram_order_notification
+from . import test_whatsapp_messages
 from . import test_whatsapp_publisher

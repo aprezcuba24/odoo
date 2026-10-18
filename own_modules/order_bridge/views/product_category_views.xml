@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List view: drag-handle for sequence, read-only name/parent for non-managers -->
+    <record id="view_order_bridge_product_category_list" model="ir.ui.view">
+        <field name="name">order_bridge.product.category.list</field>
+        <field name="model">product.category</field>
+        <field name="arch" type="xml">
+            <list string="Categorías Tienda Apk"
+                  default_order="order_bridge_sequence, complete_name, id">
+                <field name="order_bridge_sequence" widget="handle"/>
+                <field name="complete_name" string="Categoría"
+                       readonly="not order_bridge_can_manage"/>
+                <field name="parent_id" string="Categoría padre"
+                       readonly="not order_bridge_can_manage"/>
+                <!-- hidden helper field used for readonly logic -->
+                <field name="order_bridge_can_manage" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view: name, parent and sequence; name/parent read-only for non-managers -->
+    <record id="view_order_bridge_product_category_form" model="ir.ui.view">
+        <field name="name">order_bridge.product.category.form</field>
+        <field name="model">product.category</field>
+        <field name="arch" type="xml">
+            <form string="Categoría de producto">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nombre de la categoría"/>
+                        <h1>
+                            <field name="name" placeholder="p. ej. Bebidas"
+                                   readonly="not order_bridge_can_manage"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="parent_id"
+                               readonly="not order_bridge_can_manage"/>
+                        <field name="order_bridge_sequence"/>
+                    </group>
+                    <!-- hidden helper -->
+                    <field name="order_bridge_can_manage" invisible="True"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="view_order_bridge_product_category_search" model="ir.ui.view">
+        <field name="name">order_bridge.product.category.search</field>
+        <field name="model">product.category</field>
+        <field name="arch" type="xml">
+            <search string="Categorías">
+                <field name="complete_name" string="Categoría"/>
+                <field name="parent_id" string="Categoría padre"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_order_bridge_product_category" model="ir.actions.act_window">
+        <field name="name">Categorías de la tienda</field>
+        <field name="res_model">product.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_order_bridge_product_category_list"/>
+        <field name="search_view_id" ref="view_order_bridge_product_category_search"/>
+        <field name="context">{'hierarchical_naming': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Cree la primera categoría para la tienda.
+            </p>
+            <p>Aquí puede ordenar y gestionar las categorías que verán los clientes en la app.</p>
+        </field>
+    </record>
+
+    <!-- Show order_bridge_sequence in the standard Inventory category form -->
+    <record id="view_product_category_form_ob_sequence" model="ir.ui.view">
+        <field name="name">product.category.form.order_bridge_sequence</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='first']" position="after">
+                <group string="Tienda Apk" name="order_bridge_group">
+                    <field name="order_bridge_sequence" string="Orden en la app"
+                           groups="sales_team.group_sale_salesman"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

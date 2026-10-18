@@ -25,7 +25,16 @@ class ProductProduct(models.Model):
         """Sellable storable variants with free stock for the WhatsApp publisher UI.
 
         Returns every matching product (visible in Tienda Apk or not). The client
-        filters visibility in the browser. Each row includes ``order_bridge_visible``.
+        filters visibility in the browser. Each row includes ``order_bridge_visible``,
+        ``category_id``, ``category_name`` and ``category_sequence`` so the caller
+        can group products by category in the correct order.
+
+        Products are sorted by:
+          1. category ``order_bridge_sequence`` (ascending)
+          2. category ``complete_name`` (alphabetical fallback)
+          3. category ``id``
+          4. product ``name``
+          5. product ``id``
         """
         company = self.env.company
         domain = [
@@ -36,7 +45,7 @@ class ProductProduct(models.Model):
             ('product_tmpl_id.company_id', '=', False),
             ('product_tmpl_id.company_id', '=', company.id),
         ]
-        products = self.search(domain, order='name, id')
+        products = self.search(domain)
         stock_installed, warehouse, precision = get_catalog_warehouse(self.env, company)
         available = filter_available_products(
             products, stock_installed, warehouse, precision,
@@ -44,9 +53,20 @@ class ProductProduct(models.Model):
         if warehouse:
             available = available.with_context(warehouse_id=warehouse.id)
 
+        def _sort_key(p):
+            categ = p.product_tmpl_id.categ_id
+            if categ:
+                seq = categ.order_bridge_sequence if categ.order_bridge_sequence is not False else 10
+                cname = categ.complete_name or ''
+                cid = categ.id
+            else:
+                seq, cname, cid = 9999, '', 0
+            return (seq, cname, cid, p.name or '', p.id)
+
         rows = []
-        for product in available:
+        for product in sorted(available, key=_sort_key):
             tmpl = product.product_tmpl_id
+            categ = tmpl.categ_id
             image_url = False
             if product.image_variant_1920 or tmpl.image_1920:
                 image_url = f'/web/image/product.product/{product.id}/image_128'
@@ -61,6 +81,9 @@ class ProductProduct(models.Model):
                 'free_qty': float(product.free_qty),
                 'image_url': image_url,
                 'order_bridge_visible': bool(tmpl.order_bridge_visible),
+                'category_id': categ.id if categ else False,
+                'category_name': categ.name if categ else False,
+                'category_sequence': categ.order_bridge_sequence if categ else 10,
             })
         return rows
 

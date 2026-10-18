@@ -24,7 +24,7 @@ class CatalogController(http.Controller):
         if not categ_ids:
             categories = Category.browse([])
         else:
-            categories = Category.search([('id', 'in', categ_ids)], order='complete_name, id')
+            categories = Category.search([('id', 'in', categ_ids)], order='order_bridge_sequence, complete_name, id')
         return api_json_response(categories_list_response(categories))
 
     @http.route('/api/order_bridge/products', type='http', auth='public', methods=['GET', 'OPTIONS'], csrf=False)

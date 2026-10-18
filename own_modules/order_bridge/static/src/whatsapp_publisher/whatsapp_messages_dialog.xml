@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="order_bridge.WhatsappMessagesDialog">
+        <Dialog title.translate="Mensajes a publicar" size="'md'" contentClass="'o_order_bridge_wa_messages_dialog'">
+            <p class="text-muted mb-3">
+                Desmarque los mensajes que no quiera incluir en esta publicación.
+                Esto no los borra de la configuración.
+            </p>
+
+            <t t-if="startMessages.length">
+                <h6 class="fw-bold">Al inicio</h6>
+                <ul class="list-unstyled mb-3">
+                    <li t-foreach="startMessages" t-as="msg" t-key="msg.id" class="form-check mb-2">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            t-att-id="'ob_wa_msg_' + msg.id"
+                            t-att-checked="isSelected(msg.id)"
+                            t-on-change="() => this.toggle(msg.id)"
+                        />
+                        <label class="form-check-label" t-att-for="'ob_wa_msg_' + msg.id">
+                            <span class="fw-semibold" t-esc="msg.name"/>
+                            <span class="text-muted small d-block" t-esc="messagePreview(msg)"/>
+                        </label>
+                    </li>
+                </ul>
+            </t>
+
+            <t t-if="endMessages.length">
+                <h6 class="fw-bold">Al final</h6>
+                <ul class="list-unstyled mb-0">
+                    <li t-foreach="endMessages" t-as="msg" t-key="msg.id" class="form-check mb-2">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            t-att-id="'ob_wa_msg_' + msg.id"
+                            t-att-checked="isSelected(msg.id)"
+                            t-on-change="() => this.toggle(msg.id)"
+                        />
+                        <label class="form-check-label" t-att-for="'ob_wa_msg_' + msg.id">
+                            <span class="fw-semibold" t-esc="msg.name"/>
+                            <span class="text-muted small d-block" t-esc="messagePreview(msg)"/>
+                        </label>
+                    </li>
+                </ul>
+            </t>
+
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-secondary" t-on-click="onCancel">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" t-on-click="onConfirm">
+                    Continuar
+                </button>
+            </t>
+        </Dialog>
+    </t>
+</templates>
