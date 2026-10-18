@@ -113,18 +113,19 @@ class TestCategoryPermissions(TransactionCase):
     def setUp(self):
         super().setUp()
         # Create a salesman user (no product manager, no OB manager)
-        self.salesman_user = self.env['res.users'].sudo().create({
+        Users = self.env['res.users'].sudo().with_context(no_reset_password=True)
+        self.salesman_user = Users.create({
             'name': 'Vendedor OB Test',
             'login': 'ob_test_salesman@example.com',
-            'groups_id': [(6, 0, [
+            'group_ids': [(6, 0, [
                 self.env.ref('sales_team.group_sale_salesman').id,
             ])],
         })
         # Create an OB manager user
-        self.ob_manager_user = self.env['res.users'].sudo().create({
+        self.ob_manager_user = Users.create({
             'name': 'OB Manager Test',
             'login': 'ob_test_manager@example.com',
-            'groups_id': [(6, 0, [
+            'group_ids': [(6, 0, [
                 self.env.ref('order_bridge.group_order_bridge_manager').id,
             ])],
         })

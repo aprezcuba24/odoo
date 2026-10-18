@@ -212,24 +212,17 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
         self.assertIn(order.name, text)
         self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.name)
 
-    @patch.dict(
-        os.environ,
-        {'TELEGRAM_BOT_TOKEN': 'test-token', 'TELEGRAM_CHAT_ID': '123'},
-        clear=True,
-    )
     @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
-    def test_listener_sends_telegram_for_admin_order(self, mock_send):
+    def test_listener_skips_admin_order(self, mock_send):
         from odoo.addons.order_bridge.listeners.order_created_listener import order_bridge_order_created
 
-        mock_send.return_value = True
         partner = self.env['res.partner'].create({'name': 'Admin Cliente', 'phone': '+5355599999'})
         order = self.env['sale.order'].create({
             'partner_id': partner.id,
             'order_bridge_origin': 'admin',
         })
         order_bridge_order_created(order, None, order)
-        mock_send.assert_called_once()
-        self.assertEqual(mock_send.call_args.kwargs.get('order_ref'), order.name)
+        mock_send.assert_not_called()
 
     @patch('odoo.addons.order_bridge.listeners.order_created_listener.send_message')
     def test_listener_skips_non_bridge_origin(self, mock_send):
@@ -241,17 +234,29 @@ class TestOrderBridgeTelegramOrderNotification(TransactionCase):
         mock_send.assert_not_called()
 
     def test_listener_module_calls_send_message(self):
-        for origin in ('app', 'admin'):
-            order = MagicMock()
-            order.order_bridge_origin = origin
-            order.order_bridge_ref = 'O-MOCK'
-            order.name = 'S-MOCK'
-            with patch.object(listener_module, 'send_message', return_value=True) as mock_send:
-                with patch.object(
-                    listener_module,
-                    'format_order_created_message',
-                    return_value='msg',
-                ) as mock_format:
-                    listener_module.order_bridge_order_created(order, None, order)
-            mock_format.assert_called_once_with(order)
-            mock_send.assert_called_once_with('msg', order_ref='S-MOCK')
+        order = MagicMock()
+        order.order_bridge_origin = 'app'
+        order.order_bridge_ref = 'O-MOCK'
+        order.name = 'S-MOCK'
+        with patch.object(listener_module, 'send_message', return_value=True) as mock_send:
+            with patch.object(
+                listener_module,
+                'format_order_created_message',
+                return_value='msg',
+            ) as mock_format:
+                listener_module.order_bridge_order_created(order, None, order)
+        mock_format.assert_called_once_with(order)
+        mock_send.assert_called_once_with('msg', order_ref='S-MOCK')
+
+        admin = MagicMock()
+        admin.order_bridge_origin = 'admin'
+        admin.name = 'S-ADMIN'
+        with patch.object(listener_module, 'send_message', return_value=True) as mock_send:
+            with patch.object(
+                listener_module,
+                'format_order_created_message',
+                return_value='msg',
+            ) as mock_format:
+                listener_module.order_bridge_order_created(admin, None, admin)
+        mock_format.assert_not_called()
+        mock_send.assert_not_called()
