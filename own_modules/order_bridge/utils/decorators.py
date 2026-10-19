@@ -26,7 +26,7 @@ CORS_HEADERS = [
     ('Access-Control-Allow-Origin', '*'),
     (
         'Access-Control-Allow-Headers',
-        'Authorization, Content-Type, X-App-Version, X-Company-Slug',
+        'Accept, Authorization, Content-Type, X-Api-Key, X-App-Version, X-Company-Slug',
     ),
     ('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS'),
     ('Access-Control-Max-Age', '86400'),

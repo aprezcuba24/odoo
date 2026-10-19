@@ -53,6 +53,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'views/whatsapp_message_views.xml',
         'views/municipality_views.xml',
         'views/device_views.xml',
+        'views/messenger_views.xml',
         'views/res_company_views.xml',
         'views/res_partner_views.xml',
         'views/res_partner_search_order_bridge.xml',

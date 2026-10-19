@@ -4,6 +4,7 @@ from . import test_backfill_company
 from . import test_fcm_send_wizard
 from . import test_local_dotenv
 from . import test_messaging_guide
+from . import test_mobile_deliveries
 from . import test_multi_company_isolation
 from . import test_order_bridge_admin_stock
 from . import test_order_bridge_api

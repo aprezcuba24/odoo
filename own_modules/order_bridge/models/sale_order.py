@@ -89,6 +89,26 @@ class SaleOrder(models.Model):
         tracking=True,
         index=True,
     )
+    order_bridge_messenger_id = fields.Many2one(
+        'order_bridge.messenger',
+        string='Mensajero',
+        ondelete='set null',
+        index=True,
+        check_company=True,
+        help='Mensajero al que se asigna este pedido para la API móvil de entregas.',
+    )
+    order_bridge_delivery_received_at = fields.Char(
+        string='Entrega confirmada (servidor)',
+        copy=False,
+        readonly=True,
+        help='ISO-8601 exacto devuelto a la APK en la primera confirmación de entrega.',
+    )
+    order_bridge_delivery_device_at = fields.Char(
+        string='Entrega marcada (dispositivo)',
+        copy=False,
+        readonly=True,
+        help='deviceTimestamp ISO-8601 enviado por la APK al marcar la entrega.',
+    )
 
     _sql_constraints = [
         (

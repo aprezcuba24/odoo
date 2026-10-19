@@ -29,6 +29,16 @@ class OrderBridgePartnerAddress(models.Model):
         index=True,
     )
     state = fields.Char(string='Estado / provincia')
+    latitude = fields.Float(
+        string='Latitud',
+        digits=(10, 7),
+        help='Coordenada WGS84. La escribe el administrador; la API de clientes no la envía.',
+    )
+    longitude = fields.Float(
+        string='Longitud',
+        digits=(10, 7),
+        help='Coordenada WGS84. La escribe el administrador; la API de clientes no la envía.',
+    )
 
     _sql_constraints = [
         ('partner_unique', 'unique(partner_id)', 'Solo una dirección Tienda Apk por contacto.'),

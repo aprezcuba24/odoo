@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_bridge_messenger_tree" model="ir.ui.view">
+        <field name="name">order_bridge.messenger.list</field>
+        <field name="model">order_bridge.messenger</field>
+        <field name="arch" type="xml">
+            <list string="Mensajeros" decoration-muted="not active">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="active" widget="boolean"/>
+                <field name="api_key" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_messenger_form" model="ir.ui.view">
+        <field name="name">order_bridge.messenger.form</field>
+        <field name="model">order_bridge.messenger</field>
+        <field name="arch" type="xml">
+            <form string="Mensajero">
+                <header>
+                    <button
+                        name="action_regenerate_api_key"
+                        type="object"
+                        string="Regenerar clave API"
+                        class="btn-secondary"
+                        confirm="Se invalidará la clave actual en el teléfono del mensajero. ¿Continuar?"
+                    />
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="api_key" widget="CopyClipboardChar" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert" colspan="2">
+                        Use el botón de copiar junto a la clave API e introdúzcala en la aplicación de mensajería
+                        (cabecera <code>X-Api-Key</code>). No la incluya en la APK de clientes ni en repositorios.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_order_bridge_messenger_search" model="ir.ui.view">
+        <field name="name">order_bridge.messenger.search</field>
+        <field name="model">order_bridge.messenger</field>
+        <field name="arch" type="xml">
+            <search string="Mensajeros">
+                <field name="name"/>
+                <field name="api_key"/>
+                <separator/>
+                <filter name="filter_active" string="Activo" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Inactivo" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_order_bridge_messenger" model="ir.actions.act_window">
+        <field name="name">Mensajeros</field>
+        <field name="res_model">order_bridge.messenger</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_order_bridge_messenger_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Cree un mensajero y copie su clave API en el teléfono.</p>
+            <p>Asigne pedidos listos para entrega a un mensajero para que aparezcan en la app móvil.</p>
+        </field>
+    </record>
+</odoo>

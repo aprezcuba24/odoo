@@ -52,6 +52,8 @@
                             <field name="municipality_id"/>
                             <field name="neighborhood_id"/>
                             <field name="state"/>
+                            <field name="latitude"/>
+                            <field name="longitude"/>
                         </list>
                     </field>
                 </page>
