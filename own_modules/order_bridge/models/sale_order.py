@@ -62,6 +62,16 @@ class SaleOrder(models.Model):
         ),
         readonly=True,
     )
+    order_bridge_partner_has_map_point = fields.Boolean(
+        related='partner_id.order_bridge_has_map_point',
+        string='Coordenadas',
+        store=True,
+        readonly=True,
+        help=(
+            'Indica si el cliente del pedido tiene latitud y longitud configuradas '
+            'en su dirección Tienda Apk.'
+        ),
+    )
     order_bridge_ref = fields.Char(string='Referencia tienda', copy=False, index=True)
     order_bridge_client_order_id = fields.Char(
         string='Id. pedido cliente',

@@ -142,13 +142,10 @@
             <xpath expr="//list" position="attributes">
                 <attribute name="js_class">order_bridge_store_order_list</attribute>
             </xpath>
-            <xpath expr="//list" position="inside">
-                <field name="order_bridge_origin"/>
-                <field name="order_bridge_ref"/>
-                <field name="order_bridge_messenger_id" optional="show"/>
-                <field name="order_bridge_device_phone_validated" string="Dispositivo OK"/>
+            <xpath expr="//field[@name='date_order']" position="after">
                 <field
                     name="order_bridge_store_state"
+                    string="Estado"
                     widget="badge"
                     decoration-muted="order_bridge_store_state == 'reviewing'"
                     decoration-warning="order_bridge_store_state == 'negotiating'"
@@ -156,6 +153,22 @@
                     decoration-success="order_bridge_store_state == 'delivered'"
                     decoration-danger="order_bridge_store_state == 'canceled'"
                 />
+            </xpath>
+            <xpath expr="//field[@name='activity_ids']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+            <xpath expr="//field[@name='company_id'][@optional='show']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_status']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+            <xpath expr="//list" position="inside">
+                <field name="order_bridge_origin" string="Origen"/>
+                <field name="order_bridge_messenger_id"/>
+                <field name="order_bridge_device_phone_validated" string="Dispositivo OK"/>
+                <field name="order_bridge_partner_has_map_point" string="Coordenadas" widget="boolean"/>
+                <field name="order_bridge_ref" optional="hide"/>
             </xpath>
         </field>
     </record>

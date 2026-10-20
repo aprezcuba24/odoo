@@ -40,6 +40,15 @@ class ResPartner(models.Model):
         store=True,
         readonly=True,
     )
+    order_bridge_has_map_point = fields.Boolean(
+        string='Coordenadas de mapa',
+        compute='_compute_order_bridge_has_map_point',
+        store=True,
+        help=(
+            'Indica si la dirección Tienda Apk del cliente tiene latitud y longitud '
+            'distintas de cero (punto útil para el mapa de entregas).'
+        ),
+    )
 
     @api.depends(
         'order_bridge_partner_address_ids.municipality_id',
@@ -50,6 +59,20 @@ class ResPartner(models.Model):
             addr = partner.order_bridge_partner_address_ids[:1]
             partner.order_bridge_municipality_id = addr.municipality_id
             partner.order_bridge_neighborhood_id = addr.neighborhood_id
+
+    @api.depends(
+        'order_bridge_partner_address_ids.latitude',
+        'order_bridge_partner_address_ids.longitude',
+    )
+    def _compute_order_bridge_has_map_point(self):
+        for partner in self:
+            addr = partner.order_bridge_partner_address_ids[:1]
+            if not addr:
+                partner.order_bridge_has_map_point = False
+                continue
+            lat = float(addr.latitude or 0.0)
+            lon = float(addr.longitude or 0.0)
+            partner.order_bridge_has_map_point = lat != 0.0 and lon != 0.0
 
     @api.depends('order_bridge_device_ids.active', 'order_bridge_device_ids.phone_validated')
     def _compute_order_bridge_flags(self):
