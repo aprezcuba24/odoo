@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { _t } from "@web/core/l10n/translation";
 import { downloadFile } from "@web/core/network/download";
 import { useService } from "@web/core/utils/hooks";
@@ -26,12 +27,15 @@ function base64ToBlob(base64, mimetype) {
 export function setupPrepareMessaging(component) {
     component.notification = useService("notification");
     component.orm = useService("orm");
+    component.actionService = useService("action");
+    component.dialog = useService("dialog");
     component.prepareMessaging = useState({
         active: false,
         filterGroupId: null,
         filterSearchItemId: null,
         selecting: false,
         generating: false,
+        assigning: false,
     });
     useSubEnv({ orderBridgePrepareMessaging: component.prepareMessaging });
 }
@@ -103,7 +107,7 @@ export const PrepareMessagingMethods = {
     },
 
     async onDownloadMessagingGuide() {
-        if (this.prepareMessaging.generating) {
+        if (this.prepareMessaging.generating || this.prepareMessaging.assigning) {
             return;
         }
         const resIds = await this.model.root.getResIds(true);
@@ -128,6 +132,81 @@ export const PrepareMessagingMethods = {
         } finally {
             this.prepareMessaging.generating = false;
         }
+    },
+
+    async onAssignMessenger() {
+        if (
+            this.prepareMessaging.assigning ||
+            this.prepareMessaging.generating ||
+            this.prepareMessaging.selecting
+        ) {
+            return;
+        }
+        const resIds = await this.model.root.getResIds(true);
+        if (!resIds.length) {
+            this.notification.add(_t("Seleccione al menos un pedido."), {
+                type: "warning",
+            });
+            return;
+        }
+        this.prepareMessaging.assigning = true;
+        try {
+            await this.actionService.doAction(
+                "order_bridge.action_order_bridge_assign_messenger_wizard",
+                {
+                    additionalContext: {
+                        active_model: "sale.order",
+                        active_ids: resIds,
+                        active_id: resIds[0],
+                    },
+                    onClose: async (infos) => {
+                        this.prepareMessaging.assigning = false;
+                        if (!infos || !infos.assigned) {
+                            return;
+                        }
+                        await this.model.load();
+                        await this._showAssignMessengerNextStepDialog(infos);
+                    },
+                }
+            );
+        } catch (error) {
+            this.prepareMessaging.assigning = false;
+            throw error;
+        }
+    },
+
+    async _showAssignMessengerNextStepDialog(infos) {
+        const count = infos.count || 0;
+        const messengerName = infos.messenger_name || "";
+        const body = messengerName
+            ? _t(
+                  "Se asignó %(messenger)s a %(count)s pedido(s). Puede volver a la lista de pedidos o continuar en esta pantalla.",
+                  { messenger: messengerName, count }
+              )
+            : _t(
+                  "Se asignó el mensajero a %(count)s pedido(s). Puede volver a la lista de pedidos o continuar en esta pantalla.",
+                  { count }
+              );
+        return new Promise((resolve) => {
+            this.dialog.add(ConfirmationDialog, {
+                title: _t("Mensajero asignado"),
+                body,
+                confirmLabel: _t("Continuar"),
+                confirmClass: "btn-primary",
+                cancelLabel: _t("Volver a pedidos"),
+                confirm: async () => {
+                    // Stay in prepare-messaging mode with current selection.
+                },
+                cancel: async () => {
+                    await this.onCancelPrepareMessaging();
+                },
+                dismiss: async () => {
+                    // Closing the dialog keeps the mode active (same as Continuar).
+                },
+            }, {
+                onClose: resolve,
+            });
+        });
     },
 
     async _waitModelIdle() {

@@ -7,6 +7,7 @@ from . import dispatch_mixin
 from . import fcm
 from . import general_settings
 from . import ir_http
+from . import messenger
 from . import municipality
 from . import partner_address
 from . import push_token
