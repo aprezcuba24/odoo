@@ -33,8 +33,14 @@ patch(PosStore.prototype, {
         const maybeCombo =
             productTmpl?.isCombo?.() || (productTmpl?.combo_ids?.length ?? 0) > 0;
         const draftQty = vals.qty ?? (order.preset_id?.is_return ? -1 : 1);
-        const draftProduct = vals.product_id || productTmpl?.product_variant_ids?.[0];
-        const productId = draftProduct?.id ?? draftProduct;
+        // Only resolve a draft variant when it is already known. Configurable templates
+        // open the configurator in super.addLineToOrder; checking product_variant_ids[0]
+        // would block the whole product if that first variant is out of stock.
+        const knownVariant =
+            vals.product_id ||
+            opts.presetVariant ||
+            (!productTmpl?.isConfigurable?.() && productTmpl?.product_variant_ids?.[0]);
+        const productId = knownVariant?.id ?? knownVariant;
         const isWeighted =
             Boolean(productTmpl?.to_weight) && Boolean(this.config.iface_electronic_scale);
 
