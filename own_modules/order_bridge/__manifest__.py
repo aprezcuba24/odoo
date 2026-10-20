@@ -60,6 +60,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'views/product_template_views.xml',
         'views/sale_order_views.xml',
         'views/fcm_send_wizard_views.xml',
+        'views/assign_messenger_wizard_views.xml',
         'views/order_bridge_menu.xml',
     ],
     'license': 'LGPL-3',

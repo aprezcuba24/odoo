@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from . import test_assign_messenger_wizard
 from . import test_backfill_company
 from . import test_fcm_send_wizard
 from . import test_local_dotenv

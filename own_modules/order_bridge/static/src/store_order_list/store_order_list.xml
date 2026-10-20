@@ -14,7 +14,7 @@
             t-if="prepareMessaging.active"
             type="button"
             class="btn btn-success o_order_bridge_generate_messaging_pdf"
-            t-att-disabled="prepareMessaging.generating or prepareMessaging.selecting"
+            t-att-disabled="prepareMessaging.generating or prepareMessaging.selecting or prepareMessaging.assigning"
             t-on-click="onDownloadMessagingGuide"
         >
             <t t-if="prepareMessaging.generating">Generando…</t>
@@ -23,8 +23,17 @@
         <button
             t-if="prepareMessaging.active"
             type="button"
+            class="btn btn-primary o_order_bridge_assign_messenger"
+            t-att-disabled="prepareMessaging.generating or prepareMessaging.selecting or prepareMessaging.assigning"
+            t-on-click="onAssignMessenger"
+        >
+            Asignar mensajero
+        </button>
+        <button
+            t-if="prepareMessaging.active"
+            type="button"
             class="btn btn-secondary o_order_bridge_cancel_prepare_messaging"
-            t-att-disabled="prepareMessaging.generating"
+            t-att-disabled="prepareMessaging.generating or prepareMessaging.assigning"
             t-on-click="onCancelPrepareMessaging"
         >
             Cancelar
