@@ -134,6 +134,7 @@ class TestMobileDeliveriesApi(HttpCase):
         self.assertAlmostEqual(item['point']['latitude'], 23.18, places=5)
         self.assertIsInstance(item['description'], str)
         self.assertIn('Arroz', item['description'])
+        self.assertEqual(item['notes'], [])
         self.assertNotIn('status', item)
         self.assertNotIn('syncStatus', item)
 
@@ -308,3 +309,130 @@ class TestMobileDeliveriesApi(HttpCase):
             timeout=60,
         )
         self.assertEqual(res.status_code, 401, res.text)
+
+    def test_get_deliveries_includes_admin_and_messenger_notes(self):
+        order = self._create_ready_order()
+        self.env['order_bridge.delivery.note'].create({
+            'order_id': order.id,
+            'author': 'admin',
+            'body': 'Tocar el timbre dos veces',
+        })
+        self.env['order_bridge.delivery.note'].create({
+            'order_id': order.id,
+            'author': 'messenger',
+            'body': 'Cliente no estaba',
+            'messenger_id': self.messenger.id,
+        })
+        res = self.url_open(
+            '/api/mobile/v1/deliveries',
+            headers=self._auth_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        notes = json.loads(res.text)[0]['notes']
+        self.assertEqual(len(notes), 2)
+        self.assertEqual(notes[0]['author'], 'admin')
+        self.assertEqual(notes[0]['body'], 'Tocar el timbre dos veces')
+        self.assertRegex(notes[0]['createdAt'], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$')
+        self.assertEqual(notes[1]['author'], 'messenger')
+        self.assertEqual(notes[1]['body'], 'Cliente no estaba')
+
+    def test_post_note_success_marks_unread(self):
+        order = self._create_ready_order()
+        self.assertFalse(order.order_bridge_unread_messenger_note)
+        headers = {
+            **self._auth_headers(),
+            'Content-Type': 'application/json',
+        }
+        res = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/notes',
+            data=json.dumps({'note': '  Dejé el paquete en portería  '}),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 201, res.text)
+        data = json.loads(res.text)
+        self.assertEqual(data['author'], 'messenger')
+        self.assertEqual(data['body'], 'Dejé el paquete en portería')
+        self.assertRegex(data['createdAt'], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$')
+
+        order.invalidate_recordset()
+        self.assertTrue(order.order_bridge_unread_messenger_note)
+        self.assertEqual(len(order.order_bridge_delivery_note_ids), 1)
+        note = order.order_bridge_delivery_note_ids[0]
+        self.assertEqual(note.author, 'messenger')
+        self.assertFalse(note.reviewed)
+        self.assertEqual(note.messenger_id, self.messenger)
+
+        order.action_order_bridge_mark_messenger_notes_reviewed()
+        order.invalidate_recordset()
+        self.assertFalse(order.order_bridge_unread_messenger_note)
+        self.assertTrue(note.reviewed)
+
+    def test_post_note_rejects_foreign_messenger_and_invalid_body(self):
+        order = self._create_ready_order()
+        headers = {
+            **self._auth_headers(self.other_messenger.api_key),
+            'Content-Type': 'application/json',
+        }
+        res_foreign = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/notes',
+            data=json.dumps({'note': 'hola'}),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res_foreign.status_code, 404, res_foreign.text)
+
+        headers_ok = {
+            **self._auth_headers(),
+            'Content-Type': 'application/json',
+        }
+        res_empty = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/notes',
+            data=json.dumps({'note': '   '}),
+            headers=headers_ok,
+            timeout=60,
+        )
+        self.assertEqual(res_empty.status_code, 400, res_empty.text)
+        self.assertEqual(json.loads(res_empty.text)['error'], 'invalid_note')
+
+        res_missing = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/notes',
+            data=json.dumps({}),
+            headers=headers_ok,
+            timeout=60,
+        )
+        self.assertEqual(res_missing.status_code, 400, res_missing.text)
+
+    def test_post_note_409_when_reviewing(self):
+        order = self._create_store_order(store_state=STATE_REVIEWING)
+        headers = {
+            **self._auth_headers(),
+            'Content-Type': 'application/json',
+        }
+        res = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/notes',
+            data=json.dumps({'note': 'nota'}),
+            headers=headers,
+            timeout=60,
+        )
+        # Not in GET list; POST still finds the order but state conflicts.
+        self.assertEqual(res.status_code, 409, res.text)
+        self.assertEqual(json.loads(res.text)['error'], 'conflict')
+
+    def test_post_note_allowed_when_delivered(self):
+        order = self._create_ready_order()
+        order.write({'order_bridge_store_state': STATE_DELIVERED})
+        headers = {
+            **self._auth_headers(),
+            'Content-Type': 'application/json',
+        }
+        res = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/notes',
+            data=json.dumps({'note': 'Entregué y cobré'}),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 201, res.text)
+        order.invalidate_recordset()
+        self.assertTrue(order.order_bridge_unread_messenger_note)

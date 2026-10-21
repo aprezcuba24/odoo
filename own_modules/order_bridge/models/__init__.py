@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from . import banner
+from . import delivery_note
 from . import device
 from . import fs_storage_hook
 from . import dispatch_mixin

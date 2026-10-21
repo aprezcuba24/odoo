@@ -118,6 +118,21 @@
                         options="{'no_create': True}"
                     />
                     <field
+                        name="order_bridge_unread_messenger_note"
+                        widget="boolean"
+                        readonly="1"
+                        invisible="not order_bridge_unread_messenger_note"
+                    />
+                    <button
+                        name="action_order_bridge_mark_messenger_notes_reviewed"
+                        string="Marcar notas del mensajero como revisadas"
+                        type="object"
+                        class="btn-secondary"
+                        groups="sales_team.group_sale_salesman"
+                        invisible="not order_bridge_unread_messenger_note"
+                        colspan="2"
+                    />
+                    <field
                         name="order_bridge_delivery_received_at"
                         readonly="1"
                         invisible="not order_bridge_delivery_received_at"
@@ -129,6 +144,30 @@
                     />
                     <field name="order_bridge_snapshot_address_id" readonly="1" invisible="not order_bridge_snapshot_address_id" options="{'no_create': True}"/>
                 </group>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page
+                    string="Notas de entrega"
+                    name="order_bridge_delivery_notes"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin"
+                >
+                    <field
+                        name="order_bridge_delivery_note_ids"
+                        nolabel="1"
+                        readonly="order_bridge_store_state == 'canceled'"
+                        context="{'default_author': 'admin'}"
+                    >
+                        <list editable="bottom" create="true" delete="false">
+                            <field name="create_date" string="Fecha" readonly="1" optional="show"/>
+                            <field name="author" readonly="1"/>
+                            <field name="body" required="1"/>
+                            <field name="reviewed" readonly="1" optional="hide"/>
+                            <field name="messenger_id" readonly="1" optional="hide"/>
+                            <field name="user_id" readonly="1" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
             </xpath>
         </field>
     </record>
@@ -166,6 +205,12 @@
             <xpath expr="//list" position="inside">
                 <field name="order_bridge_origin" string="Origen"/>
                 <field name="order_bridge_messenger_id"/>
+                <field
+                    name="order_bridge_unread_messenger_note"
+                    string="Nota mensajero"
+                    widget="boolean"
+                    optional="show"
+                />
                 <field name="order_bridge_device_phone_validated" string="Dispositivo OK"/>
                 <field name="order_bridge_partner_has_map_point" string="Coordenadas" widget="boolean"/>
                 <field name="order_bridge_ref" optional="hide"/>
@@ -209,6 +254,11 @@
                     name="filter_packing"
                     string="Packing"
                     domain="[('order_bridge_store_state', 'in', ('reviewing', 'negotiating'))]"
+                />
+                <filter
+                    name="filter_messenger_notes"
+                    string="Notas del mensajero"
+                    domain="[('order_bridge_unread_messenger_note', '=', True)]"
                 />
             </filter>
         </field>

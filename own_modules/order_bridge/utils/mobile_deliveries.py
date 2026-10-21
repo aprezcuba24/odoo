@@ -16,8 +16,27 @@ from odoo.addons.order_bridge.utils.order_contact import (
 
 def utc_now_iso_ms() -> str:
     """ISO-8601 UTC with milliseconds and Z suffix."""
-    now = datetime.now(timezone.utc)
-    return now.strftime('%Y-%m-%dT%H:%M:%S.') + f'{int(now.microsecond / 1000):03d}Z'
+    return datetime_to_iso_ms(datetime.now(timezone.utc))
+
+
+def datetime_to_iso_ms(dt) -> str:
+    """Format a datetime as ISO-8601 UTC with milliseconds and Z suffix."""
+    if dt is None:
+        return utc_now_iso_ms()
+    if getattr(dt, 'tzinfo', None) is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.strftime('%Y-%m-%dT%H:%M:%S.') + f'{int(dt.microsecond / 1000):03d}Z'
+
+
+def delivery_note_to_remote(note) -> dict:
+    """Map order_bridge.delivery.note to the RemoteDelivery note shape."""
+    return {
+        'author': note.author,
+        'body': note.body or '',
+        'createdAt': datetime_to_iso_ms(note.create_date),
+    }
 
 
 def parse_device_timestamp(value) -> str | None:
@@ -82,6 +101,9 @@ def order_delivery_description(order) -> str:
 def order_to_remote_delivery(order) -> dict:
     """Map a sale.order to the RemoteDelivery JSON shape (camelCase)."""
     partner = order.partner_id
+    notes = order.order_bridge_delivery_note_ids.sorted(
+        key=lambda n: (n.create_date or fields.Datetime.now(), n.id),
+    )
     return {
         'identifier': str(order.id),
         'reference': order.name or '',
@@ -91,4 +113,5 @@ def order_to_remote_delivery(order) -> dict:
         'date': order_delivery_date(order),
         'description': order_delivery_description(order),
         'point': delivery_point_from_partner(partner),
+        'notes': [delivery_note_to_remote(note) for note in notes],
     }

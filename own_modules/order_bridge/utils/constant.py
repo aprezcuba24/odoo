@@ -57,3 +57,7 @@ ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS = {
     STATE_DELIVERED: {STATE_CANCELED},
     STATE_CANCELED: set(),
 }
+
+# Notas de entrega (API móvil + formulario del pedido).
+DELIVERY_NOTE_MAX_LENGTH = 2000
+MESSENGER_NOTE_ACTIVITY_SUMMARY = 'Nota del mensajero'

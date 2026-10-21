@@ -143,6 +143,22 @@ class TestOrderBridgeMessagingGuide(TransactionCase):
         created_at = fields.Datetime.context_timestamp(order, order.create_date)
         self.assertIn(created_at.strftime('%d/%m/%Y %H:%M'), html)
         self.assertNotIn('Pedido creado por el administrador.', html)
+        self.assertNotIn('Notas para el mensajero', html)
+
+        self.env['order_bridge.delivery.note'].create({
+            'order_id': order.id,
+            'author': 'admin',
+            'body': 'Llamar antes de llegar',
+        })
+        html_notes = self.env['ir.actions.report']._render_qweb_html(
+            'order_bridge.report_messaging_guide',
+            order.ids,
+            data={'generated_at': '13/10/2026 11:16'},
+        )[0]
+        if isinstance(html_notes, bytes):
+            html_notes = html_notes.decode()
+        self.assertIn('Notas para el mensajero', html_notes)
+        self.assertIn('Llamar antes de llegar', html_notes)
 
         admin_order, _admin_product = self._create_store_order(
             device_key='mg-admin',
