@@ -13,6 +13,7 @@ from odoo.addons.order_bridge.utils import order_stock
 from odoo.addons.order_bridge.utils.constant import (
     API_LANG,
     DEFAULT_STORE_STATE,
+    MESSENGER_NOTE_ACTIVITY_SUMMARY,
     STATE_CANCELED,
     STATE_DELIVERED,
     STATE_NEGOTIATING,
@@ -118,6 +119,19 @@ class SaleOrder(models.Model):
         copy=False,
         readonly=True,
         help='deviceTimestamp ISO-8601 enviado por la APK al marcar la entrega.',
+    )
+    order_bridge_delivery_note_ids = fields.One2many(
+        'order_bridge.delivery.note',
+        'order_id',
+        string='Notas de entrega',
+        copy=False,
+    )
+    order_bridge_unread_messenger_note = fields.Boolean(
+        string='Notas del mensajero sin revisar',
+        default=False,
+        copy=False,
+        index=True,
+        help='Hay notas del mensajero pendientes de revisión en este pedido.',
     )
 
     _sql_constraints = [
@@ -413,6 +427,88 @@ class SaleOrder(models.Model):
         """Product lines for the messaging guide (no sections/notes)."""
         self.ensure_one()
         return self.order_line.filtered(lambda l: not l.display_type and l.product_id)
+
+    def order_bridge_report_admin_delivery_notes(self):
+        """Admin delivery notes for the messaging guide (chronological)."""
+        self.ensure_one()
+        return self.order_bridge_delivery_note_ids.filtered(lambda n: n.author == 'admin')
+
+    def _order_bridge_note_activity_user(self):
+        """User who should receive the messenger-note activity."""
+        self.ensure_one()
+        if self.user_id:
+            return self.user_id
+        Users = self.env['res.users']
+        company = self.company_id
+        manager_group = self.env.ref('sales_team.group_sale_manager', raise_if_not_found=False)
+        salesman_group = self.env.ref('sales_team.group_sale_salesman', raise_if_not_found=False)
+        domain_base = [
+            ('share', '=', False),
+            ('active', '=', True),
+            ('company_ids', 'in', company.id),
+        ]
+        if manager_group:
+            user = Users.search(
+                domain_base + [('all_group_ids', 'in', manager_group.id)],
+                limit=1,
+                order='id',
+            )
+            if user:
+                return user
+        if salesman_group:
+            return Users.search(
+                domain_base + [('all_group_ids', 'in', salesman_group.id)],
+                limit=1,
+                order='id',
+            )
+        return Users.browse()
+
+    def _order_bridge_on_messenger_note(self, note):
+        """Mark unread, post chatter copy and schedule one open activity."""
+        self.ensure_one()
+        self.sudo().write({'order_bridge_unread_messenger_note': True})
+        messenger_name = note.messenger_id.name or _('Mensajero')
+        self.sudo().message_post(
+            body=_(
+                'Nota del mensajero %(name)s: %(body)s',
+                name=messenger_name,
+                body=note.body,
+            ),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+        todo = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        existing = self.activity_ids.filtered(
+            lambda a: a.summary == MESSENGER_NOTE_ACTIVITY_SUMMARY
+            and (not todo or a.activity_type_id == todo)
+        )
+        if existing:
+            return
+        user = self._order_bridge_note_activity_user()
+        if not user:
+            return
+        self.sudo().activity_schedule(
+            'mail.mail_activity_data_todo',
+            summary=MESSENGER_NOTE_ACTIVITY_SUMMARY,
+            note=note.body,
+            user_id=user.id,
+        )
+
+    def action_order_bridge_mark_messenger_notes_reviewed(self):
+        """Mark messenger notes reviewed, clear badge and close related activities."""
+        for order in self:
+            pending = order.order_bridge_delivery_note_ids.filtered(
+                lambda n: n.author == 'messenger' and not n.reviewed
+            )
+            if pending:
+                pending.write({'reviewed': True})
+            order.order_bridge_unread_messenger_note = False
+            activities = order.activity_ids.filtered(
+                lambda a: a.summary == MESSENGER_NOTE_ACTIVITY_SUMMARY
+            )
+            if activities:
+                activities.action_feedback(feedback=_('Notas del mensajero revisadas'))
+        return True
 
     def write(self, vals):
         if 'order_bridge_store_state' in vals:

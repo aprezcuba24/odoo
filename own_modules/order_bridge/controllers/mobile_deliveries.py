@@ -9,11 +9,13 @@ from odoo.exceptions import LockError, UserError
 from odoo.http import request
 
 from odoo.addons.order_bridge.utils.constant import (
+    DELIVERY_NOTE_MAX_LENGTH,
     STATE_DELIVERED,
     STATE_READY_FOR_DELIVERY,
 )
 from odoo.addons.order_bridge.utils.decorators import CORS_HEADERS, api_cors_preflight
 from odoo.addons.order_bridge.utils.mobile_deliveries import (
+    delivery_note_to_remote,
     order_to_remote_delivery,
     parse_device_timestamp,
     utc_now_iso_ms,
@@ -157,3 +159,62 @@ class MobileDeliveriesController(http.Controller):
             return _json({'error': 'conflict'}, 409)
 
         return _json({'serverReceivedAt': stamp}, 200)
+
+    @http.route(
+        '/api/mobile/v1/deliveries/<path:identifier>/notes',
+        type='http',
+        auth='public',
+        methods=['POST', 'OPTIONS'],
+        csrf=False,
+    )
+    def create_delivery_note(self, identifier, **kwargs):
+        if request.httprequest.method == 'OPTIONS':
+            return api_cors_preflight()
+        messenger = _resolve_messenger()
+        if not messenger:
+            return _json({'error': 'unauthorized'}, 401)
+
+        body = request.httprequest.get_data(cache=True, as_text=True) or ''
+        try:
+            payload = json.loads(body) if body.strip() else {}
+        except json.JSONDecodeError:
+            return _json({'error': 'invalid_json'}, 400)
+        if not isinstance(payload, dict):
+            return _json({'error': 'invalid_body'}, 400)
+
+        note_raw = payload.get('note')
+        if not isinstance(note_raw, str):
+            return _json({'error': 'invalid_note'}, 400)
+        note_text = note_raw.strip()
+        if not note_text or len(note_text) > DELIVERY_NOTE_MAX_LENGTH:
+            return _json({'error': 'invalid_note'}, 400)
+
+        order_id = _parse_order_identifier(identifier)
+        if order_id is None:
+            return _json({'error': 'not_found'}, 404)
+
+        Order = request.env['sale.order'].sudo()
+        order = Order.browse(order_id).exists()
+        if not order:
+            return _json({'error': 'not_found'}, 404)
+        if order.order_bridge_messenger_id.id != messenger.id:
+            return _json({'error': 'not_found'}, 404)
+        if order.order_bridge_origin not in ('app', 'admin'):
+            return _json({'error': 'not_found'}, 404)
+
+        try:
+            order.lock_for_update()
+        except LockError:
+            return _json({'error': 'locked'}, 429)
+
+        order.invalidate_recordset()
+        if order.order_bridge_store_state not in (STATE_READY_FOR_DELIVERY, STATE_DELIVERED):
+            return _json({'error': 'conflict'}, 409)
+
+        note = request.env['order_bridge.delivery.note'].sudo().create({
+            'order_id': order.id,
+            'author': 'messenger',
+            'body': note_text,
+            'messenger_id': messenger.id,
+        })
+        return _json(delivery_note_to_remote(note), 201)

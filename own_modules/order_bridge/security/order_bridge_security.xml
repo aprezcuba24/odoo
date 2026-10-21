@@ -81,4 +81,11 @@
         <field name="domain_force">[('sale_order_id.company_id', 'in', company_ids)]</field>
         <field name="global" eval="True"/>
     </record>
+
+    <record id="order_bridge_delivery_note_company_rule" model="ir.rule">
+        <field name="name">Nota de entrega Tienda Apk: multi-company</field>
+        <field name="model_id" ref="model_order_bridge_delivery_note"/>
+        <field name="domain_force">[('order_id.company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
 </odoo>

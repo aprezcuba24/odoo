@@ -63,6 +63,19 @@
                             color: #212529;
                             line-height: 1.45;
                         }
+                        .o_ob_mg_notes_title {
+                            font-size: 15px;
+                            font-weight: 700;
+                            color: #343a40;
+                            margin-bottom: 4px;
+                        }
+                        .o_ob_mg_note_body {
+                            font-size: 16px;
+                            color: #212529;
+                            line-height: 1.4;
+                            margin-top: 4px;
+                            white-space: pre-wrap;
+                        }
                         .o_ob_mg_products {
                             padding: 4px 0 8px;
                             border-bottom: 1px solid #ced4da;
@@ -183,6 +196,14 @@
                                 <div class="o_ob_mg_section o_ob_mg_phone" t-esc="doc.order_bridge_report_phone() or '—'"/>
 
                                 <div class="o_ob_mg_section o_ob_mg_address" t-esc="doc.order_bridge_report_address() or '—'"/>
+
+                                <t t-set="admin_notes" t-value="doc.order_bridge_report_admin_delivery_notes()"/>
+                                <div t-if="admin_notes" class="o_ob_mg_section o_ob_mg_notes">
+                                    <div class="o_ob_mg_notes_title">Notas para el mensajero</div>
+                                    <t t-foreach="admin_notes" t-as="dnote">
+                                        <div class="o_ob_mg_note_body" t-esc="dnote.body"/>
+                                    </t>
+                                </div>
 
                                 <div class="o_ob_mg_products">
                                     <t t-foreach="product_lines" t-as="line">
