@@ -67,6 +67,18 @@ def delivery_point_from_partner(partner) -> dict | None:
     return {'longitude': lon, 'latitude': lat}
 
 
+def delivery_point_from_order(order) -> dict | None:
+    """WGS84 point of the order snapshot; without snapshot, the customer's current point."""
+    snap = order.order_bridge_snapshot_address_id
+    if not snap:
+        return delivery_point_from_partner(order.partner_id)
+    lat = float(snap.latitude or 0.0)
+    lon = float(snap.longitude or 0.0)
+    if lat == 0.0 or lon == 0.0:
+        return None
+    return {'longitude': lon, 'latitude': lat}
+
+
 def order_delivery_date(order) -> str:
     """Order day as YYYY-MM-DD in the company timezone."""
     dt = order.date_order
@@ -112,6 +124,6 @@ def order_to_remote_delivery(order) -> dict:
         'address': delivery_address_text(order) or '',
         'date': order_delivery_date(order),
         'description': order_delivery_description(order),
-        'point': delivery_point_from_partner(partner),
+        'point': delivery_point_from_order(order),
         'notes': [delivery_note_to_remote(note) for note in notes],
     }
