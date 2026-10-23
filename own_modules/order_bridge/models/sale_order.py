@@ -22,6 +22,7 @@ from odoo.addons.order_bridge.utils.constant import (
     ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS,
 )
 from odoo.addons.order_bridge.utils.order_contact import (
+    address_text,
     delivery_address_text,
     order_phone,
 )
@@ -92,6 +93,14 @@ class SaleOrder(models.Model):
         readonly=True,
         copy=False,
         ondelete='set null',
+    )
+    order_bridge_order_contact = fields.Text(
+        string='Datos de entrega del pedido',
+        compute='_compute_order_bridge_contact_summaries',
+    )
+    order_bridge_customer_contact = fields.Text(
+        string='Datos actuales del cliente',
+        compute='_compute_order_bridge_contact_summaries',
     )
     order_bridge_store_state = fields.Selection(
         selection=STORE_STATE_VALID_CHOICES,
@@ -415,6 +424,110 @@ class SaleOrder(models.Model):
             'mimetype': 'application/pdf',
         }
 
+    def _order_bridge_customer_address(self):
+        """Dirección Tienda Apk actual del cliente (registro vacío si no existe)."""
+        self.ensure_one()
+        return self.env['order_bridge.partner_address'].sudo().search(
+            [('partner_id', '=', self.partner_id.id)], limit=1,
+        )
+
+    def _order_bridge_customer_phone(self):
+        """Teléfono actual del cliente; si falta, el del dispositivo API."""
+        self.ensure_one()
+        phone = (self.partner_id.phone or '').strip()
+        if not phone and self.order_bridge_device_id:
+            phone = (self.order_bridge_device_id.phone or '').strip()
+        return phone
+
+    def _order_bridge_store_customer_snapshot(self):
+        """Crea o sustituye la instantánea con los datos actuales del cliente.
+
+        Devuelve False (sin cambios) si el cliente no tiene dirección Tienda Apk.
+        """
+        self.ensure_one()
+        addr = self._order_bridge_customer_address()
+        if not addr:
+            return False
+        vals = {
+            'street': addr.street or '',
+            'neighborhood_id': addr.neighborhood_id.id if addr.neighborhood_id else False,
+            'municipality_id': addr.municipality_id.id if addr.municipality_id else False,
+            'state': addr.state or '',
+            'phone': self._order_bridge_customer_phone(),
+            'latitude': addr.latitude or 0.0,
+            'longitude': addr.longitude or 0.0,
+        }
+        snap = self.order_bridge_snapshot_address_id.sudo()
+        if snap:
+            snap.write(vals)
+        else:
+            snap = self.env['order_bridge.order_address_snapshot'].sudo().create(
+                {'sale_order_id': self.id, **vals},
+            )
+            self.write({'order_bridge_snapshot_address_id': snap.id})
+        return True
+
+    @staticmethod
+    def _order_bridge_contact_block(phone, address, latitude, longitude):
+        coords = f'{latitude}, {longitude}' if latitude and longitude else '—'
+        return _(
+            'Teléfono: %(phone)s\nDirección: %(address)s\nCoordenadas: %(coords)s',
+            phone=phone or '—',
+            address=address or '—',
+            coords=coords,
+        )
+
+    @api.depends(
+        'order_bridge_snapshot_address_id.street',
+        'order_bridge_snapshot_address_id.neighborhood_id',
+        'order_bridge_snapshot_address_id.municipality_id',
+        'order_bridge_snapshot_address_id.state',
+        'order_bridge_snapshot_address_id.phone',
+        'order_bridge_snapshot_address_id.latitude',
+        'order_bridge_snapshot_address_id.longitude',
+        'partner_id.phone',
+        'partner_id.order_bridge_partner_address_ids.street',
+        'partner_id.order_bridge_partner_address_ids.neighborhood_id',
+        'partner_id.order_bridge_partner_address_ids.municipality_id',
+        'partner_id.order_bridge_partner_address_ids.state',
+        'partner_id.order_bridge_partner_address_ids.latitude',
+        'partner_id.order_bridge_partner_address_ids.longitude',
+        'order_bridge_device_id.phone',
+    )
+    def _compute_order_bridge_contact_summaries(self):
+        for order in self:
+            snap = order.order_bridge_snapshot_address_id.sudo()
+            if snap:
+                order.order_bridge_order_contact = self._order_bridge_contact_block(
+                    (snap.phone or '').strip(),
+                    address_text(snap),
+                    snap.latitude,
+                    snap.longitude,
+                )
+            else:
+                order.order_bridge_order_contact = _('El pedido no tiene dirección.')
+            addr = order._order_bridge_customer_address()
+            order.order_bridge_customer_contact = self._order_bridge_contact_block(
+                order._order_bridge_customer_phone(),
+                address_text(addr),
+                addr.latitude,
+                addr.longitude,
+            )
+
+    def action_order_bridge_replace_with_customer_address(self):
+        """Sustituye los datos de entrega del pedido por los actuales del cliente."""
+        for order in self:
+            if not order._order_bridge_store_customer_snapshot():
+                raise UserError(
+                    _(
+                        'El cliente %(partner)s no tiene dirección Tienda Apk; '
+                        'el pedido %(name)s no se ha modificado.',
+                        partner=order.partner_id.display_name,
+                        name=order.display_name,
+                    )
+                )
+        return True
+
     def order_bridge_report_phone(self):
         self.ensure_one()
         return order_phone(self)
@@ -543,23 +656,9 @@ class SaleOrder(models.Model):
                 if ref:
                     vals['order_bridge_ref'] = ref
         records = super().create(vals_list)
-        PartnerAddress = self.env['order_bridge.partner_address'].sudo()
-        Snapshot = self.env['order_bridge.order_address_snapshot'].sudo()
         for order, vals in zip(records, vals_list):
-            pid = vals.get('partner_id')
-            if pid:
-                if isinstance(pid, (list, tuple)):
-                    pid = pid[0]
-                addr = PartnerAddress.search([('partner_id', '=', pid)], limit=1)
-                if addr:
-                    snap = Snapshot.create({
-                        'sale_order_id': order.id,
-                        'street': addr.street or '',
-                        'neighborhood_id': addr.neighborhood_id.id if addr.neighborhood_id else False,
-                        'municipality_id': addr.municipality_id.id if addr.municipality_id else False,
-                        'state': addr.state or '',
-                    })
-                    order.write({'order_bridge_snapshot_address_id': snap.id})
+            if vals.get('partner_id'):
+                order._order_bridge_store_customer_snapshot()
             promo_code = self.env.context.get('order_bridge_promo_code')
             if promo_code:
                 order._order_bridge_apply_promo_code(promo_code)

@@ -164,6 +164,9 @@ class OrderBridgeOrderAddressSnapshot(models.Model):
         ondelete='set null',
     )
     state = fields.Char(string='Estado / provincia', readonly=True)
+    phone = fields.Char(string='Teléfono', readonly=True)
+    latitude = fields.Float(string='Latitud', digits=(10, 7), readonly=True)
+    longitude = fields.Float(string='Longitud', digits=(10, 7), readonly=True)
 
     _sql_constraints = [
         ('sale_order_unique', 'unique(sale_order_id)', 'Una instantánea de dirección por pedido de venta.'),
