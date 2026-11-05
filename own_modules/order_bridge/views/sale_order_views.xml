@@ -109,10 +109,6 @@
                     <div invisible="order_bridge_origin != 'admin'" colspan="2" class="text-muted">
                         Pedido creado por el administrador.
                     </div>
-                    <field name="order_bridge_ref" readonly="1"/>
-                    <field name="order_bridge_client_order_id" readonly="1" optional="hide"/>
-                    <field name="order_bridge_device_id" options="{'no_create': True}"/>
-                    <field name="order_bridge_device_phone_validated" readonly="1"/>
                     <field
                         name="order_bridge_messenger_id"
                         options="{'no_create': True}"
@@ -142,7 +138,6 @@
                         readonly="1"
                         invisible="not order_bridge_delivery_device_at"
                     />
-                    <field name="order_bridge_snapshot_address_id" readonly="1" invisible="not order_bridge_snapshot_address_id" options="{'no_create': True}"/>
                 </group>
             </xpath>
             <xpath expr="//notebook" position="inside">
@@ -233,9 +228,7 @@
                     widget="boolean"
                     optional="show"
                 />
-                <field name="order_bridge_device_phone_validated" string="Dispositivo OK"/>
                 <field name="order_bridge_partner_has_map_point" string="Coordenadas" widget="boolean"/>
-                <field name="order_bridge_ref" optional="hide"/>
             </xpath>
         </field>
     </record>
