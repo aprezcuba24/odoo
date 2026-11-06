@@ -126,6 +126,156 @@ class TestOrderBridgeApi(HttpCase):
         self.assertEqual(res_no_header.status_code, 200, res_no_header.text)
         device.invalidate_recordset(['apk_version'])
         self.assertEqual(device.apk_version, '2.3.0')
+        self.assertEqual(device.client_channel, 'apk')
+
+    def test_register_keeps_one_active_key_per_client_channel(self):
+        phone = '60033344'
+        Device = self.env['order_bridge.device']
+
+        apk_key = str(uuid.uuid4())
+        res_apk = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': apk_key}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '1.0.0 apk',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_apk.status_code, 200, res_apk.text)
+        apk_device = Device.search([('device_key', '=', apk_key)], limit=1)
+        self.assertTrue(apk_device.active)
+        self.assertEqual(apk_device.client_channel, 'apk')
+        apk_device.action_validate_phone()
+        self.assertTrue(apk_device.phone_validated)
+
+        web_key = str(uuid.uuid4())
+        res_web = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': web_key}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '1.0.0 web',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_web.status_code, 200, res_web.text)
+        apk_device.invalidate_recordset()
+        web_device = Device.search([('device_key', '=', web_key)], limit=1)
+        self.assertTrue(apk_device.active)
+        self.assertTrue(apk_device.phone_validated)
+        self.assertTrue(web_device.active)
+        self.assertEqual(web_device.client_channel, 'web')
+        self.assertFalse(web_device.phone_validated)
+
+        apk_key_2 = str(uuid.uuid4())
+        res_apk_2 = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': apk_key_2}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '1.1.0 apk',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_apk_2.status_code, 200, res_apk_2.text)
+        apk_device.invalidate_recordset()
+        web_device.invalidate_recordset()
+        apk_device_2 = Device.search([('device_key', '=', apk_key_2)], limit=1)
+        self.assertFalse(apk_device.active)
+        self.assertTrue(web_device.active)
+        self.assertTrue(apk_device_2.active)
+        self.assertEqual(apk_device_2.client_channel, 'apk')
+        self.assertFalse(apk_device_2.phone_validated)
+
+        web_key_2 = str(uuid.uuid4())
+        res_web_2 = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': web_key_2}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '1.1.0 web',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_web_2.status_code, 200, res_web_2.text)
+        web_device.invalidate_recordset()
+        apk_device_2.invalidate_recordset()
+        web_device_2 = Device.search([('device_key', '=', web_key_2)], limit=1)
+        self.assertFalse(web_device.active)
+        self.assertTrue(apk_device_2.active)
+        self.assertTrue(web_device_2.active)
+        self.assertEqual(web_device_2.client_channel, 'web')
+
+        # Unidentified channel (no tokens) → apk slot.
+        apk_key_3 = str(uuid.uuid4())
+        res_plain = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': apk_key_3}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '2.1.0',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_plain.status_code, 200, res_plain.text)
+        apk_device_2.invalidate_recordset()
+        web_device_2.invalidate_recordset()
+        apk_device_3 = Device.search([('device_key', '=', apk_key_3)], limit=1)
+        self.assertFalse(apk_device_2.active)
+        self.assertTrue(web_device_2.active)
+        self.assertTrue(apk_device_3.active)
+        self.assertEqual(apk_device_3.client_channel, 'apk')
+
+        # Both tokens → apk (unidentifiable).
+        apk_key_4 = str(uuid.uuid4())
+        res_both = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': apk_key_4}),
+            headers={
+                'Content-Type': 'application/json',
+                'X-App-Version': '3.0.0 apk web',
+            },
+            timeout=60,
+        )
+        self.assertEqual(res_both.status_code, 200, res_both.text)
+        apk_device_3.invalidate_recordset()
+        web_device_2.invalidate_recordset()
+        apk_device_4 = Device.search([('device_key', '=', apk_key_4)], limit=1)
+        self.assertFalse(apk_device_3.active)
+        self.assertTrue(web_device_2.active)
+        self.assertTrue(apk_device_4.active)
+        self.assertEqual(apk_device_4.client_channel, 'apk')
+
+        # Missing X-App-Version → apk.
+        apk_key_5 = str(uuid.uuid4())
+        res_missing = self.url_open(
+            '/api/order_bridge/register',
+            data=json.dumps({'phone': phone, 'device_key': apk_key_5}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60,
+        )
+        self.assertEqual(res_missing.status_code, 200, res_missing.text)
+        apk_device_4.invalidate_recordset()
+        web_device_2.invalidate_recordset()
+        apk_device_5 = Device.search([('device_key', '=', apk_key_5)], limit=1)
+        self.assertFalse(apk_device_4.active)
+        self.assertTrue(web_device_2.active)
+        self.assertTrue(apk_device_5.active)
+        self.assertEqual(apk_device_5.client_channel, 'apk')
+
+        res_status_web = self.url_open(
+            '/api/order_bridge/status',
+            headers={'Authorization': f'Bearer {web_key_2}'},
+            timeout=60,
+        )
+        self.assertEqual(res_status_web.status_code, 200, res_status_web.text)
+        res_status_old_apk = self.url_open(
+            '/api/order_bridge/status',
+            headers={'Authorization': f'Bearer {apk_key_4}'},
+            timeout=60,
+        )
+        self.assertEqual(res_status_old_apk.status_code, 401, res_status_old_apk.text)
 
     def test_profile_put_get_and_patch(self):
         key = str(uuid.uuid4())

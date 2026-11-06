@@ -12,6 +12,7 @@
                 <field name="active" widget="boolean"/>
                 <field name="registration_date"/>
                 <field name="last_activity"/>
+                <field name="client_channel" optional="show"/>
                 <field name="device_key" optional="hide"/>
                 <field name="device_info" optional="hide"/>
                 <field name="apk_version" optional="hide"/>
@@ -43,6 +44,7 @@
                             <field name="registration_date"/>
                             <field name="last_activity"/>
                             <field name="device_info"/>
+                            <field name="client_channel"/>
                             <field name="apk_version"/>
                         </group>
                     </group>

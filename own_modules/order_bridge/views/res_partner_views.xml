@@ -42,6 +42,7 @@
                             <field name="registration_date"/>
                             <field name="last_activity"/>
                             <field name="device_info"/>
+                            <field name="client_channel" optional="show"/>
                             <field name="apk_version" optional="hide"/>
                         </list>
                     </field>
