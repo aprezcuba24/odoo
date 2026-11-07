@@ -18,7 +18,7 @@ class ProductProduct(models.Model):
 
     def _compute_order_bridge_store_link(self):
         for product in self:
-            product.order_bridge_store_link = f'/product/{product.id}' if product.id else False
+            product.order_bridge_store_link = f'/{product.id}' if product.id else False
 
     @api.model
     def get_whatsapp_publisher_products(self):
