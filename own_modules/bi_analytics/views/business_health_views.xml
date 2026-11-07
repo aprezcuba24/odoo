@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bi_business_health_form" model="ir.ui.view">
+        <field name="name">bi.business.health.form</field>
+        <field name="model">bi.business.health</field>
+        <field name="arch" type="xml">
+            <form string="Salud del negocio" create="false" delete="false" class="o_bi_business_health">
+                <header>
+                    <button name="action_previous_month" type="object" string="Mes anterior" class="btn-secondary"/>
+                    <button name="action_next_month" type="object" string="Mes siguiente" class="btn-secondary"/>
+                </header>
+                <group>
+                    <group>
+                        <field name="date_from" widget="daterange" options="{'end_date_field': 'date_to', 'always_range': true}"/>
+                        <field name="date_to" invisible="1"/>
+                        <field name="previous_date_from" readonly="1"/>
+                        <field name="previous_date_to" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Indicadores" name="indicators">
+                        <group>
+                            <group string="Crecimiento del negocio">
+                                <field name="sale_amount"/>
+                                <field name="sale_amount_prev"/>
+                                <field name="sale_growth_pct"/>
+                                <field name="qty_sold"/>
+                                <field name="qty_sold_prev"/>
+                                <field name="qty_growth_pct"/>
+                                <field name="order_count"/>
+                                <field name="order_count_prev"/>
+                                <field name="order_growth_pct"/>
+                                <field name="avg_ticket"/>
+                                <field name="avg_ticket_prev"/>
+                                <field name="avg_ticket_growth_pct"/>
+                            </group>
+                            <group string="Margen y concentración">
+                                <field name="profit_amount"/>
+                                <field name="profit_amount_prev"/>
+                                <field name="profit_growth_pct"/>
+                                <field name="margin_pct"/>
+                                <field name="margin_pct_prev"/>
+                                <field name="inventory_days"/>
+                                <field name="idle_inventory_value"/>
+                                <field name="concentration_80_count"/>
+                                <field name="top20_sale_share_pct"/>
+                                <field name="q4_low_margin_count"/>
+                            </group>
+                        </group>
+                        <separator string="Por origen de venta"/>
+                        <field name="origin_line_ids" nolabel="1">
+                            <list create="false" delete="false" edit="false">
+                                <field name="sale_origin"/>
+                                <field name="sale_amount" sum="Total venta"/>
+                                <field name="sale_amount_prev" sum="Total venta anterior"/>
+                                <field name="sale_growth_pct"/>
+                                <field name="qty_sold" sum="Total unidades"/>
+                                <field name="order_count" sum="Total pedidos"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Inventario" name="inventory">
+                        <group>
+                            <group string="Valor neto">
+                                <field name="net_inventory_value"/>
+                                <field name="product_inventory_value"/>
+                                <field name="supply_inventory_value"/>
+                            </group>
+                            <group string="Alertas">
+                                <field name="zero_cost_product_count"/>
+                                <field name="zero_cost_supply_count"/>
+                                <field name="idle_inventory_value"/>
+                            </group>
+                        </group>
+                        <separator string="Por categoría"/>
+                        <field name="inventory_category_ids" nolabel="1">
+                            <list create="false" delete="false" edit="false">
+                                <field name="categ_id"/>
+                                <field name="value" sum="Total"/>
+                                <field name="share_pct"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                        <separator string="Por almacén"/>
+                        <field name="inventory_warehouse_ids" nolabel="1">
+                            <list create="false" delete="false" edit="false">
+                                <field name="warehouse_id"/>
+                                <field name="value" sum="Total"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                        <separator string="Productos"/>
+                        <field name="inventory_line_ids" nolabel="1">
+                            <list create="false" delete="false" edit="false">
+                                <field name="product_id"/>
+                                <field name="categ_id" optional="show"/>
+                                <field name="quantity"/>
+                                <field name="unit_cost"/>
+                                <field name="value" sum="Total"/>
+                                <field name="zero_cost"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                        <separator string="Insumos"/>
+                        <field name="supply_line_ids" nolabel="1">
+                            <list create="false" delete="false" edit="false">
+                                <field name="supply_id"/>
+                                <field name="quantity"/>
+                                <field name="unit_cost"/>
+                                <field name="value" sum="Total"/>
+                                <field name="zero_cost"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Cuartiles" name="quartiles">
+                        <field name="quartile_ids" nolabel="1">
+                            <list create="false" delete="false" edit="false">
+                                <field name="group"/>
+                                <field name="product_count"/>
+                                <field name="sale_amount" sum="Total venta"/>
+                                <field name="sale_amount_prev" sum="Total venta anterior"/>
+                                <field name="sale_variation" sum="Total variación"/>
+                                <field name="median_growth_pct"/>
+                                <field name="share_pct"/>
+                                <button name="action_show_in_detail" type="object" string="Ver detalle" class="btn-link"/>
+                                <field name="currency_id" column_invisible="True"/>
+                                <field name="sequence" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Detalle" name="detail">
+                        <group>
+                            <field name="detail_group"/>
+                        </group>
+                        <field name="product_line_ids" nolabel="1" domain="[('group', '=?', detail_group)]">
+                            <list create="false" delete="false" edit="false">
+                                <field name="group"/>
+                                <field name="product_id"/>
+                                <field name="categ_id" optional="show"/>
+                                <field name="sale_amount" sum="Total venta"/>
+                                <field name="sale_amount_prev" sum="Total venta anterior"/>
+                                <field name="growth_pct"/>
+                                <field name="qty_sold" sum="Total unidades"/>
+                                <field name="profit_amount" sum="Total ganancia"/>
+                                <field name="margin_pct"/>
+                                <field name="low_margin"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bi_business_health" model="ir.actions.server">
+        <field name="name">Salud del negocio</field>
+        <field name="model_id" ref="model_bi_business_health"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+</odoo>

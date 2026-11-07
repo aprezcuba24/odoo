@@ -10,7 +10,8 @@ Inteligencia de Negocio
 =======================
 
 Reportes analíticos sobre ventas confirmadas (incl. TPV), gastos y rentabilidad.
-Incluye catálogo de insumos y registro de consumos.
+Incluye catálogo de insumos, registro de consumos y salud del negocio
+(valor de inventario y crecimiento por cuartiles).
     """,
     'depends': ['sale', 'sale_margin', 'sale_stock', 'point_of_sale'],
     'data': [
@@ -24,11 +25,13 @@ Incluye catálogo de insumos y registro de consumos.
         'views/profitability_report_views.xml',
         'views/product_sale_report_views.xml',
         'views/other_cost_report_views.xml',
+        'views/business_health_views.xml',
         'views/bi_analytics_menu.xml',
     ],
     'assets': {
         'web.assets_backend': [
             'bi_analytics/static/src/scss/profitability_summary.scss',
+            'bi_analytics/static/src/scss/business_health.scss',
         ],
     },
     'license': 'LGPL-3',

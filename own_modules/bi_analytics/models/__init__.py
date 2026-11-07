@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from . import business_health
 from . import cost_category
 from . import other_cost
 from . import other_cost_report

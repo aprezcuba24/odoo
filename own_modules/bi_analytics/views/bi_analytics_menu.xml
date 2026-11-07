@@ -38,6 +38,14 @@
         groups="sales_team.group_sale_salesman"/>
 
     <menuitem
+        id="menu_bi_business_health"
+        name="Salud del negocio"
+        parent="menu_bi_analytics_reports"
+        action="action_bi_business_health"
+        sequence="40"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
         id="menu_bi_analytics_records"
         name="Registro"
         parent="menu_bi_analytics_root"
