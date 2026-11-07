@@ -34,12 +34,14 @@ class DeviceAuthController(http.Controller):
             )
             if err:
                 return api_json_response(SimpleErrorResponse(**err), status)
+        app_version = request.httprequest.headers.get('X-App-Version')
         try:
             result = Device.register_or_get(
                 body.phone,
                 body.device_key,
                 body.device_info,
                 company=company,
+                app_version=app_version,
             )
         except UserError as e:
             return api_json_response(
@@ -50,7 +52,7 @@ class DeviceAuthController(http.Controller):
         partner = result['partner']
         Device.order_bridge_sync_apk_version(
             body.device_key,
-            request.httprequest.headers.get('X-App-Version'),
+            app_version,
         )
         return api_json_response(RegisterOkResponse(
             status='ok',

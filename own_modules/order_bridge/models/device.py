@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
+import re
 from datetime import timedelta
 
 from odoo import _, api, fields, models
@@ -9,6 +10,8 @@ from odoo.exceptions import UserError
 from odoo.addons.phone_validation.tools import phone_validation as phone_validation_tools
 
 _logger = logging.getLogger(__name__)
+
+_CHANNEL_TOKEN_RE = re.compile(r'(?<![a-z])(?:web|apk)(?![a-z])', re.IGNORECASE)
 
 
 def normalize_phone_for_registration(env, phone_raw, company=None):
@@ -27,6 +30,26 @@ def normalize_phone_for_registration(env, phone_raw, company=None):
     except UserError:
         _logger.info('Phone format fallback for %r', phone_raw)
         return phone_raw
+
+
+def parse_client_channel(app_version):
+    """Return ``web`` or ``apk`` from ``X-App-Version``; default ``apk`` if unclear.
+
+    Identified only when exactly one of the tokens ``web`` / ``apk`` appears
+    (case-insensitive, bounded by non-letters). Missing, empty, neither, or both
+    → ``apk``.
+    """
+    if app_version is None:
+        return 'apk'
+    text = str(app_version).strip()
+    if not text:
+        return 'apk'
+    found = {m.group(0).lower() for m in _CHANNEL_TOKEN_RE.finditer(text)}
+    if found == {'web'}:
+        return 'web'
+    if found == {'apk'}:
+        return 'apk'
+    return 'apk'
 
 
 class OrderBridgeDevice(models.Model):
@@ -65,6 +88,17 @@ class OrderBridgeDevice(models.Model):
     last_activity = fields.Datetime()
     device_info = fields.Char(string='Información del dispositivo')
     apk_version = fields.Char(string='Versión APK')
+    client_channel = fields.Selection(
+        selection=[
+            ('apk', 'APK'),
+            ('web', 'Web'),
+        ],
+        string='Canal cliente',
+        required=True,
+        default='apk',
+        index=True,
+        help='Canal de cliente (APK o web). Se fija en el alta desde X-App-Version.',
+    )
 
     _sql_constraints = [
         ('device_key_unique', 'unique(device_key)', 'La clave del dispositivo debe ser única.'),
@@ -136,12 +170,15 @@ class OrderBridgeDevice(models.Model):
             log_exceptions=False,
         )
 
-    def _deactivate_other_devices_for_phone(self, normalized_phone, company, keep_key=None):
-        """One phone = one active device per company. Deactivate others with same phone."""
+    def _deactivate_other_devices_for_phone(
+        self, normalized_phone, company, client_channel, keep_key=None,
+    ):
+        """One phone = one active device per company and client channel."""
         domain = [
             ('phone', '=', normalized_phone),
             ('active', '=', True),
             ('company_id', '=', company.id),
+            ('client_channel', '=', client_channel),
         ]
         if keep_key:
             domain.append(('device_key', '!=', keep_key))
@@ -150,11 +187,14 @@ class OrderBridgeDevice(models.Model):
             others.write({'active': False})
 
     @api.model
-    def register_or_get(self, phone_raw, device_key, device_info=None, company=None):
+    def register_or_get(
+        self, phone_raw, device_key, device_info=None, company=None, app_version=None,
+    ):
         """Register device or return existing state (idempotent on same device_key).
 
         ``company`` is required when registering a new device (multi-company).
         Existing devices are returned without re-checking company.
+        ``app_version`` (``X-App-Version``) sets ``client_channel`` on create only.
         """
         self = self.sudo()
         if not device_key or not str(device_key).strip():
@@ -199,8 +239,11 @@ class OrderBridgeDevice(models.Model):
                 vals['company_id'] = company.id
             if vals:
                 partner.write(vals)
-        self._deactivate_other_devices_for_phone(normalized, company, keep_key=None)
-        device = self.create({
+        client_channel = parse_client_channel(app_version)
+        self._deactivate_other_devices_for_phone(
+            normalized, company, client_channel, keep_key=None,
+        )
+        create_vals = {
             'device_key': device_key,
             'partner_id': partner.id,
             'company_id': company.id,
@@ -208,7 +251,11 @@ class OrderBridgeDevice(models.Model):
             'phone_validated': False,
             'active': True,
             'device_info': device_info,
-        })
+            'client_channel': client_channel,
+        }
+        if app_version is not None and str(app_version).strip():
+            create_vals['apk_version'] = str(app_version).strip()
+        device = self.create(create_vals)
         return {'device': device, 'created': True, 'partner': partner}
 
     @api.model

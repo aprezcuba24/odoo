@@ -52,8 +52,8 @@ Opcionales a futuro: **sale_management** (plantillas), **rpc** solo como referen
 2. **Lo que se valida es el dispositivo ligado al teléfono**
    El usuario introduce el teléfono en el cliente; la app genera y guarda un `device_key` (p. ej. UUID v4). El backend registra `phone` + `device_key`. Tras la validación administrativa, ese dispositivo se considera validado.
 
-3. **Un teléfono, un dispositivo activo**
-   Si se registra un nuevo `device_key` para el mismo teléfono normalizado, los dispositivos anteriores con ese teléfono se **desactivan**. El nuevo queda pendiente de validación de nuevo (**re-validación** por seguridad).
+3. **Un teléfono, un dispositivo activo por canal**
+   Por teléfono y compañía pueden coexistir como máximo dos dispositivos activos: uno de canal `apk` y uno de canal `web` (leídos de `X-App-Version` en el alta; si el canal no se identifica, se asume `apk`). Si se registra un nuevo `device_key` del **mismo** canal, solo se **desactiva** el dispositivo activo previo de ese canal. El del otro canal sigue activo. El nuevo queda pendiente de validación de nuevo (**re-validación** por seguridad).
 
 4. **Pedidos antes de validar**
    La API **permite crear pedidos** con dispositivo no validado. En backend, el formulario y listados de `sale.order` muestran el estado **actual** de validación del dispositivo vinculado (`order_bridge_device_phone_validated`, relacionado con `order_bridge.device.phone_validated`), útil para informes y filtros; el JSON de la API expone el mismo criterio en `device_validated`.
@@ -89,7 +89,7 @@ El módulo depende de **sale_stock**. Al crear un pedido por API, `sale.order` s
 
 ### `order_bridge.device`
 
-Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normalizado), `phone_validated`, `active`, fechas de registro y última actividad, `device_info` opcional.
+Registro por dispositivo: `device_key` (único), `partner_id`, `phone` (normalizado), `phone_validated`, `active`, `client_channel` (`apk` | `web`, fijado en el alta), fechas de registro y última actividad, `device_info` y `apk_version` opcionales.
 
 ### Extensiones
 
@@ -179,7 +179,7 @@ flowchart LR
 
 1. **Alta**: Cliente genera `device_key` → POST `/register` con `phone`, `name`, `device_key` → partner + device; admin valida en backend → GET `/status` refleja `validated`.
 2. **Pedido**: POST `/orders` con líneas, `client_order_id` (UUID por checkout) y opcionalmente `promo_code`; se crea `sale.order` con `order_bridge_origin=app` y dispositivo vinculado; si hay cupón válido se aplica antes de confirmar. La validación mostrada en API y backend refleja el estado actual del dispositivo. Reintentos con el mismo `client_order_id` son idempotentes. Telegram se envía solo tras commit de la transacción HTTP.
-3. **Cambio de dispositivo**: nuevo `device_key` + mismo teléfono → dispositivos previos con ese teléfono inactivos → nuevo pendiente de validación.
+3. **Cambio de dispositivo**: nuevo `device_key` + mismo teléfono y canal → solo el dispositivo previo de ese canal queda inactivo; el del otro canal (si existe) sigue activo → el nuevo queda pendiente de validación.
 
 ---
 
