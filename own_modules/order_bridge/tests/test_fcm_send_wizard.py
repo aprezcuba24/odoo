@@ -75,6 +75,65 @@ class TestOrderBridgeFcmSendWizard(TransactionCase):
         with self.assertRaises(UserError):
             w.action_send()
 
+    def _multicast_data(self, mock_multi):
+        call_args, call_kwargs = mock_multi.call_args
+        if 'data' in call_kwargs:
+            return call_kwargs['data']
+        return call_args[3] if len(call_args) > 3 else None
+
+    @patch('odoo.addons.order_bridge.utils.fcm_client.send_notification_multicast', return_value=[])
+    @patch('odoo.addons.order_bridge.utils.fcm_client.ensure_firebase_app')
+    def test_wizard_without_app_route_sends_data_none(self, _mock_ensure, mock_multi):
+        w = self._new_wizard()
+        w.action_send()
+        mock_multi.assert_called()
+        self.assertIsNone(self._multicast_data(mock_multi))
+
+    @patch('odoo.addons.order_bridge.utils.fcm_client.send_notification_multicast', return_value=[])
+    @patch('odoo.addons.order_bridge.utils.fcm_client.ensure_firebase_app')
+    def test_wizard_app_route_merged_into_data(self, _mock_ensure, mock_multi):
+        w = self._new_wizard(app_route='/orders/42')
+        w.action_send()
+        mock_multi.assert_called()
+        data = self._multicast_data(mock_multi)
+        self.assertEqual(data['route'], '/orders/42')
+        self.assertIsInstance(data['route'], str)
+
+    @patch('odoo.addons.order_bridge.utils.fcm_client.send_notification_multicast', return_value=[])
+    @patch('odoo.addons.order_bridge.utils.fcm_client.ensure_firebase_app')
+    def test_wizard_app_route_overrides_data_json_route(self, _mock_ensure, mock_multi):
+        w = self._new_wizard(
+            app_route='/orders/42',
+            data_json='{"route":"/cart","type":"promo"}',
+        )
+        w.action_send()
+        data = self._multicast_data(mock_multi)
+        self.assertEqual(data['route'], '/orders/42')
+        self.assertEqual(data['type'], 'promo')
+
+    def test_wizard_app_route_rejects_http(self):
+        w = self._new_wizard(app_route='http://evil.example/x')
+        with self.assertRaises(UserError):
+            w.action_send()
+
+    def test_wizard_app_route_rejects_double_slash(self):
+        w = self._new_wizard(app_route='//evil')
+        with self.assertRaises(UserError):
+            w.action_send()
+
+    def test_wizard_app_route_rejects_dotdot(self):
+        w = self._new_wizard(app_route='/../x')
+        with self.assertRaises(UserError):
+            w.action_send()
+
+    @patch('odoo.addons.order_bridge.utils.fcm_client.send_notification_multicast', return_value=[])
+    @patch('odoo.addons.order_bridge.utils.fcm_client.ensure_firebase_app')
+    def test_wizard_invalid_app_route_does_not_send(self, _mock_ensure, mock_multi):
+        w = self._new_wizard(app_route='http://evil.example/x')
+        with self.assertRaises(UserError):
+            w.action_send()
+        mock_multi.assert_not_called()
+
     def test_default_get_multi_from_list_context(self):
         p2 = self.env['res.partner'].create({'name': 'P2 FCM test'})
         Wizard = self.env['order_bridge.fcm.send.wizard'].with_context(

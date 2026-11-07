@@ -24,6 +24,7 @@
                     <field name="body" placeholder="Texto de la notificación"/>
                 </group>
                 <group>
+                    <field name="app_route" placeholder="/orders/42"/>
                     <field name="data_json" placeholder="{}"/>
                 </group>
                 <footer>

@@ -49,13 +49,25 @@ Especificación OpenAPI generada: `docs/openapi.json` y `static/openapi.json` en
 
 Requieren un usuario con permisos de **vendedor** o **gestor** de Order Bridge (según implementación; ver el modelo en código). No hay rutas HTTP públicas para el envío.
 
+Cada envío incluye siempre el bloque **notification** (`title` / `body`) para que Android muestre la bandeja con la app en segundo plano. El diccionario opcional `data` es un objeto **plano** (valores convertidos a string); no se usan `android.notification.click_action` ni `fcm_options.link`.
+
+### Navegación en la APK (`data.route`)
+
+La única clave de navegación que interpreta odoo-shop al pulsar la notificación es **`route`**: una ruta interna de la SPA con barra inicial (p. ej. `/orders/42`, `/123`, `/orders`, `/cart`). Sin `route` (o con una ruta que la APK rechaza) el tap solo trae la app al frente; no hay fallback a `type` / `order_id`.
+
+Rutas que la APK acepta: `/`, `/cart`, `/checkout`, `/wizard`, `/account`, `/account/address`, `/account/about`, `/edit-profile`, `/orders`, `/orders/<id entero>`, `/<id entero>` (producto), `/product/<id entero>`.
+
+Ejemplo mínimo de `data` para abrir un pedido: `{"route": "/orders/42"}`. El push automático de cambio de estado de tienda incluye además metadatos opcionales (`type`, `order_id`) y siempre `route=/orders/<id>`.
+
 ### Asistente en la interfaz de Odoo
 
 Usuarios con permisos adecuados (vendedor / gestor Tienda Apk) pueden enviar notificaciones desde el backend con el asistente transitorio **Enviar notificación push** (`order_bridge.fcm.send.wizard`):
 
-- **Tienda Apk → Operaciones → Enviar Notificaciones Push** — elige el modo (un contacto, varios contactos o un topic FCM) y rellena título y mensaje; opcionalmente un objeto JSON de datos.
+- **Tienda Apk → Operaciones → Enviar Notificaciones Push** — elige el modo (un contacto, varios contactos o un topic FCM) y rellena título y mensaje; opcionalmente **Ruta en la app** (`app_route`) y/o un objeto JSON de datos.
 - **Contactos (lista) → Acción → Enviar notificación push a contactos** — rellena la selección múltiple con los contactos activos.
 - **Ficha de contacto → pestaña Tienda Apk → Enviar notificación push** — abre el asistente con ese contacto como destino único.
+
+Si **Ruta en la app** tiene texto, el asistente solo comprueba que sea una ruta relativa segura (empieza por `/`; sin esquema, `//`, `..` ni espacios) y la fusiona en `data` como clave `route`, pisando la misma clave si venía en el JSON. No mantiene un catálogo de pantallas de la SPA: la APK decide si navega o solo trae la app al frente. Vacío: no se añade `route`. No es obligatorio rellenar el JSON de datos.
 
 El asistente llama a los mismos métodos de `order_bridge.fcm` descritos arriba; no añade credenciales ni rutas API nuevas.
 
