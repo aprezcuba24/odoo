@@ -36,7 +36,14 @@ class TestOrderBridgeStoreStatePushListener(TransactionCase):
         title, body, data = format_store_state_push(order)
         self.assertIn(order.name, title)
         self.assertIn('Negociando', body)
-        self.assertEqual(data, {'type': 'order_status', 'order_id': str(order.id)})
+        self.assertEqual(
+            data,
+            {
+                'type': 'order_status',
+                'order_id': str(order.id),
+                'route': '/orders/%s' % order.id,
+            },
+        )
 
     @patch.object(push_listener_module, '_schedule_store_state_push')
     def test_write_store_state_schedules_push(self, mock_schedule):
@@ -87,4 +94,13 @@ class TestOrderBridgeStoreStatePushListener(TransactionCase):
         mock_send.assert_called_once()
         _args, kwargs = mock_send.call_args
         self.assertEqual(_args[0], order.partner_id.id)
-        self.assertEqual(kwargs['data'], {'type': 'order_status', 'order_id': str(order.id)})
+        self.assertTrue(_args[1])  # title
+        self.assertTrue(_args[2])  # body
+        self.assertEqual(
+            kwargs['data'],
+            {
+                'type': 'order_status',
+                'order_id': str(order.id),
+                'route': '/orders/%s' % order.id,
+            },
+        )

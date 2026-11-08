@@ -19,5 +19,6 @@ def format_store_state_push(order) -> tuple[str, str, dict[str, str]]:
     data = {
         'type': 'order_status',
         'order_id': str(order.id),
+        'route': '/orders/%s' % order.id,
     }
     return title, body, data
