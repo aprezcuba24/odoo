@@ -145,3 +145,34 @@ class TestOrderBridgePayments(TransactionCase):
         action = self.partner.action_open_order_bridge_orders_with_due()
         matched = self.env['sale.order'].search(action['domain'])
         self.assertIn(self.order, matched)
+
+    def test_ui_transfer_create_applies_like_api(self):
+        self.order.order_bridge_payment_pending = True
+        self.assertEqual(self.order.order_bridge_amount_due, self.order.amount_total)
+
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': self.partner.phone,
+            'amount': self.order.amount_total,
+            'code': 'UI-MANUAL-001',
+        })
+        self.assertEqual(transfer.result, 'processed')
+        self.assertEqual(len(transfer.payment_ids), 1)
+        self.assertEqual(transfer.payment_ids.amount, self.order.amount_total)
+        self.order.invalidate_recordset()
+        self.assertEqual(self.order.order_bridge_amount_due, 0.0)
+
+        with self.assertRaises(UserError):
+            self.env['order_bridge.transfer'].create({
+                'phone': self.partner.phone,
+                'amount': 10.0,
+                'code': 'UI-MANUAL-001',
+            })
+
+    def test_ui_transfer_not_interested(self):
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': '+529998887776',
+            'amount': 50.0,
+            'code': 'UI-NO-DEBT',
+        })
+        self.assertEqual(transfer.result, 'not_interested')
+        self.assertFalse(transfer.payment_ids)

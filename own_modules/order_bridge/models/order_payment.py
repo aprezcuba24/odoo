@@ -46,6 +46,13 @@ class OrderBridgeOrderPayment(models.Model):
         store=True,
         readonly=True,
     )
+    transfer_id = fields.Many2one(
+        'order_bridge.transfer',
+        string='Transferencia',
+        ondelete='set null',
+        index=True,
+        copy=False,
+    )
 
     @api.constrains('amount')
     def _check_amount_positive(self):

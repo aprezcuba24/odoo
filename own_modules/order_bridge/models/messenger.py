@@ -21,6 +21,16 @@ class OrderBridgeMessenger(models.Model):
         default=lambda self: self.env.company,
     )
     active = fields.Boolean(default=True)
+    module_delivery = fields.Boolean(
+        string='Módulo entregas',
+        default=True,
+        help='Concede el módulo delivery a la clave API (lista y confirmación de entregas).',
+    )
+    module_payments = fields.Boolean(
+        string='Módulo pagos',
+        default=False,
+        help='Concede el módulo payments a la clave API (avisos de transferencia).',
+    )
     api_key = fields.Char(
         string='Clave API',
         required=True,

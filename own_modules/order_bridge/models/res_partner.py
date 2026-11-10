@@ -2,12 +2,25 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Domain
 from odoo.tools.float_utils import float_compare
+
+from odoo.addons.order_bridge.utils.phone_match import phone_match_domain, phone_match_key
 
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
+    order_bridge_phone_key = fields.Char(
+        string='Clave teléfono Tienda Apk',
+        compute='_compute_order_bridge_phone_key',
+        store=True,
+        index=True,
+        help=(
+            'Clave normalizada del campo phone para equivalencias '
+            '(p. ej. 53024637 y 5353024637).'
+        ),
+    )
     order_bridge_device_ids = fields.One2many(
         'order_bridge.device', 'partner_id', string='Dispositivos API'
     )
@@ -58,6 +71,40 @@ class ResPartner(models.Model):
             'distintas de cero (punto útil para el mapa de entregas).'
         ),
     )
+
+    @api.depends('phone')
+    def _compute_order_bridge_phone_key(self):
+        for partner in self:
+            partner.order_bridge_phone_key = phone_match_key(partner.phone) or False
+
+    def _search_phone_mobile_search(self, operator, value):
+        domain = super()._search_phone_mobile_search(operator, value)
+        if not isinstance(value, str):
+            return domain
+        key = phone_match_key(value)
+        if not key:
+            return domain
+        min_len = getattr(self, '_phone_search_min_length', 3) or 0
+        if min_len and len(key) < min_len:
+            return domain
+        if operator in Domain.NEGATIVE_OPERATORS:
+            return Domain.AND([domain, Domain('order_bridge_phone_key', '!=', key)])
+        return Domain.OR([domain, Domain('order_bridge_phone_key', '=', key)])
+
+    @api.model
+    def _order_bridge_partners_by_phone(self, phone_raw, company):
+        """Partners of ``company`` (or shared) whose ``phone`` matches ``phone_raw``."""
+        key_domain = phone_match_domain(phone_raw)
+        if key_domain == [('id', '=', False)]:
+            return self.browse()
+        return self.search(
+            key_domain
+            + [
+                '|',
+                ('company_id', '=', company.id),
+                ('company_id', '=', False),
+            ]
+        )
 
     @api.depends(
         'order_bridge_partner_address_ids.municipality_id',

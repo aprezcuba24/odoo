@@ -211,6 +211,7 @@
                             <field name="date"/>
                             <field name="method_id" options="{'no_create': True}"/>
                             <field name="amount" sum="Total cobrado"/>
+                            <field name="transfer_id" optional="hide"/>
                             <field name="currency_id" column_invisible="1"/>
                         </list>
                     </field>

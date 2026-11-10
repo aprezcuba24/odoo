@@ -1,6 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import hmac
 import json
 import logging
 
@@ -14,6 +13,11 @@ from odoo.addons.order_bridge.utils.constant import (
     STATE_READY_FOR_DELIVERY,
 )
 from odoo.addons.order_bridge.utils.decorators import CORS_HEADERS, api_cors_preflight
+from odoo.addons.order_bridge.utils.mobile_auth import (
+    MODULE_DELIVERY,
+    messenger_has_module,
+    resolve_messenger,
+)
 from odoo.addons.order_bridge.utils.mobile_deliveries import (
     delivery_note_to_remote,
     order_to_remote_delivery,
@@ -32,15 +36,9 @@ def _json(payload, status=200):
     )
 
 
-def _resolve_messenger():
-    key = (request.httprequest.headers.get('X-Api-Key') or '').strip()
-    if not key:
-        return None
-    Messenger = request.env['order_bridge.messenger'].sudo()
-    messenger = Messenger.search([('api_key', '=', key), ('active', '=', True)], limit=1)
-    if not messenger:
-        return None
-    if not hmac.compare_digest(messenger.api_key, key):
+def _resolve_delivery_messenger():
+    messenger = resolve_messenger()
+    if not messenger or not messenger_has_module(messenger, MODULE_DELIVERY):
         return None
     return messenger
 
@@ -66,7 +64,7 @@ class MobileDeliveriesController(http.Controller):
     def list_deliveries(self, **kwargs):
         if request.httprequest.method == 'OPTIONS':
             return api_cors_preflight()
-        messenger = _resolve_messenger()
+        messenger = _resolve_delivery_messenger()
         if not messenger:
             return _json({'error': 'unauthorized'}, 401)
         orders = request.env['sale.order'].sudo().search(
@@ -89,7 +87,7 @@ class MobileDeliveriesController(http.Controller):
     def mark_delivered(self, identifier, **kwargs):
         if request.httprequest.method == 'OPTIONS':
             return api_cors_preflight()
-        messenger = _resolve_messenger()
+        messenger = _resolve_delivery_messenger()
         if not messenger:
             return _json({'error': 'unauthorized'}, 401)
 
@@ -170,7 +168,7 @@ class MobileDeliveriesController(http.Controller):
     def create_delivery_note(self, identifier, **kwargs):
         if request.httprequest.method == 'OPTIONS':
             return api_cors_preflight()
-        messenger = _resolve_messenger()
+        messenger = _resolve_delivery_messenger()
         if not messenger:
             return _json({'error': 'unauthorized'}, 401)
 
