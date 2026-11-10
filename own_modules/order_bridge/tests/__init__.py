@@ -13,6 +13,7 @@ from . import test_order_bridge_categories
 from . import test_order_bridge_multi_company_api
 from . import test_order_bridge_openapi
 from . import test_order_bridge_order_created_listener
+from . import test_order_bridge_payments
 from . import test_order_bridge_push
 from . import test_order_bridge_snapshot
 from . import test_order_bridge_store_state

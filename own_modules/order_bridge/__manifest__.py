@@ -2,7 +2,7 @@
 
 {
     'name': 'Tienda Apk',
-    'version': '19.0.1.1.0',
+    'version': '19.0.1.2.0',
     'category': 'Ventas/Ventas',
     'summary': 'API REST para aplicaciones externas: catálogo por marca en producto, registro de dispositivo por teléfono y validación en Tienda Apk.',
     'description': """
@@ -45,6 +45,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'security/ir.model.access.csv',
         'data/order_bridge_data.xml',
         'data/order_bridge_general_settings.xml',
+        'data/order_bridge_payment_method_data.xml',
         'report/messaging_guide_report.xml',
         'report/messaging_guide_templates.xml',
         'views/general_settings_views.xml',
@@ -52,6 +53,7 @@ Los pedidos creados por la API se **confirman solos**; Odoo genera las entregas 
         'views/banner_views.xml',
         'views/whatsapp_message_views.xml',
         'views/municipality_views.xml',
+        'views/payment_method_views.xml',
         'views/device_views.xml',
         'views/messenger_views.xml',
         'views/res_company_views.xml',

@@ -9,6 +9,14 @@
                 <field name="order_bridge_municipality_id"/>
                 <field name="order_bridge_neighborhood_id"/>
             </xpath>
+            <xpath expr="//filter[@name='inactive']" position="before">
+                <filter
+                    name="filter_order_bridge_with_due"
+                    string="Con deuda"
+                    domain="[('order_bridge_amount_due', '&gt;', 0)]"
+                />
+                <separator/>
+            </xpath>
             <xpath expr="//group[@name='group_by']" position="inside">
                 <filter name="order_bridge_municipality" string="Municipio" context="{'group_by': 'order_bridge_municipality_id'}"/>
                 <filter name="order_bridge_neighborhood" string="Barrio" context="{'group_by': 'order_bridge_neighborhood_id'}"/>
