@@ -6,6 +6,7 @@ from . import test_fcm_send_wizard
 from . import test_local_dotenv
 from . import test_messaging_guide
 from . import test_mobile_deliveries
+from . import test_mobile_modules_payments
 from . import test_multi_company_isolation
 from . import test_order_bridge_admin_stock
 from . import test_order_bridge_api
@@ -13,11 +14,13 @@ from . import test_order_bridge_categories
 from . import test_order_bridge_multi_company_api
 from . import test_order_bridge_openapi
 from . import test_order_bridge_order_created_listener
+from . import test_order_bridge_payments
 from . import test_order_bridge_push
 from . import test_order_bridge_snapshot
 from . import test_order_bridge_store_state
 from . import test_order_bridge_store_state_push_listener
 from . import test_partner_map_point
+from . import test_phone_match
 from . import test_pos_stock
 from . import test_res_partner_order_bridge_orders
 from . import test_s3_hooks

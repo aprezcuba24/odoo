@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="payment_method_cash" model="order_bridge.payment.method">
+        <field name="name">Efectivo</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="payment_method_transfer" model="order_bridge.payment.method">
+        <field name="name">Transferencia</field>
+        <field name="sequence">20</field>
+    </record>
+</odoo>

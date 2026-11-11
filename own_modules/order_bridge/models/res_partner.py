@@ -1,11 +1,26 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
+from odoo.fields import Domain
+from odoo.tools.float_utils import float_compare
+
+from odoo.addons.order_bridge.utils.phone_match import phone_match_key
 
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
+    order_bridge_phone_key = fields.Char(
+        string='Clave teléfono Tienda Apk',
+        compute='_compute_order_bridge_phone_key',
+        store=True,
+        index=True,
+        help=(
+            'Clave normalizada del campo phone para equivalencias '
+            '(p. ej. 53024637 y 5353024637).'
+        ),
+    )
     order_bridge_device_ids = fields.One2many(
         'order_bridge.device', 'partner_id', string='Dispositivos API'
     )
@@ -22,6 +37,13 @@ class ResPartner(models.Model):
     order_bridge_order_count = fields.Integer(
         string='Pedidos Tienda Apk',
         compute='_compute_order_bridge_order_count',
+    )
+    order_bridge_amount_due = fields.Monetary(
+        string='Deuda Tienda Apk',
+        compute='_compute_order_bridge_amount_due',
+        search='_search_order_bridge_amount_due',
+        currency_field='currency_id',
+        help='Suma del saldo pendiente de cobro de los pedidos Tienda Apk de este cliente.',
     )
     order_bridge_partner_address_ids = fields.One2many(
         'order_bridge.partner_address', 'partner_id', string='Dirección Tienda Apk'
@@ -49,6 +71,25 @@ class ResPartner(models.Model):
             'distintas de cero (punto útil para el mapa de entregas).'
         ),
     )
+
+    @api.depends('phone')
+    def _compute_order_bridge_phone_key(self):
+        for partner in self:
+            partner.order_bridge_phone_key = phone_match_key(partner.phone) or False
+
+    def _search_phone_mobile_search(self, operator, value):
+        domain = super()._search_phone_mobile_search(operator, value)
+        if not isinstance(value, str):
+            return domain
+        key = phone_match_key(value)
+        if not key:
+            return domain
+        min_len = getattr(self, '_phone_search_min_length', 3) or 0
+        if min_len and len(key) < min_len:
+            return domain
+        if operator in Domain.NEGATIVE_OPERATORS:
+            return Domain.AND([domain, Domain('order_bridge_phone_key', '!=', key)])
+        return Domain.OR([domain, Domain('order_bridge_phone_key', '=', key)])
 
     @api.depends(
         'order_bridge_partner_address_ids.municipality_id',
@@ -95,6 +136,64 @@ class ResPartner(models.Model):
                 partner._order_bridge_store_order_domain(),
             )
 
+    def _compute_order_bridge_amount_due(self):
+        SaleOrder = self.env['sale.order']
+        for partner in self:
+            orders = SaleOrder.search(partner._order_bridge_store_order_domain())
+            partner.order_bridge_amount_due = sum(orders.mapped('order_bridge_amount_due'))
+
+    def _search_order_bridge_amount_due(self, operator, value):
+        if operator not in ('>', '>=', '<', '<=', '=', '!='):
+            raise UserError(_('Operador de búsqueda no soportado para la deuda Tienda Apk.'))
+        try:
+            amount = float(value)
+        except (TypeError, ValueError) as exc:
+            raise UserError(_('Valor de búsqueda inválido para la deuda Tienda Apk.')) from exc
+
+        groups = self.env['sale.order']._read_group(
+            [('order_bridge_origin', 'in', ('app', 'admin'))],
+            groupby=['partner_id'],
+            aggregates=['order_bridge_amount_due:sum'],
+        )
+        matching_ids = []
+        partners_with_orders = []
+        for partner, total_due in groups:
+            if not partner:
+                continue
+            partners_with_orders.append(partner.id)
+            due = total_due or 0.0
+            if self._order_bridge_compare_amount(due, operator, amount):
+                matching_ids.append(partner.id)
+
+        # Clientes sin pedidos de tienda tienen deuda 0.
+        if self._order_bridge_compare_amount(0.0, operator, amount):
+            if matching_ids and partners_with_orders:
+                return ['|', ('id', 'in', matching_ids), ('id', 'not in', partners_with_orders)]
+            if matching_ids:
+                return [('id', 'in', matching_ids)]
+            if partners_with_orders:
+                return [('id', 'not in', partners_with_orders)]
+            return [(1, '=', 1)]
+        return [('id', 'in', matching_ids)]
+
+    @api.model
+    def _order_bridge_compare_amount(self, left, operator, right):
+        rounding = self.env.company.currency_id.rounding or 0.01
+        cmp_res = float_compare(left, right, precision_rounding=rounding)
+        if operator == '>':
+            return cmp_res > 0
+        if operator == '>=':
+            return cmp_res >= 0
+        if operator == '<':
+            return cmp_res < 0
+        if operator == '<=':
+            return cmp_res <= 0
+        if operator == '=':
+            return cmp_res == 0
+        if operator == '!=':
+            return cmp_res != 0
+        return False
+
     def action_open_order_bridge_devices(self):
         self.ensure_one()
         return {
@@ -115,6 +214,24 @@ class ResPartner(models.Model):
             'res_model': 'sale.order',
             'views': [(list_view.id, 'list'), (False, 'form')],
             'domain': self._order_bridge_store_order_domain(),
+            'context': {
+                'default_partner_id': self.id,
+                'default_order_bridge_origin': 'admin',
+                'order_bridge_admin_create': True,
+            },
+        }
+
+    def action_open_order_bridge_orders_with_due(self):
+        self.ensure_one()
+        list_view = self.env.ref('order_bridge.view_order_tree_order_bridge_store')
+        return {
+            'name': _('Pedidos con saldo pendiente'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'sale.order',
+            'views': [(list_view.id, 'list'), (False, 'form')],
+            'domain': self._order_bridge_store_order_domain() + [
+                ('order_bridge_amount_due', '>', 0),
+            ],
             'context': {
                 'default_partner_id': self.id,
                 'default_order_bridge_origin': 'admin',

@@ -124,6 +124,14 @@
         sequence="20"
         groups="sales_team.group_sale_salesman"/>
 
+    <menuitem
+        id="menu_order_bridge_transfers"
+        name="Transferencias"
+        parent="menu_order_bridge_operaciones_group"
+        action="action_order_bridge_transfer"
+        sequence="30"
+        groups="sales_team.group_sale_salesman"/>
+
     <!-- ── Configuración ─────────────────────────────────────────── -->
 
     <menuitem
@@ -179,5 +187,13 @@
         parent="menu_order_bridge_config_group"
         action="action_order_bridge_neighborhood"
         sequence="50"
+        groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+        id="menu_order_bridge_payment_methods"
+        name="Vías de pago"
+        parent="menu_order_bridge_config_group"
+        action="action_order_bridge_payment_method"
+        sequence="60"
         groups="sales_team.group_sale_salesman"/>
 </odoo>

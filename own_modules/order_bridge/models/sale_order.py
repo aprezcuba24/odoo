@@ -142,6 +142,34 @@ class SaleOrder(models.Model):
         index=True,
         help='Hay notas del mensajero pendientes de revisión en este pedido.',
     )
+    order_bridge_payment_ids = fields.One2many(
+        'order_bridge.order.payment',
+        'order_id',
+        string='Cobros',
+        copy=False,
+    )
+    order_bridge_payment_pending = fields.Boolean(
+        string='Queda por cobrar',
+        default=False,
+        copy=False,
+        help=(
+            'Marque si el pedido aún debe cobrarse y no hay líneas de cobro. '
+            'Sin esta marca y sin cobros, el pedido se considera saldado.'
+        ),
+    )
+    order_bridge_amount_paid = fields.Monetary(
+        string='Cobrado (Tienda Apk)',
+        compute='_compute_order_bridge_payment_amounts',
+        store=True,
+        currency_field='currency_id',
+    )
+    order_bridge_amount_due = fields.Monetary(
+        string='Pendiente de cobro',
+        compute='_compute_order_bridge_payment_amounts',
+        store=True,
+        currency_field='currency_id',
+        index=True,
+    )
 
     _sql_constraints = [
         (
@@ -150,6 +178,46 @@ class SaleOrder(models.Model):
             'Ya existe un pedido con el mismo identificador de cliente para este dispositivo.',
         ),
     ]
+
+    @api.depends(
+        'amount_total',
+        'currency_id',
+        'order_bridge_store_state',
+        'order_bridge_payment_pending',
+        'order_bridge_payment_ids.amount',
+    )
+    def _compute_order_bridge_payment_amounts(self):
+        for order in self:
+            paid = sum(order.order_bridge_payment_ids.mapped('amount'))
+            order.order_bridge_amount_paid = paid
+            rounding = order.currency_id.rounding or 0.01
+            if order.order_bridge_store_state == STATE_CANCELED:
+                order.order_bridge_amount_due = 0.0
+                continue
+            track_due = order.order_bridge_payment_pending or bool(order.order_bridge_payment_ids)
+            if not track_due:
+                order.order_bridge_amount_due = 0.0
+                continue
+            due = order.amount_total - paid
+            if float_compare(due, 0.0, precision_rounding=rounding) <= 0:
+                order.order_bridge_amount_due = 0.0
+            else:
+                order.order_bridge_amount_due = due
+
+    def _order_bridge_check_payments_not_over_total(self):
+        for order in self:
+            if not order.order_bridge_payment_ids:
+                continue
+            rounding = order.currency_id.rounding or 0.01
+            paid = sum(order.order_bridge_payment_ids.mapped('amount'))
+            if float_compare(paid, order.amount_total, precision_rounding=rounding) > 0:
+                raise UserError(
+                    _(
+                        'La suma de cobros (%(paid)s) no puede superar el total del pedido (%(total)s).',
+                        paid=paid,
+                        total=order.amount_total,
+                    )
+                )
 
     @api.model
     def order_bridge_find_idempotent(self, device, body):

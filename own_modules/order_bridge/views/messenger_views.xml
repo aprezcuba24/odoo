@@ -7,6 +7,8 @@
             <list string="Mensajeros" decoration-muted="not active">
                 <field name="name"/>
                 <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="module_delivery" widget="boolean" optional="show"/>
+                <field name="module_payments" widget="boolean" optional="show"/>
                 <field name="active" widget="boolean"/>
                 <field name="api_key" optional="hide"/>
             </list>
@@ -39,9 +41,14 @@
                             <field name="api_key" widget="CopyClipboardChar" readonly="1"/>
                         </group>
                     </group>
+                    <group string="Módulos de la clave">
+                        <field name="module_delivery"/>
+                        <field name="module_payments"/>
+                    </group>
                     <div class="alert alert-info" role="alert" colspan="2">
                         Use el botón de copiar junto a la clave API e introdúzcala en la aplicación de mensajería
                         (cabecera <code>X-Api-Key</code>). No la incluya en la APK de clientes ni en repositorios.
+                        Los módulos concedidos se consultan con <code>GET /api/mobile/v1/modules</code>.
                     </div>
                 </sheet>
             </form>

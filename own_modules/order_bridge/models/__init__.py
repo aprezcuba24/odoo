@@ -10,7 +10,9 @@ from . import general_settings
 from . import ir_http
 from . import messenger
 from . import municipality
+from . import order_payment
 from . import partner_address
+from . import payment_method
 from . import push_token
 from . import product_category
 from . import product_product
@@ -19,4 +21,5 @@ from . import pos_order
 from . import res_company
 from . import res_partner
 from . import sale_order
+from . import transfer
 from . import whatsapp_message

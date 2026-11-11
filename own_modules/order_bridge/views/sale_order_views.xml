@@ -185,6 +185,37 @@
                         </list>
                     </field>
                 </page>
+                <page
+                    string="Pagos"
+                    name="order_bridge_payments"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="not order_bridge_origin"
+                >
+                    <group>
+                        <group>
+                            <field
+                                name="order_bridge_payment_pending"
+                                readonly="order_bridge_store_state == 'canceled'"
+                            />
+                            <field name="amount_total" string="Total del pedido" readonly="1"/>
+                            <field name="order_bridge_amount_paid" readonly="1"/>
+                            <field name="order_bridge_amount_due" readonly="1"/>
+                        </group>
+                    </group>
+                    <field
+                        name="order_bridge_payment_ids"
+                        nolabel="1"
+                        readonly="order_bridge_store_state == 'canceled'"
+                    >
+                        <list editable="bottom" create="true" delete="true">
+                            <field name="date"/>
+                            <field name="method_id" options="{'no_create': True}"/>
+                            <field name="amount" sum="Total cobrado"/>
+                            <field name="transfer_id" optional="hide"/>
+                            <field name="currency_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </page>
             </xpath>
         </field>
     </record>
@@ -229,6 +260,12 @@
                     optional="show"
                 />
                 <field name="order_bridge_partner_has_map_point" string="Coordenadas" widget="boolean"/>
+                <field
+                    name="order_bridge_amount_due"
+                    string="Pendiente"
+                    optional="show"
+                    decoration-danger="order_bridge_amount_due &gt; 0"
+                />
             </xpath>
         </field>
     </record>
@@ -274,6 +311,11 @@
                     name="filter_messenger_notes"
                     string="Notas del mensajero"
                     domain="[('order_bridge_unread_messenger_note', '=', True)]"
+                />
+                <filter
+                    name="filter_payment_due"
+                    string="Pendientes de pago"
+                    domain="[('order_bridge_amount_due', '&gt;', 0)]"
                 />
             </filter>
         </field>

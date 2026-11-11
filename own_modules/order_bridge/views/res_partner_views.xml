@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//sheet" position="before">
                 <field name="order_bridge_order_count" invisible="1"/>
+                <field name="order_bridge_amount_due" invisible="1"/>
             </xpath>
             <div name="button_box" position="inside">
                 <button
@@ -18,12 +19,32 @@
                     invisible="order_bridge_order_count == 0">
                     <field name="order_bridge_order_count" widget="statinfo" string="Pedidos Tienda Apk"/>
                 </button>
+                <button
+                    name="action_open_order_bridge_orders_with_due"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-money"
+                    groups="sales_team.group_sale_salesman"
+                    invisible="order_bridge_amount_due == 0">
+                    <field name="order_bridge_amount_due" widget="statinfo" string="Deuda Tienda Apk"/>
+                </button>
             </div>
             <notebook position="inside">
                 <page string="Tienda Apk" name="order_bridge_page" groups="sales_team.group_sale_salesman">
                     <group>
                         <field name="order_bridge_registered" readonly="1"/>
                         <field name="order_bridge_phone_validated" readonly="1"/>
+                        <label for="order_bridge_amount_due"/>
+                        <div class="o_row">
+                            <field name="order_bridge_amount_due" readonly="1" nolabel="1" class="oe_inline"/>
+                            <button
+                                name="action_open_order_bridge_orders_with_due"
+                                type="object"
+                                string="Ver pedidos con deuda"
+                                class="btn-link"
+                                invisible="order_bridge_amount_due == 0"
+                            />
+                        </div>
                         <button name="action_open_order_bridge_devices" type="object" string="Abrir dispositivos" class="btn-link" colspan="2"/>
                         <button
                             name="action_order_bridge_fcm_send_wizard"
