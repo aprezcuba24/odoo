@@ -50,8 +50,3 @@ class TestPhoneMatch(TransactionCase):
             ('id', '=', partner.id),
         ])
         self.assertIn(partner, found_intl)
-
-        by_helper = self.env['res.partner']._order_bridge_partners_by_phone(
-            '53024637', self.env.company,
-        )
-        self.assertIn(partner, by_helper)

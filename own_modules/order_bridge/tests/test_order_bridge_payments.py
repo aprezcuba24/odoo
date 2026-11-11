@@ -146,10 +146,9 @@ class TestOrderBridgePayments(TransactionCase):
         matched = self.env['sale.order'].search(action['domain'])
         self.assertIn(self.order, matched)
 
-    def test_ui_transfer_create_applies_like_api(self):
+    def test_ui_transfer_create_registers_without_applying(self):
         self.order.order_bridge_payment_pending = True
-        self.assertEqual(self.order.order_bridge_amount_due, self.order.amount_total)
-        money = self.env.company.currency_id.format
+        due_before = self.order.order_bridge_amount_due
 
         transfer = self.env['order_bridge.transfer'].create({
             'phone': self.partner.phone,
@@ -157,15 +156,11 @@ class TestOrderBridgePayments(TransactionCase):
             'code': 'UI-MANUAL-001',
         })
         self.assertEqual(transfer.result, 'processed')
-        self.assertEqual(len(transfer.payment_ids), 1)
-        self.assertEqual(transfer.payment_ids.amount, self.order.amount_total)
-        self.assertIn('**Pago registrado.**', transfer.backend_response)
-        self.assertIn(f'**{self.partner.name}**', transfer.backend_response)
-        self.assertIn(f'Deuda anterior: {money(self.order.amount_total)}', transfer.backend_response)
-        self.assertIn(f'Se aplicó: {money(self.order.amount_total)}', transfer.backend_response)
-        self.assertIn(f'Queda por pagar: {money(0.0)}', transfer.backend_response)
+        self.assertFalse(transfer.applied)
+        self.assertFalse(transfer.payment_ids)
+        self.assertFalse(transfer.partner_id)
         self.order.invalidate_recordset()
-        self.assertEqual(self.order.order_bridge_amount_due, 0.0)
+        self.assertEqual(self.order.order_bridge_amount_due, due_before)
 
         with self.assertRaises(UserError):
             self.env['order_bridge.transfer'].create({
@@ -174,15 +169,64 @@ class TestOrderBridgePayments(TransactionCase):
                 'code': 'UI-MANUAL-001',
             })
 
-    def test_ui_transfer_not_interested(self):
+    def test_ui_transfer_apply_to_debt(self):
+        self.order.order_bridge_payment_pending = True
         transfer = self.env['order_bridge.transfer'].create({
             'phone': '+529998887776',
-            'amount': 50.0,
-            'code': 'UI-NO-DEBT',
+            'amount': 60.0,
+            'code': 'UI-APPLY-001',
         })
-        self.assertEqual(transfer.result, 'not_interested')
+        with self.assertRaises(UserError):
+            transfer.action_apply_to_debt()
+
+        transfer.partner_id = self.partner
+        transfer.action_apply_to_debt()
+        self.assertTrue(transfer.applied)
+        self.assertEqual(len(transfer.payment_ids), 1)
+        self.assertEqual(transfer.payment_ids.amount, 60.0)
+        self.assertEqual(transfer.payment_ids.method_id, self.transfer)
+        self.order.invalidate_recordset()
+        self.assertEqual(self.order.order_bridge_amount_due, 40.0)
+
+        with self.assertRaises(UserError):
+            transfer.action_apply_to_debt()
+        with self.assertRaises(UserError):
+            transfer.partner_id = False
+
+    def test_ui_transfer_apply_without_debt(self):
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': '+529998887775',
+            'amount': 50.0,
+            'code': 'UI-APPLY-NO-DEBT',
+            'partner_id': self.partner.id,
+        })
+        with self.assertRaises(UserError):
+            transfer.action_apply_to_debt()
         self.assertFalse(transfer.payment_ids)
-        self.assertEqual(
-            transfer.backend_response,
-            'Ese teléfono **no espera** un pago.',
-        )
+
+    def test_ui_transfer_apply_partial_across_orders(self):
+        self.order.order_bridge_payment_pending = True
+        order2 = self.env['sale.order'].create({
+            'partner_id': self.partner.id,
+            'order_bridge_origin': 'admin',
+            'order_bridge_payment_pending': True,
+            'order_line': [Command.create({
+                'product_id': self.product.id,
+                'product_uom_qty': 1.0,
+                'price_unit': 50.0,
+                'tax_ids': [Command.clear()],
+            })],
+        })
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': '9991110001',
+            'amount': 120.0,
+            'code': 'UI-APPLY-PARTIAL',
+            'partner_id': self.partner.id,
+        })
+        transfer.action_apply_to_debt()
+        self.assertEqual(len(transfer.payment_ids), 2)
+        self.assertEqual(sum(transfer.payment_ids.mapped('amount')), 120.0)
+        self.order.invalidate_recordset()
+        order2.invalidate_recordset()
+        self.assertEqual(self.order.order_bridge_amount_due, 0.0)
+        self.assertEqual(order2.order_bridge_amount_due, 30.0)

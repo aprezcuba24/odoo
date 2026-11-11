@@ -5,8 +5,6 @@ import json
 from odoo.fields import Command
 from odoo.tests.common import HttpCase, tagged
 
-from odoo.addons.order_bridge.utils.phone_match import phone_match_key
-
 
 @tagged('post_install', '-at_install')
 class TestMobileModulesPaymentsApi(HttpCase):
@@ -30,8 +28,6 @@ class TestMobileModulesPaymentsApi(HttpCase):
             'module_delivery': False,
             'module_payments': False,
         })
-        cls.transfer = cls.env.ref('order_bridge.payment_method_transfer')
-        cls.currency = cls.env.company.currency_id
 
     def _auth_headers(self, key=None):
         return {
@@ -44,31 +40,19 @@ class TestMobileModulesPaymentsApi(HttpCase):
         headers['Content-Type'] = 'application/json'
         return headers
 
-    def _money(self, amount):
-        return self.currency.format(amount)
-
-    def _assert_payment_ok(self, payload, *, result, backend_contains=(), backend_equals=None):
+    def _assert_payment_ok(self, payload, *, result='processed', backend_equals=''):
         self.assertIsInstance(payload, dict)
         self.assertEqual(payload.get('result'), result)
         self.assertIn('backendResponse', payload)
         self.assertIsInstance(payload['backendResponse'], str)
-        if backend_equals is not None:
-            self.assertEqual(payload['backendResponse'], backend_equals)
-        for fragment in backend_contains:
-            self.assertIn(fragment, payload['backendResponse'])
+        self.assertEqual(payload['backendResponse'], backend_equals)
         return payload['backendResponse']
 
-    def _create_due_order(self, *, phone='+5353024637', price=100.0, qty=1.0, name=None):
-        key = phone_match_key(phone)
-        partner = self.env['res.partner'].search([
-            ('order_bridge_phone_key', '=', key),
-            ('company_id', 'in', [False, self.env.company.id]),
-        ], limit=1) if key else self.env['res.partner']
-        if not partner:
-            partner = self.env['res.partner'].create({
-                'name': name or f'Cliente {phone}',
-                'phone': phone,
-            })
+    def _create_due_order(self, *, phone='+5359012001', price=100.0, qty=1.0, name=None):
+        partner = self.env['res.partner'].create({
+            'name': name or f'Cliente {phone}',
+            'phone': phone,
+        })
         product = self.env['product.product'].create({
             'name': f'Prod {phone}-{price}',
             'sale_ok': True,
@@ -164,253 +148,106 @@ class TestMobileModulesPaymentsApi(HttpCase):
             self.assertEqual(payload, {'error': error}, body)
             self.assertNotIn('backendResponse', payload)
 
-    def test_post_payments_not_interested(self):
+    def test_post_payments_registers_unknown_phone_without_applying(self):
+        partner, order = self._create_due_order(
+            phone='+5359012001', price=100.0, name='Cliente con deuda',
+        )
+        due_before = order.order_bridge_amount_due
+
         res = self.url_open(
             '/api/mobile/v1/payments',
             data=json.dumps({
                 'phone': '5399999999',
                 'amount': 50,
-                'code': 'MM-NOT-INTERESTED',
+                'code': 'MM-UNKNOWN-PHONE',
             }),
             headers=self._json_headers(),
             timeout=60,
         )
         self.assertEqual(res.status_code, 200, res.text)
-        text = self._assert_payment_ok(
-            json.loads(res.text),
-            result='not_interested',
-            backend_contains=['Ese teléfono **no espera** un pago.'],
-        )
+        self._assert_payment_ok(json.loads(res.text), result='processed', backend_equals='')
 
         transfer = self.env['order_bridge.transfer'].search([
-            ('code', '=', 'MM-NOT-INTERESTED'),
+            ('code', '=', 'MM-UNKNOWN-PHONE'),
             ('transfer_type', '=', 'mobile'),
         ])
         self.assertEqual(len(transfer), 1)
-        self.assertEqual(transfer.result, 'not_interested')
-        self.assertEqual(transfer.backend_response, text)
+        self.assertEqual(transfer.result, 'processed')
+        self.assertFalse(transfer.applied)
+        self.assertEqual(transfer.phone, '5399999999')
+        self.assertFalse(transfer.partner_id)
         self.assertFalse(transfer.payment_ids)
+        self.assertEqual(transfer.messenger_id, self.messenger)
 
-        # Idempotent replay keeps stored text
+        order.invalidate_recordset()
+        self.assertEqual(order.order_bridge_amount_due, due_before)
+        self.assertEqual(partner.order_bridge_amount_due, due_before)
+
+    def test_post_payments_idempotent_same_code(self):
+        res = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012002',
+                'amount': 25,
+                'code': 'MM-IDEM-001',
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        self._assert_payment_ok(json.loads(res.text))
+
         res2 = self.url_open(
             '/api/mobile/v1/payments',
             data=json.dumps({
                 'phone': '5300000000',
                 'amount': 999,
-                'code': 'MM-NOT-INTERESTED',
+                'code': 'MM-IDEM-001',
             }),
             headers=self._json_headers(),
             timeout=60,
         )
         self.assertEqual(res2.status_code, 200, res2.text)
-        self._assert_payment_ok(
-            json.loads(res2.text),
-            result='not_interested',
-            backend_equals=text,
-        )
-        self.assertEqual(
-            self.env['order_bridge.transfer'].search_count([
-                ('code', '=', 'MM-NOT-INTERESTED'),
-            ]),
-            1,
-        )
+        self._assert_payment_ok(json.loads(res2.text))
 
-    def test_post_payments_not_interested_with_partner_no_debt(self):
-        partner = self.env['res.partner'].create({
-            'name': 'Sin Deuda',
-            'phone': '+5359011004',
-        })
+        transfers = self.env['order_bridge.transfer'].search([
+            ('code', '=', 'MM-IDEM-001'),
+        ])
+        self.assertEqual(len(transfers), 1)
+        self.assertEqual(transfers.phone, '5359012002')
+        self.assertEqual(transfers.amount, 25.0)
+        self.assertFalse(transfers.payment_ids)
+
+    def test_post_payments_matching_phone_still_does_not_apply(self):
+        partner, order = self._create_due_order(
+            phone='+5359012003', price=80.0, name='Cliente coincidente',
+        )
+        due_before = order.order_bridge_amount_due
+
         res = self.url_open(
             '/api/mobile/v1/payments',
             data=json.dumps({
-                'phone': '59011004',
-                'amount': 25,
-                'code': 'MM-PARTNER-NO-DEBT',
+                'phone': '59012003',
+                'amount': 40,
+                'code': 'MM-MATCH-NO-APPLY',
             }),
             headers=self._json_headers(),
             timeout=60,
         )
         self.assertEqual(res.status_code, 200, res.text)
-        zero = self._money(0.0)
-        self._assert_payment_ok(
-            json.loads(res.text),
-            result='not_interested',
-            backend_contains=[
-                'Ese teléfono **no espera** un pago.',
-                f'**{partner.name}**',
-                f'Deuda anterior: {zero}',
-                f'Queda por pagar: {zero}',
-            ],
-        )
-
-    def test_post_payments_processed_applies_to_due_orders(self):
-        phone = '+5359011001'
-        partner, order1 = self._create_due_order(
-            phone=phone, price=60.0, name='Cliente Pagos',
-        )
-        _partner2, order2 = self._create_due_order(phone='59011001', price=40.0)
-        self.assertEqual(partner, order2.partner_id)
-        self.assertEqual(order1.order_bridge_amount_due, 60.0)
-        self.assertEqual(order2.order_bridge_amount_due, 40.0)
-
-        res = self.url_open(
-            '/api/mobile/v1/payments',
-            data=json.dumps({
-                'phone': '59011001',
-                'amount': 100,
-                'code': 'MM-PROC-100',
-            }),
-            headers=self._json_headers(),
-            timeout=60,
-        )
-        self.assertEqual(res.status_code, 200, res.text)
-        text = self._assert_payment_ok(
-            json.loads(res.text),
-            result='processed',
-            backend_contains=[
-                '**Pago registrado.**',
-                f'**{partner.name}**',
-                f'Deuda anterior: {self._money(100.0)}',
-                f'Se aplicó: {self._money(100.0)}',
-                f'Queda por pagar: {self._money(0.0)}',
-            ],
-        )
-        self.assertNotIn('Sobra:', text)
-
-        order1.invalidate_recordset()
-        order2.invalidate_recordset()
-        self.assertEqual(order1.order_bridge_amount_due, 0.0)
-        self.assertEqual(order2.order_bridge_amount_due, 0.0)
+        self._assert_payment_ok(json.loads(res.text))
 
         transfer = self.env['order_bridge.transfer'].search([
-            ('code', '=', 'MM-PROC-100'),
+            ('code', '=', 'MM-MATCH-NO-APPLY'),
         ])
         self.assertEqual(len(transfer), 1)
-        self.assertEqual(transfer.result, 'processed')
-        self.assertEqual(transfer.backend_response, text)
-        self.assertEqual(len(transfer.payment_ids), 2)
-        self.assertEqual(sum(transfer.payment_ids.mapped('amount')), 100.0)
-        self.assertTrue(all(
-            p.method_id == self.transfer for p in transfer.payment_ids
-        ))
+        self.assertFalse(transfer.payment_ids)
+        self.assertFalse(transfer.partner_id)
 
-        # Idempotent: same code does not pay again and returns stored text
-        res2 = self.url_open(
-            '/api/mobile/v1/payments',
-            data=json.dumps({
-                'phone': '5359011001',
-                'amount': 100,
-                'code': 'MM-PROC-100',
-            }),
-            headers=self._json_headers(),
-            timeout=60,
-        )
-        self.assertEqual(res2.status_code, 200, res2.text)
-        self._assert_payment_ok(
-            json.loads(res2.text),
-            result='processed',
-            backend_equals=text,
-        )
-        self.assertEqual(
-            self.env['order_bridge.order.payment'].search_count([
-                ('transfer_id', '=', transfer.id),
-            ]),
-            2,
-        )
-
-        # Edited backend_response is returned on next replay
-        edited = 'Texto **editado** para la app.'
-        transfer.write({'backend_response': edited})
-        res3 = self.url_open(
-            '/api/mobile/v1/payments',
-            data=json.dumps({
-                'phone': '5359011001',
-                'amount': 100,
-                'code': 'MM-PROC-100',
-            }),
-            headers=self._json_headers(),
-            timeout=60,
-        )
-        self.assertEqual(res3.status_code, 200, res3.text)
-        self._assert_payment_ok(
-            json.loads(res3.text),
-            result='processed',
-            backend_equals=edited,
-        )
-        self.assertEqual(
-            self.env['order_bridge.order.payment'].search_count([
-                ('transfer_id', '=', transfer.id),
-            ]),
-            2,
-        )
-
-    def test_post_payments_partial_across_orders(self):
-        partner, order1 = self._create_due_order(
-            phone='+5359011002', price=80.0, name='Cliente Parcial',
-        )
-        _, order2 = self._create_due_order(phone='59011002', price=50.0)
-        self.assertEqual(partner, order2.partner_id)
-
-        res = self.url_open(
-            '/api/mobile/v1/payments',
-            data=json.dumps({
-                'phone': '5359011002',
-                'amount': 100,
-                'code': 'MM-PARTIAL-100',
-            }),
-            headers=self._json_headers(),
-            timeout=60,
-        )
-        self.assertEqual(res.status_code, 200, res.text)
-        self._assert_payment_ok(
-            json.loads(res.text),
-            result='processed',
-            backend_contains=[
-                '**Pago registrado.**',
-                f'**{partner.name}**',
-                f'Deuda anterior: {self._money(130.0)}',
-                f'Se aplicó: {self._money(100.0)}',
-                f'Queda por pagar: {self._money(30.0)}',
-            ],
-        )
-
-        order1.invalidate_recordset()
-        order2.invalidate_recordset()
-        self.assertEqual(order1.order_bridge_amount_due, 0.0)
-        self.assertEqual(order2.order_bridge_amount_due, 30.0)
-
-    def test_post_payments_surplus_over_debt(self):
-        partner, order = self._create_due_order(
-            phone='+5359011003', price=50.0, name='Cliente Sobra',
-        )
-        res = self.url_open(
-            '/api/mobile/v1/payments',
-            data=json.dumps({
-                'phone': '59011003',
-                'amount': 80,
-                'code': 'MM-SURPLUS-80',
-            }),
-            headers=self._json_headers(),
-            timeout=60,
-        )
-        self.assertEqual(res.status_code, 200, res.text)
-        self._assert_payment_ok(
-            json.loads(res.text),
-            result='processed',
-            backend_contains=[
-                '**Pago registrado.**',
-                f'**{partner.name}**',
-                f'Deuda anterior: {self._money(50.0)}',
-                f'Se aplicó: {self._money(50.0)}',
-                f'Queda por pagar: {self._money(0.0)}',
-                f'Sobra: **{self._money(30.0)}** sin aplicar.',
-            ],
-        )
         order.invalidate_recordset()
-        self.assertEqual(order.order_bridge_amount_due, 0.0)
-        transfer = self.env['order_bridge.transfer'].search([('code', '=', 'MM-SURPLUS-80')])
-        self.assertEqual(len(transfer.payment_ids), 1)
-        self.assertEqual(transfer.payment_ids.amount, 50.0)
+        partner.invalidate_recordset()
+        self.assertEqual(order.order_bridge_amount_due, due_before)
+        self.assertEqual(partner.order_bridge_amount_due, due_before)
 
     def test_deliveries_require_delivery_module(self):
         res = self.url_open(

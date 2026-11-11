@@ -5,7 +5,7 @@ from odoo.exceptions import UserError
 from odoo.fields import Domain
 from odoo.tools.float_utils import float_compare
 
-from odoo.addons.order_bridge.utils.phone_match import phone_match_domain, phone_match_key
+from odoo.addons.order_bridge.utils.phone_match import phone_match_key
 
 
 class ResPartner(models.Model):
@@ -90,21 +90,6 @@ class ResPartner(models.Model):
         if operator in Domain.NEGATIVE_OPERATORS:
             return Domain.AND([domain, Domain('order_bridge_phone_key', '!=', key)])
         return Domain.OR([domain, Domain('order_bridge_phone_key', '=', key)])
-
-    @api.model
-    def _order_bridge_partners_by_phone(self, phone_raw, company):
-        """Partners of ``company`` (or shared) whose ``phone`` matches ``phone_raw``."""
-        key_domain = phone_match_domain(phone_raw)
-        if key_domain == [('id', '=', False)]:
-            return self.browse()
-        return self.search(
-            key_domain
-            + [
-                '|',
-                ('company_id', '=', company.id),
-                ('company_id', '=', False),
-            ]
-        )
 
     @api.depends(
         'order_bridge_partner_address_ids.municipality_id',

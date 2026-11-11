@@ -1,10 +1,8 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
-import logging
 
 from odoo import http
-from odoo.exceptions import LockError
 from odoo.http import request
 
 from odoo.addons.order_bridge.utils.decorators import CORS_HEADERS, api_cors_preflight
@@ -13,8 +11,6 @@ from odoo.addons.order_bridge.utils.mobile_auth import (
     messenger_has_module,
     resolve_messenger,
 )
-
-_logger = logging.getLogger(__name__)
 
 
 def _json(payload, status=200):
@@ -74,21 +70,12 @@ class MobilePaymentsController(http.Controller):
         if error:
             return _json({'error': error}, 400)
 
-        try:
-            result, backend_response = request.env['order_bridge.transfer'].sudo().process_mobile_payment(
-                messenger,
-                parsed['phone'],
-                parsed['amount'],
-                parsed['code'],
-            )
-        except LockError:
-            _logger.info(
-                'mobile payment locked messenger_id=%s code=%s',
-                messenger.id,
-                parsed['code'],
-            )
-            return _json({'error': 'locked'}, 429)
-
+        result, backend_response = request.env['order_bridge.transfer'].sudo().process_mobile_payment(
+            messenger,
+            parsed['phone'],
+            parsed['amount'],
+            parsed['code'],
+        )
         return _json({
             'result': result,
             'backendResponse': backend_response or '',

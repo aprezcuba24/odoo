@@ -9,12 +9,11 @@
                 <field name="transfer_type"/>
                 <field name="code"/>
                 <field name="phone"/>
+                <field name="partner_id"/>
                 <field name="amount"/>
                 <field name="currency_id" optional="hide"/>
-                <field name="result"
-                    widget="badge"
-                    decoration-success="result == 'processed'"
-                    decoration-muted="result == 'not_interested'"/>
+                <field name="applied"
+                    widget="boolean"/>
                 <field name="payment_count"/>
                 <field name="messenger_id" optional="show"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
@@ -27,6 +26,14 @@
         <field name="model">order_bridge.transfer</field>
         <field name="arch" type="xml">
             <form string="Transferencia" delete="false">
+                <header>
+                    <button
+                        name="action_apply_to_debt"
+                        type="object"
+                        string="Aplicar a la deuda"
+                        class="btn-primary"
+                        invisible="not id or applied"/>
+                </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button
@@ -34,20 +41,21 @@
                             type="object"
                             class="oe_stat_button"
                             icon="fa-money"
-                            invisible="payment_count == 0">
+                            invisible="not applied">
                             <field name="payment_count" widget="statinfo" string="Cobros"/>
                         </button>
                     </div>
                     <div class="alert alert-info" role="alert" invisible="id">
-                        Al guardar se buscará el cliente por teléfono y se aplicará el importe
-                        a sus pedidos con deuda (igual que un aviso de la app móvil).
+                        Al guardar se registra el aviso. Después elija el cliente y
+                        pulse «Aplicar a la deuda» para repartir el importe.
                     </div>
                     <group>
                         <group>
                             <field name="transfer_type" readonly="id"/>
                             <field name="code" readonly="id"/>
                             <field name="phone" readonly="id"/>
-                            <field name="result" invisible="not id"/>
+                            <field name="partner_id" readonly="applied"/>
+                            <field name="applied" readonly="1" invisible="not id"/>
                         </group>
                         <group>
                             <field name="amount" readonly="id"/>
@@ -56,9 +64,6 @@
                             <field name="company_id" groups="base.group_multi_company" readonly="id"/>
                             <field name="create_date" readonly="1" invisible="not id"/>
                         </group>
-                    </group>
-                    <group invisible="not id" string="Respuesta para la app">
-                        <field name="backend_response" nolabel="1" placeholder="Markdown enviado a la APK…"/>
                     </group>
                     <notebook invisible="not id">
                         <page string="Cobros" name="payments">
@@ -85,15 +90,17 @@
             <search string="Transferencias">
                 <field name="code"/>
                 <field name="phone"/>
+                <field name="partner_id"/>
                 <field name="messenger_id"/>
                 <separator/>
-                <filter name="filter_processed" string="Procesadas" domain="[('result', '=', 'processed')]"/>
-                <filter name="filter_not_interested" string="Sin interés" domain="[('result', '=', 'not_interested')]"/>
+                <filter name="filter_applied" string="Aplicadas" domain="[('applied', '=', True)]"/>
+                <filter name="filter_pending" string="Pendientes" domain="[('applied', '=', False)]"/>
                 <separator/>
                 <filter name="filter_mobile" string="Aviso móvil" domain="[('transfer_type', '=', 'mobile')]"/>
                 <group>
-                    <filter name="group_result" string="Resultado" context="{'group_by': 'result'}"/>
+                    <filter name="group_applied" string="Aplicada a deuda" context="{'group_by': 'applied'}"/>
                     <filter name="group_type" string="Tipo" context="{'group_by': 'transfer_type'}"/>
+                    <filter name="group_partner" string="Cliente" context="{'group_by': 'partner_id'}"/>
                 </group>
             </search>
         </field>
@@ -109,7 +116,7 @@
             <p class="o_view_nocontent_smiling_face">Aún no hay transferencias registradas.</p>
             <p>
                 Registre un aviso con teléfono, importe y código, o revise los enviados
-                desde la app móvil. Al guardar se aplica el importe a los pedidos con deuda.
+                desde la app móvil. Después asigne el cliente y aplique el importe a su deuda.
             </p>
         </field>
     </record>

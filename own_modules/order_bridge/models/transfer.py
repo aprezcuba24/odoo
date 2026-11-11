@@ -56,6 +56,14 @@ class OrderBridgeTransfer(models.Model):
         index=True,
         check_company=True,
     )
+    partner_id = fields.Many2one(
+        'res.partner',
+        string='Cliente',
+        ondelete='set null',
+        index=True,
+        check_company=True,
+        help='Cliente al que el administrador aplica el importe de esta transferencia.',
+    )
     result = fields.Selection(
         selection=[
             ('processed', 'Procesado'),
@@ -65,11 +73,12 @@ class OrderBridgeTransfer(models.Model):
         index=True,
         copy=False,
         readonly=True,
+        default='processed',
     )
     backend_response = fields.Text(
         string='Respuesta para la app',
         copy=False,
-        help='Markdown en español enviado a la APK en POST /payments (backendResponse).',
+        help='Texto histórico enviado a la APK en avisos antiguos (backendResponse).',
     )
     payment_ids = fields.One2many(
         'order_bridge.order.payment',
@@ -79,6 +88,13 @@ class OrderBridgeTransfer(models.Model):
     payment_count = fields.Integer(
         string='Nº cobros',
         compute='_compute_payment_count',
+    )
+    applied = fields.Boolean(
+        string='Aplicada a deuda',
+        compute='_compute_applied',
+        store=True,
+        index=True,
+        help='Indica si esta transferencia ya tiene cobros aplicados a pedidos con deuda.',
     )
 
     _transfer_type_code_unique = models.Constraint(
@@ -90,6 +106,11 @@ class OrderBridgeTransfer(models.Model):
     def _compute_payment_count(self):
         for transfer in self:
             transfer.payment_count = len(transfer.payment_ids)
+
+    @api.depends('payment_ids')
+    def _compute_applied(self):
+        for transfer in self:
+            transfer.applied = bool(transfer.payment_ids)
 
     @api.constrains('amount')
     def _check_amount_positive(self):
@@ -105,21 +126,22 @@ class OrderBridgeTransfer(models.Model):
 
         records = self.browse()
         for vals in vals_list:
-            if vals.get('result'):
-                records |= super().create([vals])
-            else:
-                records |= self._register_from_ui(vals)
+            records |= self._register_notice(vals)
         return records
 
     def write(self, vals):
         locked = {'phone', 'amount', 'code', 'transfer_type', 'result', 'messenger_id'}
         if locked.intersection(vals) and not self.env.context.get('order_bridge_transfer_skip_process'):
             raise UserError(_('No se puede modificar una transferencia ya registrada.'))
+        if 'partner_id' in vals and any(transfer.applied for transfer in self):
+            raise UserError(
+                _('No se puede cambiar el cliente de una transferencia que ya tiene cobros.')
+            )
         return super().write(vals)
 
     @api.model
-    def _register_from_ui(self, vals):
-        """Create a transfer from the Odoo UI using the same apply flow as the API."""
+    def _register_notice(self, vals):
+        """Create a transfer notice without applying payments."""
         phone = (vals.get('phone') or '').strip()
         code = (vals.get('code') or '').strip()
         amount = vals.get('amount')
@@ -141,33 +163,35 @@ class OrderBridgeTransfer(models.Model):
         if amount <= 0:
             raise UserError(_('El importe debe ser un número mayor que cero.'))
 
-        messenger = False
-        if vals.get('messenger_id'):
-            messenger = self.env['order_bridge.messenger'].browse(vals['messenger_id']).exists()
-
         existing = self._find_by_code(transfer_type, code)
         if existing:
+            if self.env.context.get('order_bridge_transfer_from_api'):
+                return existing
             raise UserError(
                 _('Ya existe una transferencia con el código %(code)s.', code=code)
             )
 
-        try:
-            self.process_payment(
-                company=company,
-                phone=phone,
-                amount=amount,
-                code=code,
-                transfer_type=transfer_type,
-                messenger=messenger or None,
-            )
-        except LockError as exc:
-            raise UserError(
-                _('No se pudo registrar la transferencia: un pedido está bloqueado. Inténtelo de nuevo.')
-            ) from exc
+        messenger = False
+        if vals.get('messenger_id'):
+            messenger = self.env['order_bridge.messenger'].browse(vals['messenger_id']).exists()
 
-        transfer = self._find_by_code(transfer_type, code)
-        if not transfer:
-            raise UserError(_('No se pudo registrar la transferencia.'))
+        create_vals = {
+            'transfer_type': transfer_type,
+            'code': code,
+            'phone': phone,
+            'amount': amount,
+            'result': 'processed',
+            'backend_response': vals.get('backend_response') or '',
+            'messenger_id': messenger.id if messenger else False,
+            'company_id': company.id,
+            'currency_id': vals.get('currency_id') or company.currency_id.id,
+            'partner_id': vals.get('partner_id') or False,
+        }
+        transfer, created = self._create_transfer_row(create_vals)
+        if not created and not self.env.context.get('order_bridge_transfer_from_api'):
+            raise UserError(
+                _('Ya existe una transferencia con el código %(code)s.', code=code)
+            )
         return transfer
 
     @api.model
@@ -178,180 +202,78 @@ class OrderBridgeTransfer(models.Model):
         )
 
     @api.model
-    def _find_mobile_by_code(self, code):
-        return self._find_by_code('mobile', code)
-
-    @api.model
     def _api_result(self, transfer):
         """Return ``(result, backend_response)`` for an existing transfer."""
         return transfer.result, transfer.backend_response or ''
 
     @api.model
-    def _escape_backend_md(self, text):
-        value = text or ''
-        return (
-            value
-            .replace('\\', '\\\\')
-            .replace('*', '\\*')
-            .replace('_', '\\_')
-            .replace('`', '\\`')
-        )
-
-    @api.model
-    def _format_backend_amount(self, currency, amount):
-        return currency.format(amount)
-
-    @api.model
-    def _backend_response_not_interested(self, partners, currency):
-        lines = ['Ese teléfono **no espera** un pago.']
-        for partner in partners:
-            zero = self._format_backend_amount(currency, 0.0)
-            lines.append('')
-            lines.append(f'**{self._escape_backend_md(partner.name)}**')
-            lines.append(f'Deuda anterior: {zero}')
-            lines.append(f'Queda por pagar: {zero}')
-        return '\n'.join(lines)
-
-    @api.model
-    def _backend_response_processed(self, partner_rows, leftover, currency):
-        lines = ['**Pago registrado.**']
-        for row in partner_rows:
-            lines.append('')
-            lines.append(f'**{self._escape_backend_md(row["name"])}**')
-            lines.append(
-                f'Deuda anterior: {self._format_backend_amount(currency, row["debt_before"])}'
-            )
-            lines.append(
-                f'Se aplicó: {self._format_backend_amount(currency, row["applied"])}'
-            )
-            lines.append(
-                f'Queda por pagar: {self._format_backend_amount(currency, row["remaining_due"])}'
-            )
-        rounding = currency.rounding or 0.01
-        if float_compare(leftover, 0.0, precision_rounding=rounding) > 0:
-            lines.append('')
-            surplus = self._format_backend_amount(currency, leftover)
-            lines.append(f'Sobra: **{surplus}** sin aplicar.')
-        return '\n'.join(lines)
-
-    @api.model
-    def _partner_rows_from_payments(self, orders, payment_vals):
-        """Build per-partner debt/applied rows in application order."""
-        orders_by_id = {order.id: order for order in orders}
-        debt_before = {}
-        for order in orders:
-            partner_id = order.partner_id.id
-            debt_before[partner_id] = debt_before.get(partner_id, 0.0) + order.order_bridge_amount_due
-
-        applied = {}
-        partner_order = []
-        for vals in payment_vals:
-            order = orders_by_id[vals['order_id']]
-            partner_id = order.partner_id.id
-            if partner_id not in applied:
-                partner_order.append(partner_id)
-                applied[partner_id] = 0.0
-            applied[partner_id] += vals['amount']
-
-        rows = []
-        for partner_id in partner_order:
-            partner = self.env['res.partner'].browse(partner_id)
-            before = debt_before.get(partner_id, 0.0)
-            applied_amount = applied[partner_id]
-            rows.append({
-                'name': partner.name or partner.display_name or '',
-                'debt_before': before,
-                'applied': applied_amount,
-                'remaining_due': before - applied_amount,
-            })
-        return rows
-
-    @api.model
     def process_mobile_payment(self, messenger, phone, amount, code):
-        """API helper: process a mobile notice for the messenger's company."""
-        return self.process_payment(
-            company=messenger.company_id,
-            phone=phone,
-            amount=amount,
-            code=code,
-            transfer_type='mobile',
-            messenger=messenger,
-        )
+        """API helper: register a mobile notice without applying payments."""
+        self = self.sudo().with_context(order_bridge_transfer_from_api=True)
+        transfer = self._register_notice({
+            'company_id': messenger.company_id.id,
+            'phone': phone,
+            'amount': amount,
+            'code': code,
+            'transfer_type': 'mobile',
+            'messenger_id': messenger.id,
+        })
+        return self._api_result(transfer)
 
     @api.model
-    def process_payment(
-        self, *, company, phone, amount, code, transfer_type='mobile', messenger=None,
-    ):
-        """Idempotent payment notice: apply transfer amount to due orders.
+    def _create_transfer_row(self, vals):
+        """Create a transfer row. Return ``(record, created)``.
 
-        Returns ``(result, backend_response)`` where ``result`` is
-        ``processed`` or ``not_interested``.
-        Raises ``LockError`` when an order cannot be locked.
+        On unique-code collision, return the existing row and ``created=False``.
         """
-        self = self.sudo()
-        existing = self._find_by_code(transfer_type, code)
-        if existing:
-            return self._api_result(existing)
+        transfer_type = vals.get('transfer_type') or 'mobile'
+        code = vals.get('code')
+        try:
+            with self.env.cr.savepoint(), mute_logger('odoo.sql_db'):
+                return (
+                    self.with_context(order_bridge_transfer_skip_process=True).create(vals),
+                    True,
+                )
+        except IntegrityError:
+            existing = self._find_by_code(transfer_type, code)
+            if existing:
+                return existing, False
+            raise
 
-        currency = company.currency_id
-        partners = self.env['res.partner'].sudo()._order_bridge_partners_by_phone(
-            phone, company,
-        )
-        orders = self.env['sale.order'].sudo().search(
+    def action_apply_to_debt(self):
+        """Apply this transfer amount to the selected partner's due store orders."""
+        self.ensure_one()
+        if self.applied:
+            raise UserError(_('Esta transferencia ya tiene cobros aplicados.'))
+        if not self.partner_id:
+            raise UserError(_('Seleccione un cliente antes de aplicar la transferencia.'))
+
+        orders = self.env['sale.order'].search(
             [
-                ('partner_id', 'in', partners.ids),
-                ('company_id', '=', company.id),
+                ('partner_id', '=', self.partner_id.id),
+                ('company_id', '=', self.company_id.id),
                 ('order_bridge_origin', 'in', ('app', 'admin')),
                 ('order_bridge_amount_due', '>', 0),
             ],
             order='id asc',
         )
-
-        if not partners or not orders:
-            backend_response = self._backend_response_not_interested(
-                partners, currency,
-            )
-            transfer, created = self._create_transfer(
-                company=company,
-                phone=phone,
-                amount=amount,
-                code=code,
-                result='not_interested',
-                transfer_type=transfer_type,
-                messenger=messenger,
-                backend_response=backend_response,
-            )
-            if not created:
-                return self._api_result(transfer)
-            return self._api_result(transfer)
-
-        for order in orders:
-            order.lock_for_update()
-        orders.invalidate_recordset()
-
-        orders = orders.filtered(lambda o: o.order_bridge_amount_due > 0).sorted('id')
-        if orders:
-            currency = orders[:1].currency_id
-
         if not orders:
-            backend_response = self._backend_response_not_interested(
-                partners, currency,
-            )
-            transfer, created = self._create_transfer(
-                company=company,
-                phone=phone,
-                amount=amount,
-                code=code,
-                result='not_interested',
-                transfer_type=transfer_type,
-                messenger=messenger,
-                currency=currency,
-                backend_response=backend_response,
-            )
-            return self._api_result(transfer)
+            raise UserError(_('El cliente seleccionado no tiene pedidos con deuda.'))
+
+        try:
+            for order in orders:
+                order.lock_for_update()
+        except LockError as exc:
+            raise UserError(
+                _('No se pudo aplicar la transferencia: un pedido está bloqueado. Inténtelo de nuevo.')
+            ) from exc
+        orders.invalidate_recordset()
+        orders = orders.filtered(lambda o: o.order_bridge_amount_due > 0).sorted('id')
+        if not orders:
+            raise UserError(_('El cliente seleccionado no tiene pedidos con deuda.'))
 
         transfer_method = self.env.ref('order_bridge.payment_method_transfer')
-        remaining = float(amount)
+        remaining = float(self.amount)
         payment_vals = []
         for order in orders:
             rounding = order.currency_id.rounding or 0.01
@@ -367,89 +289,15 @@ class OrderBridgeTransfer(models.Model):
                 'order_id': order.id,
                 'method_id': transfer_method.id,
                 'amount': apply_amount,
+                'transfer_id': self.id,
             })
             remaining -= apply_amount
 
         if not payment_vals:
-            backend_response = self._backend_response_not_interested(
-                partners, currency,
-            )
-            transfer, created = self._create_transfer(
-                company=company,
-                phone=phone,
-                amount=amount,
-                code=code,
-                result='not_interested',
-                transfer_type=transfer_type,
-                messenger=messenger,
-                currency=currency,
-                backend_response=backend_response,
-            )
-            return self._api_result(transfer)
+            raise UserError(_('El cliente seleccionado no tiene pedidos con deuda.'))
 
-        partner_rows = self._partner_rows_from_payments(orders, payment_vals)
-        backend_response = self._backend_response_processed(
-            partner_rows, remaining, currency,
-        )
-        transfer, created = self._create_transfer(
-            company=company,
-            phone=phone,
-            amount=amount,
-            code=code,
-            result='processed',
-            transfer_type=transfer_type,
-            messenger=messenger,
-            currency=currency,
-            backend_response=backend_response,
-        )
-        if not created:
-            return self._api_result(transfer)
-
-        for vals in payment_vals:
-            vals['transfer_id'] = transfer.id
-        self.env['order_bridge.order.payment'].sudo().create(payment_vals)
-        return self._api_result(transfer)
-
-    @api.model
-    def _create_transfer(
-        self,
-        *,
-        company,
-        phone,
-        amount,
-        code,
-        result,
-        transfer_type='mobile',
-        messenger=None,
-        currency=None,
-        backend_response='',
-    ):
-        """Create a transfer row. Return ``(record, created)``.
-
-        On unique-code collision, return the existing row and ``created=False``.
-        """
-        vals = {
-            'transfer_type': transfer_type,
-            'code': code,
-            'phone': phone,
-            'amount': amount,
-            'result': result,
-            'backend_response': backend_response or '',
-            'messenger_id': messenger.id if messenger else False,
-            'company_id': company.id,
-            'currency_id': (currency or company.currency_id).id,
-        }
-        try:
-            with self.env.cr.savepoint(), mute_logger('odoo.sql_db'):
-                return (
-                    self.with_context(order_bridge_transfer_skip_process=True).create(vals),
-                    True,
-                )
-        except IntegrityError:
-            existing = self._find_by_code(transfer_type, code)
-            if existing:
-                return existing, False
-            raise
+        self.env['order_bridge.order.payment'].create(payment_vals)
+        return True
 
     def action_open_payments(self):
         self.ensure_one()
