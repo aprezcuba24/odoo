@@ -57,6 +57,9 @@
                             <field name="create_date" readonly="1" invisible="not id"/>
                         </group>
                     </group>
+                    <group invisible="not id" string="Respuesta para la app">
+                        <field name="backend_response" nolabel="1" placeholder="Markdown enviado a la APK…"/>
+                    </group>
                     <notebook invisible="not id">
                         <page string="Cobros" name="payments">
                             <field name="payment_ids" readonly="1">

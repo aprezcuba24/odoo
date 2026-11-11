@@ -75,7 +75,7 @@ class MobilePaymentsController(http.Controller):
             return _json({'error': error}, 400)
 
         try:
-            result = request.env['order_bridge.transfer'].sudo().process_mobile_payment(
+            result, backend_response = request.env['order_bridge.transfer'].sudo().process_mobile_payment(
                 messenger,
                 parsed['phone'],
                 parsed['amount'],
@@ -89,4 +89,7 @@ class MobilePaymentsController(http.Controller):
             )
             return _json({'error': 'locked'}, 429)
 
-        return _json({'result': result}, 200)
+        return _json({
+            'result': result,
+            'backendResponse': backend_response or '',
+        }, 200)

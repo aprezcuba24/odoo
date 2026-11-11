@@ -162,8 +162,8 @@ update_database() {
     local target_db="${1:-$PGDATABASE}"
     print_info "Actualizando esquema de la base de datos '${target_db}'..."
 
-    print_info "Ejecutando: odoo-bin -d ${target_db} -u base..."
-    if "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${target_db}" -u base --stop-after-init --no-http; then
+    print_info "Ejecutando: odoo-bin -d ${target_db} -u base,order_bridge..."
+    if "$SCRIPT_DIR/odoo-bin" "${DB_ARGS[@]}" -d "${target_db}" -u base,order_bridge --stop-after-init --no-http; then
         print_info "Base de datos '${target_db}' actualizada correctamente."
         return 0
     else
@@ -285,7 +285,7 @@ prepare_database() {
     provision_banner_s3 "${target_db}"
 }
 
-# SKIP_DB_UPGRADE=true|1|yes omite odoo-bin -u base (emergencia / falta de RAM en deploy)
+# SKIP_DB_UPGRADE=true|1|yes omite odoo-bin -u base,order_bridge (emergencia / falta de RAM en deploy)
 skip_db_upgrade() {
     case "$(printf '%s' "${SKIP_DB_UPGRADE:-}" | tr '[:upper:]' '[:lower:]')" in
         true|1|yes) return 0 ;;
@@ -301,8 +301,8 @@ print_info "Iniciando proceso de inicialización/actualización de base de datos
 if check_database_initialized 2>/dev/null; then
     print_info "La base de datos '${PGDATABASE}' ya existe y está inicializada."
     if skip_db_upgrade; then
-        print_warn "SKIP_DB_UPGRADE activado: se omite odoo-bin -u base en este arranque."
-        print_warn "Ejecuta el upgrade manualmente contra esta misma base (odoo-bin -u base) con RAM suficiente."
+        print_warn "SKIP_DB_UPGRADE activado: se omite odoo-bin -u base,order_bridge en este arranque."
+        print_warn "Ejecuta el upgrade manualmente contra esta misma base (odoo-bin -u base,order_bridge) con RAM suficiente."
     else
         print_info "Actualizando esquema de la base de datos (esto se ejecuta en cada deploy)..."
         if ! update_database; then

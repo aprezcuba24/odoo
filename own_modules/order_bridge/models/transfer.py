@@ -66,6 +66,11 @@ class OrderBridgeTransfer(models.Model):
         copy=False,
         readonly=True,
     )
+    backend_response = fields.Text(
+        string='Respuesta para la app',
+        copy=False,
+        help='Markdown en español enviado a la APK en POST /payments (backendResponse).',
+    )
     payment_ids = fields.One2many(
         'order_bridge.order.payment',
         'transfer_id',
@@ -177,6 +182,91 @@ class OrderBridgeTransfer(models.Model):
         return self._find_by_code('mobile', code)
 
     @api.model
+    def _api_result(self, transfer):
+        """Return ``(result, backend_response)`` for an existing transfer."""
+        return transfer.result, transfer.backend_response or ''
+
+    @api.model
+    def _escape_backend_md(self, text):
+        value = text or ''
+        return (
+            value
+            .replace('\\', '\\\\')
+            .replace('*', '\\*')
+            .replace('_', '\\_')
+            .replace('`', '\\`')
+        )
+
+    @api.model
+    def _format_backend_amount(self, currency, amount):
+        return currency.format(amount)
+
+    @api.model
+    def _backend_response_not_interested(self, partners, currency):
+        lines = ['Ese teléfono **no espera** un pago.']
+        for partner in partners:
+            zero = self._format_backend_amount(currency, 0.0)
+            lines.append('')
+            lines.append(f'**{self._escape_backend_md(partner.name)}**')
+            lines.append(f'Deuda anterior: {zero}')
+            lines.append(f'Queda por pagar: {zero}')
+        return '\n'.join(lines)
+
+    @api.model
+    def _backend_response_processed(self, partner_rows, leftover, currency):
+        lines = ['**Pago registrado.**']
+        for row in partner_rows:
+            lines.append('')
+            lines.append(f'**{self._escape_backend_md(row["name"])}**')
+            lines.append(
+                f'Deuda anterior: {self._format_backend_amount(currency, row["debt_before"])}'
+            )
+            lines.append(
+                f'Se aplicó: {self._format_backend_amount(currency, row["applied"])}'
+            )
+            lines.append(
+                f'Queda por pagar: {self._format_backend_amount(currency, row["remaining_due"])}'
+            )
+        rounding = currency.rounding or 0.01
+        if float_compare(leftover, 0.0, precision_rounding=rounding) > 0:
+            lines.append('')
+            surplus = self._format_backend_amount(currency, leftover)
+            lines.append(f'Sobra: **{surplus}** sin aplicar.')
+        return '\n'.join(lines)
+
+    @api.model
+    def _partner_rows_from_payments(self, orders, payment_vals):
+        """Build per-partner debt/applied rows in application order."""
+        orders_by_id = {order.id: order for order in orders}
+        debt_before = {}
+        for order in orders:
+            partner_id = order.partner_id.id
+            debt_before[partner_id] = debt_before.get(partner_id, 0.0) + order.order_bridge_amount_due
+
+        applied = {}
+        partner_order = []
+        for vals in payment_vals:
+            order = orders_by_id[vals['order_id']]
+            partner_id = order.partner_id.id
+            if partner_id not in applied:
+                partner_order.append(partner_id)
+                applied[partner_id] = 0.0
+            applied[partner_id] += vals['amount']
+
+        rows = []
+        for partner_id in partner_order:
+            partner = self.env['res.partner'].browse(partner_id)
+            before = debt_before.get(partner_id, 0.0)
+            applied_amount = applied[partner_id]
+            rows.append({
+                'name': partner.name or partner.display_name or '',
+                'debt_before': before,
+                'applied': applied_amount,
+                'remaining_due': before - applied_amount,
+            })
+        return rows
+
+    @api.model
     def process_mobile_payment(self, messenger, phone, amount, code):
         """API helper: process a mobile notice for the messenger's company."""
         return self.process_payment(
@@ -194,14 +284,16 @@ class OrderBridgeTransfer(models.Model):
     ):
         """Idempotent payment notice: apply transfer amount to due orders.
 
-        Returns the result string ``processed`` or ``not_interested``.
+        Returns ``(result, backend_response)`` where ``result`` is
+        ``processed`` or ``not_interested``.
         Raises ``LockError`` when an order cannot be locked.
         """
         self = self.sudo()
         existing = self._find_by_code(transfer_type, code)
         if existing:
-            return existing.result
+            return self._api_result(existing)
 
+        currency = company.currency_id
         partners = self.env['res.partner'].sudo()._order_bridge_partners_by_phone(
             phone, company,
         )
@@ -216,7 +308,10 @@ class OrderBridgeTransfer(models.Model):
         )
 
         if not partners or not orders:
-            transfer, _created = self._create_transfer(
+            backend_response = self._backend_response_not_interested(
+                partners, currency,
+            )
+            transfer, created = self._create_transfer(
                 company=company,
                 phone=phone,
                 amount=amount,
@@ -224,16 +319,25 @@ class OrderBridgeTransfer(models.Model):
                 result='not_interested',
                 transfer_type=transfer_type,
                 messenger=messenger,
+                backend_response=backend_response,
             )
-            return transfer.result
+            if not created:
+                return self._api_result(transfer)
+            return self._api_result(transfer)
 
         for order in orders:
             order.lock_for_update()
         orders.invalidate_recordset()
 
         orders = orders.filtered(lambda o: o.order_bridge_amount_due > 0).sorted('id')
+        if orders:
+            currency = orders[:1].currency_id
+
         if not orders:
-            transfer, _created = self._create_transfer(
+            backend_response = self._backend_response_not_interested(
+                partners, currency,
+            )
+            transfer, created = self._create_transfer(
                 company=company,
                 phone=phone,
                 amount=amount,
@@ -241,8 +345,10 @@ class OrderBridgeTransfer(models.Model):
                 result='not_interested',
                 transfer_type=transfer_type,
                 messenger=messenger,
+                currency=currency,
+                backend_response=backend_response,
             )
-            return transfer.result
+            return self._api_result(transfer)
 
         transfer_method = self.env.ref('order_bridge.payment_method_transfer')
         remaining = float(amount)
@@ -265,7 +371,10 @@ class OrderBridgeTransfer(models.Model):
             remaining -= apply_amount
 
         if not payment_vals:
-            transfer, _created = self._create_transfer(
+            backend_response = self._backend_response_not_interested(
+                partners, currency,
+            )
+            transfer, created = self._create_transfer(
                 company=company,
                 phone=phone,
                 amount=amount,
@@ -273,9 +382,15 @@ class OrderBridgeTransfer(models.Model):
                 result='not_interested',
                 transfer_type=transfer_type,
                 messenger=messenger,
+                currency=currency,
+                backend_response=backend_response,
             )
-            return transfer.result
+            return self._api_result(transfer)
 
+        partner_rows = self._partner_rows_from_payments(orders, payment_vals)
+        backend_response = self._backend_response_processed(
+            partner_rows, remaining, currency,
+        )
         transfer, created = self._create_transfer(
             company=company,
             phone=phone,
@@ -284,15 +399,16 @@ class OrderBridgeTransfer(models.Model):
             result='processed',
             transfer_type=transfer_type,
             messenger=messenger,
-            currency=orders[:1].currency_id,
+            currency=currency,
+            backend_response=backend_response,
         )
         if not created:
-            return transfer.result
+            return self._api_result(transfer)
 
         for vals in payment_vals:
             vals['transfer_id'] = transfer.id
         self.env['order_bridge.order.payment'].sudo().create(payment_vals)
-        return 'processed'
+        return self._api_result(transfer)
 
     @api.model
     def _create_transfer(
@@ -306,6 +422,7 @@ class OrderBridgeTransfer(models.Model):
         transfer_type='mobile',
         messenger=None,
         currency=None,
+        backend_response='',
     ):
         """Create a transfer row. Return ``(record, created)``.
 
@@ -317,6 +434,7 @@ class OrderBridgeTransfer(models.Model):
             'phone': phone,
             'amount': amount,
             'result': result,
+            'backend_response': backend_response or '',
             'messenger_id': messenger.id if messenger else False,
             'company_id': company.id,
             'currency_id': (currency or company.currency_id).id,
