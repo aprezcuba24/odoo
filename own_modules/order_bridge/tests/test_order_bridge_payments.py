@@ -230,3 +230,67 @@ class TestOrderBridgePayments(TransactionCase):
         order2.invalidate_recordset()
         self.assertEqual(self.order.order_bridge_amount_due, 0.0)
         self.assertEqual(order2.order_bridge_amount_due, 30.0)
+
+    def test_ui_transfer_discard_and_recover(self):
+        Transfer = self.env['order_bridge.transfer']
+        transfer = Transfer.create({
+            'phone': '9991110002',
+            'amount': 10.0,
+            'code': 'UI-DISCARD-001',
+        })
+        self.assertTrue(transfer.active)
+        self.assertIn(transfer, Transfer.search([('code', '=', 'UI-DISCARD-001')]))
+
+        transfer.action_discard()
+        self.assertFalse(transfer.active)
+        self.assertFalse(Transfer.search([('code', '=', 'UI-DISCARD-001')]))
+        self.assertIn(
+            transfer,
+            Transfer.search([('code', '=', 'UI-DISCARD-001'), ('active', '=', False)]),
+        )
+
+        transfer.action_recover()
+        self.assertTrue(transfer.active)
+        self.assertIn(transfer, Transfer.search([('code', '=', 'UI-DISCARD-001')]))
+
+    def test_ui_transfer_discarded_keeps_code_reserved(self):
+        Transfer = self.env['order_bridge.transfer']
+        transfer = Transfer.create({
+            'phone': '9991110003',
+            'amount': 10.0,
+            'code': 'UI-DISCARD-002',
+        })
+        transfer.action_discard()
+
+        with self.assertRaises(UserError):
+            Transfer.create({
+                'phone': '9991110003',
+                'amount': 10.0,
+                'code': 'UI-DISCARD-002',
+            })
+
+        again = Transfer.with_context(order_bridge_transfer_from_api=True).create({
+            'phone': '9991110003',
+            'amount': 10.0,
+            'code': 'UI-DISCARD-002',
+        })
+        self.assertEqual(again, transfer)
+        self.assertFalse(again.active)
+
+    def test_ui_transfer_discard_keeps_payments(self):
+        self.order.order_bridge_payment_pending = True
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': '9991110004',
+            'amount': 40.0,
+            'code': 'UI-DISCARD-003',
+            'partner_id': self.partner.id,
+        })
+        transfer.action_apply_to_debt()
+        payments = transfer.payment_ids
+        self.assertTrue(payments)
+
+        transfer.action_discard()
+        self.assertFalse(transfer.active)
+        self.assertTrue(transfer.applied)
+        self.assertEqual(transfer.payment_ids, payments)
+        self.assertTrue(payments.exists())

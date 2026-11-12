@@ -80,6 +80,14 @@ class OrderBridgeTransfer(models.Model):
         copy=False,
         help='Texto histórico enviado a la APK en avisos antiguos (backendResponse).',
     )
+    active = fields.Boolean(
+        string='Activa',
+        default=True,
+        readonly=True,
+        index=True,
+        copy=False,
+        help='Las transferencias descartadas se ocultan por defecto y pueden recuperarse.',
+    )
     payment_ids = fields.One2many(
         'order_bridge.order.payment',
         'transfer_id',
@@ -196,7 +204,7 @@ class OrderBridgeTransfer(models.Model):
 
     @api.model
     def _find_by_code(self, transfer_type, code):
-        return self.search(
+        return self.with_context(active_test=False).search(
             [('transfer_type', '=', transfer_type), ('code', '=', code)],
             limit=1,
         )
@@ -297,6 +305,16 @@ class OrderBridgeTransfer(models.Model):
             raise UserError(_('El cliente seleccionado no tiene pedidos con deuda.'))
 
         self.env['order_bridge.order.payment'].create(payment_vals)
+        return True
+
+    def action_discard(self):
+        """Hide transfers from the default list without deleting them."""
+        self.action_archive()
+        return True
+
+    def action_recover(self):
+        """Show previously discarded transfers again."""
+        self.action_unarchive()
         return True
 
     def action_open_payments(self):

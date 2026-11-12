@@ -17,6 +17,7 @@
                 <field name="payment_count"/>
                 <field name="messenger_id" optional="show"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="active" column_invisible="1"/>
             </list>
         </field>
     </record>
@@ -32,9 +33,23 @@
                         type="object"
                         string="Aplicar a la deuda"
                         class="btn-primary"
-                        invisible="not id or applied"/>
+                        invisible="not id or applied or not active"/>
+                    <button
+                        name="action_discard"
+                        type="object"
+                        string="Descartar"
+                        confirm="La transferencia se ocultará del listado. Podrá recuperarla después. ¿Continuar?"
+                        invisible="not id or not active"/>
+                    <button
+                        name="action_recover"
+                        type="object"
+                        string="Recuperar"
+                        class="btn-primary"
+                        invisible="not id or active"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Descartada" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button
                             name="action_open_payments"
@@ -97,6 +112,8 @@
                 <filter name="filter_pending" string="Pendientes" domain="[('applied', '=', False)]"/>
                 <separator/>
                 <filter name="filter_mobile" string="Aviso móvil" domain="[('transfer_type', '=', 'mobile')]"/>
+                <separator/>
+                <filter name="filter_discarded" string="Descartadas" domain="[('active', '=', False)]"/>
                 <group>
                     <filter name="group_applied" string="Aplicada a deuda" context="{'group_by': 'applied'}"/>
                     <filter name="group_type" string="Tipo" context="{'group_by': 'transfer_type'}"/>
@@ -104,6 +121,24 @@
                 </group>
             </search>
         </field>
+    </record>
+
+    <record id="action_order_bridge_transfer_discard_server" model="ir.actions.server">
+        <field name="name">Descartar</field>
+        <field name="model_id" ref="model_order_bridge_transfer"/>
+        <field name="binding_model_id" ref="model_order_bridge_transfer"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_discard()</field>
+    </record>
+
+    <record id="action_order_bridge_transfer_recover_server" model="ir.actions.server">
+        <field name="name">Recuperar</field>
+        <field name="model_id" ref="model_order_bridge_transfer"/>
+        <field name="binding_model_id" ref="model_order_bridge_transfer"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_recover()</field>
     </record>
 
     <record id="action_order_bridge_transfer" model="ir.actions.act_window">
