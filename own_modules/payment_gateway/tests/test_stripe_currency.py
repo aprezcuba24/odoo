@@ -7,6 +7,7 @@ from odoo.addons.payment_gateway.services.currency import (
     UnsupportedStripeCurrency,
     assert_stripe_currency,
     order_currency_code,
+    to_stripe_minor_units,
 )
 
 
@@ -72,3 +73,12 @@ class TestStripeCurrency(TransactionCase):
         self.order.currency_id = cup
         with self.assertRaises(UnsupportedStripeCurrency):
             order_currency_code(self.order)
+
+    def test_to_stripe_minor_units_usd_and_jpy(self):
+        self.assertEqual(to_stripe_minor_units(10.50, 'usd'), 1050)
+        self.assertEqual(to_stripe_minor_units(1000, 'jpy'), 1000)
+
+    def test_to_stripe_minor_units_special_and_three_decimal(self):
+        self.assertEqual(to_stripe_minor_units(10.50, 'isk'), 1050)
+        self.assertEqual(to_stripe_minor_units(10.50, 'ugx'), 1050)
+        self.assertEqual(to_stripe_minor_units(10.125, 'bhd'), 10130)

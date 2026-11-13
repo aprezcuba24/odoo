@@ -24,6 +24,19 @@ class PaymentEvent:
 class PaymentProvider(ABC):
     """Strategy interface for an online payment provider."""
 
+    def charge_currency(self, code: str | None) -> str:
+        """Normalize a currency code for charging (lowercase ISO)."""
+        if code is None:
+            raise ValueError('Currency code is required')
+        normalized = str(code).strip().lower()
+        if not normalized:
+            raise ValueError('Currency code is required')
+        return normalized
+
+    def client_config(self) -> dict:
+        """Public SDK values that do not depend on a specific attempt."""
+        return {}
+
     @abstractmethod
     def start_payment(
         self,
@@ -31,6 +44,7 @@ class PaymentProvider(ABC):
         amount: float,
         currency: str,
         reference: str,
+        order_id: int | None = None,
     ) -> PaymentStart:
         """Open a remote charge and return ids plus SDK payload."""
 

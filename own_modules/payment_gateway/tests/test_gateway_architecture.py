@@ -17,7 +17,14 @@ from odoo.addons.payment_gateway.services.orchestrator import PaymentOrchestrato
 
 
 class FakeProvider(PaymentProvider):
-    def start_payment(self, *, amount, currency, reference):
+    def start_payment(
+        self,
+        *,
+        amount,
+        currency,
+        reference,
+        order_id=None,
+    ):
         return PaymentStart(
             external_id=f'fake_{reference}',
             sdk_payload={'amount': amount, 'currency': currency},

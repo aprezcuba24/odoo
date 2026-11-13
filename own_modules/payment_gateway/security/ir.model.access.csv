@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_payment_gateway_attempt_salesman,payment_gateway.payment.attempt.salesman,model_payment_gateway_payment_attempt,sales_team.group_sale_salesman,1,0,0,0
+access_payment_gateway_attempt_user,payment_gateway.payment.attempt.user,model_payment_gateway_payment_attempt,order_bridge.group_order_bridge_user,1,0,0,0
+access_payment_gateway_attempt_manager,payment_gateway.payment.attempt.manager,model_payment_gateway_payment_attempt,order_bridge.group_order_bridge_manager,1,1,1,1
+access_payment_gateway_attempt_system,payment_gateway.payment.attempt.system,model_payment_gateway_payment_attempt,base.group_system,1,1,1,1
