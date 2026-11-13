@@ -32,6 +32,16 @@ _logger = logging.getLogger(__name__)
 
 
 class StripePaymentController(http.Controller):
+    def _order_for_device(self, order_id, api_device):
+        order = request.env['sale.order'].sudo().browse(order_id).exists()
+        if (
+            not order
+            or not order.order_bridge_device_id
+            or order.order_bridge_device_id.id != api_device.id
+        ):
+            return None
+        return order
+
     @http.route(
         '/api/order_bridge/orders/<int:order_id>/payments/stripe',
         type='http',
@@ -44,12 +54,8 @@ class StripePaymentController(http.Controller):
         if request.httprequest.method == 'OPTIONS':
             return api_cors_preflight()
 
-        order = request.env['sale.order'].sudo().browse(order_id).exists()
-        if (
-            not order
-            or not order.order_bridge_device_id
-            or order.order_bridge_device_id.id != api_device.id
-        ):
+        order = self._order_for_device(order_id, api_device)
+        if not order:
             return api_json_response(SimpleErrorResponse(error='not_found'), 404)
 
         orchestrator = PaymentOrchestrator(env=request.env)
@@ -81,6 +87,39 @@ class StripePaymentController(http.Controller):
                     message='no se pudo iniciar el pago',
                 ),
                 502,
+            )
+        return api_json_response(payload)
+
+    @http.route(
+        '/api/order_bridge/orders/<int:order_id>/payments/stripe',
+        type='http',
+        auth='public',
+        methods=['GET', 'OPTIONS'],
+        csrf=False,
+    )
+    @api_device_auth
+    def stripe_payment_status(self, order_id, api_device=None, api_partner=None, **kwargs):
+        if request.httprequest.method == 'OPTIONS':
+            return api_cors_preflight()
+
+        order = self._order_for_device(order_id, api_device)
+        if not order:
+            return api_json_response(SimpleErrorResponse(error='not_found'), 404)
+
+        orchestrator = PaymentOrchestrator(env=request.env)
+        try:
+            payload = orchestrator.status_for_order(order, code='stripe')
+        except MissingStripeSecrets:
+            _logger.error(
+                'Stripe secrets missing when reading payment status for order %s',
+                order_id,
+            )
+            return api_json_response(
+                MessageErrorResponse(
+                    error='configuration',
+                    message='los pagos online no están configurados',
+                ),
+                503,
             )
         return api_json_response(payload)
 

@@ -94,6 +94,45 @@ class PaymentOrchestrator:
             order.sudo().write({'order_bridge_payment_pending': True})
         return self._response_payload(attempt, provider, code)
 
+    def status_for_order(self, order, code: str = 'stripe') -> dict:
+        """Return paid/due amounts and the latest attempt for ``order``.
+
+        Does not call the provider API. Includes ``client_secret`` and
+        publishable config only while the latest attempt is still open
+        (``client_config`` may raise ``MissingStripeSecrets`` in that case).
+        """
+        if self.env is None:
+            raise RuntimeError('PaymentOrchestrator requires an Odoo env')
+        order.ensure_one()
+        Attempt = self.env['payment_gateway.payment.attempt'].sudo()
+        attempt = Attempt.search([
+            ('order_id', '=', order.id),
+            ('provider_code', '=', code),
+        ], limit=1, order='id desc')
+
+        currency = (order.currency_id.name or '').strip().lower()
+        payload = {
+            'provider': code,
+            'amount_paid': order.order_bridge_amount_paid,
+            'amount_due': order.order_bridge_amount_due,
+            'currency': currency,
+            'attempt': None,
+        }
+        if not attempt:
+            return payload
+
+        attempt_payload = {
+            'state': attempt.state,
+            'external_id': attempt.external_id,
+            'amount': attempt.amount,
+        }
+        if attempt.state == 'open':
+            provider = self.provider(code)
+            attempt_payload['client_secret'] = attempt.sudo().client_secret
+            attempt_payload.update(provider.client_config())
+        payload['attempt'] = attempt_payload
+        return payload
+
     def apply_webhook_event(self, event: PaymentEvent) -> None:
         """Apply a normalized provider webhook event to the matching attempt."""
         if self.env is None:
