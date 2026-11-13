@@ -23,3 +23,10 @@ def stripe_publishable_key() -> str:
     if not key:
         raise MissingStripeSecrets('STRIPE_PUBLISHABLE_KEY is not configured')
     return key
+
+
+def stripe_webhook_secret() -> str:
+    key = (os.environ.get('STRIPE_WEBHOOK_SECRET') or '').strip()
+    if not key:
+        raise MissingStripeSecrets('STRIPE_WEBHOOK_SECRET is not configured')
+    return key

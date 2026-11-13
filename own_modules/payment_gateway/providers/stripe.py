@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-"""Stripe adapter: PaymentIntent create/cancel. Webhook parsing is point 5."""
+"""Stripe adapter: PaymentIntent create/cancel and signed webhook parsing."""
 
 from __future__ import annotations
 
@@ -10,11 +10,13 @@ from odoo.addons.payment_gateway.providers.base import PaymentEvent, PaymentProv
 from odoo.addons.payment_gateway.providers.registry import register
 from odoo.addons.payment_gateway.services.currency import (
     assert_stripe_currency,
+    from_stripe_minor_units,
     to_stripe_minor_units,
 )
 from odoo.addons.payment_gateway.services.secrets import (
     stripe_publishable_key,
     stripe_secret_key,
+    stripe_webhook_secret,
 )
 
 _logger = logging.getLogger(__name__)
@@ -24,8 +26,12 @@ class StripeProviderError(RuntimeError):
     """Raised when the Stripe API call fails."""
 
 
-class StripeWebhookNotImplemented(NotImplementedError):
-    """parse_webhook is implemented in point 5."""
+class StripeWebhookSignatureError(ValueError):
+    """Raised when the webhook signature or payload cannot be verified."""
+
+
+class StripeWebhookIgnoredEvent(ValueError):
+    """Raised when the webhook event type is not handled."""
 
 
 def _import_stripe():
@@ -42,11 +48,18 @@ def _is_stripe_error(exc: BaseException) -> bool:
     return exc.__class__.__module__.startswith('stripe')
 
 
+def _event_get(obj, key, default=None):
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
 class StripeProvider(PaymentProvider):
     """Adapter for Stripe PaymentIntents."""
 
-    def __init__(self, client=None):
+    def __init__(self, client=None, webhook_construct=None):
         self._client = client
+        self._webhook_construct = webhook_construct
 
     def charge_currency(self, code: str | None) -> str:
         return assert_stripe_currency(code)
@@ -58,6 +71,12 @@ class StripeProvider(PaymentProvider):
         if self._client is not None:
             return self._client.PaymentIntent
         return _import_stripe().PaymentIntent
+
+    def _construct_event(self, payload: bytes, signature: str, secret: str):
+        if self._webhook_construct is not None:
+            return self._webhook_construct(payload, signature, secret)
+        stripe = _import_stripe()
+        return stripe.Webhook.construct_event(payload, signature, secret)
 
     def start_payment(
         self,
@@ -99,9 +118,44 @@ class StripeProvider(PaymentProvider):
         )
 
     def parse_webhook(self, *, payload: bytes, signature: str) -> PaymentEvent:
-        raise StripeWebhookNotImplemented(
-            'Stripe webhook parsing is implemented in point 5'
-        )
+        if not signature:
+            raise StripeWebhookSignatureError('Missing Stripe-Signature header')
+        secret = stripe_webhook_secret()
+        try:
+            event = self._construct_event(payload, signature, secret)
+        except StripeWebhookSignatureError:
+            raise
+        except Exception as err:
+            # Stripe raises SignatureVerificationError / ValueError on bad payload.
+            _logger.warning('Stripe webhook verification failed: %s', err)
+            raise StripeWebhookSignatureError('Invalid Stripe webhook signature') from err
+
+        event_type = _event_get(event, 'type')
+        data = _event_get(event, 'data') or {}
+        intent = _event_get(data, 'object') or {}
+        external_id = _event_get(intent, 'id')
+        if not external_id:
+            raise StripeWebhookSignatureError('Webhook event missing PaymentIntent id')
+
+        currency = assert_stripe_currency(_event_get(intent, 'currency'))
+        amount_minor = _event_get(intent, 'amount')
+        if amount_minor is None:
+            amount_minor = _event_get(intent, 'amount_received', 0)
+        amount = from_stripe_minor_units(int(amount_minor), currency)
+
+        if event_type == 'payment_intent.succeeded':
+            return PaymentEvent(
+                external_id=str(external_id),
+                status='succeeded',
+                amount=amount,
+            )
+        if event_type == 'payment_intent.payment_failed':
+            return PaymentEvent(
+                external_id=str(external_id),
+                status='failed',
+                amount=amount,
+            )
+        raise StripeWebhookIgnoredEvent(f'Unhandled Stripe event type: {event_type}')
 
     def cancel_payment(self, *, external_id: str) -> None:
         try:

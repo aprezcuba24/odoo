@@ -7,7 +7,8 @@ from odoo.tests.common import TransactionCase, tagged
 
 from odoo.addons.payment_gateway.providers.stripe import (
     StripeProvider,
-    StripeWebhookNotImplemented,
+    StripeWebhookIgnoredEvent,
+    StripeWebhookSignatureError,
 )
 
 
@@ -39,6 +40,7 @@ class TestStripeProvider(TransactionCase):
         self.env_patch = patch.dict(os.environ, {
             'STRIPE_SECRET_KEY': 'sk_test_unit',
             'STRIPE_PUBLISHABLE_KEY': 'pk_test_unit',
+            'STRIPE_WEBHOOK_SECRET': 'whsec_test_unit',
         })
         self.env_patch.start()
         self.addCleanup(self.env_patch.stop)
@@ -72,6 +74,69 @@ class TestStripeProvider(TransactionCase):
         self.provider.cancel_payment(external_id='pi_fake_1')
         self.assertEqual(_FakePaymentIntent.last_cancel[0], 'pi_fake_1')
 
-    def test_parse_webhook_not_implemented(self):
-        with self.assertRaises(StripeWebhookNotImplemented):
-            self.provider.parse_webhook(payload=b'{}', signature='t=1')
+    def test_parse_webhook_succeeded(self):
+        def construct(payload, signature, secret):
+            self.assertEqual(payload, b'{"ok":1}')
+            self.assertEqual(signature, 't=1,v1=abc')
+            self.assertEqual(secret, 'whsec_test_unit')
+            return {
+                'type': 'payment_intent.succeeded',
+                'data': {
+                    'object': {
+                        'id': 'pi_ok',
+                        'amount': 1234,
+                        'currency': 'usd',
+                    },
+                },
+            }
+
+        provider = StripeProvider(
+            client=_FakeStripeClient,
+            webhook_construct=construct,
+        )
+        event = provider.parse_webhook(payload=b'{"ok":1}', signature='t=1,v1=abc')
+        self.assertEqual(event.external_id, 'pi_ok')
+        self.assertEqual(event.status, 'succeeded')
+        self.assertEqual(event.amount, 12.34)
+
+    def test_parse_webhook_payment_failed(self):
+        def construct(payload, signature, secret):
+            return {
+                'type': 'payment_intent.payment_failed',
+                'data': {
+                    'object': {
+                        'id': 'pi_fail',
+                        'amount': 500,
+                        'currency': 'eur',
+                    },
+                },
+            }
+
+        provider = StripeProvider(webhook_construct=construct)
+        event = provider.parse_webhook(payload=b'{}', signature='sig')
+        self.assertEqual(event.status, 'failed')
+        self.assertEqual(event.external_id, 'pi_fail')
+        self.assertEqual(event.amount, 5.0)
+
+    def test_parse_webhook_ignored_event(self):
+        def construct(payload, signature, secret):
+            return {
+                'type': 'charge.refunded',
+                'data': {'object': {'id': 'ch_1', 'amount': 100, 'currency': 'usd'}},
+            }
+
+        provider = StripeProvider(webhook_construct=construct)
+        with self.assertRaises(StripeWebhookIgnoredEvent):
+            provider.parse_webhook(payload=b'{}', signature='sig')
+
+    def test_parse_webhook_bad_signature(self):
+        def construct(payload, signature, secret):
+            raise ValueError('bad sig')
+
+        provider = StripeProvider(webhook_construct=construct)
+        with self.assertRaises(StripeWebhookSignatureError):
+            provider.parse_webhook(payload=b'{}', signature='sig')
+
+    def test_parse_webhook_missing_signature(self):
+        with self.assertRaises(StripeWebhookSignatureError):
+            self.provider.parse_webhook(payload=b'{}', signature='')

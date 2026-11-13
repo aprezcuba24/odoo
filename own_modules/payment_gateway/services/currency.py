@@ -99,3 +99,18 @@ def to_stripe_minor_units(amount: float, code: str) -> int:
     if normalized in _STRIPE_ZERO_DECIMAL:
         return int(round(amount))
     return int(round(amount * 100))
+
+
+def from_stripe_minor_units(minor: int, code: str) -> float:
+    """Convert Stripe's smallest currency unit back to a major-unit amount.
+
+    Inverse of ``to_stripe_minor_units`` for the same currency rules.
+    """
+    normalized = assert_stripe_currency(code)
+    if normalized in _STRIPE_SPECIAL_TWO_DECIMAL:
+        return minor / 100.0
+    if normalized in _STRIPE_THREE_DECIMAL:
+        return minor / 1000.0
+    if normalized in _STRIPE_ZERO_DECIMAL:
+        return float(minor)
+    return minor / 100.0

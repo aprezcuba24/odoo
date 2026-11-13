@@ -14,11 +14,17 @@ from odoo.addons.order_bridge.utils.decorators import (
     api_device_auth,
     api_json_response,
 )
-from odoo.addons.payment_gateway.providers.stripe import StripeProviderError
+from odoo.addons.payment_gateway.providers.stripe import (
+    StripeProviderError,
+    StripeWebhookIgnoredEvent,
+    StripeWebhookSignatureError,
+)
 from odoo.addons.payment_gateway.services.currency import UnsupportedStripeCurrency
 from odoo.addons.payment_gateway.services.orchestrator import (
     OrderNotPayable,
     PaymentOrchestrator,
+    UnknownPaymentAttempt,
+    WebhookAmountMismatch,
 )
 from odoo.addons.payment_gateway.services.secrets import MissingStripeSecrets
 
@@ -77,3 +83,63 @@ class StripePaymentController(http.Controller):
                 502,
             )
         return api_json_response(payload)
+
+    @http.route(
+        '/api/payment_gateway/stripe/webhook',
+        type='http',
+        auth='public',
+        methods=['POST'],
+        csrf=False,
+    )
+    def stripe_webhook(self, **kwargs):
+        payload = request.httprequest.get_data(cache=False)
+        signature = request.httprequest.headers.get('Stripe-Signature') or ''
+
+        orchestrator = PaymentOrchestrator(env=request.env)
+        try:
+            provider = orchestrator.provider('stripe')
+            event = provider.parse_webhook(payload=payload, signature=signature)
+        except MissingStripeSecrets:
+            _logger.error('STRIPE_WEBHOOK_SECRET missing on webhook request')
+            return api_json_response(
+                MessageErrorResponse(
+                    error='configuration',
+                    message='los pagos online no están configurados',
+                ),
+                503,
+            )
+        except StripeWebhookIgnoredEvent:
+            return api_json_response({'received': True})
+        except StripeWebhookSignatureError as err:
+            _logger.warning('Stripe webhook rejected: %s', err)
+            return api_json_response(
+                MessageErrorResponse(error='invalid_signature', message=str(err)),
+                400,
+            )
+        except UnsupportedStripeCurrency as err:
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(err)),
+                400,
+            )
+
+        try:
+            orchestrator.apply_webhook_event(event)
+        except UnknownPaymentAttempt:
+            _logger.warning(
+                'Stripe webhook for unknown attempt %s', event.external_id,
+            )
+            return api_json_response(
+                MessageErrorResponse(error='not_found', message='intento no encontrado'),
+                404,
+            )
+        except WebhookAmountMismatch as err:
+            _logger.warning(
+                'Stripe webhook amount mismatch for %s: %s',
+                event.external_id,
+                err,
+            )
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(err)),
+                400,
+            )
+        return api_json_response({'received': True})

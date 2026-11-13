@@ -6,6 +6,7 @@ from odoo.tests.common import TransactionCase, tagged
 from odoo.addons.payment_gateway.services.currency import (
     UnsupportedStripeCurrency,
     assert_stripe_currency,
+    from_stripe_minor_units,
     order_currency_code,
     to_stripe_minor_units,
 )
@@ -82,3 +83,9 @@ class TestStripeCurrency(TransactionCase):
         self.assertEqual(to_stripe_minor_units(10.50, 'isk'), 1050)
         self.assertEqual(to_stripe_minor_units(10.50, 'ugx'), 1050)
         self.assertEqual(to_stripe_minor_units(10.125, 'bhd'), 10130)
+
+    def test_from_stripe_minor_units_roundtrip(self):
+        self.assertEqual(from_stripe_minor_units(1050, 'usd'), 10.50)
+        self.assertEqual(from_stripe_minor_units(1000, 'jpy'), 1000.0)
+        self.assertEqual(from_stripe_minor_units(1050, 'isk'), 10.50)
+        self.assertEqual(from_stripe_minor_units(10130, 'bhd'), 10.13)

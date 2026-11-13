@@ -6,12 +6,20 @@ from odoo.tools.float_utils import float_compare, float_round
 
 from odoo.addons.order_bridge.utils.constant import STATE_CANCELED
 from odoo.addons.payment_gateway.providers import registry as default_registry
-from odoo.addons.payment_gateway.providers.base import PaymentProvider
+from odoo.addons.payment_gateway.providers.base import PaymentEvent, PaymentProvider
 from odoo.addons.payment_gateway.providers.registry import ProviderRegistry
 
 
 class OrderNotPayable(ValueError):
     """Raised when the order cannot start an online payment."""
+
+
+class UnknownPaymentAttempt(LookupError):
+    """Raised when no payment attempt matches the webhook external id."""
+
+
+class WebhookAmountMismatch(ValueError):
+    """Raised when the webhook amount does not match the stored attempt."""
 
 
 class PaymentOrchestrator:
@@ -85,6 +93,54 @@ class PaymentOrchestrator:
         if not order.order_bridge_payment_pending:
             order.sudo().write({'order_bridge_payment_pending': True})
         return self._response_payload(attempt, provider, code)
+
+    def apply_webhook_event(self, event: PaymentEvent) -> None:
+        """Apply a normalized provider webhook event to the matching attempt."""
+        if self.env is None:
+            raise RuntimeError('PaymentOrchestrator requires an Odoo env')
+        Attempt = self.env['payment_gateway.payment.attempt'].sudo()
+        attempt = Attempt.search([
+            ('external_id', '=', event.external_id),
+        ], limit=1)
+        if not attempt:
+            raise UnknownPaymentAttempt(
+                f'No payment attempt for external_id={event.external_id}'
+            )
+
+        self.env.cr.execute(
+            'SELECT id FROM payment_gateway_payment_attempt WHERE id = %s FOR UPDATE',
+            (attempt.id,),
+        )
+        attempt.invalidate_recordset()
+
+        if event.status == 'succeeded':
+            self._apply_succeeded(attempt, event)
+        elif event.status == 'failed':
+            self._apply_failed(attempt)
+        else:
+            raise ValueError(f'Unsupported webhook status: {event.status}')
+
+    def _apply_succeeded(self, attempt, event: PaymentEvent) -> None:
+        if attempt.state == 'succeeded':
+            return
+        if attempt.state == 'canceled':
+            return
+        rounding = attempt.currency_id.rounding or 0.01
+        if float_compare(event.amount, attempt.amount, precision_rounding=rounding) != 0:
+            raise WebhookAmountMismatch(
+                'el importe del webhook no coincide con el intento'
+            )
+        method = self.env.ref('payment_gateway.payment_method_stripe').sudo()
+        self.env['order_bridge.order.payment'].sudo().create({
+            'order_id': attempt.order_id.id,
+            'method_id': method.id,
+            'amount': attempt.amount,
+        })
+        attempt.write({'state': 'succeeded'})
+
+    def _apply_failed(self, attempt) -> None:
+        if attempt.state == 'open':
+            attempt.write({'state': 'failed'})
 
     def _amount_due(self, order) -> float:
         paid = sum(order.order_bridge_payment_ids.mapped('amount'))
