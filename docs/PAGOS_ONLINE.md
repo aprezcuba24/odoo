@@ -94,7 +94,7 @@ sequenceDiagram
 ## Checklist
 
 - [x] **0. Este documento.** `docs/PAGOS_ONLINE.md` con la checklist y la regla de un punto cada vez. Los planes individuales se crean al abrir el punto, en `docs/pagos/`.
-- [ ] **1. Módulo `payment_gateway`.** Manifiesto con `depends: ['order_bridge']`, sin que `order_bridge` dependa de él. Dato de la vía de pago Stripe sobre el modelo que ya existe. Sin llamadas a Stripe y sin cambiar la creación de pedidos. El campo `code` en la vía de pago se añade aquí solo si el módulo lo necesita para localizar la vía; efectivo y transferencia no se mueven. Plan individual al abrir: `docs/pagos/01-modulo-payment-gateway.md`.
+- [x] **1. Módulo `payment_gateway`.** Manifiesto con `depends: ['order_bridge']`, sin que `order_bridge` dependa de él. Dato de la vía de pago Stripe sobre el modelo que ya existe. Sin llamadas a Stripe y sin cambiar la creación de pedidos. El campo `code` en la vía de pago se añade aquí solo si el módulo lo necesita para localizar la vía; efectivo y transferencia no se mueven. Plan individual al abrir: `docs/pagos/01-modulo-payment-gateway.md`.
 - [ ] **2. Arquitectura del gateway.** Esqueleto en `own_modules/payment_gateway/`: `providers/base.py` (`PaymentProvider` con `start_payment` y `parse_webhook`), `providers/registry.py` (`register` / `get(code)`) y orquestador vacío que resuelve por `code`. Sin HTTP a Stripe, sin secretos y sin modelo de intento. Plan individual al abrir: `docs/pagos/02-arquitectura-gateway.md`.
 - [ ] **3. Secretos y moneda.** Variables de entorno de prueba (`STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`) documentadas en [`.env.example`](../.env.example). Comprobar que la moneda del pedido la acepta Stripe antes de crear intents. Aún no se cobra. Plan individual al abrir: `docs/pagos/03-secretos-y-moneda.md`.
 - [ ] **4. PaymentIntent de un pedido ya creado.** En `payment_gateway`: modelo de intento (pedido, id de Stripe, estado, importe) y endpoint autenticado con el dispositivo del pedido (reutiliza el auth de `order_bridge`). Importe calculado en el servidor (total menos cobros ya registrados; si no hay cobros, el total). Al crear el intento, ese pedido queda **Queda por cobrar**. Si ya está cubierto por efectivo o transferencia, se rechaza. El adaptador Stripe implementa `start_payment`. Plan individual al abrir: `docs/pagos/04-payment-intent.md`.
@@ -107,4 +107,4 @@ Al cerrar el punto 8 el sistema tiene una vía online real. Un segundo proveedor
 
 ## Siguiente paso
 
-Abrir el **punto 1**: plan corto en `docs/pagos/01-modulo-payment-gateway.md` e implementación mínima del módulo `payment_gateway` (manifiesto + vía Stripe), sin llamadas a Stripe.
+Abrir el **punto 2**: plan corto en `docs/pagos/02-arquitectura-gateway.md` e implementación del esqueleto Strategy / Registry / orquestador vacío, sin HTTP a Stripe.
