@@ -107,4 +107,4 @@ Al cerrar el punto 8 el sistema tiene una vía online real. Un segundo proveedor
 
 ## Siguiente paso
 
-Abrir el **punto 8**: plan corto en `docs/pagos/08-prueba-manual.md` (pedido con tarjeta de prueba, cobro en la pestaña Pagos, y pedido sin Stripe que sigue igual).
+Ejecutar el **punto 8** según [`docs/pagos/08-prueba-manual.md`](pagos/08-prueba-manual.md). Faltan en el entorno local las tres variables de test (`STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`) y la CLI de Stripe (`stripe listen` + `payment_intents confirm`). Con eso en marcha: pedido A con `pm_card_visa`, línea Stripe en Pagos; pedido B sin Stripe, saldado. Marcar el ítem solo entonces.
