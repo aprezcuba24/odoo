@@ -17,10 +17,10 @@ Cobrar un pedido con tarjeta de prueba y comprobar que la línea Stripe aparece 
 
 Comprobarlos antes de crear pedidos. Si falta alguno, parar y decir cuál: no inventar claves y no marcar el ítem 8.
 
-- Odoo local con `payment_gateway` instalado y las tres variables de [`.env.example`](../../.env.example) en el proceso (solo test: `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`).
-- Moneda de la compañía en la lista de presentment de Stripe (en esta base, USD; ver [`03-secretos-y-moneda.md`](03-secretos-y-moneda.md)).
-- CLI de Stripe en la misma cuenta test que `STRIPE_SECRET_KEY`.
-- `stripe listen --forward-to <odoo>/api/payment_gateway/stripe/webhook`. El `whsec_` que imprime es `STRIPE_WEBHOOK_SECRET` (el lector lo toma de `os.environ` en cada petición; el proceso de Odoo tiene que ver ese valor).
+- Odoo local con `payment_gateway` instalado y las tres claves de test en Tienda Apk → Configuración → Stripe para la compañía principal (`secret_key`, `publishable_key`, `webhook_secret`; ver [`03-secretos-y-moneda.md`](03-secretos-y-moneda.md)).
+- Moneda de la compañía en la lista de presentment de Stripe (en esta base, USD).
+- CLI de Stripe en la misma cuenta test que la `secret_key` guardada.
+- `stripe listen --forward-to <odoo>/api/payment_gateway/stripe/webhook`. El `whsec_` que imprime hay que pegarlo en el campo webhook secret de esa compañía (no en variables de entorno).
 
 ## Qué no entra
 

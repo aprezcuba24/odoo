@@ -1,32 +1,40 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-"""Read Stripe API keys from the process environment."""
+"""Resolve Stripe API keys from ``payment_gateway.stripe.account`` rows."""
 
 from __future__ import annotations
 
-import os
+from dataclasses import dataclass
 
 
 class MissingStripeSecrets(RuntimeError):
-    """Raised when required Stripe environment variables are absent."""
+    """Raised when required Stripe secrets are absent."""
 
 
-def stripe_secret_key() -> str:
-    key = (os.environ.get('STRIPE_SECRET_KEY') or '').strip()
-    if not key:
-        raise MissingStripeSecrets('STRIPE_SECRET_KEY is not configured')
-    return key
+@dataclass(frozen=True)
+class StripeCredentials:
+    secret_key: str
+    publishable_key: str
+    webhook_secret: str
 
 
-def stripe_publishable_key() -> str:
-    key = (os.environ.get('STRIPE_PUBLISHABLE_KEY') or '').strip()
-    if not key:
-        raise MissingStripeSecrets('STRIPE_PUBLISHABLE_KEY is not configured')
-    return key
+def credentials_for_company(env, company) -> StripeCredentials:
+    """Return Stripe credentials stored for ``company``.
 
-
-def stripe_webhook_secret() -> str:
-    key = (os.environ.get('STRIPE_WEBHOOK_SECRET') or '').strip()
-    if not key:
-        raise MissingStripeSecrets('STRIPE_WEBHOOK_SECRET is not configured')
-    return key
+    Always reads ``payment_gateway.stripe.account``. A missing or incomplete
+    row raises ``MissingStripeSecrets`` (same rule for single-tenant and
+    multi-company).
+    """
+    if not company:
+        raise MissingStripeSecrets('Stripe credentials require a company')
+    Account = env['payment_gateway.stripe.account'].sudo()
+    account = Account.search([('company_id', '=', company.id)], limit=1)
+    if not account or not account.has_complete_credentials():
+        raise MissingStripeSecrets(
+            'Stripe credentials are not configured for this company'
+        )
+    return StripeCredentials(
+        secret_key=account.secret_key.strip(),
+        publishable_key=account.publishable_key.strip(),
+        webhook_secret=account.webhook_secret.strip(),
+    )

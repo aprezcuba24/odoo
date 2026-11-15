@@ -8,6 +8,7 @@ from odoo.addons.order_bridge.utils.constant import STATE_CANCELED
 from odoo.addons.payment_gateway.providers import registry as default_registry
 from odoo.addons.payment_gateway.providers.base import PaymentEvent, PaymentProvider
 from odoo.addons.payment_gateway.providers.registry import ProviderRegistry
+from odoo.addons.payment_gateway.services.secrets import credentials_for_company
 
 
 class OrderNotPayable(ValueError):
@@ -29,8 +30,19 @@ class PaymentOrchestrator:
         self.env = env
         self._registry = registry if registry is not None else default_registry
 
-    def provider(self, code: str) -> PaymentProvider:
-        return self._registry.get(code)
+    def provider(self, code: str, company=None) -> PaymentProvider:
+        # Lazy import: controllers load the orchestrator before providers/.
+        from odoo.addons.payment_gateway.providers.stripe import StripeProvider
+
+        credentials = None
+        provider_cls = self._registry.get_class(code)
+        if (
+            self.env is not None
+            and isinstance(provider_cls, type)
+            and issubclass(provider_cls, StripeProvider)
+        ):
+            credentials = credentials_for_company(self.env, company)
+        return self._registry.get(code, credentials=credentials)
 
     def start_for_order(self, order, code: str = 'stripe') -> dict:
         """Create or reuse an open PaymentIntent for ``order``.
@@ -44,7 +56,7 @@ class PaymentOrchestrator:
         if order.order_bridge_store_state == STATE_CANCELED:
             raise OrderNotPayable('el pedido está cancelado')
 
-        provider = self.provider(code)
+        provider = self.provider(code, company=order.company_id)
         currency_name = order.currency_id.name if order.currency_id else None
         currency_code = provider.charge_currency(currency_name)
         amount_due = self._amount_due(order)
@@ -127,14 +139,18 @@ class PaymentOrchestrator:
             'amount': attempt.amount,
         }
         if attempt.state == 'open':
-            provider = self.provider(code)
+            provider = self.provider(code, company=order.company_id)
             attempt_payload['client_secret'] = attempt.sudo().client_secret
             attempt_payload.update(provider.client_config())
         payload['attempt'] = attempt_payload
         return payload
 
-    def apply_webhook_event(self, event: PaymentEvent) -> None:
-        """Apply a normalized provider webhook event to the matching attempt."""
+    def apply_webhook_event(self, event: PaymentEvent, company=None) -> None:
+        """Apply a normalized provider webhook event to the matching attempt.
+
+        When ``company`` is set (multi-company slug webhook), the attempt must
+        belong to that company or ``UnknownPaymentAttempt`` is raised.
+        """
         if self.env is None:
             raise RuntimeError('PaymentOrchestrator requires an Odoo env')
         Attempt = self.env['payment_gateway.payment.attempt'].sudo()
@@ -144,6 +160,11 @@ class PaymentOrchestrator:
         if not attempt:
             raise UnknownPaymentAttempt(
                 f'No payment attempt for external_id={event.external_id}'
+            )
+        if company and attempt.company_id != company:
+            raise UnknownPaymentAttempt(
+                f'Payment attempt {event.external_id} does not belong to company '
+                f'{company.id}'
             )
 
         self.env.cr.execute(

@@ -1,6 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import os
 from unittest.mock import patch
 
 from odoo.fields import Command
@@ -22,8 +21,11 @@ from odoo.addons.payment_gateway.services.orchestrator import (
 
 def _provider_cls_with_construct(construct):
     class _Provider(StripeProvider):
-        def __init__(self):
-            super().__init__(webhook_construct=construct)
+        def __init__(self, credentials=None, **kwargs):
+            super().__init__(
+                webhook_construct=construct,
+                credentials=credentials,
+            )
 
     return _Provider
 
@@ -167,13 +169,24 @@ class TestWebhookOrchestrator(TransactionCase):
 class TestWebhookHttp(HttpCase):
     def setUp(self):
         super().setUp()
-        self.env_patch = patch.dict(os.environ, {
-            'STRIPE_SECRET_KEY': 'sk_test_http',
-            'STRIPE_PUBLISHABLE_KEY': 'pk_test_http',
-            'STRIPE_WEBHOOK_SECRET': 'whsec_test_http',
-        })
-        self.env_patch.start()
-        self.addCleanup(self.env_patch.stop)
+        self.main_company = self.env.ref('base.main_company')
+        Account = self.env['payment_gateway.stripe.account'].sudo()
+        self.stripe_account = Account.search([
+            ('company_id', '=', self.main_company.id),
+        ], limit=1)
+        if self.stripe_account:
+            self.stripe_account.write({
+                'secret_key': 'sk_test_http',
+                'publishable_key': 'pk_test_http',
+                'webhook_secret': 'whsec_test_http',
+            })
+        else:
+            self.stripe_account = Account.create({
+                'company_id': self.main_company.id,
+                'secret_key': 'sk_test_http',
+                'publishable_key': 'pk_test_http',
+                'webhook_secret': 'whsec_test_http',
+            })
 
         self.partner = self.env['res.partner'].create({
             'name': 'Cliente Webhook HTTP',
@@ -286,23 +299,23 @@ class TestWebhookHttp(HttpCase):
         self.assertEqual(res.status_code, 404, res.text)
 
     def test_http_missing_secret_503(self):
-        with patch.dict(os.environ, {'STRIPE_WEBHOOK_SECRET': ''}, clear=False):
-            registry = ProviderRegistry()
-            registry.register('stripe', StripeProvider)
-            with patch(
-                'odoo.addons.payment_gateway.controllers.stripe_payment.PaymentOrchestrator',
-            ) as Orch:
-                def _factory(env=None, registry=None):
-                    return PaymentOrchestrator(env=env, registry=registry)
+        self.stripe_account.unlink()
+        registry = ProviderRegistry()
+        registry.register('stripe', StripeProvider)
+        with patch(
+            'odoo.addons.payment_gateway.controllers.stripe_payment.PaymentOrchestrator',
+        ) as Orch:
+            def _factory(env=None, registry=None):
+                return PaymentOrchestrator(env=env, registry=registry)
 
-                Orch.side_effect = _factory
-                res = self.url_open(
-                    '/api/payment_gateway/stripe/webhook',
-                    data=b'{}',
-                    headers={
-                        'Content-Type': 'application/json',
-                        'Stripe-Signature': 't=1,v1=x',
-                    },
-                    timeout=60,
-                )
+            Orch.side_effect = _factory
+            res = self.url_open(
+                '/api/payment_gateway/stripe/webhook',
+                data=b'{}',
+                headers={
+                    'Content-Type': 'application/json',
+                    'Stripe-Signature': 't=1,v1=x',
+                },
+                timeout=60,
+            )
         self.assertEqual(res.status_code, 503, res.text)

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_payment_gateway_stripe_account_list" model="ir.ui.view">
+        <field name="name">payment_gateway.stripe.account.list</field>
+        <field name="model">payment_gateway.stripe.account</field>
+        <field name="arch" type="xml">
+            <list string="Cuentas Stripe">
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_payment_gateway_stripe_account_form" model="ir.ui.view">
+        <field name="name">payment_gateway.stripe.account.form</field>
+        <field name="model">payment_gateway.stripe.account</field>
+        <field name="arch" type="xml">
+            <form string="Cuenta Stripe">
+                <sheet>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="publishable_key" password="True" placeholder="pk_test_…"/>
+                        <field name="secret_key" password="True" placeholder="sk_test_…"/>
+                        <field name="webhook_secret" password="True" placeholder="whsec_…"/>
+                    </group>
+                    <group string="Webhook">
+                        <div colspan="2" class="text-muted">
+                            Compañía principal:
+                            <code>/api/payment_gateway/stripe/webhook</code>
+                            · Por slug:
+                            <code>/api/payment_gateway/stripe/webhook/&lt;order_bridge_slug&gt;</code>
+                        </div>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_payment_gateway_stripe_account" model="ir.actions.act_window">
+        <field name="name">Stripe</field>
+        <field name="res_model">payment_gateway.stripe.account</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configura las claves Stripe de esta compañía para cobros online.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_payment_gateway_stripe_account"
+        name="Stripe"
+        parent="order_bridge.menu_order_bridge_config_group"
+        action="action_payment_gateway_stripe_account"
+        sequence="15"
+        groups="base.group_system"/>
+</odoo>

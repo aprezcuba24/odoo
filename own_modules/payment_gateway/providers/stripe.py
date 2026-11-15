@@ -14,9 +14,8 @@ from odoo.addons.payment_gateway.services.currency import (
     to_stripe_minor_units,
 )
 from odoo.addons.payment_gateway.services.secrets import (
-    stripe_publishable_key,
-    stripe_secret_key,
-    stripe_webhook_secret,
+    MissingStripeSecrets,
+    StripeCredentials,
 )
 
 _logger = logging.getLogger(__name__)
@@ -57,15 +56,21 @@ def _event_get(obj, key, default=None):
 class StripeProvider(PaymentProvider):
     """Adapter for Stripe PaymentIntents."""
 
-    def __init__(self, client=None, webhook_construct=None):
+    def __init__(self, client=None, webhook_construct=None, credentials=None):
         self._client = client
         self._webhook_construct = webhook_construct
+        self._credentials = credentials
+
+    def _creds(self) -> StripeCredentials:
+        if self._credentials is None:
+            raise MissingStripeSecrets('Stripe credentials were not provided')
+        return self._credentials
 
     def charge_currency(self, code: str | None) -> str:
         return assert_stripe_currency(code)
 
     def client_config(self) -> dict:
-        return {'publishable_key': stripe_publishable_key()}
+        return {'publishable_key': self._creds().publishable_key}
 
     def _payment_intents(self):
         if self._client is not None:
@@ -89,16 +94,16 @@ class StripeProvider(PaymentProvider):
         currency = self.charge_currency(currency)
         minor = to_stripe_minor_units(amount, currency)
         key_ref = order_id if order_id is not None else reference
-        idempotency_key = f'pgw-{key_ref}-{minor}-{currency}'
+        idempotency_key = f'pgw2-{key_ref}-{minor}-{currency}'
         metadata = {'reference': reference}
         if order_id is not None:
             metadata['order_id'] = str(order_id)
         create_kwargs = {
             'amount': minor,
             'currency': currency,
-            'payment_method_types': ['card'],
+            'allowed_payment_method_types': ['card'],
             'metadata': metadata,
-            'api_key': stripe_secret_key(),
+            'api_key': self._creds().secret_key,
             'idempotency_key': idempotency_key,
         }
         try:
@@ -120,7 +125,10 @@ class StripeProvider(PaymentProvider):
     def parse_webhook(self, *, payload: bytes, signature: str) -> PaymentEvent:
         if not signature:
             raise StripeWebhookSignatureError('Missing Stripe-Signature header')
-        secret = stripe_webhook_secret()
+        try:
+            secret = self._creds().webhook_secret
+        except MissingStripeSecrets:
+            raise
         try:
             event = self._construct_event(payload, signature, secret)
         except StripeWebhookSignatureError:
@@ -161,7 +169,7 @@ class StripeProvider(PaymentProvider):
         try:
             self._payment_intents().cancel(
                 external_id,
-                api_key=stripe_secret_key(),
+                api_key=self._creds().secret_key,
             )
         except Exception as err:
             if not _is_stripe_error(err):

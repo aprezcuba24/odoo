@@ -31,7 +31,7 @@ sequenceDiagram
 
 ## Regla de tarjeta
 
-Odoo no acepta número de tarjeta, CVC ni caducidad. Esos datos van solo al SDK de Stripe. `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` no salen en ninguna respuesta. `client_secret` y `publishable_key` sí van al dispositivo dueño mientras el intento esté abierto.
+Odoo no acepta número de tarjeta, CVC ni caducidad. Esos datos van solo al SDK de Stripe. La secret key y el webhook secret (guardados en `payment_gateway.stripe.account`) no salen en ninguna respuesta. `client_secret` y `publishable_key` sí van al dispositivo dueño mientras el intento esté abierto.
 
 ## POST — abrir PaymentIntent
 
@@ -106,7 +106,8 @@ Cuerpo típico de error con mensaje: `{"error": "...", "message": "..."}`. El 40
 
 ## Fuera del contrato de la app
 
-- `POST /api/payment_gateway/stripe/webhook` — solo Stripe.
+- `POST /api/payment_gateway/stripe/webhook` — solo Stripe (`base.main_company`).
+- `POST /api/payment_gateway/stripe/webhook/<order_bridge_slug>` — solo Stripe (secreto de esa compañía).
 - Campos de pago en `GET /api/order_bridge/orders/<id>`.
 - Reembolsos, tarjetas guardadas, pagos online parciales, segundo proveedor.
 - Implementación de la APK o la web.

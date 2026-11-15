@@ -42,6 +42,59 @@ class StripePaymentController(http.Controller):
             return None
         return order
 
+    def _handle_webhook(self, *, company=None):
+        payload = request.httprequest.get_data(cache=False)
+        signature = request.httprequest.headers.get('Stripe-Signature') or ''
+
+        orchestrator = PaymentOrchestrator(env=request.env)
+        try:
+            provider = orchestrator.provider('stripe', company=company)
+            event = provider.parse_webhook(payload=payload, signature=signature)
+        except MissingStripeSecrets:
+            _logger.error('Stripe webhook secret missing on webhook request')
+            return api_json_response(
+                MessageErrorResponse(
+                    error='configuration',
+                    message='los pagos online no están configurados',
+                ),
+                503,
+            )
+        except StripeWebhookIgnoredEvent:
+            return api_json_response({'received': True})
+        except StripeWebhookSignatureError as err:
+            _logger.warning('Stripe webhook rejected: %s', err)
+            return api_json_response(
+                MessageErrorResponse(error='invalid_signature', message=str(err)),
+                400,
+            )
+        except UnsupportedStripeCurrency as err:
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(err)),
+                400,
+            )
+
+        try:
+            orchestrator.apply_webhook_event(event, company=company)
+        except UnknownPaymentAttempt:
+            _logger.warning(
+                'Stripe webhook for unknown attempt %s', event.external_id,
+            )
+            return api_json_response(
+                MessageErrorResponse(error='not_found', message='intento no encontrado'),
+                404,
+            )
+        except WebhookAmountMismatch as err:
+            _logger.warning(
+                'Stripe webhook amount mismatch for %s: %s',
+                event.external_id,
+                err,
+            )
+            return api_json_response(
+                MessageErrorResponse(error='validation', message=str(err)),
+                400,
+            )
+        return api_json_response({'received': True})
+
     @http.route(
         '/api/order_bridge/orders/<int:order_id>/payments/stripe',
         type='http',
@@ -131,54 +184,20 @@ class StripePaymentController(http.Controller):
         csrf=False,
     )
     def stripe_webhook(self, **kwargs):
-        payload = request.httprequest.get_data(cache=False)
-        signature = request.httprequest.headers.get('Stripe-Signature') or ''
+        """Webhook without slug: credentials of ``base.main_company``."""
+        company = request.env.ref('base.main_company').sudo()
+        return self._handle_webhook(company=company)
 
-        orchestrator = PaymentOrchestrator(env=request.env)
-        try:
-            provider = orchestrator.provider('stripe')
-            event = provider.parse_webhook(payload=payload, signature=signature)
-        except MissingStripeSecrets:
-            _logger.error('STRIPE_WEBHOOK_SECRET missing on webhook request')
-            return api_json_response(
-                MessageErrorResponse(
-                    error='configuration',
-                    message='los pagos online no están configurados',
-                ),
-                503,
-            )
-        except StripeWebhookIgnoredEvent:
-            return api_json_response({'received': True})
-        except StripeWebhookSignatureError as err:
-            _logger.warning('Stripe webhook rejected: %s', err)
-            return api_json_response(
-                MessageErrorResponse(error='invalid_signature', message=str(err)),
-                400,
-            )
-        except UnsupportedStripeCurrency as err:
-            return api_json_response(
-                MessageErrorResponse(error='validation', message=str(err)),
-                400,
-            )
-
-        try:
-            orchestrator.apply_webhook_event(event)
-        except UnknownPaymentAttempt:
-            _logger.warning(
-                'Stripe webhook for unknown attempt %s', event.external_id,
-            )
-            return api_json_response(
-                MessageErrorResponse(error='not_found', message='intento no encontrado'),
-                404,
-            )
-        except WebhookAmountMismatch as err:
-            _logger.warning(
-                'Stripe webhook amount mismatch for %s: %s',
-                event.external_id,
-                err,
-            )
-            return api_json_response(
-                MessageErrorResponse(error='validation', message=str(err)),
-                400,
-            )
-        return api_json_response({'received': True})
+    @http.route(
+        '/api/payment_gateway/stripe/webhook/<string:slug>',
+        type='http',
+        auth='public',
+        methods=['POST'],
+        csrf=False,
+    )
+    def stripe_webhook_for_company(self, slug, **kwargs):
+        """Webhook with slug: credentials of the company identified by slug."""
+        company = request.env['res.company'].sudo()._order_bridge_find_by_slug(slug)
+        if not company:
+            return api_json_response(SimpleErrorResponse(error='not_found'), 404)
+        return self._handle_webhook(company=company)
