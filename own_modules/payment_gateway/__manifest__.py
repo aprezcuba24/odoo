@@ -2,7 +2,7 @@
 
 {
     'name': 'Payment Gateway',
-    'version': '19.0.1.5.1',
+    'version': '19.0.1.5.2',
     'category': 'Sales/Sales',
     'summary': 'Pasarela de cobros online para Tienda Apk (Stripe como primer proveedor).',
     'description': """

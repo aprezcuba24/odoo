@@ -17,6 +17,7 @@ from odoo.addons.payment_gateway.services.orchestrator import (
     UnknownPaymentAttempt,
     WebhookAmountMismatch,
 )
+from odoo.addons.payment_gateway.tests.common import enable_payment_gateway_app
 
 
 def _provider_cls_with_construct(construct):
@@ -170,6 +171,7 @@ class TestWebhookHttp(HttpCase):
     def setUp(self):
         super().setUp()
         self.main_company = self.env.ref('base.main_company')
+        enable_payment_gateway_app(self.env, self.main_company)
         Account = self.env['payment_gateway.stripe.account'].sudo()
         self.stripe_account = Account.search([
             ('company_id', '=', self.main_company.id),

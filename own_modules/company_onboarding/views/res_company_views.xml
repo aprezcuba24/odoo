@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_company_form_optional_apps" model="ir.ui.view">
+        <field name="name">res.company.form.optional.apps</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_enter_company"
+                    type="object"
+                    string="Entrar"
+                    class="oe_stat_button"
+                    icon="fa-sign-in"
+                    groups="base.group_system"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page
+                    string="Aplicaciones"
+                    name="optional_apps"
+                    groups="base.group_system">
+                    <group>
+                        <field
+                            name="optional_app_ids"
+                            widget="many2many_checkboxes"
+                            nolabel="1"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

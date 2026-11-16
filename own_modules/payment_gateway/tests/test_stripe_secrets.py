@@ -14,6 +14,7 @@ from odoo.addons.payment_gateway.services.secrets import (
     MissingStripeSecrets,
     credentials_for_company,
 )
+from odoo.addons.payment_gateway.tests.common import enable_payment_gateway_app
 
 
 class _FakePaymentIntent:
@@ -59,6 +60,7 @@ class TestStripeCredentialsResolution(TransactionCase):
             'name': 'Tienda Secrets B',
             'order_bridge_slug': 'secrets-b',
         })
+        enable_payment_gateway_app(self.env, self.company_a, self.company_b)
         self.env['payment_gateway.stripe.account'].create({
             'company_id': self.company_a.id,
             'secret_key': 'sk_test_a',
@@ -91,6 +93,7 @@ class TestStripeCredentialsResolution(TransactionCase):
             'name': 'Stripe Incompleto',
             'order_bridge_slug': 'secrets-incomplete',
         })
+        enable_payment_gateway_app(self.env, company)
         self.env['payment_gateway.stripe.account'].create({
             'company_id': company.id,
             'secret_key': 'sk_only',
@@ -159,6 +162,7 @@ class TestStripeWebhookPerCompany(HttpCase):
             'name': 'Webhook Co B',
             'order_bridge_slug': 'wh-co-b',
         })
+        enable_payment_gateway_app(self.env, self.company_a, self.company_b)
         self.env['payment_gateway.stripe.account'].create({
             'company_id': self.company_a.id,
             'secret_key': 'sk_a',
