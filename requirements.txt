@@ -20,6 +20,7 @@ python-slugify>=8.0.0  # OCA fs_attachment (external_dependencies: python_slugif
 s3fs>=2024.6.0  # registers protocol "s3" in fs_storage dropdown (needs restart)
 packaging>=23.0  # Odoo parses external_dependencies (e.g. fsspec>=...) via packaging.requirements
 firebase-admin>=6.5.0  # FCM (order_bridge push notifications)
+stripe>=17.0.0,<18  # payment_gateway Stripe PaymentIntent / webhook (API 2026-10-28.endive)
 freezegun==1.1.0 ; python_version < '3.11'  # (Jammy)
 freezegun==1.2.1 ; python_version >= '3.11' and python_version < '3.13'
 freezegun==1.5.1 ; python_version >= '3.13'
