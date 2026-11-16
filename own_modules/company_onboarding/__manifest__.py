@@ -2,7 +2,7 @@
 
 {
     'name': 'Company Onboarding',
-    'version': '19.0.1.3.0',
+    'version': '19.0.1.4.0',
     'author': 'Own',
     'category': 'Hidden',
     'summary': 'Self-service signup: cada usuario crea su propia compañía (multi-company en una BD).',
@@ -18,6 +18,7 @@ en dos pasos (cuenta + compañía) con el estilo de login:
 * Concede grupos de operación (ventas, inventario admin, POS admin, productos, facturación, Tienda Apk) sin derechos de sistema
 * Carga un plan de cuentas y un punto de venta inicial en la nueva compañía
 * Aísla el catálogo por compañía (productos, tarifas, categorías nuevas) sin compartir ``company_id`` vacío
+* Apps opcionales por compañía (p. ej. Payment Gateway) y botón Entrar para el admin de sistema
 
 El usuario no entra a la aplicación hasta terminar el asistente.
 El proyecto Railway single-tenant de producción no debe instalar este módulo.
@@ -38,7 +39,9 @@ El proyecto Railway single-tenant de producción no debe instalar este módulo.
         'security/company_onboarding_security.xml',
         'data/ir_config_parameter.xml',
         'data/default_lang.xml',
+        'data/optional_app_data.xml',
         'views/onboarding_templates.xml',
+        'views/res_company_views.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,

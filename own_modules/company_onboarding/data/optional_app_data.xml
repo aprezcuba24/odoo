@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="optional_app_payment_gateway" model="company.optional.app">
+        <field name="name">Payment Gateway</field>
+        <field name="code">payment_gateway</field>
+        <field name="menu_xmlids">payment_gateway.menu_payment_gateway_stripe_account</field>
+    </record>
+</odoo>

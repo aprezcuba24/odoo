@@ -1,12 +1,22 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import Command, api, models
+from odoo import Command, _, api, fields, models
+from odoo.exceptions import AccessError
 
 ONBOARDING_DEFAULT_LANG = 'es_ES'
 
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
+
+    optional_app_ids = fields.Many2many(
+        'company.optional.app',
+        'res_company_optional_app_rel',
+        'company_id',
+        'app_id',
+        string='Aplicaciones opcionales',
+        help='Apps instaladas en la base que esta compañía puede usar. Vacío = apagadas.',
+    )
 
     @api.model
     def _company_onboarding_lang_code(self):
@@ -36,6 +46,13 @@ class ResCompany(models.Model):
                 partner.sudo().write(vals)
         return companies
 
+    def write(self, vals):
+        res = super().write(vals)
+        if 'optional_app_ids' in vals:
+            # Menu visibility is cached per company; drop all orm caches.
+            self.env.registry.clear_cache()
+        return res
+
     def _company_onboarding_unlink_system_users(self, companies):
         """Keep new tenant companies off Settings admins; OdooBot may keep them."""
         root = self.env.ref('base.user_root', raise_if_not_found=False)
@@ -51,6 +68,26 @@ class ResCompany(models.Model):
             holders = to_unlink.filtered(lambda u, cid=company.id: cid in u.company_ids.ids)
             if holders:
                 holders.sudo().write({'company_ids': [Command.unlink(company.id)]})
+
+    def has_optional_app(self, code):
+        """Return True if this company has the optional app ``code`` enabled."""
+        self.ensure_one()
+        return bool(self.sudo().optional_app_ids.filtered(lambda app: app.code == code))
+
+    def action_enter_company(self):
+        """Add this company to the current system admin and switch into it."""
+        self.ensure_one()
+        user = self.env.user
+        if not user.has_group('base.group_system'):
+            raise AccessError(_('Solo el administrador de sistema puede entrar en una compañía.'))
+        user.sudo().write({
+            'company_ids': [Command.link(self.id)],
+            'company_id': self.id,
+        })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
 
     def _order_bridge_product_domain(self):
         """Catálogo Tienda Apk: solo productos de esta compañía (sin compartidos)."""
