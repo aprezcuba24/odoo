@@ -23,17 +23,20 @@ class TestOptionalApps(TransactionCase):
         self.assertFalse(self.company.has_optional_app('payment_gateway'))
         self.assertNotIn(self.optional_app, self.company.optional_app_ids)
 
-    def test_admin_enter_company_links_and_switches(self):
+    def test_admin_enter_company_links_without_moving_partner(self):
         self.admin.invalidate_recordset(['company_ids', 'company_id'])
         self.assertNotIn(self.company, self.admin.company_ids)
+        partner_company_before = self.admin.partner_id.company_id
 
         action = self.company.with_user(self.admin).action_enter_company()
         self.assertEqual(action.get('type'), 'ir.actions.client')
         self.assertEqual(action.get('tag'), 'reload')
 
         self.admin.invalidate_recordset(['company_ids', 'company_id'])
+        self.admin.partner_id.invalidate_recordset(['company_id'])
         self.assertIn(self.company, self.admin.company_ids)
-        self.assertEqual(self.admin.company_id, self.company)
+        # Main company on the user/partner must stay put (cids handles the UI switch).
+        self.assertEqual(self.admin.partner_id.company_id, partner_company_before)
 
     def test_non_system_cannot_enter_company(self):
         user = self.env['res.users'].with_context(no_reset_password=True).create({
@@ -56,7 +59,10 @@ class TestOptionalApps(TransactionCase):
             self.skipTest('payment_gateway not installed')
 
         self.company.with_user(self.admin).action_enter_company()
-        Menu = self.env(user=self.admin)['ir.ui.menu']
+        # Entrar links membership and relies on cids for the active company.
+        Menu = self.env(user=self.admin)['ir.ui.menu'].with_context(
+            allowed_company_ids=[self.company.id],
+        )
 
         visible_off = Menu._visible_menu_ids(debug=False)
         self.assertNotIn(menu.id, visible_off)

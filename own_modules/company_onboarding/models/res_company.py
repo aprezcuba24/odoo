@@ -75,15 +75,26 @@ class ResCompany(models.Model):
         return bool(self.sudo().optional_app_ids.filtered(lambda app: app.code == code))
 
     def action_enter_company(self):
-        """Add this company to the current system admin and switch into it."""
+        """Add this company to the current system admin and switch into it.
+
+        Only links ``company_ids`` (does not write ``company_id``): changing the
+        user's main company also rewrites ``partner_id.company_id`` in core
+        ``res.users``, which locks the admin partner into the tenant and raises
+        AccessError on later form saves. Active company is forced via the
+        ``cids`` cookie instead.
+        """
         self.ensure_one()
         user = self.env.user
         if not user.has_group('base.group_system'):
             raise AccessError(_('Solo el administrador de sistema puede entrar en una compañía.'))
-        user.sudo().write({
-            'company_ids': [Command.link(self.id)],
-            'company_id': self.id,
-        })
+        user.sudo().write({'company_ids': [Command.link(self.id)]})
+        # Prefer this company on the next web client load.
+        try:
+            from odoo.http import request
+            if request and getattr(request, 'future_response', None):
+                request.future_response.set_cookie('cids', str(self.id))
+        except Exception:  # noqa: BLE001 — cookie is best-effort outside HTTP
+            pass
         return {
             'type': 'ir.actions.client',
             'tag': 'reload',

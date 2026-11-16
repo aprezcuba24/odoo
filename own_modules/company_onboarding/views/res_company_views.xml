@@ -29,4 +29,20 @@
             </xpath>
         </field>
     </record>
+
+    <record id="view_company_tree_enter" model="ir.ui.view">
+        <field name="name">res.company.list.enter</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <button
+                    name="action_enter_company"
+                    type="object"
+                    string="Entrar"
+                    icon="fa-sign-in"
+                    groups="base.group_system"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
