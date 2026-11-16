@@ -142,3 +142,51 @@ class TestOrderBridgeMultiCompanyApi(HttpCase):
             self.assertEqual(device.partner_id.company_id, self.main_company)
         finally:
             extra.active = False
+
+    def test_orders_post_same_company_product_on_tenant_company(self):
+        """Public create must with_company so sale company constraint accepts tenant products."""
+        company = self.env['res.company'].create({
+            'name': 'El Brando Http',
+            'order_bridge_slug': 'el-brando-http',
+        })
+        try:
+            tmpl = self.env['product.template'].create({
+                'name': 'Huevo Http',
+                'sale_ok': True,
+                'order_bridge_visible': True,
+                'type': 'service',
+                'list_price': 3.0,
+                'company_id': company.id,
+            })
+            product = tmpl.product_variant_id
+            key = str(uuid.uuid4())
+            reg = self.url_open(
+                '/api/order_bridge/register',
+                data=json.dumps({
+                    'phone': '60033366',
+                    'device_key': key,
+                    'company_slug': company.order_bridge_slug,
+                }),
+                headers={'Content-Type': 'application/json'},
+                timeout=60,
+            )
+            self.assertEqual(reg.status_code, 200, reg.text)
+            res = self.url_open(
+                '/api/order_bridge/orders',
+                data=json.dumps({
+                    'lines': [{'product_id': product.id, 'qty': 1}],
+                }),
+                headers={
+                    'Authorization': f'Bearer {key}',
+                    'Content-Type': 'application/json',
+                },
+                method='POST',
+                timeout=60,
+            )
+            self.assertEqual(res.status_code, 200, res.text)
+            created = json.loads(res.text)
+            order = self.env['sale.order'].browse(created['id'])
+            self.assertEqual(order.company_id, company)
+            self.assertEqual(order.order_line.product_id.company_id, company)
+        finally:
+            company.active = False

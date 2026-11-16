@@ -64,10 +64,12 @@ class OrdersController(http.Controller):
         partner = api_partner.sudo()
         device = api_device.sudo()
         pg_advisory_xact_lock_device(request.env.cr, device.id)
-        Order = request.env['sale.order'].sudo()
         _catalog_company, product_domain = catalog_context_for_partner(
             partner, device.company_id,
         )
+        # Public auth has no tenant in env.companies; with_company so sale's
+        # _check_order_line_company_id (_accessible_branches) accepts same-company products.
+        Order = request.env['sale.order'].sudo().with_company(_catalog_company)
         line_cmds, line_error = self._build_line_commands(body.lines, product_domain)
         if line_error:
             return line_error
