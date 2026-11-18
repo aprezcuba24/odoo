@@ -76,3 +76,27 @@ def resolve_request_company(body_slug=None, *, required_when_multi=None):
     if len(companies) > 1:
         return request.env.ref('base.main_company').sudo(), None, 200
     return request.env.company.sudo(), None, 200
+
+
+def resolve_webhook_company(slug=None):
+    """Resolve ``res.company`` for provider webhooks from the URL slug only.
+
+    Providers sign the raw body with a per-company secret. Until the signature
+    is verified the JSON (and headers the provider does not send) cannot be
+    trusted, so the company must come from the path segment registered in the
+    provider dashboard:
+
+    - No slug → ``base.main_company`` (single-tenant / main company webhook).
+    - Slug → company with that ``order_bridge_slug``, or empty + ``not_found``.
+
+    Does not read body, ``X-Company-Slug``, query, or Host subdomain.
+
+    Returns ``(company, error_payload_or_None, http_status)``.
+    """
+    Company = request.env['res.company'].sudo()
+    if slug is None or not str(slug).strip():
+        return request.env.ref('base.main_company').sudo(), None, 200
+    company = Company._order_bridge_find_by_slug(slug)
+    if not company:
+        return Company.browse(), {'error': 'not_found'}, 404
+    return company, None, 200

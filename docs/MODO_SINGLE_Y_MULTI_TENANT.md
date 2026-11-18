@@ -159,6 +159,25 @@ Desinstalar `company_onboarding` en una BD que ya tuvo onboarding (reglas, signu
 
 ---
 
+## 6. Webhooks de proveedores (Stripe y futuros)
+
+Los proveedores firman el cuerpo crudo con el secreto de **esa** cuenta. Hasta verificar la firma el JSON no es de fiar, y sin saber la compañía no se sabe qué secreto usar. La compañía **no** se toma del body, de `metadata` ni de `X-Company-Slug` (el proveedor no envía esa cabecera).
+
+Se identifica con el segmento de ruta que cada compañía registra en el panel del proveedor:
+
+| Ruta | Compañía |
+|------|----------|
+| `POST …/webhook` | `base.main_company` (single-tenant / principal) |
+| `POST …/webhook/<order_bridge_slug>` | compañía con ese slug |
+
+Flujo: resolver compañía → cargar el secreto de esa compañía → verificar firma → el registro afectado debe pertenecer a esa misma compañía (si no, 404). Slug desconocido → 404 sin mirar el cuerpo.
+
+La resolución vive en `resolve_webhook_company(slug)` ([`order_bridge/utils/company_context.py`](../own_modules/order_bridge/utils/company_context.py)). Stripe ya usa el par de rutas en `payment_gateway`; un webhook nuevo copia el mismo patrón (`…/webhook` y `…/webhook/<slug>`).
+
+Detalle Stripe: [`docs/pagos/03-secretos-y-moneda.md`](pagos/03-secretos-y-moneda.md), [`docs/pagos/07-contrato-app.md`](pagos/07-contrato-app.md).
+
+---
+
 ## Documentación relacionada
 
 | Documento | Contenido |

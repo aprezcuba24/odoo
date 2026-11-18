@@ -9,6 +9,7 @@ from odoo.addons.order_bridge.schemas.responses import (
     MessageErrorResponse,
     SimpleErrorResponse,
 )
+from odoo.addons.order_bridge.utils.company_context import resolve_webhook_company
 from odoo.addons.order_bridge.utils.decorators import (
     api_cors_preflight,
     api_device_auth,
@@ -185,7 +186,9 @@ class StripePaymentController(http.Controller):
     )
     def stripe_webhook(self, **kwargs):
         """Webhook without slug: credentials of ``base.main_company``."""
-        company = request.env.ref('base.main_company').sudo()
+        company, error, status = resolve_webhook_company()
+        if error:
+            return api_json_response(SimpleErrorResponse(**error), status)
         return self._handle_webhook(company=company)
 
     @http.route(
@@ -197,7 +200,7 @@ class StripePaymentController(http.Controller):
     )
     def stripe_webhook_for_company(self, slug, **kwargs):
         """Webhook with slug: credentials of the company identified by slug."""
-        company = request.env['res.company'].sudo()._order_bridge_find_by_slug(slug)
-        if not company:
-            return api_json_response(SimpleErrorResponse(error='not_found'), 404)
+        company, error, status = resolve_webhook_company(slug)
+        if error:
+            return api_json_response(SimpleErrorResponse(**error), status)
         return self._handle_webhook(company=company)
