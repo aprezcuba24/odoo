@@ -1,35 +1,23 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import logging
 import re
 from datetime import timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from odoo.addons.phone_validation.tools import phone_validation as phone_validation_tools
-
-_logger = logging.getLogger(__name__)
+from odoo.addons.order_bridge.utils.phone_match import canonical_registration_phone
 
 _CHANNEL_TOKEN_RE = re.compile(r'(?<![a-z])(?:web|apk)(?![a-z])', re.IGNORECASE)
 
 
 def normalize_phone_for_registration(env, phone_raw, company=None):
-    """Return a normalized phone string (E.164 when possible)."""
-    if not phone_raw or not str(phone_raw).strip():
-        return ''
-    phone_raw = str(phone_raw).strip()
-    company = company or env.company
-    country = company.country_id
-    country_code = country.code if country else None
-    phone_code = country.phone_code if country and country.phone_code else None
-    try:
-        return phone_validation_tools.phone_format(
-            phone_raw, country_code, phone_code, force_format='E164'
-        )
-    except UserError:
-        _logger.info('Phone format fallback for %r', phone_raw)
-        return phone_raw
+    """Return a compact E.164 phone for registration (``+53…`` for 8 digits).
+
+    ``env`` / ``company`` are kept for call-site compatibility and unused:
+    legacy 8-digit numbers always use the fixed ``+53`` prefix.
+    """
+    return canonical_registration_phone(phone_raw)
 
 
 def parse_client_channel(app_version):
@@ -214,9 +202,13 @@ class OrderBridgeDevice(models.Model):
         if not company:
             raise UserError(_('La compañía (company_slug) es obligatoria para registrar un dispositivo.'))
         company = company.sudo()
+        if not phone_raw or not str(phone_raw).strip():
+            raise UserError(_('El teléfono es obligatorio.'))
         normalized = normalize_phone_for_registration(self.env, phone_raw, company=company)
         if not normalized:
-            raise UserError(_('El teléfono es obligatorio.'))
+            raise UserError(
+                _('El teléfono debe tener 8 dígitos o el formato +5353024637.')
+            )
         # Never reuse res.company.partner_id / internal users (same phone as the shop).
         partner = Partner._order_bridge_find_or_create_customer(normalized, company)
         client_channel = parse_client_channel(app_version)

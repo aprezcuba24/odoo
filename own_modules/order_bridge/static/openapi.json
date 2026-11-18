@@ -1298,6 +1298,7 @@
               }
             ],
             "default": null,
+            "description": "Tel\u00e9fono en formato ``+5353024637`` (``+`` y d\u00edgitos, sin espacios). La app antigua puede enviar solo 8 d\u00edgitos; se guarda como ``+53`` m\u00e1s esos d\u00edgitos.",
             "title": "Phone"
           }
         },

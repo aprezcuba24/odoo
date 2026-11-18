@@ -6,6 +6,10 @@ from __future__ import annotations
 import re
 
 _NON_DIGIT_RE = re.compile(r'\D+')
+_EIGHT_DIGITS_RE = re.compile(r'^\d{8}$')
+_PLUS_DIGITS_RE = re.compile(r'^\+\d{8,15}$')
+
+DEFAULT_COUNTRY_CALLING_CODE = '53'
 
 
 def phone_digits(phone_raw) -> str:
@@ -32,6 +36,30 @@ def phone_match_key(phone_raw) -> str:
     if len(digits) == 10 and digits.startswith('53'):
         return digits[2:]
     return digits
+
+
+def canonical_registration_phone(phone_raw) -> str:
+    """Return a registration phone in compact E.164, or ``''`` if invalid.
+
+    Accepted inputs:
+    - exactly 8 digits (legacy app) → ``+53`` + those digits
+    - ``+`` followed by 8–15 digits with no spaces/hyphens; if the number
+      starts with ``+53``, the national part must be exactly 8 digits
+    """
+    if phone_raw is None:
+        return ''
+    s = str(phone_raw).strip()
+    if not s:
+        return ''
+    if _EIGHT_DIGITS_RE.fullmatch(s):
+        return f'+{DEFAULT_COUNTRY_CALLING_CODE}{s}'
+    if not _PLUS_DIGITS_RE.fullmatch(s):
+        return ''
+    if s.startswith(f'+{DEFAULT_COUNTRY_CALLING_CODE}'):
+        national = s[len(DEFAULT_COUNTRY_CALLING_CODE) + 1:]
+        if len(national) != 8:
+            return ''
+    return s
 
 
 def phone_match_domain(phone_raw, *, field='order_bridge_phone_key'):

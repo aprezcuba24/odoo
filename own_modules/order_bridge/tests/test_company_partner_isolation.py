@@ -12,7 +12,7 @@ class TestCompanyPartnerIsolation(TransactionCase):
         super().setUpClass()
         cls.company = cls.env.company
         cls.company_name = 'El Brando Shop'
-        cls.shop_phone = '5551234567'
+        cls.shop_phone = '55512345'
         cls.company.write({
             'name': cls.company_name,
             'phone': cls.shop_phone,

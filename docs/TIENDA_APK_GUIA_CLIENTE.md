@@ -56,7 +56,7 @@ flowchart LR
 
 **Flujo típico:**
 
-1. El cliente descarga la app y se registra con su **teléfono** (8 dígitos).
+1. El cliente descarga la app y se registra con su **teléfono** (formato `+5353024637`, o 8 dígitos en la app antigua).
 2. La app genera una **clave de dispositivo** y queda registrada en Odoo.
 3. Su equipo puede **validar el teléfono** cuando confíe en ese cliente (recomendado antes de entregas sensibles).
 4. El cliente navega el **catálogo**, completa su **perfil y dirección** y realiza el **pedido**.
@@ -169,7 +169,7 @@ Solo se sirven banners **activos** de la compañía del catálogo. La app los ob
 
 Cuando un cliente abre la app por primera vez:
 
-1. Introduce su **teléfono** (8 dígitos).
+1. Introduce su **teléfono** (formato `+5353024637`; la app antigua puede enviar solo 8 dígitos, que Odoo guarda como `+53` más esos dígitos).
 2. La app genera una **clave de dispositivo** única y llama a `POST /api/order_bridge/register`.
 3. Odoo crea o enlaza un **contacto** (`res.partner`) y un registro de **dispositivo**.
 

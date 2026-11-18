@@ -9,13 +9,20 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validat
 from odoo.addons.order_bridge.utils.fcm_topic import (
     validate_fcm_topic_string as _valid_fcm_topic,
 )
+from odoo.addons.order_bridge.utils.phone_match import canonical_registration_phone
 
 
 class RegisterBody(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     device_key: str = Field(..., min_length=1)
-    phone: str | None = None
+    phone: str | None = Field(
+        default=None,
+        description=(
+            'Teléfono en formato ``+5353024637`` (``+`` y dígitos, sin espacios). '
+            'La app antigua puede enviar solo 8 dígitos; se guarda como ``+53`` más esos dígitos.'
+        ),
+    )
     device_info: str | None = None
     company_slug: str | None = Field(
         default=None,
@@ -27,11 +34,15 @@ class RegisterBody(BaseModel):
 
     @field_validator('phone')
     @classmethod
-    def phone_eight_digits(cls, v: str | None) -> str | None:
-        s = str(v).strip()
-        if not s.isdigit() or len(s) != 8:
-            raise ValueError('El teléfono debe tener 8 dígitos')
-        return s
+    def phone_canonical(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        canonical = canonical_registration_phone(v)
+        if not canonical:
+            raise ValueError(
+                'El teléfono debe tener 8 dígitos o el formato +5353024637'
+            )
+        return canonical
 
     @field_validator('company_slug')
     @classmethod

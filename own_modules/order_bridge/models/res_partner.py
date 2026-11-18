@@ -108,10 +108,15 @@ class ResPartner(models.Model):
             raise UserError(_('El teléfono es obligatorio.'))
         company = company.sudo()
         protected = self._order_bridge_system_partner_ids()
-        domain = [
+        key = phone_match_key(phone)
+        phone_domain = [
             '|',
             ('phone', '=', phone),
             ('phone_sanitized', '=', phone),
+        ]
+        if key:
+            phone_domain = ['|'] + phone_domain + [('order_bridge_phone_key', '=', key)]
+        domain = phone_domain + [
             '|',
             ('company_id', '=', company.id),
             ('company_id', '=', False),
@@ -121,8 +126,11 @@ class ResPartner(models.Model):
         partner = self.sudo().search(domain, limit=1)
         if partner:
             vals = {}
+            old_phone = (partner.phone or '').strip()
             if partner.phone != phone:
                 vals['phone'] = phone
+                if old_phone and partner.name == old_phone:
+                    vals['name'] = phone
             if not partner.company_id:
                 vals['company_id'] = company.id
             if vals:

@@ -30,7 +30,7 @@ Reembolsos, la APK, campos de pago en `GET /api/order_bridge/orders/<id>`, un se
 
 ### Pedido A
 
-1. `POST /api/order_bridge/register` (`device_key`, teléfono de 8 dígitos) y `POST /api/order_bridge/orders` con un producto visible del catálogo.
+1. `POST /api/order_bridge/register` (`device_key`, teléfono en formato `+5353024637` o 8 dígitos) y `POST /api/order_bridge/orders` con un producto visible del catálogo.
 2. `POST .../payments/stripe` → `client_secret`, `publishable_key` `pk_test_...`, importe = total.
 3. `GET .../payments/stripe` → `attempt.state` `open`, pendiente = total.
 4. `stripe payment_intents confirm <external_id> --payment-method pm_card_visa`.
