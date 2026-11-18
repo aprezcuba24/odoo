@@ -88,7 +88,7 @@ class DeviceAuthController(http.Controller):
         p = api_partner.sudo()
         PartnerAddress = request.env['order_bridge.partner_address']
         try:
-            PartnerAddress.order_bridge_put_full(
+            p = PartnerAddress.order_bridge_put_full(
                 p,
                 body.name,
                 street=body.address.street,
@@ -114,7 +114,7 @@ class DeviceAuthController(http.Controller):
         if body.address is not None:
             addr_patch = body.address.model_dump(exclude_unset=True)
         try:
-            PartnerAddress.order_bridge_patch(
+            p = PartnerAddress.order_bridge_patch(
                 p,
                 name=body.name,
                 address=addr_patch,

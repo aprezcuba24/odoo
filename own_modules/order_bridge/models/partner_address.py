@@ -63,10 +63,16 @@ class OrderBridgePartnerAddress(models.Model):
         municipality_id,
         state,
     ):
-        """Replace partner display name and full address (API PUT)."""
+        """Replace partner display name and full address (API PUT).
+
+        Returns the partner that was updated (a person contact if the original
+        was a company/user system partner).
+        """
         partner = partner.sudo()
         self = self.sudo()
         self._order_bridge_validate_location_ids_standalone(municipality_id, neighborhood_id)
+        # Detach from company/user partners before renaming (protects res.company.name).
+        partner = partner._order_bridge_detach_system_partner()
         partner.write({'name': name})
         addr = self.search([('partner_id', '=', partner.id)], limit=1)
         vals = {
@@ -79,6 +85,7 @@ class OrderBridgePartnerAddress(models.Model):
             addr.write(vals)
         else:
             self.create({'partner_id': partner.id, **vals})
+        return partner
 
     @api.model
     def _order_bridge_validate_location_ids_standalone(self, municipality_id, neighborhood_id):
@@ -97,13 +104,20 @@ class OrderBridgePartnerAddress(models.Model):
 
     @api.model
     def order_bridge_patch(self, partner, name=None, address=None):
-        """Partial name/address update (API PATCH)."""
+        """Partial name/address update (API PATCH).
+
+        Returns the partner that was updated (a person contact if the original
+        was a company/user system partner).
+        """
         partner = partner.sudo()
         self = self.sudo()
+        # Detach from company/user partners before renaming (protects res.company.name).
+        if name is not None or address:
+            partner = partner._order_bridge_detach_system_partner()
         if name is not None:
             partner.write({'name': name})
         if not address:
-            return
+            return partner
         patch_vals = {}
         for key in ADDRESS_FIELD_NAMES:
             if key not in address:
@@ -117,7 +131,7 @@ class OrderBridgePartnerAddress(models.Model):
             else:
                 patch_vals[key] = '' if val is None else str(val).strip()
         if not patch_vals:
-            return
+            return partner
         record = self.search([('partner_id', '=', partner.id)], limit=1)
         if record:
             m_id = record.municipality_id.id if record.municipality_id else False
@@ -141,6 +155,7 @@ class OrderBridgePartnerAddress(models.Model):
             }
             base.update(patch_vals)
             self.create({'partner_id': partner.id, **base})
+        return partner
 
 
 class OrderBridgeOrderAddressSnapshot(models.Model):

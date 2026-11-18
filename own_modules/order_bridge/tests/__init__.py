@@ -2,6 +2,7 @@
 
 from . import test_assign_messenger_wizard
 from . import test_backfill_company
+from . import test_company_partner_isolation
 from . import test_fcm_send_wizard
 from . import test_local_dotenv
 from . import test_messaging_guide

@@ -200,12 +200,16 @@ class OrderBridgeDevice(models.Model):
         if not device_key or not str(device_key).strip():
             raise UserError(_('La clave del dispositivo es obligatoria.'))
         device_key = str(device_key).strip()
+        Partner = self.env['res.partner'].sudo()
         existing = self.search([('device_key', '=', device_key)], limit=1)
         if existing:
+            # Shop phone may have linked the device to the company partner;
+            # move it to a person contact so profile updates cannot rename the company.
+            partner = existing.partner_id._order_bridge_detach_system_partner()
             return {
                 'device': existing,
                 'created': False,
-                'partner': existing.partner_id,
+                'partner': partner,
             }
         if not company:
             raise UserError(_('La compañía (company_slug) es obligatoria para registrar un dispositivo.'))
@@ -213,32 +217,8 @@ class OrderBridgeDevice(models.Model):
         normalized = normalize_phone_for_registration(self.env, phone_raw, company=company)
         if not normalized:
             raise UserError(_('El teléfono es obligatorio.'))
-        Partner = self.env['res.partner'].sudo()
-        partner = Partner.search(
-            [
-                '|',
-                ('phone', '=', normalized),
-                ('phone_sanitized', '=', normalized),
-                '|',
-                ('company_id', '=', company.id),
-                ('company_id', '=', False),
-            ],
-            limit=1,
-        )
-        if not partner:
-            partner = Partner.create({
-                'name': normalized,
-                'phone': normalized,
-                'company_id': company.id,
-            })
-        else:
-            vals = {}
-            if partner.phone != normalized:
-                vals['phone'] = normalized
-            if not partner.company_id:
-                vals['company_id'] = company.id
-            if vals:
-                partner.write(vals)
+        # Never reuse res.company.partner_id / internal users (same phone as the shop).
+        partner = Partner._order_bridge_find_or_create_customer(normalized, company)
         client_channel = parse_client_channel(app_version)
         self._deactivate_other_devices_for_phone(
             normalized, company, client_channel, keep_key=None,

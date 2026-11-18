@@ -77,6 +77,90 @@ class ResPartner(models.Model):
         for partner in self:
             partner.order_bridge_phone_key = phone_match_key(partner.phone) or False
 
+    def _order_bridge_is_system_partner(self):
+        """True if this contact is a company entity or an internal user.
+
+        App customers must not share those partners: writing the profile name
+        would rename ``res.company`` (related ``partner_id.name``).
+        """
+        self.ensure_one()
+        if self.env['res.company'].sudo().search_count([('partner_id', '=', self.id)]):
+            return True
+        if self.user_ids.filtered(lambda u: u.active and not u.share):
+            return True
+        return False
+
+    @api.model
+    def _order_bridge_system_partner_ids(self):
+        """Ids of company entity partners and internal-user partners."""
+        company_partner_ids = self.env['res.company'].sudo().search([]).partner_id.ids
+        user_partner_ids = self.env['res.users'].sudo().search([
+            ('share', '=', False),
+            ('active', '=', True),
+        ]).partner_id.ids
+        return list({*company_partner_ids, *user_partner_ids})
+
+    @api.model
+    def _order_bridge_find_or_create_customer(self, phone, company):
+        """Find a non-system partner for the phone, or create a person contact."""
+        phone = (phone or '').strip()
+        if not phone:
+            raise UserError(_('El teléfono es obligatorio.'))
+        company = company.sudo()
+        protected = self._order_bridge_system_partner_ids()
+        domain = [
+            '|',
+            ('phone', '=', phone),
+            ('phone_sanitized', '=', phone),
+            '|',
+            ('company_id', '=', company.id),
+            ('company_id', '=', False),
+        ]
+        if protected:
+            domain = [('id', 'not in', protected)] + domain
+        partner = self.sudo().search(domain, limit=1)
+        if partner:
+            vals = {}
+            if partner.phone != phone:
+                vals['phone'] = phone
+            if not partner.company_id:
+                vals['company_id'] = company.id
+            if vals:
+                partner.write(vals)
+            return partner
+        return self.sudo().create({
+            'name': phone,
+            'phone': phone,
+            'company_id': company.id,
+        })
+
+    def _order_bridge_detach_system_partner(self):
+        """If this is a system partner, move API devices to a person contact.
+
+        Leaves the company / user partner name untouched. Existing sale orders
+        stay on the original partner.
+        """
+        self.ensure_one()
+        if not self._order_bridge_is_system_partner():
+            return self
+        Device = self.env['order_bridge.device'].sudo()
+        devices = Device.search([('partner_id', '=', self.id)])
+        company = self.env['res.company'].sudo().search(
+            [('partner_id', '=', self.id)],
+            limit=1,
+        )
+        if not company and devices:
+            company = devices[0].company_id
+        if not company:
+            company = self.company_id or self.env.company
+        phone = (self.phone or '').strip()
+        if not phone and devices:
+            phone = (devices[0].phone or '').strip()
+        customer = self._order_bridge_find_or_create_customer(phone, company)
+        if devices:
+            devices.write({'partner_id': customer.id})
+        return customer
+
     def _search_phone_mobile_search(self, operator, value):
         domain = super()._search_phone_mobile_search(operator, value)
         if not isinstance(value, str):
