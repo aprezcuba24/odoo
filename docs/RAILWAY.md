@@ -67,6 +67,8 @@ Proyecto Railway **aparte** (Postgres propio). Varias `res.company` en la misma 
 
 **[`RAILWAY_MULTI_COMPANY_CHECKLIST.md`](RAILWAY_MULTI_COMPANY_CHECKLIST.md)** — checklist técnico.
 
+**Local (devcontainer): alternar single ↔ multi** — [`MODO_SINGLE_Y_MULTI_TENANT.md`](MODO_SINGLE_Y_MULTI_TENANT.md).
+
 No uses este modo en el single-tenant de producción.
 
 | Pieza | Detalle |
@@ -82,6 +84,7 @@ No uses este modo en el single-tenant de producción.
 ## Other platforms
 
 - [`RAILWAY_MULTI_COMPANY_CHECKLIST.md`](RAILWAY_MULTI_COMPANY_CHECKLIST.md) — multi-company (1 BD)
+- [`MODO_SINGLE_Y_MULTI_TENANT.md`](MODO_SINGLE_Y_MULTI_TENANT.md) — single ↔ multi en local
 - [`SEENODE_DEPLOYMENT.md`](../SEENODE_DEPLOYMENT.md) — legacy Seenode
 - [`WEBSOCKET_SERVERLESS.md`](WEBSOCKET_SERVERLESS.md) — WebSockets en PaaS
 
