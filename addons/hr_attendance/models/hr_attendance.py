@@ -16,7 +16,7 @@ from odoo import models, fields, api, exceptions, _
 from odoo.exceptions import AccessError
 from odoo.fields import Domain
 from odoo.http import request
-from odoo.tools import convert, format_duration, format_time, format_datetime
+from odoo.tools import convert, float_is_zero, format_duration, format_time, format_datetime
 from odoo.tools.date_utils import sum_intervals
 from odoo.tools.intervals import Intervals
 
@@ -48,11 +48,11 @@ class HrAttendance(models.Model):
     date = fields.Date(string="Date", compute='_compute_date', store=True, index=True, precompute=True, required=True)
     worked_hours = fields.Float(string='Worked Hours', compute='_compute_worked_hours', store=True, readonly=True)
     color = fields.Integer(compute='_compute_color')
-    overtime_hours = fields.Float(string="Over Time", compute='_compute_overtime_hours', store=True)
+    overtime_hours = fields.Float(string="Worked Extra Hours", compute='_compute_overtime_hours', store=True)
     overtime_status = fields.Selection(selection=[('to_approve', "To Approve"),
                                                   ('approved', "Approved"),
                                                   ('refused', "Refused")], compute="_compute_overtime_status", store=True, tracking=True, readonly=False)
-    validated_overtime_hours = fields.Float(string="Extra Hours", compute='_compute_validated_overtime_hours', tracking=True, store=True, readonly=True)
+    validated_overtime_hours = fields.Float(string="Validated Extra Hours", compute='_compute_validated_overtime_hours', tracking=True, store=True, readonly=True)
     in_latitude = fields.Float(string="Latitude", digits=(10, 7), readonly=True, aggregator=None)
     in_longitude = fields.Float(string="Longitude", digits=(10, 7), readonly=True, aggregator=None)
     in_location = fields.Char(help="Based on GPS-Coordinates if available or on IP Address")
@@ -273,9 +273,23 @@ class HrAttendance(models.Model):
             tz = timezone(employee.tz)
             local_check_in = utc.localize(min(attendances.mapped('check_in'))).astimezone(tz)
             local_check_out = utc.localize(max(attendances.mapped('check_out'))).astimezone(tz)
-            rulesets = attendances.mapped(lambda att: att.employee_id.sudo()._get_version(att.date)).ruleset_id
-            # append this domain only for weekly rules
-            if any(rule.quantity_period == 'week' for rule in rulesets.sudo().rule_ids):
+            versions = attendances.mapped(lambda att: att.employee_id.sudo()._get_version(att.date))
+            rulesets = versions.ruleset_id
+            # append this domain for weekly rules or flexible daily rules whose expected hours are capped weekly
+            if (
+                any(rule.quantity_period == 'week' for rule in rulesets.sudo().rule_ids)
+                or any(
+                    version.resource_calendar_id.flexible_hours
+                    and version.resource_calendar_id.hours_per_week
+                    and any(
+                        rule.base_off == 'quantity'
+                        and rule.quantity_period == 'day'
+                        and rule.expected_hours_from_contract
+                        for rule in version.ruleset_id.sudo().rule_ids
+                    )
+                    for version in versions
+                )
+            ):
                 date_from = local_check_in.date() + relativedelta(weekday=MO(-1))
                 date_to = local_check_out.date() + relativedelta(weekday=SU)
             else:
@@ -284,17 +298,33 @@ class HrAttendance(models.Model):
 
             domain_list.append(Domain.AND([
                 Domain('employee_id', '=', employee.id),
-                Domain('date', '<=', date_to),
-                Domain('date', '>=', date_from),
+                Domain('check_in', '<=', tz.localize(datetime.combine(date_to, datetime.max.time())).astimezone(utc).replace(tzinfo=None)),
+                Domain('check_out', '>', tz.localize(datetime.combine(date_from, datetime.min.time())).astimezone(utc).replace(tzinfo=None)),
             ]))
         if not domain_list:
             return Domain.FALSE
         return Domain.OR(domain_list) if len(domain_list) > 1 else domain_list[0]
 
+    def _get_overtime_domain_from_attendance_domain(self, attendance_domain):
+        overtime_domain = []
+        for leaf in attendance_domain:
+            if isinstance(leaf, (list, tuple)) and len(leaf) == 3:
+                field, operator, value = leaf
+                if field == 'check_in':
+                    field = 'time_start'
+                elif field == 'check_out':
+                    field = 'time_stop'
+                overtime_domain.append((field, operator, value))
+            else:
+                overtime_domain.append(leaf)
+        return overtime_domain
+
     def _update_overtime(self, attendance_domain=None):
         if not attendance_domain:
             attendance_domain = self._get_overtimes_to_update_domain()
-        all_overtime_lines = self.env['hr.attendance.overtime.line'].search(attendance_domain)
+
+        overtime_domain = self._get_overtime_domain_from_attendance_domain(attendance_domain)
+        all_overtime_lines = self.env['hr.attendance.overtime.line'].search(overtime_domain)
         manual_overtimes = set(all_overtime_lines.filtered(
             lambda l: l.manual_duration != l.duration or l.status == 'to_approve'
         ).mapped(lambda l: (l.employee_id.id, l.date)))
@@ -331,6 +361,7 @@ class HrAttendance(models.Model):
                 for val in ruleset_sudo.rule_ids._generate_overtime_vals_v2(min(attendances_dates), max(attendances_dates), ruleset_attendances, schedules_intervals_by_employee)
             ])
         self.env['hr.attendance.overtime.line'].create(overtime_vals_list)
+        all_attendances.invalidate_recordset(['linked_overtime_ids'])
         self.env.add_to_compute(self._fields['overtime_hours'], all_attendances)
         self.env.add_to_compute(self._fields['expected_hours'], all_attendances)
         self.env.add_to_compute(self._fields['validated_overtime_hours'], all_attendances)
@@ -635,7 +666,12 @@ class HrAttendance(models.Model):
         if not companies:
             return
 
-        checked_in_employees = self.env['hr.attendance.overtime.line'].search([('date', '=', yesterday)]).employee_id
+        today = yesterday + relativedelta(days=1)
+        checked_in_employees = self.env['hr.attendance'].search([
+            '|',
+                '&', ('check_in', '>=', yesterday), ('check_in', '<=', today),
+                '&', ('check_out', '>=', yesterday), ('check_out', '<=', today),
+        ]).employee_id
 
         technical_attendances_vals = []
         absent_employees = self.env['hr.employee'].search([
@@ -644,6 +680,14 @@ class HrAttendance(models.Model):
             ('resource_calendar_id.flexible_hours', '=', False),
             ('current_version_id.contract_date_start', '<=', fields.Date.today() - relativedelta(days=1))
         ])
+
+        # Only days with scheduled work can be absences, whatever the period of the quantity rules
+        start = utc.localize(yesterday - relativedelta(days=1))  # for timezone
+        stop = utc.localize(yesterday + relativedelta(days=2))  # for timezone
+        version_periods_by_employee = absent_employees.sudo()._get_version_periods(start, stop)
+        schedules_by_employee = absent_employees._get_schedules_by_employee_by_work_type(start, stop, version_periods_by_employee)
+        yesterday_interval = Intervals([(yesterday, yesterday + relativedelta(days=1), self.env['resource.calendar'])])
+        absent_employees = absent_employees.filtered(lambda emp: schedules_by_employee['schedule'][emp]['work'] & yesterday_interval)
 
         for emp in absent_employees:
             local_day_start = pytz.timezone(emp._get_tz()).localize(yesterday)
@@ -657,7 +701,7 @@ class HrAttendance(models.Model):
             })
 
         technical_attendances = self.env['hr.attendance'].create(technical_attendances_vals)
-        to_unlink = technical_attendances.filtered(lambda a: a.overtime_hours == 0)
+        to_unlink = technical_attendances.filtered(lambda a: float_is_zero(a.overtime_hours, 3))
 
         body = _('This attendance was automatically created to cover an unjustified absence on that day.')
         for technical_attendance in technical_attendances - to_unlink:

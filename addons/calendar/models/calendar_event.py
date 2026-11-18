@@ -1264,22 +1264,30 @@ class CalendarEvent(models.Model):
         cron = self.env.ref('calendar.ir_cron_scheduler_alarm').sudo()
         alarm_types = self._get_trigger_alarm_types()
         events_to_notify = self.env['calendar.event']
-        triggers_by_events = {}
         for event in self:
-            existing_trigger = event.recurrence_id.sudo().trigger_id
             for alarm in (alarm for alarm in event.alarm_ids if alarm.alarm_type in alarm_types):
                 at = event.start - timedelta(minutes=alarm.duration_minutes)
-                create_trigger = not existing_trigger or existing_trigger and existing_trigger.call_at != at
-                if create_trigger and (not cron.lastcall or at > cron.lastcall):
+                if not cron.lastcall or at > cron.lastcall:
                     # Don't trigger for past alarms, they would be skipped by design
-                    trigger = cron._trigger(at=at)
-                    triggers_by_events[event.id] = trigger.id
+                    self._get_alarm_triggers(cron).add(at)
             if any(alarm.alarm_type == 'notification' for alarm in event.alarm_ids):
                 # filter events before notifying attendees through calendar_alarm_manager
                 events_to_notify |= event.filtered(lambda ev: ev.alarm_ids and ev.stop >= fields.Datetime.now())
         if events_to_notify:
             self.env['calendar.alarm_manager']._notify_next_alarm(events_to_notify.partner_ids.ids)
-        return triggers_by_events
+        # TODO master: remove, kept for API compatibility as the triggers are only created at commit
+        return {}
+
+    def _get_alarm_triggers(self, cron):
+        """ Return the set of alarm trigger dates, created once at commit as the
+        same alarms can be set up several times in the same transaction """
+        if 'calendar.alarm_triggers' not in self.env.cr.precommit.data:
+            self.env.cr.precommit.data['calendar.alarm_triggers'] = set()
+
+            @self.env.cr.precommit.add
+            def create_triggers():
+                cron._trigger(at=sorted(self.env.cr.precommit.data.pop('calendar.alarm_triggers')))
+        return self.env.cr.precommit.data['calendar.alarm_triggers']
 
     def get_next_alarm_date(self, events_by_alarm):
         self.ensure_one()
@@ -1613,8 +1621,12 @@ class CalendarEvent(models.Model):
                 event.add('description').value = description
             if meeting.location:
                 event.add('location').value = meeting.location
+            if meeting.videocall_location:
+                event.add('url').value = meeting.videocall_location
             if meeting.rrule:
-                event.add('rrule').value = meeting.rrule
+                # meeting.rrule may be a full dateutil string: "DTSTART:...\nRRULE:FREQ=..."
+                # Take the last line and strip the "RRULE:" prefix if present.
+                event.add('rrule').value = meeting.rrule.splitlines()[-1].replace('RRULE:', '', 1)
 
             if meeting.alarm_ids:
                 for alarm in meeting.alarm_ids:
@@ -1629,7 +1641,7 @@ class CalendarEvent(models.Model):
                         delta = timedelta(hours=duration)
                     elif interval == 'minutes':
                         delta = timedelta(minutes=duration)
-                    trigger.value = delta
+                    trigger.value = -delta  # alarm duration is always towards the past, hence negative delta
                     valarm.add('DESCRIPTION').value = alarm.name or u'Odoo'
             for attendee in meeting.attendee_ids:
                 attendee_add = event.add('attendee')

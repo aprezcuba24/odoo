@@ -4,7 +4,7 @@ from stdnum.fr import siret
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-from odoo.addons.account_edi_ubl_cii.models.account_edi_common import EAS_MAPPING
+from odoo.addons.account_edi_ubl_cii.models.account_edi_common import EAS_MAPPING, DEPRECATED_PEPPOL_EAS
 from odoo.addons.account.models.company import PEPPOL_DEFAULT_COUNTRIES
 from odoo.tools import single_email_re
 
@@ -13,7 +13,7 @@ PEPPOL_ENDPOINT_INVALIDCHARS_RE = re.compile(r'[^a-zA-Z\d\-._~]')
 PEPPOL_ENDPOINT_INVALID_CHARS_RE_BY_EAS = {
     '0208': re.compile(r'[^0-9]'),
     '9925': re.compile(r'[^beBE0-9]'),
-    'EM': re.compile(r'[^a-zA-Z\d\-._@]'),
+    'EM': re.compile(r'[^a-zA-Z\d\-._@+]'),
 }
 
 
@@ -261,7 +261,13 @@ class ResPartner(models.Model):
             if value.isalnum():
                 value = value.removeprefix(country_code)
 
-        return sanitize_peppol_endpoint(value, eas)
+        value = sanitize_peppol_endpoint(value, eas)
+
+        # The UAE Peppol participant identifier is the TIN: the first 10 digits of the 15-digit TRN.
+        if country_code == 'AE' and field == 'vat' and value:
+            value = value[:10]
+
+        return value
 
     @api.depends('peppol_eas')
     def _compute_peppol_endpoint(self):
@@ -286,10 +292,15 @@ class ResPartner(models.Model):
             country_code = partner._deduce_country_code()
             if country_code in EAS_MAPPING:
                 eas_to_field = EAS_MAPPING[country_code]
-                if partner.peppol_eas not in eas_to_field.keys():
-                    new_eas = next(iter(EAS_MAPPING[country_code].keys()))
+                if partner.peppol_eas not in eas_to_field:
+                    candidates = {
+                        eas: field
+                        for eas, field in eas_to_field.items()
+                        if eas not in DEPRECATED_PEPPOL_EAS
+                    } or eas_to_field
+                    new_eas = next(iter(candidates))
                     # Iterate on the possible EAS until a valid one is found
-                    for eas, field in eas_to_field.items():
+                    for eas, field in candidates.items():
                         if field and field in partner._fields:
                             value = partner._get_peppol_endpoint_value(country_code, field, eas)
                             if value and not partner._build_error_peppol_endpoint(eas, value):
@@ -298,10 +309,14 @@ class ResPartner(models.Model):
                     partner.peppol_eas = new_eas
 
     @api.depends_context('company')
-    @api.depends('company_id')
+    @api.depends('company_id', 'peppol_eas')
     def _compute_available_peppol_eas(self):
         # TO OVERRIDE
-        self.available_peppol_eas = list(dict(self._fields['peppol_eas'].selection))
+        for partner in self:
+            partner.available_peppol_eas = [
+                eas for eas in dict(partner._fields['peppol_eas'].selection)
+                if eas not in DEPRECATED_PEPPOL_EAS or eas == partner.peppol_eas
+            ]
 
     def _build_error_peppol_endpoint(self, eas, endpoint):
         """ This function contains all the rules regarding the peppol_endpoint."""
@@ -318,6 +333,11 @@ class ResPartner(models.Model):
         invalid_chars_re = PEPPOL_ENDPOINT_INVALID_CHARS_RE_BY_EAS.get(eas, PEPPOL_ENDPOINT_INVALIDCHARS_RE)
         if invalid_chars_re.search(endpoint) or not 1 <= len(endpoint) <= 50:
             return _("The Peppol endpoint (%s) is not valid. It should contain only letters and digit.", endpoint)
+        if eas == '0235' and not re.match(r"^\d{10}$", endpoint):
+            return self.env._("The Peppol endpoint is not valid. "
+                              "Please enter a valid 10-digit Tax Identification Number (TIN). "
+                              "If your business is VAT-registered, this is the first 10 digits of your 15-digit TRN. "
+                              "Expected format: 1001234567.")
 
     @api.model
     def _get_edi_builder(self, invoice_edi_format):

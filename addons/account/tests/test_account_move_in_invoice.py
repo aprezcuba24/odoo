@@ -1162,10 +1162,18 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
             self.env.user.group_ids -= self.env.ref('purchase.group_purchase_user')
         copy_invoice = self.invoice.copy()
 
+        banks = self.env['res.partner.bank'].create([{
+            'acc_number': f'ACCOUNT{i}',
+            'partner_id': copy_invoice.partner_id.id,
+            'allow_out_payment': True,
+        } for i in range(2)])
+
         move_form = Form(self.invoice)
         move_form.invoice_line_ids.remove(0)
         move_form.invoice_line_ids.remove(0)
+        move_form.partner_bank_id = banks[1]
         move_form.invoice_vendor_bill_id = copy_invoice
+        self.assertEqual(move_form.partner_bank_id, banks[1], "The currency didn't change, so the bank shouldn't be recomputed")
         move_form.save()
 
         self.assertInvoiceValues(self.invoice, [
@@ -3036,3 +3044,37 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
         self.assertRecordValues(move1_reversal.message_main_attachment_id, attachment_vals)
         move2_reversal = self._reverse_invoice(move2, is_modify=True)
         self.assertFalse(move2_reversal.message_main_attachment_id)
+
+    def test_in_invoice_show_journal_single_journal(self):
+        self.env['account.journal'].search([
+            ('company_id', '=', self.company_data['company'].id),
+            ('type', '=', 'purchase'),
+            ('id', '!=', self.company_data['default_journal_purchase'].id),
+        ]).action_archive()
+        move_form = Form(self.env['account.move'].with_context(default_move_type='in_invoice'))
+        self.assertFalse(move_form.show_journal)
+
+    def test_in_invoice_onchange_keep_imported_discount_precision(self):
+        """ Test that an imported bill can have discounts more precise than the decimal precision.
+            Editing should compute the taxes on the stored discounts
+        """
+        tax_21 = self.percent_tax(21.0)
+        with self.env['account.move']._disable_discount_precision():
+            bill = self.env['account.move'].create({
+                'move_type': 'in_invoice',
+                'partner_id': self.partner_a.id,
+                'invoice_date': '2019-01-01',
+                'invoice_line_ids': [Command.create({
+                    'name': 'line',
+                    'quantity': 100.0,
+                    'price_unit': 1000.0,
+                    'discount': 9.996,
+                    'tax_ids': [Command.set(tax_21.ids)],
+                })],
+            })
+
+        with Form(bill) as bill_form:
+            with bill_form.invoice_line_ids.edit(0) as line_form:
+                line_form.name = 'edited line'
+        bill.action_post()
+        self.assertRecordValues(bill, [{'amount_untaxed': 90004.0, 'amount_tax': 18900.84, 'amount_total': 108904.84}])

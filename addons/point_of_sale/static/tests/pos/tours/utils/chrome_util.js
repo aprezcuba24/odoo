@@ -371,3 +371,40 @@ export function selectPresetDateButton(formattedDate) {
         run: "click",
     };
 }
+
+export function mockClearStorage() {
+    return {
+        content: "Mock .clear() and .removeItem() for session and local storage.",
+        trigger: "body",
+        run: function () {
+            window.sessionStorage.constructor.prototype.clear = function () {
+                console.log("Mock: sessionStorage.clear() blocked");
+            };
+            window.localStorage.constructor.prototype.clear = function () {
+                console.log("Mock: localStorage.clear() blocked");
+            };
+            window.localStorage.constructor.prototype.removeItem = function () {
+                console.log("Mock: localStorage.removeItem() blocked");
+            };
+        },
+    };
+}
+export function reloadData({ full = false } = {}) {
+    return [
+        clickMenuButton(),
+        mockClearStorage(),
+        clickMenuDropdownOption("Reload Data"),
+        clickBtn(full ? "Full" : "Limited", { expectUnloadPage: true }),
+    ];
+}
+
+export function fakePrintChange() {
+    return {
+        trigger: "body",
+        run: () => {
+            posmodel.printOrderChanges = async function (data, printer) {
+                return { successful: true, warningCode: false };
+            };
+        },
+    };
+}

@@ -486,6 +486,26 @@ describe("restaurant pos_store.js", () => {
         expect(order2.getCustomerCount()).toBe(8);
     });
 
+    test("mergeOrders keeps kitchen sent quantities when merging identical products", async () => {
+        const store = await setupPosEnv();
+        const table6 = store.models["restaurant.table"].get(2);
+        const table7 = store.models["restaurant.table"].get(3);
+        const product = store.models["product.template"].get(5);
+        const destOrder = store.addNewOrder({ table_id: table6 });
+        await store.addLineToOrder({ product_tmpl_id: product, qty: 2 }, destOrder);
+        destOrder.updateLastOrderChange();
+        const sourceOrder = store.addNewOrder({ table_id: table7 });
+        await store.addLineToOrder({ product_tmpl_id: product, qty: 3 }, sourceOrder);
+        sourceOrder.updateLastOrderChange();
+        await store.mergeOrders(sourceOrder, destOrder);
+        expect(destOrder.lines.length).toBe(1);
+        expect(destOrder.lines[0].qty).toBe(5);
+        expect(
+            destOrder.last_order_preparation_change.lines[destOrder.lines[0].uuid].quantity
+        ).toBe(5);
+        expect(store.getOrderChanges(destOrder).nbrOfChanges).toBe(0);
+    });
+
     test("getCustomerCount", async () => {
         const store = await setupPosEnv();
         const table = store.models["restaurant.table"].get(2);
@@ -520,5 +540,30 @@ describe("restaurant pos_store.js", () => {
             expect(course1).not.toBe(course2);
             expect(order.lines[0].course_id).toBe(course1);
         });
+    });
+
+    test("order synced from a trusted config updates its session_id to the current session", async () => {
+        const store = await setupPosEnv();
+        const currentSession = store.session;
+        store.config.module_pos_restaurant = false;
+
+        const otherConfigId = MockServer.env["pos.config"].create({});
+        const otherSessionId = MockServer.env["pos.session"].create({
+            config_id: otherConfigId.id,
+        });
+        const otherSession = MockServer.env["pos.session"].browse(otherSessionId);
+
+        // Simulate Config A already knowing about Config B's session
+        // (as happens via notify_synchronisation for trusted configs)
+        store.deviceSync.processStaticRecords({ "pos.session": otherSession });
+
+        const orderId = MockServer.env["pos.order"].create({
+            session_id: otherSessionId,
+            config_id: otherConfigId,
+            lines: [],
+        });
+        await store.deviceSync.readDataFromServer();
+        const order = store.models["pos.order"].get(orderId);
+        expect(order.session_id.id).toBe(currentSession.id);
     });
 });

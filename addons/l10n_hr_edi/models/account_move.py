@@ -92,22 +92,26 @@ class AccountMove(models.Model):
 
     def _search_l10n_hr_payment_unreported(self, operator, value):
         # A specific override to enable the "Has unreported payments" filter on the list view
-        if operator == '!=':
-            query = self._search([])
-            query.join('account_move', 'id', 'l10n_hr_edi_addendum', 'move_id', 'addendum')
-            query.add_where(SQL("""ROUND(%(payment_reported_amount)s - %(amount_total)s + %(amount_residual)s, 8) != 0""",
-                payment_reported_amount=self.env['l10n_hr_edi.addendum']._field_to_sql('account_move__addendum', 'payment_reported_amount', query),
-                amount_total=self._field_to_sql('account_move', 'amount_total', query),
-                amount_residual=self._field_to_sql('account_move', 'amount_residual', query),
-            ))
-            return [('id', 'in', query)]
-        return []
+        if operator != 'in':
+            return NotImplemented
+        query = self._search([])
+        query.join('account_move', 'id', 'l10n_hr_edi_addendum', 'move_id', 'addendum')
+        query.add_where(SQL("""ROUND(%(payment_reported_amount)s - %(amount_total)s + %(amount_residual)s, 8) != 0""",
+            payment_reported_amount=self.env['l10n_hr_edi.addendum']._field_to_sql('account_move__addendum', 'payment_reported_amount', query),
+            amount_total=self._field_to_sql('account_move', 'amount_total', query),
+            amount_residual=self._field_to_sql('account_move', 'amount_residual', query),
+        ))
+        return [('id', 'in', query)]
 
     @api.constrains('move_type', 'l10n_hr_process_type')
     def _check_l10n_hr_process_type(self):
         for record in self:
-            if record.country_code == 'HR' and (record.l10n_hr_process_type == 'P9') == (record.move_type != 'out_refund'):
-                raise ValidationError(self.env._('Business Process Type P9 can only be used with credit notes and vice versa.'))
+            if record.country_code != 'HR':
+                continue
+            if record.move_type != 'out_refund' and record.l10n_hr_process_type == 'P9':
+                raise ValidationError(self.env._('Business Process Type P9 can only be used with credit notes.'))
+            if record.move_type == 'out_refund' and record.l10n_hr_process_type not in ('P9', 'P10'):
+                raise ValidationError(self.env._('Credit notes must use Business Process Type P9 or P10.'))
 
     @api.depends('l10n_hr_fiscalization_status')
     def _compute_show_reset_to_draft_button(self):

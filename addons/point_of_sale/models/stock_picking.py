@@ -37,15 +37,16 @@ class StockPicking(models.Model):
             return pickings
         positive_lines = stockable_lines.filtered(lambda l: l.qty > 0)
         negative_lines = stockable_lines - positive_lines
+        session_id = stockable_lines.order_id.session_id
 
         if positive_lines:
             location_id = picking_type.default_location_src_id.id
-            positive_picking = self.env['stock.picking'].create(
-                self._prepare_picking_vals(partner, picking_type, location_id, location_dest_id)
-            )
+            positive_picking = self.env['stock.picking'].create({
+                **self._prepare_picking_vals(partner, picking_type, location_id, location_dest_id),
+                'pos_session_id': session_id.id,
+            })
 
             positive_picking._create_move_from_pos_order_lines(positive_lines)
-            self.env.flush_all()
             try:
                 with self.env.cr.savepoint():
                     positive_picking._action_done()
@@ -54,6 +55,49 @@ class StockPicking(models.Model):
 
             pickings |= positive_picking
         if negative_lines:
+            refunded_order = negative_lines.mapped('refunded_orderline_id.order_id')
+            if len(refunded_order) == 1:
+                refundable_lines = refunded_order.lines.filtered(
+                    lambda l: l.product_id.type == 'consu' and not l.product_uom_id.is_zero(l.qty)
+                )
+                is_full_refund = all(
+                    float_is_zero(
+                        line.qty - line.refunded_qty,
+                        precision_rounding=line.product_uom_id.rounding,
+                    )
+                    for line in refundable_lines
+                )
+                pickings_to_cancel = refunded_order.picking_ids.filtered(lambda p: p.state not in ('done', 'cancel'))
+                has_done_pickings = refunded_order.picking_ids.filtered(lambda p: p.state == 'done')
+
+                if is_full_refund and pickings_to_cancel and not has_done_pickings:
+                    # Full refund before delivery: cancel the picking
+                    pickings_to_cancel.action_cancel()
+                    return pickings
+                elif not is_full_refund and pickings_to_cancel and not has_done_pickings:
+                    # Partial refund before delivery: reduce the picking quantities
+                    moves_to_reassign = self.env['stock.move']
+                    for negative_line in negative_lines:
+                        refunded_line = negative_line.refunded_orderline_id
+                        moves = pickings_to_cancel.move_ids.filtered(
+                            lambda m: m.product_id == refunded_line.product_id
+                            and m.never_product_template_attribute_value_ids.ids == refunded_line.attribute_value_ids.ids
+                        )
+                        cancel_qty = abs(negative_line.qty)
+                        for move in moves:
+                            new_qty = max(0, move.product_uom_qty - cancel_qty)
+                            if float_is_zero(new_qty, precision_rounding=move.product_uom.rounding):
+                                move._action_cancel()
+                                move.unlink()
+                            else:
+                                move.product_uom_qty = new_qty
+                                moves_to_reassign |= move
+                    # Lowering the demand unreserves the move (chained moves then fall
+                    # back to 'waiting'); re-reserve so the picking stays 'ready'.
+                    moves_to_reassign._action_assign()
+                    self.env.flush_all()
+                    # Skip creating a return picking since nothing was delivered
+                    return pickings
             if picking_type.return_picking_type_id:
                 return_picking_type = picking_type.return_picking_type_id
                 return_location_id = return_picking_type.default_location_dest_id.id
@@ -61,11 +105,11 @@ class StockPicking(models.Model):
                 return_picking_type = picking_type
                 return_location_id = picking_type.default_location_src_id.id
 
-            negative_picking = self.env['stock.picking'].create(
-                self._prepare_picking_vals(partner, return_picking_type, location_dest_id, return_location_id)
-            )
+            negative_picking = self.env['stock.picking'].create({
+                **self._prepare_picking_vals(partner, return_picking_type, location_dest_id, return_location_id),
+                'pos_session_id': session_id.id,
+            })
             negative_picking._create_move_from_pos_order_lines(negative_lines)
-            self.env.flush_all()
             try:
                 with self.env.cr.savepoint():
                     negative_picking._action_done()
@@ -85,6 +129,13 @@ class StockPicking(models.Model):
             'location_dest_id': self.location_dest_id.id,
             'company_id': self.company_id.id,
             'never_product_template_attribute_value_ids': first_line.attribute_value_ids.filtered(lambda a: a.attribute_id.create_variant == 'no_variant'),
+            'origin_returned_move_id': order_lines.mapped(
+                'refunded_orderline_id.order_id.picking_ids.move_ids'
+            ).filtered(
+                lambda m: m.product_id == first_line.product_id
+                and m.state == 'done'
+                and m.picking_type_id.code == 'outgoing'
+            )[:1].id or False,
         }
 
     def _create_move_from_pos_order_lines(self, lines):
@@ -119,8 +170,11 @@ class StockPicking(models.Model):
 
 
     def _send_confirmation_email(self):
-        # Avoid sending Mail/SMS for POS deliveries
-        pickings = self.filtered(lambda p: p.picking_type_id != p.picking_type_id.warehouse_id.pos_type_id)
+        # Over the counter sales need no Mail/SMS confirmation
+        pickings = self.filtered(lambda p:
+            p.picking_type_id != p.picking_type_id.warehouse_id.pos_type_id
+            and not (p.pos_session_id and not p.pos_order_id.shipping_date)
+        )
         return super(StockPicking, pickings)._send_confirmation_email()
 
 
@@ -278,7 +332,7 @@ class StockMove(models.Model):
                 move.move_line_ids.unlink()
                 for line in lines_data[move.product_id.id]['order_lines']:
                     for lot in line.pack_lot_ids.filtered(lambda l: l.lot_name):
-                        qty = 1 if line.product_id.tracking == 'serial' else abs(line.qty)
+                        qty = self._get_lot_line_qty(line, move, lines_data)
                         if existing_lots:
                             existing_lot = existing_lots.filtered_domain([('product_id', '=', line.product_id.id), ('name', '=', lot.lot_name)])
                             quants = self.env['stock.quant']
@@ -315,15 +369,15 @@ class StockMove(models.Model):
             for move in moves_remaining:
                 for line in lines_data[move.product_id.id]['order_lines']:
                     for lot in line.pack_lot_ids.filtered(lambda l: l.lot_name):
-                        if line.product_id.tracking == 'serial':
-                            qty = 1
-                        else:
-                            qty = abs(line.qty)
+                        qty = self._get_lot_line_qty(line, move, lines_data)
                         if existing_lots:
                             existing_lot = existing_lots.filtered_domain([('product_id', '=', line.product_id.id), ('name', '=', lot.lot_name)])
                             if existing_lot:
                                 move._update_reserved_quantity(qty, move.location_id, lot_id=existing_lot)
                                 continue
+
+    def _get_lot_line_qty(self, line, move, lines_data):
+        return 1 if line.product_id.tracking == 'serial' else abs(line.qty)
 
     @api.depends("product_id")
     def _compute_description_picking(self):

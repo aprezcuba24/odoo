@@ -101,6 +101,10 @@ class ProductTemplate(models.Model):
 
         products = product_tmpls.product_variant_ids
 
+        # The client matches no category rule if the product's category is unknown to it.
+        categories = self.env['product.category'].search([('id', 'parent_of', product_tmpls.categ_id.ids)])
+        category_read = self.env['product.category']._load_pos_data_read(categories, config)
+
         # product.pricelist_item & product.pricelist loading
         pricelists = config.current_session_id.get_pos_ui_product_pricelist_item_by_product(
             product_tmpls.ids,
@@ -114,10 +118,17 @@ class ProductTemplate(models.Model):
         product_tmpl_attr_value = product_tmpls.attribute_line_ids.product_template_value_ids
         product_tmpl_attr_value_read = product_tmpl_attr_value._load_pos_data_read(product_tmpl_attr_value, config)
 
+        # product.attribute loading — include archived attributes so that archived attribute lines
+        # (kept for referential integrity when used in a sale order) resolve correctly on the frontend
+        product_attr = product_tmpl_attr_line.attribute_id
+        product_attr_read = product_attr._load_pos_data_read(product_attr, config)
+
         # product.template.attribute.exclusion loading
         product_tmpl_excl = self.env['product.template.attribute.exclusion']
+        # An exclusion is only usable in the POS if its value is loaded too
         product_tmpl_exclusion = product_tmpl_attr_value.exclude_for + product_tmpl_excl.search([
             ('product_tmpl_id', 'in', product_tmpls.ids),
+            ('product_template_attribute_value_id', 'in', product_tmpl_attr_value.ids),
         ])
         product_tmpl_exclusion_read = product_tmpl_excl._load_pos_data_read(product_tmpl_exclusion, config)
 
@@ -125,7 +136,7 @@ class ProductTemplate(models.Model):
         product_read = products._load_pos_data_read(products.with_context(display_default_code=False), config)
 
         # product.template loading
-        product_tmpl_read = self._load_pos_data_read(product_tmpls, config)
+        product_tmpl_read = self._load_pos_data_read(product_tmpls.with_context(active_test=True), config)
 
         # product.uom loading
         packaging_domain = Domain('product_id', 'in', products.ids)
@@ -148,8 +159,10 @@ class ProductTemplate(models.Model):
         tax_read = account_tax._load_pos_data_read(account_tax.search(tax_domain), config)
 
         return {
+            'product.category': category_read,
             **pricelists,
             'account.tax': tax_read,
+            'product.attribute': product_attr_read,
             'product.product': product_read,
             'product.template': product_tmpl_read,
             'product.uom': packaging_read,
@@ -353,6 +366,10 @@ class ProductTemplate(models.Model):
             tax_to_use = self.taxes_id.filtered(lambda tax: tax.company_id.id == company.id)
             if not tax_to_use:
                 company = company.sudo().parent_id
+        fiscal_position_id = self.env.context.get('fiscal_position_id')
+        if fiscal_position_id:
+            fiscal_position = self.env['account.fiscal.position'].browse(fiscal_position_id)
+            tax_to_use = fiscal_position.map_tax(tax_to_use)
         taxes = tax_to_use.compute_all(price, config.currency_id, quantity, self)
         grouped_taxes = {}
         for tax in taxes['taxes']:

@@ -13,6 +13,7 @@ from odoo.addons.base.models.res_users import check_identity
 from .._vendor.webauthn import base64url_to_bytes, generate_authentication_options, generate_registration_options, options_to_json, verify_authentication_response, verify_registration_response
 from .._vendor.webauthn.helpers import bytes_to_base64url
 from .._vendor.webauthn.helpers.structs import AuthenticatorSelectionCriteria, ResidentKeyRequirement, UserVerificationRequirement
+from ..mobile_utils import _VALID_APK_KEY_HASHES
 
 _logger = logging.getLogger(__name__)
 
@@ -66,6 +67,13 @@ class AuthPasskeyKey(models.Model):
         return challenge
 
     @api.model
+    def _get_allowed_origins(self):
+        base_url = url_parse(self.get_base_url()).replace(path='').to_url()
+        additional_origins_str = self.env['ir.config_parameter'].sudo().get_param('auth_passkey.additional_origins', '')
+        additional_origins = [origin for origin in additional_origins_str.split(';') if origin]
+        return [base_url, *_VALID_APK_KEY_HASHES, *additional_origins]
+
+    @api.model
     def _start_auth(self):
         assert request
         authentication_options = json.loads(options_to_json(generate_authentication_options(
@@ -81,7 +89,7 @@ class AuthPasskeyKey(models.Model):
         auth_verification = verify_authentication_response(
             credential=auth,
             expected_challenge=base64url_to_bytes(self._get_session_challenge()),
-            expected_origin=parsed_url.replace(path='').to_url(),
+            expected_origin=self._get_allowed_origins(),
             expected_rp_id=parsed_url.host,
             credential_public_key=base64url_to_bytes(public_key),
             credential_current_sign_count=sign_count,
@@ -111,7 +119,7 @@ class AuthPasskeyKey(models.Model):
         verification = verify_registration_response(
             credential=registration,
             expected_challenge=base64url_to_bytes(self._get_session_challenge()),
-            expected_origin=parsed_url.replace(path='').to_url(),
+            expected_origin=self._get_allowed_origins(),
             expected_rp_id=parsed_url.host,
             require_user_verification=True,
         )

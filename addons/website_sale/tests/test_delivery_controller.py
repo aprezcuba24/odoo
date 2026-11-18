@@ -80,3 +80,68 @@ class TestWebsiteSaleDeliveryController(PaymentCommon, WebsiteSaleCommon):
         self.assertEqual(
             self.empty_cart._get_delivery_methods().mapped('name'), ['Under 300', 'Fixed']
         )
+
+    def test_recompute_cart_recomputes_delivery_rate(self):
+        delivery_product = self.env['product.product'].create({
+            'name': 'Delivery Fee',
+            'type': 'service',
+            'sale_ok': False,
+            'purchase_ok': False,
+        })
+        carrier = self.env['delivery.carrier'].create({
+            'name': 'Free over 15',
+            'delivery_type': 'base_on_rule',
+            'product_id': delivery_product.id,
+            'website_published': True,
+            'price_rule_ids': [
+                Command.create({
+                    'operator': '>=',
+                    'max_value': 15,
+                    'variable': 'price',
+                    'list_base_price': 0,
+                }),
+                Command.create({
+                    'operator': '<',
+                    'max_value': 15,
+                    'variable': 'price',
+                    'list_base_price': 10,
+                }),
+            ],
+        })
+        order = self.empty_cart
+        order.order_line = [
+            Command.create({
+                'product_id': self.product.id,
+                'product_uom_qty': 1.0,
+            }),
+        ]
+        with MockRequest(self.env, website=self.website, sale_order_id=order.id) as request:
+            order = request.cart
+            order.partner_id.write(self.dummy_partner_address_values)
+            order._set_delivery_method(carrier)
+            self.assertEqual(order.amount_delivery, 0.0)
+
+            self.product.list_price = 10.0
+            order._recompute_cart()
+
+        self.assertEqual(order.amount_delivery, 10.0)
+
+    def test_order_summary_values_render_line_prices(self):
+        self.website.show_line_subtotals_tax_selection = "tax_included"
+        fiscal_position = self.env["account.fiscal.position"].create({"name": "Foreign"})
+        tax_21, tax_20 = self.env["account.tax"].create([
+            {"name": "Tax 21%", "amount": 21},
+            {"name": "Tax 20%", "amount": 20, "fiscal_position_ids": fiscal_position.ids},
+        ])
+        tax_20.original_tax_ids = tax_21
+        product = self._create_product(list_price=100.0, taxes_id=tax_21.ids)
+        order = self._create_so(order_line=[Command.create({"product_id": product.id})])
+        order.fiscal_position_id = fiscal_position
+        order._recompute_taxes()
+
+        with MockRequest(self.env, website=self.website, sale_order_id=order.id):
+            summary_content = self.Controller._order_summary_values(order)[
+                "website_sale.cart_summary_content"
+            ]
+
+        self.assertIn("120.00", summary_content)

@@ -39,7 +39,7 @@ class ProjectProject(models.Model):
         count_fields = {fname for fname in self._fields if 'count' in fname}
         if count_field not in count_fields:
             raise ValueError(f"Parameter 'count_field' can only be one of {count_fields}, got {count_field} instead.")
-        domain = Domain('project_id', 'in', self.ids) & Domain('is_template', '=', False)
+        domain = Domain('project_id', 'in', self.ids) & Domain('has_template_ancestor', '=', False)
         if additional_domain:
             domain &= Domain(additional_domain)
         ProjectTask = self.env['project.task'].with_context(active_test=any(project.active for project in self))
@@ -117,7 +117,7 @@ class ProjectProject(models.Model):
             ('followers', 'Invited internal users'),
             ('invited_users', 'Invited internal and portal users'),
             ('employees', 'All internal users'),
-            ('portal', ' All internal users and invited portal users'),
+            ('portal', 'All internal users and invited portal users'),
         ],
         string='Visibility', required=True,
         default='portal',
@@ -197,15 +197,11 @@ class ProjectProject(models.Model):
 
     @api.depends('milestone_ids', 'milestone_ids.is_reached', 'milestone_ids.deadline')
     def _compute_next_milestone_id(self):
-        milestones_per_project_id = {
-            project.id: milestones
-            for project, milestones in self.env['project.milestone']._read_group(
-                [('project_id', 'in', self.ids), ('is_reached', '=', False)],
-                ['project_id'],
-                ['id:recordset'],
-            )
-        }
-        milestones = self.env['project.milestone'].concat(*milestones_per_project_id.values())
+        milestones = self.env['project.milestone'].search([
+            ('project_id', 'in', self.ids),
+            ('is_reached', '=', False),
+        ])
+        milestones_per_project_id = milestones.grouped(lambda milestone: milestone.project_id.id)
         task_read_group = self.env['project.task']._read_group(
             [('milestone_id', 'in', milestones.ids)],
             ['milestone_id', 'state'],
@@ -509,7 +505,7 @@ class ProjectProject(models.Model):
             for follower in old_project.message_follower_ids:
                 new_project.message_subscribe(partner_ids=follower.partner_id.ids, subtype_ids=follower.subtype_ids.ids)
             if old_project.allow_milestones:
-                new_project.milestone_ids = self.milestone_ids.copy().ids
+                new_project.milestone_ids = old_project.milestone_ids.copy().ids
             if 'tasks' not in default:
                 old_project.map_tasks(new_project.id)
             if not old_project.active:
@@ -706,8 +702,9 @@ class ProjectProject(models.Model):
         # Delete the empty related analytic account
         analytic_accounts_to_delete = self.env['account.analytic.account']
         for project in self:
-            if project.account_id and not project.account_id.line_ids:
-                analytic_accounts_to_delete |= project.account_id
+            account = project.account_id
+            if account and not account.line_ids and not (account.with_context(active_test=False).project_ids - self):
+                analytic_accounts_to_delete |= account
         self.with_context(active_test=False).tasks.unlink()
         result = super().unlink()
         analytic_accounts_to_delete.unlink()
@@ -951,7 +948,7 @@ class ProjectProject(models.Model):
         action['display_name'] = _("%(name)s's Rating", name=self.name)
         action_context = ast.literal_eval(action['context']) if action['context'] else {}
         action_context.update(self.env.context)
-        action_context['search_default_filter_write_date'] = 'custom_write_date_last_30_days'
+        action_context['search_default_filter_rated_on'] = 'custom_rated_on_last_30_days'
         action_context.pop('group_by', None)
         action['domain'] = [('consumed', '=', True), ('parent_res_model', '=', 'project.project'), ('parent_res_id', '=', self.id)]
         if self.rating_count == 1:
@@ -1150,6 +1147,8 @@ class ProjectProject(models.Model):
             'costs': profitability_items['costs'],
             'revenues': profitability_items['revenues'],
             'expected_percentage': expected_percentage,
+            'to_bill_to_invoice': to_bill_to_invoice,
+            'billed_invoiced': billed_invoiced,
             'to_bill_to_invoice_percentage': to_bill_to_invoice_percentage,
             'billed_invoiced_percentage': billed_invoiced_percentage,
             'total': {
@@ -1227,9 +1226,9 @@ class ProjectProject(models.Model):
             elif project.privacy_visibility in ['invited_users', 'portal']:
                 portal_users = project.message_partner_ids.user_ids.filtered('share')
                 project.message_unsubscribe(partner_ids=portal_users.partner_id.ids)
-                project.tasks._unsubscribe_portal_users()
+                project.with_context(active_test=False).tasks._unsubscribe_portal_users()
                 # revoke access_token since the project and its tasks are no longer accessible for portal/public users
-                project.tasks.access_token = ''
+                project.with_context(active_test=False).tasks.access_token = ''
                 project.access_token = ''
 
     # ---------------------------------------------------
@@ -1293,10 +1292,10 @@ class ProjectProject(models.Model):
                 as_thread=True,
             )
 
-    @api.depends('task_count', 'open_task_count')
+    @api.depends('task_count', 'closed_task_count')
     def _compute_task_completion_percentage(self):
         for task in self:
-            task.task_completion_percentage = task.task_count and 1 - task.open_task_count / task.task_count
+            task.task_completion_percentage = task.task_count and task.closed_task_count / task.task_count
 
     # ---------------------------------------------------
     #  Project Template Methods

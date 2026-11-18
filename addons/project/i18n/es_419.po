@@ -2,16 +2,16 @@
 # This file contains the translation of the following modules:
 # * project
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Fernanda Alvarez (mfar)" <mfar@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Patricia Gutiérrez (pagc)" <pagc@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:37+0000\n"
-"PO-Revision-Date: 2026-05-16 09:46+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-11-11 16:33+0000\n"
 "Last-Translator: \"Fernanda Alvarez (mfar)\" <mfar@odoo.com>\n"
 "Language-Team: Spanish (Latin America) <https://translate.odoo.com/projects/"
 "odoo-19/project/es_419/>\n"
@@ -20,12 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17\n"
-
-#. module: project
-#: model:ir.model.fields.selection,name:project.selection__project_project__privacy_visibility__portal
-msgid " All internal users and invited portal users"
-msgstr " Todos los usuarios internos y los usuarios de portal invitados"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__rating_count
@@ -415,18 +410,18 @@ msgstr ""
 "<div>\n"
 "    Apreciable <t t-out=\"object.partner_id.name or 'cliente'\">Brandon "
 "Freeman</t>,<br/>\n"
-"    Me complace informarle que completamos el proyecto \"<strong t-"
+"    Me complace informarte que completamos el proyecto \"<strong t-"
 "out=\"object.name or ''\">Renovaciones</strong>\" con éxito.\n"
 "    <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
 "        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
-"out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></"
-"div>\n"
+"out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>"
+"\n"
 "    </t>\n"
 "</div>\n"
 "<br/><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; "
-"color: #454748;\" groups=\"project.group_project_stages\">Recibió este "
-"correo porque su proyecto pasó a la etapa <b t-out=\"object.stage_id.name or "
+"color: #454748;\" groups=\"project.group_project_stages\">Recibiste este "
+"correo porque tu proyecto pasó a la etapa <b t-out=\"object.stage_id.name or "
 "''\">Hecho</b></span>\n"
 "            "
 
@@ -455,20 +450,20 @@ msgid ""
 msgstr ""
 "<div>\n"
 "    Apreciable <t t-out=\"object.partner_id.name or 'cliente'\">Brandon "
-"Freeman</t>,<br/><br/>\n"
-"    Gracias por contactarnos, apreciamos su interés en nuestros productos y "
+"Freeman</t>:<br/><br/>\n"
+"    Gracias por contactarnos, apreciamos tu interés en nuestros productos y "
 "servicios.<br/>\n"
-"    Nuestro equipo está revisando su consulta y responderemos su correo tan "
-"pronto como sea posible.<br/>\n"
-"    Póngase en contacto con nosotros si tiene más preguntas o inquietudes, "
-"estamos aquí para ayudarle.<br/><br/>\n"
-"    Agradecemos su paciencia.<br/>\n"
+"    Nuestro equipo está revisando tu consulta y responderemos a tu correo "
+"tan pronto como podamos.<br/>\n"
+"    Comunícate con nosotros si tienes alguna duda o pregunta, estamos aquí "
+"para ayudarte.<br/><br/>\n"
+"    Agradecemos tu paciencia.<br/>\n"
 "    Saludos,\n"
 "    <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
 "        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
-"out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></"
-"div>\n"
+"out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>"
+"\n"
 "    </t>\n"
 "</div>\n"
 "        "
@@ -887,8 +882,12 @@ msgstr "Administrador"
 
 #. module: project
 #: model:res.groups,comment:project.group_project_manager
-msgid "Administrator can manage the employees' schedule"
-msgstr "El administrador puede gestionar el horario de los empleados"
+msgid ""
+"Administrator: Can manage projects and stages, with access to reporting and "
+"configuration."
+msgstr ""
+"Administrador: Puede gestionar proyectos y etapas, con acceso a reportes y "
+"configuración."
 
 #. module: project
 #. odoo-javascript
@@ -959,6 +958,11 @@ msgstr "Todas las tareas"
 #: model:ir.model.fields.selection,name:project.selection__project_project__privacy_visibility__employees
 msgid "All internal users"
 msgstr "Todos los usuarios internos"
+
+#. module: project
+#: model:ir.model.fields.selection,name:project.selection__project_project__privacy_visibility__portal
+msgid "All internal users and invited portal users"
+msgstr "Todos los usuarios internos y los usuarios de portal invitados"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__allocated_hours
@@ -1060,7 +1064,7 @@ msgstr "¿Está seguro de que quiere eliminar estas etapas?"
 #. odoo-javascript
 #: code:addons/project/static/src/components/subtask_one2many_field/subtask_list_renderer.js:0
 msgid "Are you sure you want to delete this record?"
-msgstr "¿Está seguro de que desea eliminar este registro?"
+msgstr "¿De verdad quieres eliminar este registro?"
 
 #. module: project
 #. odoo-javascript
@@ -2366,6 +2370,7 @@ msgid "Future"
 msgstr "Futuro"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_update_view_search
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_filter
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Future Activities"
@@ -2865,6 +2870,7 @@ msgid "Last Updated on"
 msgstr "Última actualización el"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_update_view_search
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_filter
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Late Activities"
@@ -3104,6 +3110,7 @@ msgid "Months"
 msgstr "Meses"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_update_view_search
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_filter
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "My Activities"
@@ -3739,7 +3746,7 @@ msgstr "Progreso"
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form_project_fsm_base
 msgid "Project"
-msgstr "Proyecto"
+msgstr "Proyectos"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__account_id
@@ -4429,7 +4436,7 @@ msgstr "Buscar en prioridad"
 #. odoo-python
 #: code:addons/project/controllers/portal.py:0
 msgid "Search in Project"
-msgstr "Buscar en proyecto"
+msgstr "Buscar en Proyectos"
 
 #. module: project
 #. odoo-python
@@ -4556,6 +4563,7 @@ msgid "Show Sub-Tasks"
 msgstr "Mostrar tareas secundarias"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_update_view_search
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_filter
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Show all records whose next activity date is past"
@@ -5507,6 +5515,7 @@ msgid "Today"
 msgstr "Hoy"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_update_view_search
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_filter
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Today Activities"
@@ -5781,8 +5790,8 @@ msgstr "Ajustes de usuario"
 
 #. module: project
 #: model:res.groups,comment:project.group_project_user
-msgid "User can user the your employees' schedule"
-msgstr "El usuario puede gestionar el horario de sus empleados"
+msgid "User: Can manage tasks in projects shared with them."
+msgstr "Usuario: Puede gestionar tareas en los proyectos que le comparten."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
@@ -6325,6 +6334,15 @@ msgstr "👤 Sin asignar"
 #: code:addons/project/models/project_task.py:0
 msgid "🔒 Private"
 msgstr "🔒 Privado"
+
+#~ msgid " All internal users and invited portal users"
+#~ msgstr " Todos los usuarios internos y los usuarios de portal invitados"
+
+#~ msgid "Administrator can manage the employees' schedule"
+#~ msgstr "El administrador puede gestionar el horario de los empleados"
+
+#~ msgid "User can user the your employees' schedule"
+#~ msgstr "El usuario puede gestionar el horario de sus empleados"
 
 #~ msgid ""
 #~ "<div>\n"

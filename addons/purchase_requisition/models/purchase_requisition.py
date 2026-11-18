@@ -120,8 +120,9 @@ class PurchaseRequisition(models.Model):
         for requisition in self:
             for requisition_line in requisition.line_ids:
                 requisition_line.supplier_info_ids.sudo().unlink()
-            requisition.purchase_ids.button_cancel()
-            for po in requisition.purchase_ids:
+            cancellable_pos = requisition.purchase_ids.filtered(lambda po: po.state == 'draft')
+            cancellable_pos.button_cancel()
+            for po in cancellable_pos:
                 po.message_post(body=_('Cancelled by the agreement associated to this quotation.'))
         self.state = 'cancel'
 
@@ -210,7 +211,10 @@ class PurchaseRequisitionLine(models.Model):
             seller = line.product_id._select_seller(
                 partner_id=line.requisition_id.vendor_id, quantity=line.product_qty,
                 date=line.requisition_id.date_start, uom_id=line.product_uom_id)
-            line.price_unit = seller.price if seller else line.product_id.standard_price
+            if seller:
+                line.price_unit = seller.product_uom_id._compute_price(seller.price, line.product_uom_id)
+            else:
+                line.price_unit = line.product_id.standard_price
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -229,6 +233,14 @@ class PurchaseRequisitionLine(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
+        if 'product_id' in vals or 'product_uom_id' in vals:
+            # Keep the SupplierInfo in line with the product and the unit its price is expressed in
+            for line in self.filtered('supplier_info_ids'):
+                line.supplier_info_ids.sudo().write({
+                    'product_id': line.product_id.id,
+                    'product_tmpl_id': line.product_id.product_tmpl_id.id,
+                    'product_uom_id': line.product_uom_id.id,
+                })
         if 'price_unit' not in vals:
             return res
         if vals['price_unit'] <= 0.0 and any(

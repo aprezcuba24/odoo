@@ -7,17 +7,17 @@
 # Ahmed Aly <ahmed.aly@datenpol.at>, 2022
 # Larissa Manderfeld, 2023
 # Martin Trigaux, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Larissa Manderfeld (lman)" <lman@odoo.com>, 2025, 2026.
-# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:35+0000\n"
-"PO-Revision-Date: 2026-06-08 11:04+0000\n"
-"Last-Translator: \"Larissa Manderfeld (lman)\" <lman@odoo.com>\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-08-02 14:26+0000\n"
+"Last-Translator: \"Malaz Siddig Elsayed Abuidris (msea)\" <msea@odoo.com>\n"
 "Language-Team: German <https://translate.odoo.com/projects/odoo-19/hr/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -3886,6 +3886,18 @@ msgstr ""
 
 #. module: hr
 #. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Contact Profile"
+msgstr "Kontaktprofil öffnen"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Employee Profile (activates company)"
+msgstr "Mitarbeiterprofil öffnen (aktiviert das Unternehmen)"
+
+#. module: hr
+#. odoo-javascript
 #: code:addons/hr/static/src/core/web/thread_actions.js:0
 msgid "Open Profile"
 msgstr "Profil öffnen"
@@ -4770,7 +4782,7 @@ msgstr "Straße"
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 #: model_terms:ir.ui.view,arch_db:hr.view_partner_bank_form_inherit_hr
 msgid "Street 2..."
-msgstr "Straße 2 …"
+msgstr "Adresszeile 2 …"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_users_view_form_preferences
@@ -4874,16 +4886,6 @@ msgid "Temporary"
 msgstr "Befristet"
 
 #. module: hr
-#. odoo-python
-#: code:addons/hr/models/hr_employee.py:0
-msgid ""
-"The Badge ID must be alphanumeric without any accents and no longer than 18 "
-"characters."
-msgstr ""
-"Die Ausweis-ID muss alphanumerisch sein, ohne Akzente und weniger als 18 "
-"Zeichen."
-
-#. module: hr
 #: model:ir.model.constraint,message:hr.constraint_hr_employee_barcode_uniq
 msgid ""
 "The Badge ID must be unique, this one is already assigned to another "
@@ -4891,6 +4893,14 @@ msgid ""
 msgstr ""
 "Die Ausweis-ID muss eindeutig sein. Diese ist bereits einem anderen "
 "Mitarbeiter zugeordnet."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"The Badge ID must contain only printable ASCII characters, without spaces, "
+"and be no longer than 18 characters."
+msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_departure_reason__country_code
@@ -5325,6 +5335,11 @@ msgid "Version"
 msgstr "Version"
 
 #. module: hr
+#: model:ir.model.fields,field_description:hr.field_hr_employee__version_revision
+msgid "Version Revision"
+msgstr "Versionsrevision"
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__versions_count
 msgid "Versions Count"
 msgstr "Anzahl Versionen"
@@ -5332,7 +5347,13 @@ msgstr "Anzahl Versionen"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_version_list_view
 msgid "View"
-msgstr ""
+msgstr "Ansicht"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "View Profile"
+msgstr "Profil anzeigen"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
@@ -5691,6 +5712,12 @@ msgstr "Sie haben keinen Zugriff auf dieses Dokument."
 
 #. module: hr
 #. odoo-python
+#: code:addons/hr/wizard/hr_bank_account_allocation_wizard_line.py:0
+msgid "You do not have the rights to trust or un-trust accounts."
+msgstr ""
+
+#. module: hr
+#. odoo-python
 #: code:addons/hr/models/hr_employee.py:0
 msgid "You need to set a valid work email address for %s"
 msgstr "Sie müssen eine gültige Arbeits-E-Mail-Adresse für %s angeben"
@@ -5935,6 +5962,13 @@ msgstr "Arbeit"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
 msgstr "work_permit_name"
+
+#~ msgid ""
+#~ "The Badge ID must be alphanumeric without any accents and no longer than "
+#~ "18 characters."
+#~ msgstr ""
+#~ "Die Ausweis-ID muss alphanumerisch sein, ohne Akzente und weniger als 18 "
+#~ "Zeichen."
 
 #~ msgid "Cannot archive the only active record of an employee."
 #~ msgstr ""

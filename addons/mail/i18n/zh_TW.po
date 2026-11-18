@@ -7,15 +7,15 @@
 # Wil Odoo, 2025
 # Tony Ng, 2025
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Tony Ng (ngto)" <ngto@odoo.com>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-08 17:35+0000\n"
-"PO-Revision-Date: 2026-05-23 09:43+0000\n"
+"POT-Creation-Date: 2026-11-13 17:36+0000\n"
+"PO-Revision-Date: 2026-11-09 07:43+0000\n"
 "Last-Translator: \"Tony Ng (ngto)\" <ngto@odoo.com>\n"
 "Language-Team: Chinese (Traditional Han script) <https://translate.odoo.com/"
 "projects/odoo-19/mail/zh_Hant/>\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_ir_actions_server__followers_type
@@ -482,6 +482,12 @@ msgstr "，<br/><br/>"
 #: code:addons/mail/static/src/core/web/message_patch.xml:0
 msgid "---------- Forwarded message ----------"
 msgstr "---------- 轉寄訊息 ----------"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_result.js:0
+msgid "1 message found"
+msgstr ""
 
 #. module: mail
 #. odoo-javascript
@@ -1194,24 +1200,27 @@ msgid "Add Star"
 msgstr ""
 
 #. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/core/common/message_actions.js:0
-msgid "Add a Reaction"
-msgstr "加入表情回應"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Add a Tenor GIF API key to enable GIFs support."
-msgstr "新增一個 Tenor GIF API 密鑰以啟用 GIF 支援。"
+msgid ""
+"Add a Klipy GIF API key to enable GIFs support. If you were using a Tenor "
+"GIF API key (service shutdown on June 30, 2026), please replace it here with "
+"a Klipy GIF API key"
+msgstr ""
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_res_config_settings__tenor_api_key
 msgid ""
-"Add a Tenor GIF API key to enable GIFs support. https://"
-"developers.google.com/tenor/guides/quickstart#setup"
+"Add a Klipy GIF API key to enable GIFs support. https://docs.klipy.com/"
+"getting-started\n"
+"If you were using a Tenor GIF API key (service shutdown on June 30, 2026), "
+"please replace it here with a Klipy GIF API key"
 msgstr ""
-"新增一個 Tenor GIF API 密鑰以啟用 GIF 支援。 https://developers.google.com/"
-"tenor/guides/quickstart#setup"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Add a Reaction"
+msgstr "加入表情回應"
 
 #. module: mail
 #. odoo-javascript
@@ -1903,6 +1912,12 @@ msgstr ""
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/blur_manager.js:0
+msgid "Background blur could not be loaded"
+msgstr ""
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
 msgid "Background blur intensity"
 msgstr "背景模糊強度"
@@ -2152,6 +2167,12 @@ msgstr ""
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
 msgid "By order of server priority"
+msgstr ""
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "CMD"
 msgstr ""
 
 #. module: mail
@@ -3647,7 +3668,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:mail.mail_scheduled_message_view_form
 #: model_terms:ir.ui.view,arch_db:mail.mail_template_reset_view_form
 msgid "Discard"
-msgstr "捨棄"
+msgstr "取消"
 
 #. module: mail
 #. odoo-javascript
@@ -4794,7 +4815,7 @@ msgstr "關注中"
 #: model:ir.model.fields,help:mail.field_res_partner__activity_type_icon
 #: model:ir.model.fields,help:mail.field_res_users__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "Font awesome 圖示，例如，fa-task"
+msgstr "Font Awesome 圖示，例如 fa-tasks"
 
 #. module: mail
 #. odoo-python
@@ -5552,6 +5573,14 @@ msgid "If you want to use twilio as TURN/STUN server provider"
 msgstr "如果你想使用 twilio 作為 TURN/STUN 伺服器提供者"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid ""
+"If you were using a Tenor API key, please replace it with a Klipy API key in "
+"the General Settings."
+msgstr ""
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel__image_128
 #: model:ir.model.fields,field_description:mail.field_mail_guest__image_1920
 #: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_image
@@ -6207,6 +6236,16 @@ msgid "Kind Regards"
 msgstr "順祝 安康"
 
 #. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
+msgid "Klipy API key"
+msgstr ""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF API key"
+msgstr ""
+
+#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
 #: code:addons/mail/static/src/discuss/call/public_web/discuss_sidebar_call_participants.xml:0
@@ -6221,6 +6260,11 @@ msgstr "線上"
 #: model:ir.model.fields,field_description:mail.field_mail_template__lang
 msgid "Language"
 msgstr "語言"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_mail_message_translation__target_lang
+msgid "Language code used as the target for the translation request."
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
@@ -8896,6 +8940,12 @@ msgid "Pop out Attachments"
 msgstr "彈出附件"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_view.js:0
+msgid "Pop out is not supported on mobile."
+msgstr ""
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_fetchmail_server__port
 msgid "Port"
 msgstr "端口"
@@ -9890,6 +9940,12 @@ msgstr "搜尋收件伺服器"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid "Search Klipy"
+msgstr ""
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/core/common/search_messages_panel.js:0
 msgid "Search Message"
 msgstr "搜尋訊息"
@@ -9944,12 +10000,6 @@ msgstr "以名稱搜尋"
 #: code:addons/mail/static/src/core/public_web/discuss_search.xml:0
 msgid "Search conversations"
 msgstr ""
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
-msgid "Search for a GIF"
-msgstr "搜尋 GIF"
 
 #. module: mail
 #. odoo-javascript
@@ -10393,11 +10443,6 @@ msgid "Shortcut"
 msgstr "快捷方式"
 
 #. module: mail
-#: model:ir.model.fields,help:mail.field_mail_message_translation__target_lang
-msgid "Shortened language code used as the target for the translation request."
-msgstr "翻譯請求目標語言代碼的縮寫。"
-
-#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/command_palette.js:0
 msgid "Show All Activities"
@@ -10476,6 +10521,14 @@ msgid ""
 msgstr ""
 "正在顯示 %(result_count)s 項結果；總共有 %(total_count)s 項結果。你可縮窄搜尋"
 "範圍，以查看更多選擇。"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_result.js:0
+msgid ""
+"Showing the first %(count)s messages found. Narrow your search or scroll to "
+"see more."
+msgstr ""
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_template__ref_ir_act_window
@@ -10981,16 +11034,6 @@ msgid "Templates"
 msgstr "範本"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
-msgid "Tenor API key"
-msgstr "Tenor API 密鑰"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF API key"
-msgstr "Tenor GIF API 密鑰"
-
-#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_settings.js:0
 msgid "Test"
@@ -11048,17 +11091,6 @@ msgid ""
 msgstr ""
 "「即按即說」功能只可在分頁焦點範圍內使用。若要在分頁外啟用即按即說功能，建議"
 "下載我們的%(anchor_start)s擴充功能%(anchor_end)s。"
-
-#. module: mail
-#: model:ir.model.fields,help:mail.field_res_partner__vat
-#: model:ir.model.fields,help:mail.field_res_users__vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"稅務識別號碼。此處的值將根據國家/地區格式進行驗證。可使用「/」表示合作夥伴不"
-"須納稅。"
 
 #. module: mail
 #. odoo-python
@@ -12598,7 +12630,7 @@ msgstr "視訊設定"
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
 msgid "Video player:"
-msgstr "視訊播放器："
+msgstr "影片播放器："
 
 #. module: mail
 #. odoo-javascript
@@ -13050,6 +13082,18 @@ msgid "You can still turn off your %s anytime."
 msgstr ""
 
 #. module: mail
+#: model:ir.model.fields,help:mail.field_res_partner__vat
+#: model:ir.model.fields,help:mail.field_res_users__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
+msgstr ""
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_alias_domain.py:0
+msgid "You cannot assign an empty domain name."
+msgstr ""
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_activity_type.py:0
 msgid "You cannot delete %(activity_names)s as it is required in various apps."
@@ -13333,12 +13377,6 @@ msgid "created this channel."
 msgstr "已建立這個頻道。"
 
 #. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/js/rotting_mixin/rotting_statusbar.xml:0
-msgid "d"
-msgstr ""
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.account_security_alert
 msgid "day, month dd, yyyy - hh:mm:ss (GMT)"
 msgstr "day, month dd, yyyy - hh:mm:ss (GMT)"
@@ -13509,7 +13547,7 @@ msgstr ""
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.email_compose_message_wizard_form
 msgid "e.g. info@company.com"
-msgstr ""
+msgstr "例：info@company.com"
 
 #. module: mail
 #. odoo-javascript
@@ -13885,6 +13923,37 @@ msgstr "\"%(channel_name)s\" 中的 \"%(member_name)s\""
 #: code:addons/mail/static/src/core/web/activity.js:0
 msgid "“%s”"
 msgstr ""
+
+#~ msgid ""
+#~ "Shortened language code used as the target for the translation request."
+#~ msgstr "翻譯請求目標語言代碼的縮寫。"
+
+#~ msgid "Search for a GIF"
+#~ msgstr "搜尋 GIF"
+
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "稅務識別號碼。此處的值將根據國家/地區格式進行驗證。可使用「/」表示合作夥伴"
+#~ "不須納稅。"
+
+#~ msgid "Add a Tenor GIF API key to enable GIFs support."
+#~ msgstr "新增一個 Tenor GIF API 密鑰以啟用 GIF 支援。"
+
+#~ msgid ""
+#~ "Add a Tenor GIF API key to enable GIFs support. https://"
+#~ "developers.google.com/tenor/guides/quickstart#setup"
+#~ msgstr ""
+#~ "新增一個 Tenor GIF API 密鑰以啟用 GIF 支援。 https://"
+#~ "developers.google.com/tenor/guides/quickstart#setup"
+
+#~ msgid "Tenor API key"
+#~ msgstr "Tenor API 密鑰"
+
+#~ msgid "Tenor GIF API key"
+#~ msgstr "Tenor GIF API 密鑰"
 
 #~ msgid "111.222.333.444"
 #~ msgstr "111.222.333.444"

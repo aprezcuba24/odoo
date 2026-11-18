@@ -14,15 +14,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:37+0000\n"
-"PO-Revision-Date: 2025-10-08 18:39+0000\n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-02 17:39+0000\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Language-Team: Uzbek <https://translate.odoo.com/projects/odoo-19/web/uz/>\n"
 "Language: uz\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: web
 #. odoo-javascript
@@ -2013,6 +2014,7 @@ msgstr "Webp formatiga o‘tkazish"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.js:0
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 #, fuzzy
@@ -2025,6 +2027,12 @@ msgstr "Nusxalandi"
 #, fuzzy
 msgid "Copy"
 msgstr "Nusxalash"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
+msgid "Copy Arch"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -4884,15 +4892,8 @@ msgstr "Uchrashuv mavzusi"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-#, fuzzy
-msgid "Memory limit (in bytes)"
-msgstr "Xotira chegarasi (baytlarda)"
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-#, fuzzy
-msgid "Memory profile"
-msgstr "Xotira profili"
+msgid "Memory (heuristic)"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -6950,6 +6951,12 @@ msgstr "Qo‘lda saqlash"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation_button.js:0
+msgid "Save this record and its parent to translate"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/many2one/many2one.xml:0
 #, fuzzy
 msgid "Scan barcode"
@@ -6989,6 +6996,12 @@ msgstr "Qidirish"
 #, fuzzy
 msgid "Search More..."
 msgstr "Batafsil qidirish..."
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/reference/reference_field.js:0
+msgid "Search a record..."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -7343,6 +7356,12 @@ msgstr "Shinkansen"
 #, fuzzy
 msgid "Shinto"
 msgstr "Sinto"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/user_menu/user_menu_items.js:0
+msgid "Shortcuts"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -7772,18 +7791,6 @@ msgid "Text file"
 msgstr "Matn fayli"
 
 #. module: web
-#: model:ir.model.fields,help:web.field_base_document_layout__vat
-#, fuzzy
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"Soliq identifikatsiya raqami. Bu yerdagi qiymatlar mamlakat formati asosida "
-"tekshiriladi. Hamkorning soliqqa tortilmasligini ko‘rsatish uchun '/' "
-"belgisidan foydalanishingiz mumkin."
-
-#. module: web
 #. odoo-python
 #: code:addons/web/controllers/action.py:0
 #, fuzzy
@@ -7810,6 +7817,14 @@ msgstr "Ilovani ushbu brauzer orqali o‘rnatib bo‘lmaydi"
 #, fuzzy
 msgid "The app seems to be installed on your device"
 msgstr "Ilova qurilmangizga o‘rnatilganga o‘xshaydi"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_arch_parser.js:0
+msgid ""
+"The autocomplete value for %(field)s has not been found: the record with id %"
+"(id)s doesn't seem to exist"
+msgstr ""
 
 #. module: web
 #. odoo-python
@@ -9066,6 +9081,11 @@ msgstr "Ilovani brauzer menyusidan o‘rnatishingiz mumkin"
 #, fuzzy
 msgid "You can not read that field definition."
 msgstr "Bu maydon ta'rifini o‘qiy olmaysiz."
+
+#. module: web
+#: model:ir.model.fields,help:web.field_base_document_layout__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -22185,7 +22205,6 @@ msgstr "voy"
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
 #, fuzzy
 msgid "open"
 msgstr "ochiq"
@@ -31284,6 +31303,24 @@ msgstr ""
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "空"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "Soliq identifikatsiya raqami. Bu yerdagi qiymatlar mamlakat formati "
+#~ "asosida tekshiriladi. Hamkorning soliqqa tortilmasligini ko‘rsatish uchun "
+#~ "'/' belgisidan foydalanishingiz mumkin."
+
+#, fuzzy
+#~ msgid "Memory limit (in bytes)"
+#~ msgstr "Xotira chegarasi (baytlarda)"
+
+#, fuzzy
+#~ msgid "Memory profile"
+#~ msgstr "Xotira profili"
 
 #, fuzzy
 #~ msgid "No emoji matches your search"

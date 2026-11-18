@@ -43,7 +43,7 @@ class TestItAccountMoveSend(TestItEdi, TestAccountMoveSendCommon):
 
         def _get_default_extra_edis(self, move):
             # in batch sending we use default settings, which is to use italian gov edi, bypass it
-            return {}
+            return set()
 
         with patch(
                 'odoo.addons.account.models.account_move_send.AccountMoveSend._get_default_extra_edis',
@@ -69,7 +69,7 @@ class TestItAccountMoveSend(TestItEdi, TestAccountMoveSendCommon):
 
         def _get_default_extra_edis(self, move):
             # in batch sending we use default settings, which is to use italian gov edi, bypass it
-            return {}
+            return set()
 
         with patch(
                 'odoo.addons.account.models.account_move_send.AccountMoveSend._get_default_extra_edis',
@@ -331,7 +331,7 @@ class TestItAccountMoveSend(TestItEdi, TestAccountMoveSendCommon):
         self.italian_partner_a.with_company(invoice.company_id).invoice_edi_format = 'it_edi_xml'
 
         def _get_default_extra_edis(self, move):
-            return {}
+            return set()
 
         # Fake sending to the EDI and reset to draft
         with patch(
@@ -424,3 +424,15 @@ class TestItAccountMoveSend(TestItEdi, TestAccountMoveSendCommon):
 
         self.assertFalse(bill.l10n_it_edi_attachment_name)
         self.assertTrue('detached' in attachments.name.lower())
+
+    def test_invoice_send_email_then_sdi(self):
+        invoice = self.init_invoice(self.partner_a)
+        self.partner_a.with_company(invoice.company_id).invoice_edi_format = False
+
+        settings_email = {'sending_methods': {'email'}, 'extra_edis': set()}
+        self.env['account.move.send']._generate_and_send_invoices(invoice, **settings_email)
+        self.assertTrue(invoice.invoice_pdf_report_id)
+        self.assertFalse(invoice.l10n_it_edi_attachment_file)
+
+        wizard = self.env['account.move.send.wizard'].create({'move_id': invoice.id})
+        self.assertIn('l10n_it_edi_pdf_already_generated', wizard.alerts)

@@ -20,16 +20,18 @@
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
 # "Manon Rondou (ronm)" <ronm@odoo.com>, 2025, 2026.
-# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025.
-# Stiers Nathan <nasti@odoo.com>, 2025.
+# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025, 2026.
+# Stiers Nathan <nasti@odoo.com>, 2025, 2026.
 # Grace Conlon <grco@odoo.com>, 2026.
+# "Cécile Collart (cco)" <cco@odoo.com>, 2026.
+# "Larissa Manderfeld (lman)" <lman@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-05 19:27+0000\n"
-"PO-Revision-Date: 2026-05-23 09:33+0000\n"
-"Last-Translator: \"Manon Rondou (ronm)\" <ronm@odoo.com>\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-10-20 13:33+0000\n"
+"Last-Translator: \"Cécile Collart (cco)\" <cco@odoo.com>\n"
 "Language-Team: French <https://translate.odoo.com/projects/odoo-19/account/"
 "fr/>\n"
 "Language: fr\n"
@@ -38,7 +40,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : ((n != 0 && n % "
 "1000000 == 0) ? 1 : 2);\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -322,18 +324,6 @@ msgstr "%s taxes"
 
 #. module: account
 #. odoo-python
-#: code:addons/account/models/company.py:0
-msgid "%s, or / if not applicable"
-msgstr "%s, ou / si non applicable"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/partner.py:0
-msgid "%s, or not applicable"
-msgstr "%s, ou non applicable"
-
-#. module: account
-#. odoo-python
 #: code:addons/account/models/account_document_import_mixin.py:0
 msgid "'%(filename)s' (extracted from '%(root_filename)s', type=%(type)s)"
 msgstr "'%(filename)s' (extrait de '%(root_filename)s', type=%(type)s)"
@@ -446,12 +436,6 @@ msgstr "... (%(nb_of_values)s autre(s))"
 #: code:addons/account/static/src/components/x2many_buttons/x2many_buttons.xml:0
 msgid "... (View all)"
 msgstr "... (Voir tout)"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/company.py:0
-msgid "/ if not applicable"
-msgstr "/ si non applicable"
 
 #. module: account
 #: model:account.tax,name:account.1_sale_export_tax_template
@@ -1317,14 +1301,15 @@ msgid "<span class=\"o_stat_text\">Invoiced</span>"
 msgstr "<span class=\"o_stat_text\">Facturé</span>"
 
 #. module: account
-#: model_terms:ir.ui.view,arch_db:account.view_account_journal_form
-msgid "<span class=\"o_stat_text\">Journal Entries</span>"
-msgstr "<span class=\"o_stat_text\">Pièces comptables</span>"
-
-#. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_form
 msgid "<span class=\"o_stat_text\">Journal Entry</span>"
 msgstr "<span class=\"o_stat_text\">Pièce comptable</span>"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.view_account_journal_form
+#: model_terms:ir.ui.view,arch_db:account.view_move_form
+msgid "<span class=\"o_stat_text\">Journal Items</span>"
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -2923,6 +2908,11 @@ msgid "Account Move Count"
 msgstr "Nombre d’écritures comptables"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_tax__account_move_line_ids
+msgid "Account Move Line"
+msgstr ""
+
+#. module: account
 #: model:ir.model,name:account.model_account_move_reversal
 msgid "Account Move Reversal"
 msgstr "Renversement de l'écriture comptable"
@@ -2993,6 +2983,11 @@ msgid "Account Reconcile"
 msgstr "Compte lettrable"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_tax__account_reconcile_model_line_ids
+msgid "Account Reconcile Model Line"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__account_root_id
 msgid "Account Root"
 msgstr "Compte racine"
@@ -3052,6 +3047,7 @@ msgstr ""
 "exercice fiscal ainsi que la génération des écritures d’ouverture."
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_accrued_orders_wizard__account_types
 #: model:ir.model.fields,field_description:account.field_account_report__filter_account_type
 msgid "Account Types"
 msgstr "Types de compte"
@@ -4640,8 +4636,20 @@ msgstr "Retour à la facture fournisseur"
 #. module: account
 #. odoo-javascript
 #: code:addons/account/static/src/components/product_catalog/kanban_controller.js:0
+msgid "Back to Credit Note"
+msgstr ""
+
+#. module: account
+#. odoo-javascript
+#: code:addons/account/static/src/components/product_catalog/kanban_controller.js:0
 msgid "Back to Invoice"
 msgstr "Retour à la facture client"
+
+#. module: account
+#. odoo-javascript
+#: code:addons/account/static/src/components/product_catalog/kanban_controller.js:0
+msgid "Back to Refund"
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
@@ -6333,6 +6341,16 @@ msgstr ""
 #: code:addons/account/static/src/components/upload_drop_zone/upload_drop_zone.js:0
 msgid "Could not upload files"
 msgstr "Impossible d'uploader les fichiers"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_line__count_reconciled_lines
+msgid "Count Reconciled Lines"
+msgstr "Nombre de lignes lettrées"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_line__count_reconciled_lines_excluding_exchange_diff
+msgid "Count Reconciled Lines Excluding Exchange Diff"
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_reconcile_model_form
@@ -8467,6 +8485,11 @@ msgid "Electronic Data Interchange"
 msgstr "Échange de données informatisé"
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
+msgid "Electronic Invoicing"
+msgstr ""
+
+#. module: account
 #: model_terms:ir.ui.view,arch_db:account.portal_my_details
 msgid "Electronic format"
 msgstr "Format électronique"
@@ -8490,11 +8513,9 @@ msgstr "Modèles d'e-mail"
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__incoming_einvoice_notification_email
 msgid ""
-"Email addresses that will receive copy for sent and received invoices. "
-"Separate entries with ';'."
+"Email addresses that should receive invoices copy/return reminders. Separate "
+"entries with ';'."
 msgstr ""
-"Adresses e-mail qui recevront une copie des factures envoyées et reçues. "
-"Séparez les adresses par \" ; \"."
 
 #. module: account
 #. odoo-javascript
@@ -8714,16 +8735,6 @@ msgstr "Erreur d’importation pièce jointe %(filename)s :"
 
 #. module: account
 #. odoo-python
-#: code:addons/account/controllers/download_docs.py:0
-msgid ""
-"Error while creating XML:\n"
-"- %s"
-msgstr ""
-"Erreur lors de la création du XML :\n"
-"- %s"
-
-#. module: account
-#. odoo-python
 #: code:addons/account/models/chart_template.py:0
 msgid ""
 "Error while loading the localization: missing tax tag %(tag_name)s for "
@@ -8803,6 +8814,7 @@ msgid "Exchange Gain or Loss Journal"
 msgstr "Journal pour le gain ou la perte de change"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_line__exchange_move_ids
 #: model:ir.model.fields,field_description:account.field_account_partial_reconcile__exchange_move_id
 msgid "Exchange Move"
 msgstr "Mouvement de change"
@@ -9112,6 +9124,16 @@ msgid "First New Sequence"
 msgstr "Première nouvelle séquence"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_line__first_reconciled_lines_id
+msgid "First Reconciled Lines"
+msgstr ""
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_line__first_reconciled_lines_excluding_exchange_diff_id
+msgid "First Reconciled Lines Excluding Exchange Diff"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__auto_post_origin_id
 #: model:ir.model.fields,field_description:account.field_account_move__auto_post_origin_id
 msgid "First recurring entry"
@@ -9127,6 +9149,11 @@ msgstr "Pays d'imposition"
 #: model:ir.model.fields,field_description:account.field_res_config_settings__account_fiscal_country_id
 msgid "Fiscal Country Code"
 msgstr "Code fiscal du pays"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_tax__company_country_code
+msgid "Fiscal Country Code of the Company"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment_term__fiscal_country_codes
@@ -10940,7 +10967,7 @@ msgstr "Devise de la facture"
 #: model_terms:ir.ui.view,arch_db:account.view_move_line_tree
 #: model_terms:ir.ui.view,arch_db:account.view_move_tree
 msgid "Invoice Date"
-msgstr "Date"
+msgstr "Date de facturation"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__module_account_invoice_extract
@@ -11098,6 +11125,12 @@ msgid ""
 msgstr ""
 "La répartition des factures et des avoirs doit comporter au moins une ligne "
 "de répartition des taxes."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid "Invoice generated but not sent."
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
@@ -11606,6 +11639,7 @@ msgstr "Libellé d'écriture comptable"
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_lock_exception.py:0
+#: code:addons/account/models/account_move.py:0
 #: model:ir.actions.act_window,name:account.action_account_moves_all
 #: model:ir.actions.act_window,name:account.action_account_moves_all_a
 #: model:ir.actions.act_window,name:account.action_account_moves_all_grouped_matching
@@ -11806,6 +11840,12 @@ msgstr "Libellé sur les factures"
 #: model_terms:ir.ui.view,arch_db:account.view_tax_group_form
 msgid "Label on PoS Receipts"
 msgstr "Étiquettes sur les reçus PdV"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__sanitize_payment_reference
+#: model:ir.model.fields,field_description:account.field_account_move__sanitize_payment_reference
+msgid "Label sanitize"
+msgstr ""
 
 #. module: account
 #: model:account.account,name:account.2_account_account_us_land
@@ -12215,6 +12255,7 @@ msgid "Looks great!"
 msgstr "Parfait !"
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__loss
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Loss"
 msgstr "Pertes"
@@ -13146,6 +13187,14 @@ msgid "No possible action found with the selected lines."
 msgstr "Aucune action possible pour les lignes sélectionnées."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"No valid sending method could be applied, so this invoice was not sent "
+"automatically. Please configure a sending method and send it manually."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_move_line__display_type__non_deductible_product
 msgid "Non Deductible Products"
 msgstr "Produits non déductibles"
@@ -13562,6 +13611,12 @@ msgid "Online Payments"
 msgstr "Paiements en ligne"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/partner.py:0
+msgid "Only Accounting managers can create foreign taxes."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_report__only_tax_exigible
 msgid "Only Tax Exigible Lines"
 msgstr "Uniquement les lignes de taxes exigibles"
@@ -13972,6 +14027,7 @@ msgid "Owner's Current Account"
 msgstr "Compte courant du propriétaire"
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.view_account_analytic_line_filter_inherit_account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "P&L Accounts"
 msgstr "Les comptes du compte de résultat"
@@ -14002,11 +14058,6 @@ msgstr "Fichier PDF"
 #: model:ir.actions.report,name:account.account_invoices_without_payment
 msgid "PDF without Payment"
 msgstr "PDF sans paiement"
-
-#. module: account
-#: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
-msgid "PEPPOL Electronic Invoicing"
-msgstr "Facturation électronique PEPPOL"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__module_account_peppol
@@ -15024,6 +15075,11 @@ msgid "Profit or Loss Appropriation"
 msgstr "Affectation du résultat"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_analytic_line__analytic_profitability
+msgid "Profitability"
+msgstr ""
+
+#. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "Proforma Credit Note"
 msgstr "Avoir proforma"
@@ -15098,6 +15154,7 @@ msgid "Purchase Lock date"
 msgstr "Date de verrouillage de l'achat"
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_invoice_report__move_type__in_receipt
 #: model:ir.model.fields.selection,name:account.selection__account_move__move_type__in_receipt
 msgid "Purchase Receipt"
 msgstr "Ticket"
@@ -15731,6 +15788,7 @@ msgstr "Coûts des régimes de retraite (contrepartie 401K)"
 #: code:addons/account/wizard/accrued_orders.py:0
 #: model:account.group,name:account.2_us_group_4
 #: model:ir.model.fields,field_description:account.field_digest_digest__kpi_account_total_revenue
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__revenue
 #: model:ir.model.fields.selection,name:account.selection__account_automatic_entry_wizard__account_type__income
 msgid "Revenue"
 msgstr "Revenus"
@@ -16040,6 +16098,7 @@ msgid "Sales Lock Date"
 msgstr "Date de verrouillage des ventes"
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_invoice_report__move_type__out_receipt
 #: model:ir.model.fields.selection,name:account.selection__account_move__move_type__out_receipt
 msgid "Sales Receipt"
 msgstr "Reçu de ventes"
@@ -18072,6 +18131,7 @@ msgstr "La date de verrou définitif ne peut pas être supprimée."
 #: model:ir.model.fields,help:account.field_account_payment_register__country_code
 #: model:ir.model.fields,help:account.field_account_secure_entries_wizard__country_code
 #: model:ir.model.fields,help:account.field_account_setup_bank_manual_config__country_code
+#: model:ir.model.fields,help:account.field_account_tax__company_country_code
 #: model:ir.model.fields,help:account.field_account_tax__country_code
 #: model:ir.model.fields,help:account.field_account_tax_group__country_code
 #: model:ir.model.fields,help:account.field_res_config_settings__country_code
@@ -18103,17 +18163,6 @@ msgstr ""
 "somme des pourcentages doit être 100%."
 
 #. module: account
-#: model:ir.model.fields,help:account.field_base_document_layout__vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"Le numéro d'identification fiscale. Les valeurs ici seront validées en "
-"fonction du format du pays. Vous pouvez utiliser '/' pour indiquer que le "
-"partenaire n'est pas sujet à la taxe."
-
-#. module: account
 #. odoo-python
 #: code:addons/account/models/account_move_line.py:0
 msgid "The account %(name)s (%(code)s) is archived."
@@ -18122,10 +18171,10 @@ msgstr "Le compte %(name)s (%(code)s) est archivé."
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_account.py:0
-msgid "The account code can only contain alphanumeric characters and dots."
+msgid ""
+"The account code can only contain alphanumeric characters and dots. (account "
+"code: %s)"
 msgstr ""
-"Le code de compte ne peut contenir que des caractères alphanumériques et des "
-"points."
 
 #. module: account
 #. odoo-python
@@ -18265,6 +18314,7 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_account.py:0
 #: code:addons/account/models/account_tax.py:0
 msgid "The cash basis transition account needs to allow reconciliation."
 msgstr ""
@@ -18506,6 +18556,12 @@ msgid ""
 msgstr ""
 "Cette écriture utilise des comptes (%(accounts_codes_names)s) provenant "
 "d’une autre société."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "The entry is using taxes (%(tax_names)s) from a different company."
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,help:account.field_product_category__property_account_expense_categ_id
@@ -19699,7 +19755,7 @@ msgstr "Pour annuler une écriture, celle-ci doit d’abord être comptabilisée
 #. odoo-javascript
 #: code:addons/account/static/src/components/char_with_placeholder_field_to_check/char_with_placeholder_field.xml:0
 msgid "To review"
-msgstr "À réviser"
+msgstr "À vérifier"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_partner_bank_search_inherit
@@ -20062,6 +20118,11 @@ msgid ""
 msgstr ""
 "Impossible de créer un relevé en raison de transactions manquantes. Vous "
 "pouvez réorganiser les transactions avant de continuer."
+
+#. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__uncategorized
+msgid "Uncategorized"
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -20555,6 +20616,7 @@ msgstr "Validé"
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_bank_statement_line.py:0
 #: code:addons/account/models/account_move.py:0
 msgid "Validated entries can only be changed by your accountant."
 msgstr ""
@@ -21020,19 +21082,10 @@ msgid ""
 "You can not archive a journal containing draft journal entries.\n"
 "\n"
 "To proceed:\n"
-"1/ click on the top-right button 'Journal Entries' from this journal form\n"
-"2/ then filter on 'Draft' entries\n"
+"1/ go to Accounting > Accounting > Journal Entries\n"
+"2/ filter on this journal and on 'Unposted' entries\n"
 "3/ select them all and post or delete them through the action menu"
 msgstr ""
-"Vous ne pouvez pas archiver un journal contenant des pièces comptables "
-"brouillon.\n"
-"\n"
-"Pour continuer :\n"
-"1/ cliquez sur le bouton en haut à droite 'Pièces comptables' depuis la vue "
-"formulaire du journal\n"
-"2/ puis filtrez sur les pièces en 'Brouillon'\n"
-"3/ sélectionnez-les toutes et comptabilisez-les ou supprimez-les via le menu "
-"action"
 
 #. module: account
 #. odoo-python
@@ -21106,6 +21159,11 @@ msgid ""
 msgstr ""
 "Vous pouvez vous désinscrire ici des e-mails reçus lors de l’envoi et de la "
 "réception des factures."
+
+#. module: account
+#: model:ir.model.fields,help:account.field_base_document_layout__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -21544,10 +21602,10 @@ msgstr ""
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
-msgid "You cannot modify the following readonly fields on a posted move: %s"
+msgid ""
+"You cannot modify the following readonly fields on the posted move %(move)s: "
+"%(fields)s"
 msgstr ""
-"Vous ne pouvez pas modifier les champs suivants, en lecture seule, dans une "
-"pièce comptabilisée : %s"
 
 #. module: account
 #. odoo-python
@@ -21593,6 +21651,13 @@ msgid ""
 msgstr ""
 "Vous ne pouvez pas réduire le nombre de décimales d'une devise déjà utilisée "
 "pour enregistrer des écritures comptables."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+#: code:addons/account/wizard/account_payment_register.py:0
+msgid "You cannot register payments for blocked invoices."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -22277,12 +22342,6 @@ msgstr ""
 "marchandises ou la prestation des services."
 
 #. module: account
-#. odoo-python
-#: code:addons/account/models/partner.py:0
-msgid "not applicable"
-msgstr "non applicable"
-
-#. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_tax_repartition_line__repartition_type__tax
 msgid "of tax"
 msgstr "de la taxe"
@@ -22531,6 +22590,76 @@ msgid ""
 msgstr ""
 "{{ object.company_id.name }} Facture en autofacturation (Réf. {{ object.name "
 "or 'n/a' }})"
+
+#~ msgid ""
+#~ "Email addresses that will receive copy for sent and received invoices. "
+#~ "Separate entries with ';'."
+#~ msgstr ""
+#~ "Adresses e-mail qui recevront une copie des factures envoyées et reçues. "
+#~ "Séparez les adresses par \" ; \"."
+
+#~ msgid "<span class=\"o_stat_text\">Journal Entries</span>"
+#~ msgstr "<span class=\"o_stat_text\">Pièces comptables</span>"
+
+#~ msgid ""
+#~ "Error while creating XML:\n"
+#~ "- %s"
+#~ msgstr ""
+#~ "Erreur lors de la création du XML :\n"
+#~ "- %s"
+
+#~ msgid "The account code can only contain alphanumeric characters and dots."
+#~ msgstr ""
+#~ "Le code de compte ne peut contenir que des caractères alphanumériques et "
+#~ "des points."
+
+#~ msgid ""
+#~ "You can not archive a journal containing draft journal entries.\n"
+#~ "\n"
+#~ "To proceed:\n"
+#~ "1/ click on the top-right button 'Journal Entries' from this journal "
+#~ "form\n"
+#~ "2/ then filter on 'Draft' entries\n"
+#~ "3/ select them all and post or delete them through the action menu"
+#~ msgstr ""
+#~ "Vous ne pouvez pas archiver un journal contenant des pièces comptables "
+#~ "brouillon.\n"
+#~ "\n"
+#~ "Pour continuer :\n"
+#~ "1/ cliquez sur le bouton en haut à droite 'Pièces comptables' depuis la "
+#~ "vue formulaire du journal\n"
+#~ "2/ puis filtrez sur les pièces en 'Brouillon'\n"
+#~ "3/ sélectionnez-les toutes et comptabilisez-les ou supprimez-les via le "
+#~ "menu action"
+
+#~ msgid "You cannot modify the following readonly fields on a posted move: %s"
+#~ msgstr ""
+#~ "Vous ne pouvez pas modifier les champs suivants, en lecture seule, dans "
+#~ "une pièce comptabilisée : %s"
+
+#~ msgid "PEPPOL Electronic Invoicing"
+#~ msgstr "Facturation électronique PEPPOL"
+
+#~ msgid "%s, or / if not applicable"
+#~ msgstr "%s, ou / si non applicable"
+
+#~ msgid "%s, or not applicable"
+#~ msgstr "%s, ou non applicable"
+
+#~ msgid "/ if not applicable"
+#~ msgstr "/ si non applicable"
+
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "Le numéro d'identification fiscale. Les valeurs ici seront validées en "
+#~ "fonction du format du pays. Vous pouvez utiliser '/' pour indiquer que le "
+#~ "partenaire n'est pas sujet à la taxe."
+
+#~ msgid "not applicable"
+#~ msgstr "non applicable"
 
 #~ msgid "Quick search: %s"
 #~ msgstr "Recherche rapide : %s"

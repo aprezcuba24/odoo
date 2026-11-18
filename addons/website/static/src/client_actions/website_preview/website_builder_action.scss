@@ -1,10 +1,12 @@
 .o-website-builder_sidebar {
+    z-index: 0;
     width: 0px;
     background-color: $o-we-sidebar-bg;
     transition: width ease 400ms, border 400ms;
 
     &.o_builder_sidebar_open {
-        width: $o-we-sidebar-width;
+        // Keep the sidebar below 289px to avoid mobile view at 150% zoom.
+        width: $o-we-sidebar-width - $border-width;
         transition-delay: 200ms;
         box-sizing: content-box;
 

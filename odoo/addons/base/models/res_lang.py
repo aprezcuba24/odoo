@@ -31,6 +31,14 @@ class LangData(ReadonlyDict):
         except KeyError:
             raise AttributeError
 
+    def __eq__(self, other):
+        if isinstance(other, LangData):
+            return self.id == other.id
+        return super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 class LangDataDict(ReadonlyDict):
     """ A ``dict`` of :class:`LangData` objects indexed by some key, which returns
@@ -105,7 +113,7 @@ class ResLang(models.Model):
                 lang.flag_image_url = f"/base/static/img/country_flags/{lang.code.lower().rsplit('_')[-1]}.png"
 
     flag_image = fields.Image("Image")
-    flag_image_url = fields.Char(compute=_compute_field_flag_image_url)
+    flag_image_url = fields.Char(compute='_compute_field_flag_image_url')
 
     _name_uniq = models.Constraint(
         'unique(name)',

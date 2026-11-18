@@ -6,16 +6,16 @@
 # Martin Trigaux, 2022
 # Abe Manyo, 2023
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Abe Manyo (abem)" <abem@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Nurul Aini Akrima Sabila (nuaas)" <nuaas@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-03 18:36+0000\n"
-"PO-Revision-Date: 2026-05-23 09:49+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-11-04 06:33+0000\n"
 "Last-Translator: \"Nurul Aini Akrima Sabila (nuaas)\" <nuaas@odoo.com>\n"
 "Language-Team: Indonesian <https://translate.odoo.com/projects/odoo-19/"
 "im_livechat/id/>\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: im_livechat
 #. odoo-python
@@ -94,15 +94,10 @@ msgid ""
 "* 'Show with notification' is 'Show' in addition to a floating text just "
 "next to the button.\n"
 "* 'Open automatically' displays the button and automatically opens the "
-"conversation pane.\n"
+"conversation pane on larger screens. On small screens, this behaves like "
+"'Show'.\n"
 "* 'Hide' hides the chat button on the pages.\n"
 msgstr ""
-"* 'Tunjukkan' menampilkan tombol chat pada halaman.\n"
-"* 'Tunjukkan dengan notifikasi' adalah 'Tunjukkan' ditambah teks mengambang "
-"persis di sebelah tombol.\n"
-"* 'Buka otomatis' menampilkan tombol dan secara otomatis membuka jendela "
-"percakapan.\n"
-"* 'Sembunyikan' menyembunyikkan tombol chat pada halaman.\n"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_kanban
@@ -516,7 +511,7 @@ msgstr "Pesan Chatbot"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_discuss_channel__chatbot_message_ids
 msgid "Chatbot Messages"
-msgstr "Pesan-Pesan Chatbot"
+msgstr "Pesan Chatbot"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.chatbot_script_view_form
@@ -1087,12 +1082,8 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_form
 msgid ""
 "Go to <strong>Website</strong> &gt; <strong>Configuration</strong> &gt; "
-"<strong>Settings</strong> &gt; <strong>Email</strong> &amp; "
-"<strong>Marketing.</strong>"
+"<strong>Settings</strong> &gt; <strong>General.</strong>"
 msgstr ""
-"Kunjungi <strong>Website</strong> &gt; <strong>Konfigurasi</strong> &gt; "
-"<strong>Pengaturan</strong> &gt; <strong>Email</strong> &amp; "
-"<strong>Marketing.</strong>"
 
 #. module: im_livechat
 #. odoo-javascript
@@ -1678,7 +1669,7 @@ msgstr "Riwayat Anggota Channel Livechat"
 #. module: im_livechat
 #: model:ir.model,name:im_livechat.model_im_livechat_channel_rule
 msgid "Livechat Channel Rules"
-msgstr "Peraturan-Peraturan Channel Livechat"
+msgstr "Peraturan Channel Livechat"
 
 #. module: im_livechat
 #: model:ir.model.fields.selection,name:im_livechat.selection__discuss_channel__channel_type__livechat
@@ -1861,7 +1852,7 @@ msgstr "Manajer per Sesi"
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.discuss_channel_view_kanban
 msgid "Messages:"
-msgstr "Pesan-Pesan:"
+msgstr "Pesan:"
 
 #. module: im_livechat
 #: model:ir.model.fields.selection,name:im_livechat.selection__discuss_channel__livechat_week_day__0
@@ -1996,8 +1987,8 @@ msgid ""
 "Note about the session, visible to all internal users having access to the "
 "session."
 msgstr ""
-"Catatan mengenai sesi, tampak untuk semua user-user internal yang memiliki "
-"akses ke sesi."
+"Catatan mengenai sesi, tampak untuk semua user internal yang memiliki akses "
+"ke sesi."
 
 #. module: im_livechat
 #. odoo-javascript
@@ -2079,7 +2070,7 @@ msgstr "Sedang Berlangsung"
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_form
 msgid "Ongoing Sessions"
-msgstr "Sesi-Sesi yang Sedang Berlangsung"
+msgstr "Sesi Berlangsung"
 
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_script_step__triggering_answer_ids
@@ -2221,7 +2212,7 @@ msgstr "Menilai Rata-Rata Teks"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_discuss_channel__rating_last_feedback
 msgid "Rating Last Feedback"
-msgstr "Nilai Feedback Terakhir"
+msgstr "Nilai Masukan Terakhir"
 
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_discuss_channel__rating_last_image
@@ -2406,7 +2397,7 @@ msgstr "Langkah Skrip"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_script__script_step_ids
 msgid "Script Steps"
-msgstr "Langkah-Langkah Skrip"
+msgstr "Langkah Skrip"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_agent_history_view_search
@@ -2573,7 +2564,7 @@ msgstr "Sumber"
 #: model_terms:ir.ui.view,arch_db:im_livechat.res_users_form_view
 #: model_terms:ir.ui.view,arch_db:im_livechat.res_users_form_view_simple_modif
 msgid "Spoken Languages"
-msgstr ""
+msgstr "Bahasa Percakapan"
 
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_im_livechat_report_channel__start_date
@@ -2699,6 +2690,12 @@ msgstr "Teks pada Tombol"
 #: code:addons/im_livechat/static/src/embed/common/feedback_panel/feedback_panel.xml:0
 msgid "Thank you for your feedback"
 msgstr "Terima kasih untuk feedback Anda"
+
+#. module: im_livechat
+#. odoo-python
+#: code:addons/im_livechat/models/im_livechat_channel.py:0
+msgid "The URL Regex '%(regex)s' is not valid."
+msgstr ""
 
 #. module: im_livechat
 #: model:ir.model.fields,help:im_livechat.field_im_livechat_channel_rule__channel_id
@@ -3246,6 +3243,30 @@ msgstr "detik"
 #: model:ir.model,name:im_livechat.model_ir_websocket
 msgid "websocket message handling"
 msgstr "penanganan pesan websocket"
+
+#~ msgid ""
+#~ "* 'Show' displays the chat button on the pages.\n"
+#~ "* 'Show with notification' is 'Show' in addition to a floating text just "
+#~ "next to the button.\n"
+#~ "* 'Open automatically' displays the button and automatically opens the "
+#~ "conversation pane.\n"
+#~ "* 'Hide' hides the chat button on the pages.\n"
+#~ msgstr ""
+#~ "* 'Tunjukkan' menampilkan tombol chat pada halaman.\n"
+#~ "* 'Tunjukkan dengan notifikasi' adalah 'Tunjukkan' ditambah teks "
+#~ "mengambang persis di sebelah tombol.\n"
+#~ "* 'Buka otomatis' menampilkan tombol dan secara otomatis membuka jendela "
+#~ "percakapan.\n"
+#~ "* 'Sembunyikan' menyembunyikkan tombol chat pada halaman.\n"
+
+#~ msgid ""
+#~ "Go to <strong>Website</strong> &gt; <strong>Configuration</strong> &gt; "
+#~ "<strong>Settings</strong> &gt; <strong>Email</strong> &amp; "
+#~ "<strong>Marketing.</strong>"
+#~ msgstr ""
+#~ "Kunjungi <strong>Website</strong> &gt; <strong>Konfigurasi</strong> &gt; "
+#~ "<strong>Pengaturan</strong> &gt; <strong>Email</strong> &amp; "
+#~ "<strong>Marketing.</strong>"
 
 #~ msgid "This livechat conversation has ended"
 #~ msgstr "Percakapan livechat ini telah berakhir"

@@ -52,6 +52,12 @@ async function applyProduct(record, product) {
         // and the value isn't expected to change anyway.
         update_values.product_uom_id = product.uom;
     }
+    if (product.product_type === "combo" && product.selectedComboItems?.length) {
+        update_values.selected_combo_items = JSON.stringify(
+            product.selectedComboItems.map(serializeComboItem)
+        );
+        update_values.virtual_id = product.virtual_id || uuid();
+    }
     await record._update(update_values);
 }
 
@@ -236,6 +242,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
         const saleOrderLine = this.props.record.data;
         const ptavIds = [...this._getVariantPtavIds(saleOrderLine)];
         let customPtavs = [];
+        let productUOMId;
 
         if (edit) {
             /**
@@ -244,6 +251,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
              */
             ptavIds.push(...this._getNoVariantPtavIds(saleOrderLine));
             customPtavs = await this._getCustomPtavs(saleOrderLine);
+            productUOMId = saleOrderLine.product_uom_id.id;
         }
 
         this.dialog.add(ProductConfiguratorDialog, {
@@ -251,7 +259,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
             ptavIds: ptavIds,
             customPtavs: customPtavs,
             quantity: saleOrderLine.product_uom_qty,
-            productUOMId: saleOrderLine.product_uom_id.id,
+            productUOMId: productUOMId,
             companyId: saleOrderRecord.data.company_id.id,
             pricelistId: saleOrderRecord.data.pricelist_id.id,
             currencyId: saleOrderLine.currency_id.id,
@@ -362,10 +370,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
         await saleOrder.order_line._sort();
 
         if (hasOptionalProducts && !edit) {
-            const selectedComboProducts = selectedComboItems.map(
-                item => ({ name: item.product.display_name })
-            );
-            await this._openProductConfigurator(false, selectedComboProducts);
+            await this._openProductConfigurator(false, selectedComboItems);
         }
     }
 

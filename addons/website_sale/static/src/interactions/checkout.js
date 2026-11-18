@@ -179,6 +179,7 @@ export class Checkout extends Interaction {
                 const jsonLocation = JSON.stringify(location);
                 // Assign the selected pickup location to the order.
                 await this.waitFor(this._setPickupLocation(jsonLocation));
+                await this._onPickupLocationConfirmed();
 
                 //  Show and set the order location details.
                 this._updatePickupLocation(deliveryMethodContainer, location, jsonLocation);
@@ -376,6 +377,15 @@ export class Checkout extends Interaction {
         amountUntaxed.innerHTML = result.amount_untaxed;
         amountTax.innerHTML = result.amount_tax;
         amountTotal.forEach(total => total.innerHTML = result.amount_total);
+        const productsTable = targetEl.querySelector('.o_cart_products_table');
+        if (productsTable && result['website_sale.cart_summary_content']) {
+            const newProductsTable = new DOMParser().parseFromString(
+                result['website_sale.cart_summary_content'], 'text/html'
+            ).querySelector('.o_cart_products_table');
+            if (newProductsTable) {
+                productsTable.parentNode.replaceChild(newProductsTable, productsTable);
+            }
+        }
     }
 
     /**
@@ -555,6 +565,14 @@ export class Checkout extends Interaction {
     async _setPickupLocation(pickupLocationData) {
         await rpc('/website_sale/set_pickup_location', {pickup_location_data: pickupLocationData});
     }
+
+    /**
+     * Hook called after confirming a pickup location from the selector.
+     *
+     * @private
+     * @return {void}
+     */
+    async _onPickupLocationConfirmed() {}
 
     // #=== GETTERS & SETTERS ===#
 

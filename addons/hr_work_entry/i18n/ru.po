@@ -3,15 +3,15 @@
 # * hr_work_entry
 #
 # Translators:
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Anastasiia Koroleva (koan)" <koan@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:38+0000\n"
-"PO-Revision-Date: 2026-02-20 19:43+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-08-10 11:23+0000\n"
 "Last-Translator: \"Anastasiia Koroleva (koan)\" <koan@odoo.com>\n"
 "Language-Team: Russian <https://translate.odoo.com/projects/odoo-19/"
 "hr_work_entry/ru/>\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: hr_work_entry
 #: model:ir.model.fields,help:hr_work_entry.field_hr_employee__work_entry_source
@@ -100,7 +100,7 @@ msgstr "<span>Часы</span>"
 #. module: hr_work_entry
 #: model:hr.work.entry.type,display_code:hr_work_entry.work_entry_type_attendance
 msgid "A"
-msgstr ""
+msgstr "A"
 
 #. module: hr_work_entry
 #: model:ir.model.fields,field_description:hr_work_entry.field_hr_user_work_entry_employee__active
@@ -788,6 +788,21 @@ msgid "Overtime Hours (Paid at 150%)"
 msgstr "Overtime Hours (Paid at 150%)"
 
 #. module: hr_work_entry
+#: model:hr.work.entry.type,name:hr_work_entry.uae_work_entry_type_overtime_off_days
+msgid "Overtime Off-days"
+msgstr ""
+
+#. module: hr_work_entry
+#: model:hr.work.entry.type,name:hr_work_entry.uae_work_entry_type_overtime_work_days_daytime
+msgid "Overtime Weekdays Daytime"
+msgstr ""
+
+#. module: hr_work_entry
+#: model:hr.work.entry.type,name:hr_work_entry.uae_work_entry_type_overtime_work_days_nighttime
+msgid "Overtime Weekdays Nighttime"
+msgstr ""
+
+#. module: hr_work_entry
 #: model:hr.work.entry.type,name:hr_work_entry.l10n_au_work_entry_type_overtime_pto
 msgid "Overtime: Public Time Off"
 msgstr "Overtime: Public Time Off"
@@ -1043,8 +1058,8 @@ msgstr "Sick Leave (Unpaid)"
 
 #. module: hr_work_entry
 #: model:hr.work.entry.type,name:hr_work_entry.uae_sick_leave_0_entry_type
-msgid "Sick Leave 0"
-msgstr "Больничный 0"
+msgid "Sick Leave 1"
+msgstr ""
 
 #. module: hr_work_entry
 #: model:hr.work.entry.type,name:hr_work_entry.uae_sick_leave_50_entry_type
@@ -1439,6 +1454,9 @@ msgstr "Youth Time Off"
 #: model_terms:ir.ui.view,arch_db:hr_work_entry.hr_work_entry_view_calendar_multi_create_form
 msgid "hours"
 msgstr "часов"
+
+#~ msgid "Sick Leave 0"
+#~ msgstr "Больничный 0"
 
 #~ msgid "Beginning"
 #~ msgstr "Начало"

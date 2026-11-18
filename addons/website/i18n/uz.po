@@ -14,15 +14,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 17:35+0000\n"
-"PO-Revision-Date: 2025-10-08 18:37+0000\n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"POT-Creation-Date: 2026-11-13 17:36+0000\n"
+"PO-Revision-Date: 2026-08-04 06:59+0000\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Language-Team: Uzbek <https://translate.odoo.com/projects/odoo-19/website/uz/"
+">\n"
 "Language: uz\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_quotes_carousel_compact
@@ -287,13 +289,6 @@ msgid "$ 32M"
 msgstr "$ 32M"
 
 #. module: website
-#. odoo-python
-#: code:addons/website/models/ir_ui_view.py:0
-#, fuzzy
-msgid "%(error)s (website: %(website_id)s)"
-msgstr "%(website_id)s saytida %(error)s xatosi yuz berdi"
-
-#. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/client_actions/website_preview/website_builder_action.js:0
 #, fuzzy
@@ -343,6 +338,12 @@ msgstr "' hech narsaga mos kelmadi. Natijalar ' uchun ko‘rsatilmoqda"
 #, fuzzy
 msgid "'. Showing results for '"
 msgstr "'. ' uchun natijalar ko‘rsatilmoqda"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/search_bar.js:0
+msgid "(%(count)s found)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -3372,9 +3373,8 @@ msgstr "Akkordeon rasmi"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
-#, fuzzy
-msgid "Accounts are usable across all your multiple websites"
-msgstr "Hisoblar barcha ko‘p saytlaringizda foydalanish mumkin"
+msgid "Accounts created on this website are usable across all other websites"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_2_s_three_columns
@@ -4162,13 +4162,6 @@ msgstr "Har doim"
 #, fuzzy
 msgid "Always Underline"
 msgstr "Doimo tagiga chizish"
-
-#. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
-#, fuzzy
-msgid "Always Visible"
-msgstr "Doimo ko‘rinadigan"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_3_s_three_columns
@@ -8034,6 +8027,12 @@ msgstr "Halqasimon diagramma"
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/popup_option_plugin.js:0
+msgid "Drag blocks here"
+msgstr ""
+
+#. module: website
+#. odoo-javascript
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 #, fuzzy
 msgid "Drag the <b>%s</b> block and drop it at the bottom of the page."
@@ -9035,6 +9034,12 @@ msgstr "Kengaytma ko‘rinishi"
 #, fuzzy
 msgid "External ID"
 msgstr "Tashqi ID"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "External ID can not be loaded: %(error)s (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -10146,6 +10151,15 @@ msgstr "Google Xarita"
 #, fuzzy
 msgid "Google Maps API Key"
 msgstr "Google Xaritalar API kaliti"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_service.js:0
+#: code:addons/website/static/src/core/website_map_service.js:0
+msgid ""
+"Google Maps configuration has changed. Please reload the page for changes to "
+"take effect."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -15631,9 +15645,8 @@ msgstr "Joytutqich"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_api_key_dialog.xml:0
-#, fuzzy
-msgid "Places API"
-msgstr "Joylar API"
+msgid "Places API (NEW)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -15893,6 +15906,7 @@ msgstr "Narxlash rejalari"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 #, fuzzy
 msgid "Primary"
 msgstr "Asosiy"
@@ -17279,6 +17293,7 @@ msgstr "Ikkinchi standart radio"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 #, fuzzy
 msgid "Secondary"
 msgstr "Ikkilamchi"
@@ -18817,10 +18832,24 @@ msgid "Template ID: %s"
 msgstr "Shablon ID: %s"
 
 #. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid ""
+"Template does not exist or has been deleted: %(error)s (website: %"
+"(website_id)s)"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.qweb_500
 #, fuzzy
 msgid "Template fallback"
 msgstr "Shablon zaxirasi"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "Template not found: '%(error)s' (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_mega
@@ -19065,13 +19094,6 @@ msgstr "Quyidagi domen noto‘g‘ri:"
 #, fuzzy
 msgid "The form has been sent successfully."
 msgstr "Shakl muvaffaqiyatli yuborildi."
-
-#. module: website
-#. odoo-python
-#: code:addons/website/controllers/form.py:0
-#, fuzzy
-msgid "The form's specified model does not exist"
-msgstr "Shaklning ko‘rsatilgan modeli mavjud emas"
 
 #. module: website
 #: model:ir.model.fields,help:website.field_ir_actions_server__website_url
@@ -19414,14 +19436,10 @@ msgstr "Bu maydon veb-saytda favikon sifatida ko‘rsatiladigan rasmni saqlaydi.
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/form/form_option_plugin.js:0
-#, fuzzy
 msgid ""
 "This field is mandatory for this action. You cannot remove it. Try hiding it "
-"with the 'Visibility' option instead and add it a default value."
+"with the 'Visibility Rule' option instead and add it a default value."
 msgstr ""
-"Ushbu amal uchun bu maydon majburiydir. Uni olib tashlashning iloji yo‘q. "
-"Buning o‘rniga \"Ko‘rinish\" parametri yordamida uni yashirishga harakat "
-"qiling va unga standart qiymat bering."
 
 #. module: website
 #: model:ir.model.fields,help:website.field_website_controller_page__arch_base
@@ -19494,6 +19512,13 @@ msgid ""
 msgstr ""
 "Bu shrift allaqachon mavjud, uni faqat server versiyasini almashtirish uchun "
 "mahalliy shrift sifatida qo‘shishingiz mumkin."
+
+#. module: website
+#. odoo-python
+#: code:addons/website/controllers/form.py:0
+msgid ""
+"This form cannot be submitted. Please contact the website administrator."
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -20870,6 +20895,12 @@ msgid "Visibility Password Display"
 msgstr "Ko‘rinuvchanlik parolini ko‘rsatish"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
+msgid "Visibility Rule"
+msgstr ""
+
+#. module: website
 #: model:ir.model.fields,field_description:website.field_website_menu__group_ids
 #, fuzzy
 msgid "Visible Groups"
@@ -22244,6 +22275,12 @@ msgstr ""
 #, fuzzy
 msgid "You cannot duplicate this field."
 msgstr "Bu maydonni nusxalash mumkin emas."
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/card_image_option_plugin.js:0
+msgid "You cannot duplicate this image."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -24127,6 +24164,35 @@ msgstr "✽ Pitsalar"
 #, fuzzy
 msgid "✽  What We Offer"
 msgstr "✽ Biz nimalarni taklif etamiz"
+
+#, fuzzy
+#~ msgid "Always Visible"
+#~ msgstr "Doimo ko‘rinadigan"
+
+#, fuzzy
+#~ msgid ""
+#~ "This field is mandatory for this action. You cannot remove it. Try hiding "
+#~ "it with the 'Visibility' option instead and add it a default value."
+#~ msgstr ""
+#~ "Ushbu amal uchun bu maydon majburiydir. Uni olib tashlashning iloji yo‘q. "
+#~ "Buning o‘rniga \"Ko‘rinish\" parametri yordamida uni yashirishga harakat "
+#~ "qiling va unga standart qiymat bering."
+
+#, fuzzy
+#~ msgid "%(error)s (website: %(website_id)s)"
+#~ msgstr "%(website_id)s saytida %(error)s xatosi yuz berdi"
+
+#, fuzzy
+#~ msgid "Places API"
+#~ msgstr "Joylar API"
+
+#, fuzzy
+#~ msgid "The form's specified model does not exist"
+#~ msgstr "Shaklning ko‘rsatilgan modeli mavjud emas"
+
+#, fuzzy
+#~ msgid "Accounts are usable across all your multiple websites"
+#~ msgstr "Hisoblar barcha ko‘p saytlaringizda foydalanish mumkin"
 
 #, fuzzy
 #~ msgid "Translate the whole content with AI"

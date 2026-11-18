@@ -2,16 +2,16 @@
 # This file contains the translation of the following modules:
 # * spreadsheet
 #
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Marta (wacm)" <wacm@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-24 17:37+0000\n"
-"PO-Revision-Date: 2026-04-13 20:51+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-10-28 10:49+0000\n"
 "Last-Translator: \"Marta (wacm)\" <wacm@odoo.com>\n"
 "Language-Team: Polish <https://translate.odoo.com/projects/odoo-19/"
 "spreadsheet/pl/>\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -270,7 +270,7 @@ msgstr "%s dopasowań we wszystkich arkuszach"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "'${str}'"
-msgstr ""
+msgstr "'${str}'"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -370,7 +370,7 @@ msgstr "=PIVOT(${"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "A"
-msgstr ""
+msgstr "A"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1392,6 +1392,8 @@ msgstr "Tablica lub zakres zawierający zestaw danych do rozważenia."
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Array result was not expanded because it would overwrite data."
 msgstr ""
+"Wynik tablicy nie został rozwinięty, ponieważ spowodowałoby to nadpisanie "
+"danych."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1874,6 +1876,15 @@ msgstr "Nie można ukryć wszystkich wierszy w arkuszu."
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot open the link because the linked sheet is hidden."
 msgstr "Nie można otworzyć linku, ponieważ arkusz linków jest ukryty."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"Cannot perform this action on merged cells. Unmerge the cells and try again."
+msgstr ""
+"Nie można wykonać tej czynności na scalonych komórkach. Rozłącz komórki i "
+"spróbuj ponownie."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4900,6 +4911,8 @@ msgid ""
 "In [[FUNCTION_NAME]], the number of columns of the first matrix (%s) must be "
 "equal to the           number of rows of the second matrix (%s)."
 msgstr ""
+"W [[FUNCTION_NAME]] liczba kolumn pierwszej macierzy (%s) musi być równa "
+"liczbie wierszy drugiej macierzy (%s)."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6195,7 +6208,7 @@ msgstr "Data następnego kuponu po dacie rozliczenia."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/hooks.js:0
 msgid "No"
-msgstr ""
+msgstr "Nie"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6470,7 +6483,7 @@ msgstr "Funkcja OFFSET prowadzi do zakresu poza granicami."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/helpers/geo_json_service.js:0
 msgid "Oceania"
-msgstr ""
+msgstr "Oceania"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -7308,6 +7321,12 @@ msgstr "Zwróć elementy, które pojawiają się dokładnie raz"
 #: code:addons/spreadsheet/static/src/pivot/pivot_functions.js:0
 msgid "Return the current value of a spreadsheet filter."
 msgstr "Zwraca bieżącą wartość filtra arkusza kalkulacyjnego."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/pivot/pivot_functions.js:0
+msgid "Return the label of the current value of a spreadsheet filter."
+msgstr "Zwraca etykietę bieżącej wartości filtru arkusza kalkulacyjnego."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8453,7 +8472,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Table"
-msgstr "Stół"
+msgstr "Tabela"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -12461,11 +12480,9 @@ msgstr "Ta operacja nie jest dozwolona w przypadku wielokrotnego wyboru."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid ""
-"This operation is not possible due to a merge. Please remove the merges "
-"first than try again."
+"This operation would cause tables to overlap. Move or remove the conflicting "
+"table and try again."
 msgstr ""
-"Ta operacja nie jest możliwa z powodu scalenia. Najpierw usuń scalenia, a "
-"następnie spróbuj ponownie."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -14039,6 +14056,13 @@ msgstr "wczoraj"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "zero"
 msgstr "zero"
+
+#~ msgid ""
+#~ "This operation is not possible due to a merge. Please remove the merges "
+#~ "first than try again."
+#~ msgstr ""
+#~ "Ta operacja nie jest możliwa z powodu scalenia. Najpierw usuń scalenia, a "
+#~ "następnie spróbuj ponownie."
 
 #~ msgid ""
 #~ "An unexpected error occurred while pasting content.\n"

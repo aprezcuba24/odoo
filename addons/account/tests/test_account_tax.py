@@ -223,7 +223,6 @@ class TestAccountTax(AccountTestInvoicingCommon):
                 }),
             ],
         })
-        tax_invoice.invalidate_model(fnames=['is_used'])
         self.assertTrue(tax_invoice.is_used)
 
         # Account.reconcile is another of transaction
@@ -238,7 +237,6 @@ class TestAccountTax(AccountTestInvoicingCommon):
                 'tax_ids': [Command.set(tax_reconciliation.ids)],
             })],
         })
-        tax_reconciliation.invalidate_model(fnames=['is_used'])
         self.assertTrue(tax_reconciliation.is_used)
 
     def test_tax_no_duplicate_in_repartition_line(self):
@@ -392,3 +390,138 @@ class TestAccountTax(AccountTestInvoicingCommon):
             hide_original_tax_ids=True,
         ).name_search(name='Name search tax')
         self.assertEqual(result, [(tax_1.id, tax_1.display_name)])
+
+    def test_distribute_delta_amount_smoothly_empty_target_factors(self):
+        """ Empty 'target_factors' must not crash, e.g. a reverse-charge tax
+        with no positive-factor repartition line. """
+        result = self.env['account.tax']._distribute_delta_amount_smoothly(
+            precision_digits=2,
+            delta_amount=0.03,
+            target_factors=[],
+        )
+        self.assertEqual(result, [])
+
+    def test_import_retrieve_tax_from_fixed_allowance_charge(self):
+        """ Test fuzzy matching of fixed taxes like Recupel and Bebat """
+        company = self.company_data['company']
+
+        tax_recupel = self.env['account.tax'].create({
+            'name': 'REC 0.12',
+            'amount_type': 'fixed',
+            'amount': 0.12,
+            'type_tax_use': 'purchase',
+            'company_id': company.id,
+        })
+        tax_bebat = self.env['account.tax'].create({
+            'name': 'Bebat 0.13',
+            'amount_type': 'fixed',
+            'amount': 0.13,
+            'type_tax_use': 'purchase',
+            'company_id': company.id,
+        })
+        random = self.env['account.tax'].create({
+            'name': 'random 0.50',
+            'amount_type': 'fixed',
+            'amount': 0.50,
+            'type_tax_use': 'purchase',
+            'company_id': company.id,
+        })
+
+        dummy_invoice = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'company_id': company.id,
+        })
+
+        def get_search_method(amount, name, amount_type='fixed'):
+            tax_values = {
+                'amount_type': amount_type,
+                'type_tax_use': 'purchase',
+                'amount': amount,
+                'name': name,
+                'invoice_predictive': {'invoice': dummy_invoice},
+            }
+            plan = self.env['account.tax']._import_retrieve_tax_from_fixed_allowance_charge(tax_values)
+            return plan['criteria'][0]['search_method'] if plan else None
+
+        # multiple candidate taxes matching
+        search_method_recupel = get_search_method(0.125, 'REC 0.12 (Kopie)')
+        search_method_bebat = get_search_method(0.125, 'BEBAT')
+
+        self.assertEqual(search_method_recupel({}), tax_recupel)
+        self.assertEqual(search_method_bebat({}), tax_bebat)
+
+        # single candidate tax match, even if the name doesnt match
+        search_method_fallback = get_search_method(0.505, 'Unknown Eco Tax')
+        self.assertEqual(search_method_fallback({}), random)
+
+        # multiple candidate taxes matching, but name doesnt match
+        search_method_not_found = get_search_method(0.125, 'Unknown Eco Tax')
+        self.assertFalse(search_method_not_found({}))
+
+        # percentage tax, early exit
+        search_method_ignored = get_search_method(0.125, 'REC 0.12 (Kopie)', amount_type='percent')
+        self.assertIsNone(search_method_ignored)
+
+    def test_is_domestic_with_duplicate_tax(self):
+        """ Test that the is_domestic field is well computed when duplicating a tax """
+        tax = self.tax_sale_a
+        self.assertTrue(tax.company_id.domestic_fiscal_position_id in tax.fiscal_position_ids)
+        self.assertEqual(tax.is_domestic, True)
+        tax_copy = tax.copy({'name': 'new tax'})
+        self.assertEqual(tax_copy.is_domestic, True)
+
+    def test_quick_create_purchase_tax(self):
+        """ Test that quick-creating a tax preserves the default purchase type. """
+        tax_id, _ = self.env['account.tax'].with_context(
+            default_type_tax_use='purchase',
+        ).name_create('New Purchase Tax')
+        tax = self.env['account.tax'].browse(tax_id)
+
+        self.assertEqual(tax.type_tax_use, 'purchase')
+        self.product.supplier_taxes_id = tax
+        self.assertEqual(self.product.supplier_taxes_id, tax)
+
+    def test_import_retrieve_tax_with_foreign_vat_fiscal_position(self):
+        """ When an EDI import resolves a foreign-VAT fiscal position for the invoice,
+        `_import_retrieve_tax` must not let the `invoice_predictive` country filter
+        fall back to the invoice's default fiscal country: that would exclude every tax
+        from the fiscal position's own foreign country, even though the fiscal position
+        was correctly resolved. """
+        company = self.company_data['company']
+        domestic_tax = self.company_data['default_tax_purchase']
+        foreign_country = self.env.ref('base.be')
+        foreign_vat = 'BE0477472701'
+
+        foreign_tax_group = domestic_tax.tax_group_id.copy({'country_id': foreign_country.id})
+        foreign_tax = domestic_tax.copy({
+            'country_id': foreign_country.id,
+            'tax_group_id': foreign_tax_group.id,
+        })
+        fiscal_position = self.env['account.fiscal.position'].create({
+            'name': 'foreign vat fpos',
+            'company_id': company.id,
+            'country_id': foreign_country.id,
+            'foreign_vat': foreign_vat,
+        })
+
+        invoice = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'company_id': company.id,
+        })
+        self.assertEqual(invoice.tax_country_id, domestic_tax.country_id)
+
+        tax_values = {
+            'amount_type': domestic_tax.amount_type,
+            'type_tax_use': domestic_tax.type_tax_use,
+            'amount': domestic_tax.amount,
+            'invoice_predictive': {'invoice': invoice, 'name': 'Test item', 'partner': self.partner_a},
+            'fiscal_position': fiscal_position,
+        }
+        AccountTax = self.env['account.tax']
+        AccountTax._import_retrieve_tax(
+            search_plan=[AccountTax._import_retrieve_tax_from_price_include_exclude],
+            company=company,
+            tax_values_list=[tax_values],
+        )
+
+        self.assertEqual(tax_values.get('tax'), foreign_tax)

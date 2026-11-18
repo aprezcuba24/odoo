@@ -339,11 +339,12 @@ class StockPickingBatch(models.Model):
 
         target_batch = self[:1]
         other_batches = self[1:]
-        earliest_batch = self.filtered(lambda b: b.scheduled_date).sorted(key=lambda b: b.scheduled_date)[0]
-        merged_batch_vals = earliest_batch._get_merged_batch_vals()
+        earliest_batch = self.filtered(lambda b: b.scheduled_date).sorted(key=lambda b: b.scheduled_date)[:1]
+        merged_batch_vals = earliest_batch._get_merged_batch_vals() if earliest_batch else {}
         target_batch.move_line_ids |= other_batches.move_line_ids
         target_batch.picking_ids |= other_batches.picking_ids
-        target_batch.write(merged_batch_vals)
+        if merged_batch_vals:
+            target_batch.write(merged_batch_vals)
         other_batches.unlink()
         return {
             'type': 'ir.actions.client',
@@ -416,7 +417,18 @@ class StockPickingBatch(models.Model):
     @api.model
     def _prepare_name(self, picking_type, sequence_code, company_id):
         sequence = self.env['ir.sequence'].with_company(company_id).next_by_code(sequence_code) or '/'
-        sequence_prefix, sequence_number = sequence.rsplit('/', 1)
+        split = sequence.rsplit('/', 1)
+        if len(split) != 2:
+            if self:
+                self.message_post(
+                    body=_(
+                        "The sequence '%(sequence)s' is misconfigured. "
+                        "Its prefix should end with a '/' separator.",
+                        sequence=sequence_code,
+                    ),
+                )
+            return f"{picking_type.sequence_code}/{sequence}"
+        sequence_prefix, sequence_number = split
         return f"{sequence_prefix}/{picking_type.sequence_code}/{sequence_number}"
 
     def _sanity_check(self):

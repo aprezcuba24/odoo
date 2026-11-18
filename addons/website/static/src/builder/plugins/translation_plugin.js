@@ -48,7 +48,7 @@ function findOEditable(containerEl) {
 
 export class TranslationPlugin extends Plugin {
     static id = "translation";
-    static dependencies = ["history"];
+    static dependencies = ["history", "valueHistory"];
     static shared = ["getElToTranslationInfoMap"];
 
     /** @type {import("plugins").WebsiteResources} */
@@ -108,6 +108,16 @@ export class TranslationPlugin extends Plugin {
         for (const [translatedEl] of this.elToTranslationInfoMap) {
             if (translatedEl.matches("input[type=hidden].o_translatable_input_hidden")) {
                 translatedEl.setAttribute("type", "text");
+            }
+        }
+
+        // On Firefox, the caret cannot be placed inside the editable content
+        // of a non-editable link, as the browser waits for a possible drag of
+        // the link instead.
+        for (const editableEl of this.editableEls) {
+            const linkEl = editableEl.parentElement.closest("a[href]");
+            if (linkEl && !linkEl.isContentEditable && !linkEl.hasAttribute("draggable")) {
+                linkEl.setAttribute("draggable", "false");
             }
         }
 
@@ -316,6 +326,7 @@ export class TranslationPlugin extends Plugin {
                     elToTranslationInfoMap: elToTranslationInfoMap,
                     addStep: this.dependencies.history.addStep,
                     applyCustomMutation: this.dependencies.history.applyCustomMutation,
+                    setValueProperty: this.dependencies.valueHistory.setValue,
                 });
             });
         }
@@ -376,6 +387,9 @@ export class TranslationPlugin extends Plugin {
     cleanForSave({ root }) {
         root.querySelectorAll(".o_editable_attribute").forEach((el) => {
             el.classList.remove("o_editable_attribute");
+        });
+        root.querySelectorAll("a[href][draggable='false']").forEach((el) => {
+            el.removeAttribute("draggable");
         });
         // Remove the `.o_translation_select` temporary element
         const optionsEl = root.querySelector(".o_translation_select");

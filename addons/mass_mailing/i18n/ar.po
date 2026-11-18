@@ -9,15 +9,15 @@
 # Mustafa J. Kadhem <safi2266@gmail.com>, 2023
 # Martin Trigaux, 2023
 # Malaz Abuidris <msea@odoo.com>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-01 17:35+0000\n"
-"PO-Revision-Date: 2026-04-13 20:46+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-09-01 08:11+0000\n"
 "Last-Translator: \"Malaz Siddig Elsayed Abuidris (msea)\" <msea@odoo.com>\n"
 "Language-Team: Arabic <https://translate.odoo.com/projects/odoo-19/"
 "mass_mailing/ar/>\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: mass_mailing
 #. odoo-python
@@ -246,7 +246,7 @@ msgstr "7 أسرار لتصميم أجمل المنازل في العالم"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_text_contact
 msgid "8.00am - 12.00pm"
-msgstr ""
+msgstr "8:00 صباحًا - 12:00 مساءً"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_text_contact
@@ -1679,6 +1679,11 @@ msgid "Attach a file"
 msgstr "إرفاق ملف"
 
 #. module: mass_mailing
+#: model:ir.model,name:mass_mailing.model_ir_attachment
+msgid "Attachment"
+msgstr ""
+
+#. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_contact__message_attachment_count
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_mailing__message_attachment_count
 msgid "Attachment Count"
@@ -2108,6 +2113,21 @@ msgstr "تم الإلغاء"
 #: model_terms:ir.ui.view,arch_db:mass_mailing.mailing_trace_view_search
 msgid "Cancelled"
 msgstr "تم الإلغاء"
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is configured as the dedicated Email "
+"Marketing server."
+msgstr ""
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is used by mailing '%(mailing)s'."
+msgstr ""
 
 #. module: mass_mailing
 #: model:ir.model.fields,help:mass_mailing.field_mailing_mailing_test__email_to
@@ -2760,6 +2780,7 @@ msgstr ""
 "كلما دخلت إليها."
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__display_name
@@ -3417,6 +3438,7 @@ msgid "I receive too many emails from this list"
 msgstr "تصلني العديد من الرسائل من هذه القائمة"
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__id
@@ -6731,13 +6753,13 @@ msgstr ""
 #: code:addons/mass_mailing/static/src/builder/tabs/design_tab.xml:0
 #: model_terms:ir.ui.view,arch_db:mass_mailing.social_links
 msgid "X"
-msgstr ""
+msgstr "X"
 
 #. module: mass_mailing
 #. odoo-javascript
 #: code:addons/mass_mailing/static/src/builder/tabs/design_tab.xml:0
 msgid "Y"
-msgstr ""
+msgstr "Y"
 
 #. module: mass_mailing
 #. odoo-python

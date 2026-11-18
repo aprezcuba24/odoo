@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from collections import defaultdict
 from datetime import timedelta, datetime, date
 import calendar
@@ -9,12 +7,12 @@ from odoo.exceptions import LockError, ValidationError, UserError, RedirectWarni
 from odoo.tools import date_utils, format_list, SQL
 from odoo.tools.mail import is_html_empty
 from odoo.tools.misc import format_date
+
 from odoo.addons.account.models.account_move import MAX_HASH_VERSION
 from odoo.addons.account.models.product import ACCOUNT_DOMAIN
 from odoo.addons.account.models.partner import _ref_company_registry
 from odoo.addons.base_vat.models.res_partner import _ref_vat
 from odoo.fields import Domain
-
 
 MONTH_SELECTION = [
     ('1', 'January'),
@@ -163,14 +161,6 @@ class ResCompany(models.Model):
         comodel_name='ir.sequence',
         readonly=True,
         copy=False,
-        default=lambda self: self.env['ir.sequence'].sudo().create({
-            'name': _("Group Payments Number Sequence"),
-            'implementation': 'no_gap',
-            'padding': 5,
-            'use_date_range': True,
-            'company_id': self.id,
-            'prefix': 'GROUP/%(year)s/',
-        }),
     )
 
     #Fields of the setup step for opening move
@@ -182,7 +172,7 @@ class ResCompany(models.Model):
     terms_type = fields.Selection([('plain', 'Add a Note'), ('html', 'Add a link to a Web Page')],
                                   string='Terms & Conditions format', default='plain')
     invoice_terms_html = fields.Html(string='Default Terms and Conditions as a Web page', translate=True,
-                                     sanitize_attributes=False,
+                                     sanitize_attributes=False, sanitize_form=False,
                                      compute='_compute_invoice_terms_html', store=True, readonly=False)
 
     # Needed in the Point of Sale
@@ -362,10 +352,10 @@ class ResCompany(models.Model):
     def _compute_domestic_fiscal_position_id(self):
         for company in self:
             potential_domestic_fps = company.fiscal_position_ids.filtered_domain(
-            Domain('country_id', '=', company.country_id.id)
+            Domain('country_id', '=', company.account_fiscal_country_id.id)
             | Domain([
                     ('country_id', '=', False),
-                    ('country_group_id', 'in', company.country_id.country_group_ids.ids),
+                    ('country_group_id', 'in', company.account_fiscal_country_id.country_group_ids.ids),
                 ]),
             ).sorted(lambda x: x.country_id.id or float('inf')).sorted('sequence')
             company.domestic_fiscal_position_id = potential_domestic_fps[0] if potential_domestic_fps else False
@@ -475,6 +465,25 @@ class ResCompany(models.Model):
         for company in self:
             onboardings.with_company(company)._search_or_create_progress()
 
+    def _get_batch_payment_sequence_values(self):
+        self.ensure_one()
+        return {
+            'name': _("Group Payments Number Sequence"),
+            'implementation': 'no_gap',
+            'padding': 5,
+            'use_date_range': True,
+            'company_id': self.id,
+            'prefix': 'GROUP/%(range_year)s/',
+        }
+
+    def _create_batch_payment_sequence(self):
+        for company in self:
+            if not company.batch_payment_sequence_id:
+                sequence = self.env['ir.sequence'].sudo().create(
+                    company._get_batch_payment_sequence_values()
+                )
+                company.batch_payment_sequence_id = sequence
+
     @api.model_create_multi
     def create(self, vals_list):
         companies = super().create(vals_list)
@@ -487,6 +496,7 @@ class ResCompany(models.Model):
                         install_demo=False,
                     )
                 self.env.cr.precommit.add(try_loading)
+            company._create_batch_payment_sequence()
         companies._set_category_defaults()
         return companies
 
@@ -982,7 +992,8 @@ class ResCompany(models.Model):
     def _existing_accounting(self) -> bool:
         """Return True iff some accounting entries have already been made for the current company."""
         self.ensure_one()
-        return bool(self.env['account.move.line'].sudo().search_count([('company_id', 'child_of', self.id)], limit=1))
+        child_company_ids = self.sudo().with_context(active_test=False).search([('id', 'child_of', self.id)]).ids
+        return bool(self.env['account.move.line'].sudo().search_count([('company_id', 'in', child_company_ids)], limit=1))
 
     def _chart_template_selection(self):
         return self.env['account.chart.template']._select_chart_template(self.country_id)
@@ -1114,15 +1125,13 @@ class ResCompany(models.Model):
     @api.depends('country_id', 'account_fiscal_country_id')
     def _compute_company_vat_placeholder(self):
         for company in self:
-            placeholder = _("/ if not applicable")
+            expected_vat = ''
             if company.country_id or company.account_fiscal_country_id:
                 expected_vat = _ref_vat.get(
                     (company.country_id.code or company.account_fiscal_country_id.code).lower()
                 )
-                if expected_vat:
-                    placeholder = _("%s, or / if not applicable", expected_vat)
 
-            company.company_vat_placeholder = placeholder
+            company.company_vat_placeholder = self.env._(expected_vat or '')  # pylint: disable=E8502
 
     @api.depends('country_id', 'account_fiscal_country_id')
     def _compute_company_registry_placeholder(self):

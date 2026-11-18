@@ -75,7 +75,7 @@ class SaleOrder(models.Model):
         for order in confirmed_so:
             if order.id not in loyalty_history_data_per_order:
                 continue
-            coupons = order.coupon_point_ids.coupon_id
+            coupons = order.sudo().coupon_point_ids.coupon_id
             coupon_point_name = (len(coupons) == 1 and coupons.point_name) or _("Points")
             order.loyalty_data = {
                 'point_name': coupon_point_name,
@@ -84,16 +84,18 @@ class SaleOrder(models.Model):
             }
 
     def _compute_gift_card_count(self):
-        gift_card_data = dict(
-            self.env['loyalty.card']._read_group(
-                domain=[
-                    ('order_id', 'in', self.ids),
-                    ('program_type', '=', 'gift_card'),
-                ],
-                groupby=['order_id'],
-                aggregates=['__count'],
+        gift_card_data = {}
+        if self.env['loyalty.card'].has_access('read'):
+            gift_card_data = dict(
+                self.env['loyalty.card']._read_group(
+                    domain=[
+                        ('order_id', 'in', self.ids),
+                        ('program_type', '=', 'gift_card'),
+                    ],
+                    groupby=['order_id'],
+                    aggregates=['__count'],
+                )
             )
-        )
         for order in self:
             order.gift_card_count = gift_card_data.get(order, 0)
 
@@ -203,7 +205,7 @@ class SaleOrder(models.Model):
         self.coupon_point_ids.coupon_id.sudo().filtered(
             lambda c: not c.program_id.is_nominative and c.order_id in self and not c.use_count)\
             .unlink()
-        self.coupon_point_ids.unlink()
+        self.coupon_point_ids.sudo().unlink()
         return res
 
     def action_open_reward_wizard(self):
@@ -337,6 +339,11 @@ class SaleOrder(models.Model):
             # Gift cards and eWallets are applied on the total order amount
             # Other types of programs are not expected to apply on delivery lines
             lines -= self._get_no_effect_on_threshold_lines()
+        else:
+            # Prevent paying for a payment program's own top-up product using that
+            # same program (e.g. topping up an eWallet by paying with the eWallet).
+            top_up_products = reward.program_id.trigger_product_ids
+            lines -= lines.filtered(lambda line: line.product_id in top_up_products)
 
         discountable = 0
         discountable_per_tax = defaultdict(float)
@@ -819,9 +826,18 @@ class SaleOrder(models.Model):
             ('order_model', '=', self._name),
             ('order_id', '=', self.id),
         ], limit=1)
-        order_coupon_history.update({
-            'used': order_coupon_history.used + points,
-        })
+        if order_coupon_history:
+            order_coupon_history.update({'used': order_coupon_history.used + points})
+        else:
+            issued = self.coupon_point_ids.filtered(lambda p: p.coupon_id == coupon_id).points
+            self.env['loyalty.history'].create({
+                'card_id': coupon_id.id,
+                'order_model': self._name,
+                'order_id': self.id,
+                'description': _("Order %s", self.display_name),
+                'issued': issued,
+                'used': points,
+            })
 
     def _remove_program_from_points(self, programs):
         self.coupon_point_ids.filtered(lambda p: p.coupon_id.program_id in programs).sudo().unlink()
@@ -1533,3 +1549,19 @@ class SaleOrder(models.Model):
             self._force_lines_to_invoice_policy_order()
             invoice = self._create_invoices(final=True)
             invoice.action_post()
+
+            if invoice._is_ready_to_be_sent():
+                send_context = {'allow_raising': False, 'allow_fallback_pdf': True}
+
+                default_template_param = (
+                    self.env['ir.config_parameter']
+                    .sudo()
+                    .get_param('sale.default_invoice_email_template', False)
+                )
+
+                if default_template_param:
+                    mail_template = self.env['mail.template'].sudo().browse(int(default_template_param))
+                    if mail_template.exists():
+                        send_context['mail_template'] = mail_template
+
+                self.env['account.move.send']._generate_and_send_invoices_post_commit(invoice, **send_context)

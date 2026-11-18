@@ -27,6 +27,7 @@ import {
     isEditorTab,
     isPhrasingContent,
     getDeepestEditablePosition,
+    isVisible,
 } from "../utils/dom_info";
 import {
     childNodes,
@@ -249,7 +250,8 @@ export class DomPlugin extends Plugin {
             container.replaceChildren(...childNodes(nodeToUnwrap));
         } else if (container.childElementCount > 1) {
             const isSelectionAtStart =
-                firstLeaf(block) === selection.anchorNode && selection.anchorOffset === 0;
+                firstLeaf(block) === firstLeaf(selection.anchorNode) &&
+                selection.anchorOffset === 0;
             const isSelectionAtEnd =
                 lastLeaf(block) === selection.focusNode &&
                 selection.focusOffset === nodeSize(selection.focusNode);
@@ -372,7 +374,10 @@ export class DomPlugin extends Plugin {
                     if (!insertBefore) {
                         offset += 1;
                     }
-                    if (offset) {
+                    if (
+                        (offset === 1 && !insertBefore) ||
+                        (offset && isVisible(currentNode?.previousSibling))
+                    ) {
                         const [left, right] = this.dependencies.split.splitElement(
                             currentNode.parentElement,
                             offset
@@ -431,7 +436,8 @@ export class DomPlugin extends Plugin {
             if (
                 !this.areInlinesAllowedAtRoot(parent) &&
                 this.isEditionBoundary(parent) &&
-                allowsParagraphRelatedElements(parent)
+                allowsParagraphRelatedElements(parent) &&
+                !isPhrasingContent(parent)
             ) {
                 // Ensure that edition boundaries do not have inline content.
                 wrapInlinesInBlocks(parent, {

@@ -7,16 +7,16 @@
 # Friederike Fasterling-Nesselbosch, 2022
 # Martin Trigaux, 2023
 # Larissa Manderfeld, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Larissa Manderfeld (lman)" <lman@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-01 17:35+0000\n"
-"PO-Revision-Date: 2026-06-08 10:53+0000\n"
-"Last-Translator: \"Larissa Manderfeld (lman)\" <lman@odoo.com>\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-08-07 22:33+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: German <https://translate.odoo.com/projects/odoo-19/"
 "mass_mailing/de/>\n"
 "Language: de\n"
@@ -1715,6 +1715,11 @@ msgid "Attach a file"
 msgstr "Datei anhängen"
 
 #. module: mass_mailing
+#: model:ir.model,name:mass_mailing.model_ir_attachment
+msgid "Attachment"
+msgstr ""
+
+#. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_contact__message_attachment_count
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_mailing__message_attachment_count
 msgid "Attachment Count"
@@ -2153,6 +2158,25 @@ msgstr "Abgebrochen"
 #: model_terms:ir.ui.view,arch_db:mass_mailing.mailing_trace_view_search
 msgid "Cancelled"
 msgstr "Abgebrochen"
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is configured as the dedicated Email "
+"Marketing server."
+msgstr ""
+"Für „%(server)s“ kann kein Eigentümer festgelegt werden, da es als "
+"dedizierter Server für E-Mail-Marketing konfiguriert ist."
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is used by mailing '%(mailing)s'."
+msgstr ""
+"Es kann kein Eigentümer für „%(server)s“ festgelegt werden: Es wird vom "
+"Mailing „%(mailing)s“ verwendet."
 
 #. module: mass_mailing
 #: model:ir.model.fields,help:mass_mailing.field_mailing_mailing_test__email_to
@@ -2820,6 +2844,7 @@ msgstr ""
 "ihn betreten, vor Stolz strahlen werden</strong>."
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__display_name
@@ -3490,6 +3515,7 @@ msgid "I receive too many emails from this list"
 msgstr "Ich erhalte zu viele E-Mails von dieser Liste"
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__id

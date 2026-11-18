@@ -81,14 +81,13 @@ patch(PosStore.prototype, {
                 // Try auto claiming rewards
                 const claimableRewards = order.getClaimableRewards(false, false, true);
                 let changed = false;
-                for (const { coupon_id, reward } of claimableRewards) {
+                for (const { coupon_id, reward, product } of claimableRewards) {
                     if (
                         reward.program_id.reward_ids.length === 1 &&
                         !reward.program_id.is_nominative &&
-                        (reward.reward_type !== "product" ||
-                            (reward.reward_type == "product" && !reward.multi_product))
+                        (reward.reward_type !== "product" || product)
                     ) {
-                        order._applyReward(reward, coupon_id);
+                        order._applyReward(reward, coupon_id, { product });
                         changed = true;
                     }
                 }
@@ -243,6 +242,11 @@ patch(PosStore.prototype, {
             })
         );
         order._code_activated_coupon_ids = [["unlink", ...toUnlink]];
+
+        if (order.relinkRewardLines) {
+            order.relinkRewardLines = false;
+            order._relinkRewardLinesWithoutCoupon();
+        }
     },
     async activateCode(code) {
         const order = this.getOrder();
@@ -360,6 +364,9 @@ patch(PosStore.prototype, {
                     this.models["loyalty.card"].get(pe.coupon_id)
                 )
             );
+            order._restoreCodeActivatedCoupons();
+            // The point changes are only known after `updatePrograms`.
+            order.relinkRewardLines = true;
         });
     },
     async applyDiscount(percent, order = this.getOrder()) {
@@ -384,40 +391,40 @@ patch(PosStore.prototype, {
                     .filter((p) => ["gift_card", "ewallet"].includes(p.program_type))
             ),
         ];
-        let selectedProgram = null;
-        if (linkedPrograms.length > 1) {
-            selectedProgram = await makeAwaitable(this.dialog, SelectionPopup, {
-                title: _t("Select program"),
-                list: linkedPrograms.map((program) => ({
-                    id: program.id,
-                    item: program,
-                    label: program.name,
-                })),
-            });
-            if (!selectedProgram) {
-                return;
+        let selectedProgram = opt.eWalletGiftCardProgram || null;
+        if (!selectedProgram) {
+            if (linkedPrograms.length > 1) {
+                selectedProgram = await makeAwaitable(this.dialog, SelectionPopup, {
+                    title: _t("Select program"),
+                    list: linkedPrograms.map((program) => ({
+                        id: program.id,
+                        item: program,
+                        label: program.name,
+                    })),
+                });
+                if (!selectedProgram) {
+                    return;
+                }
+            } else if (linkedPrograms.length === 1) {
+                selectedProgram = linkedPrograms[0];
             }
-        } else if (linkedPrograms.length === 1) {
-            selectedProgram = linkedPrograms[0];
         }
 
-        const orderTotal = this.getOrder().priceIncl;
-        if (
-            selectedProgram &&
-            ["gift_card", "ewallet"].includes(selectedProgram.program_type) &&
-            orderTotal < 0
-        ) {
-            opt.price_unit = -orderTotal;
-        }
-        if (selectedProgram && selectedProgram.program_type == "gift_card") {
-            const shouldProceed = await this._setupGiftCardOptions(selectedProgram, opt);
-            if (!shouldProceed) {
-                return;
+        if (selectedProgram) {
+            const orderTotal = this.getOrder().priceIncl;
+            if (["gift_card", "ewallet"].includes(selectedProgram.program_type) && orderTotal < 0) {
+                opt.price_unit = -orderTotal;
             }
-        } else if (selectedProgram && selectedProgram.program_type == "ewallet") {
-            const shouldProceed = await this.setupEWalletOptions(selectedProgram, opt);
-            if (!shouldProceed) {
-                return;
+            if (selectedProgram.program_type == "gift_card") {
+                const shouldProceed = await this._setupGiftCardOptions(selectedProgram, opt);
+                if (!shouldProceed) {
+                    return;
+                }
+            } else if (selectedProgram.program_type == "ewallet") {
+                const shouldProceed = await this.setupEWalletOptions(selectedProgram, opt);
+                if (!shouldProceed) {
+                    return;
+                }
             }
         }
         const potentialRewards = this.getPotentialFreeProductRewards();
@@ -691,9 +698,12 @@ patch(PosStore.prototype, {
     getLoyaltyCards(partner) {
         const loyaltyCards = [];
         if (this.partnerId2CouponIds[partner.id]) {
-            this.partnerId2CouponIds[partner.id].forEach((couponId) =>
-                loyaltyCards.push(this.models["loyalty.card"].get(couponId))
-            );
+            this.partnerId2CouponIds[partner.id].forEach((couponId) => {
+                const loyaltyCard = this.models["loyalty.card"].get(couponId);
+                if (loyaltyCard) {
+                    loyaltyCards.push(loyaltyCard);
+                }
+            });
         }
         return loyaltyCards;
     },
@@ -778,6 +788,9 @@ patch(PosStore.prototype, {
             return agg;
         }, {});
         for (const line of rewardLines) {
+            if (!line.coupon_id) {
+                continue;
+            }
             const reward = line.reward_id;
             const couponId = line.coupon_id.id;
             if (!couponData[couponId]) {

@@ -2,15 +2,16 @@
 # This file contains the translation of the following modules:
 # * spreadsheet
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
+# Ryoko Tsuda <ryoko@quartile.co>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-24 17:37+0000\n"
-"PO-Revision-Date: 2026-06-06 15:46+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-11-12 06:39+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "spreadsheet/ja/>\n"
@@ -19,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -283,7 +284,7 @@ msgstr "(次へ)"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "(previous)"
-msgstr "(前へ)"
+msgstr "(前期)"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1807,6 +1808,13 @@ msgstr "シートの全ての行を隠すことはできません。"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot open the link because the linked sheet is hidden."
 msgstr "リンクされたシートが隠されているためリンクを開けません。"
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"Cannot perform this action on merged cells. Unmerge the cells and try again."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4607,7 +4615,7 @@ msgstr "時間"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Hour component of a specific time."
-msgstr "特定の時間のHour要素。"
+msgstr "指定した時刻の時(hour)部分。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5330,7 +5338,7 @@ msgstr "直近12か月"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/global_filters/helpers.js:0
 msgid "Last 30 Days"
-msgstr "過去30日"
+msgstr "直近30日"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5342,7 +5350,7 @@ msgstr "直近７日"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/global_filters/helpers.js:0
 msgid "Last 90 Days"
-msgstr "過去90日"
+msgstr "直近90日"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5508,7 +5516,7 @@ msgstr "さらに読み込む..."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "Locale"
-msgstr "ローカル"
+msgstr "ロケール"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5862,7 +5870,7 @@ msgstr "分"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Minute component of a specific time."
-msgstr "特定の時刻の分(分成分)。"
+msgstr "指定した時刻の分(minute)部分。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6054,7 +6062,7 @@ msgstr "非定期のキャッシュフローに基づく正味現在価値。"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Net working days between two dates (specifying weekends)."
-msgstr "2 つの日付の間の正味稼働日数(週末を指定)。"
+msgstr "2つの日付の間の正味の営業日数(週末を指定)。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6639,13 +6647,13 @@ msgstr "ピボット #%(formulaId)s"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/index.js:0
 msgid "Pivot #%(pivot_id)s"
-msgstr "ピボット数%(pivot_id)s"
+msgstr "ピボット #%(pivot_id)s"
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Pivot #%s"
-msgstr "ピボット数%s"
+msgstr "ピボット #%s"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -7181,6 +7189,12 @@ msgstr "出現回数が 1 回のみの項目を返す"
 #: code:addons/spreadsheet/static/src/pivot/pivot_functions.js:0
 msgid "Return the current value of a spreadsheet filter."
 msgstr "スプレッドシートフィルタの現在の値を返します。"
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/pivot/pivot_functions.js:0
+msgid "Return the label of the current value of a spreadsheet filter."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8899,7 +8913,7 @@ msgid ""
 "resizing your browser window or adjusting frozen rows and columns."
 msgstr ""
 "現在のウィンドウが小さすぎて、シートが正しく表示されません。ブラウザのウィン"
-"ドウサイズを変更するか、固定された行とカラムを調整して下さい。"
+"ドウサイズを変更するか、固定された行と列を調整して下さい。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11164,7 +11178,7 @@ msgstr "参照元文字列。"
 msgid ""
 "The start date of the period from which to calculate the number of net "
 "working days."
-msgstr "正味労働日数を計算する期間の開始日"
+msgstr "正味の営業日数の計算対象となる期間の開始日。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -12205,10 +12219,9 @@ msgstr "この操作は、複数選択を許可されていません。"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid ""
-"This operation is not possible due to a merge. Please remove the merges "
-"first than try again."
+"This operation would cause tables to overlap. Move or remove the conflicting "
+"table and try again."
 msgstr ""
-"マージのためこの操作ができません。マージを削除してから再試行して下さい。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -12627,7 +12640,7 @@ msgstr "無題スプレッドシート"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Up to current column"
-msgstr "現在のカラムまで"
+msgstr "現在の列まで"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -13777,6 +13790,12 @@ msgstr "昨日"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "zero"
 msgstr "ゼロ"
+
+#~ msgid ""
+#~ "This operation is not possible due to a merge. Please remove the merges "
+#~ "first than try again."
+#~ msgstr ""
+#~ "マージのためこの操作ができません。マージを削除してから再試行して下さい。"
 
 #~ msgid ""
 #~ "An unexpected error occurred while pasting content.\n"

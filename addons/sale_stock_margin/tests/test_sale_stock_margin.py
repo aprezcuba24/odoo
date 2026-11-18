@@ -68,6 +68,29 @@ class TestSaleStockMargin(TestStockValuationCommon):
     # TESTS #
     #########
 
+    def test_margin_split_done_move_line(self):
+        """Splitting the move line of a done delivery (move quantity and
+        move lines saved together, as the detailed operations form does)
+        must keep the move value and the SO line cost unchanged."""
+        self._make_in_move(self.product_avco, 20, 100)
+        sale_order = self._create_sale_order()
+        order_line = self._create_sale_order_line(sale_order, self.product_avco, 10, 150)
+        sale_order.action_confirm()
+        picking = sale_order.picking_ids
+        picking.button_validate()
+        picking.move_ids.write({
+            'quantity': 10,
+            'move_line_ids': [
+                Command.create({
+                    'product_id': self.product_avco.id,
+                    'quantity': 6,
+                }),
+                Command.update(picking.move_ids.move_line_ids.id, {'quantity': 4}),
+            ]
+        })
+        self.assertRecordValues(picking.move_ids, [{'quantity': 10, 'value': 1000}])
+        self.assertRecordValues(order_line, [{'qty_delivered': 10, 'purchase_price': 100, 'margin': 500}])
+
     def test_sale_stock_margin_1(self):
         sale_order = self._create_sale_order()
         product = self._create_product()
@@ -667,3 +690,19 @@ class TestSaleStockMargin(TestStockValuationCommon):
         so.picking_ids.button_validate()
         self.assertEqual(po.order_line.price_unit, 20)
         self.assertEqual(so.order_line.purchase_price, 20)
+
+    def test_fifo_return_and_redelivery_purchase_price(self):
+        """ A FIFO delivery valued at 1000 is returned, then the return is returned to the customer
+        and consumes the receipt at 2. The cost of the 10 delivered units is the one of the second
+        delivery, as the first one is cancelled by its return.
+        """
+        self._make_in_move(self.product_fifo_auto, 10, 1000)
+        self._make_in_move(self.product_fifo_auto, 10, 2)
+        sale_order = self._create_sale_order()
+        order_line = self._create_sale_order_line(sale_order, self.product_fifo_auto, 10)
+        sale_order.action_confirm()
+        delivery = sale_order.picking_ids
+        delivery.button_validate()
+        return_move = self._make_return(delivery.move_ids, 10)
+        self._make_return(return_move, 10)
+        self.assertRecordValues(order_line, [{'qty_delivered': 10, 'purchase_price': 2}])

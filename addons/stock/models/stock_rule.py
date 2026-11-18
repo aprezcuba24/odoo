@@ -262,6 +262,8 @@ class StockRule(models.Model):
             final_location_id = move_to_copy.location_final_id.id
         if move_to_copy.location_final_id and move_to_copy.location_final_id._child_of(self.location_dest_id):
             location_dest_id = move_to_copy.location_final_id.id
+        elif move_to_copy.partner_id and self.location_dest_id.usage == 'customer':
+            location_dest_id = move_to_copy.partner_id.property_stock_customer.id
         if move_to_copy.product_uom.compare(move_to_copy.product_uom_qty, 0) < 0:
             copied_quantity = move_to_copy.product_uom_qty
         if not company_id:
@@ -434,7 +436,9 @@ class StockRule(models.Model):
         bypass_global_horizon_days = self.env.context.get('bypass_global_horizon_days')
         if bypass_global_horizon_days:
             return delays, delay_description
-        global_horizon_days = self.env['stock.warehouse.orderpoint'].get_horizon_days()
+        orderpoint = values.get('orderpoint_id') or self.env['stock.warehouse.orderpoint']
+        # keep the rules' context: mrp sets global_horizon_days=0 on pre-production rules
+        global_horizon_days = orderpoint.with_context(self.env.context).get_horizon_days()
         if global_horizon_days:
             delays['horizon_time'] += global_horizon_days
             if not bypass_delay_description:
@@ -697,10 +701,11 @@ class StockRule(models.Model):
         orderpoints = self.env['stock.warehouse.orderpoint'].search(domain)
         orderpoints.sudo()._compute_qty_to_order_computed()
         orderpoints.sudo()._compute_deadline_date()
-        orderpoints.sudo()._procure_orderpoint_confirm(use_new_cursor=use_new_cursor, company_id=company_id, raise_user_error=False)
 
         if use_new_cursor:
             self.env['ir.cron']._commit_progress(1)
+
+        orderpoints.sudo()._procure_orderpoint_confirm(use_new_cursor=use_new_cursor, company_id=company_id, raise_user_error=False)
 
         # Search all confirmed stock_moves and try to assign them
         domain = self._get_moves_to_assign_domain(company_id)

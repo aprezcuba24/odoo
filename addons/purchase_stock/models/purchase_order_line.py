@@ -3,7 +3,7 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import SUPERUSER_ID, api, Command, fields, models, _
-from odoo.tools.float_utils import float_compare, float_is_zero, float_round
+from odoo.tools.float_utils import float_compare
 from odoo.exceptions import UserError
 
 
@@ -71,7 +71,7 @@ class PurchaseOrderLine(models.Model):
                             # receive the product physically in our stock. To avoid counting the
                             # quantity twice, we do nothing.
                             pass
-                        elif move.origin_returned_move_id and move.origin_returned_move_id._is_purchase_return() and not move.to_refund:
+                        elif move.origin_returned_move_id and move.origin_returned_move_id._is_purchase_return() and not move.to_refund or not move._should_count_for_quantity_received():
                             pass
                         else:
                             total += move.product_uom._compute_quantity(move.quantity, line.product_uom_id, rounding_method='HALF-UP')
@@ -109,7 +109,7 @@ class PurchaseOrderLine(models.Model):
         previous_product_uom_qty = {line.id: line.product_uom_qty for line in lines}
         previous_product_qty = {line.id: line.product_qty for line in lines}
         result = super().write(values)
-        if 'price_unit' in values:
+        if 'price_unit' in values or 'discount' in values:
             for line in lines:
                 # Avoid updating kit components' stock.move
                 moves = line.move_ids.filtered(lambda s: s.state not in ('cancel', 'done') and s.product_id == line.product_id)
@@ -117,7 +117,7 @@ class PurchaseOrderLine(models.Model):
         if 'product_qty' in values:
             lines = lines.filtered(lambda l: l.product_uom_id.compare(previous_product_qty[l.id], l.product_qty) != 0)
             lines.with_context(previous_product_qty=previous_product_uom_qty)._create_or_update_picking()
-        valuation_trigger = ['price_unit', 'product_qty', 'product_uom']
+        valuation_trigger = ['price_unit', 'discount', 'tax_ids', 'product_qty', 'product_uom_id']
         if any(field in valuation_trigger for field in values):
             self.move_ids.filtered(lambda m: m.is_valued)._set_value()
         return result
@@ -240,7 +240,6 @@ class PurchaseOrderLine(models.Model):
         self.ensure_one()
         order = self.order_id
         price_unit = self.price_unit_discounted
-        price_unit_prec = self.env['decimal.precision'].precision_get('Product Price')
         if self.tax_ids:
             qty = self.product_qty or 1
             price_unit = self.tax_ids.compute_all(
@@ -259,7 +258,7 @@ class PurchaseOrderLine(models.Model):
             conversion_date = self.env.context.get('conversion_date', self.date_order) or fields.Date.today()
             price_unit = order.currency_id._convert(
                 price_unit, order.company_id.currency_id, self.company_id, conversion_date, round=False)
-        return float_round(price_unit, precision_digits=price_unit_prec)
+        return price_unit
 
     def _get_qty_procurement(self):
         self.ensure_one()
@@ -310,6 +309,7 @@ class PurchaseOrderLine(models.Model):
             'warehouse_id': self.order_id.picking_type_id.warehouse_id.id,
             'product_uom_qty': product_uom_qty,
             'product_uom': product_uom.id,
+            'never_product_template_attribute_value_ids': self.product_no_variant_attribute_value_ids,
             'sequence': self.sequence,
         }
 
@@ -377,9 +377,15 @@ class PurchaseOrderLine(models.Model):
         description_picking = ''
         if values.get('product_description_variants'):
             description_picking = values['product_description_variants']
+        has_temp_manual_orderpoint = (
+            values.get('orderpoint_id')
+            and values['orderpoint_id'].create_uid.id == SUPERUSER_ID
+            and values['orderpoint_id'].trigger == 'manual'
+        )
         lines = self.filtered(
             lambda l: l.propagate_cancel == values['propagate_cancel']
-            and (l.orderpoint_id in [values['orderpoint_id'], False] if values['orderpoint_id'] and not values['move_dest_ids'] else True)
+            and (l.orderpoint_id in [values['orderpoint_id'], False] if values['orderpoint_id']
+            and not values['move_dest_ids'] and not has_temp_manual_orderpoint else True)
             and (l.product_uom_id == product_uom if values.get('force_uom') else True)
         )
 

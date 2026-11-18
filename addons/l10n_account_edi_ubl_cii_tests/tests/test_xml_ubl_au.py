@@ -50,6 +50,10 @@ class TestUBLAU(TestUBLCommon):
     ####################################################
 
     def test_export_import_invoice(self):
+        company = self.company_data['company']
+        if "predict_bill_product" in company._fields:
+            company.predict_bill_product = True
+
         invoice = self._generate_move(
             self.partner_1,
             self.partner_2,
@@ -105,10 +109,13 @@ class TestUBLAU(TestUBLCommon):
             expected_file_path='from_odoo/a_nz_out_invoice.xml',
         )
         self.assertEqual(attachment.name[-8:], "a_nz.xml")
-        self.partner_1.bank_ids.unlink()
         self._assert_imported_invoice_from_etree(invoice, attachment)
 
     def test_export_import_refund(self):
+        company = self.company_data['company']
+        if "predict_bill_product" in company._fields:
+            company.predict_bill_product = True
+
         refund = self._generate_move(
             self.partner_1,
             self.partner_2,

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:38+0000\n"
-"PO-Revision-Date: 2026-05-05 12:54+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-08-10 13:12+0000\n"
 "Last-Translator: \"Malaz Siddig Elsayed Abuidris (msea)\" <msea@odoo.com>\n"
 "Language-Team: Arabic <https://translate.odoo.com/projects/odoo-19/"
 "account_peppol_response/ar/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: account_peppol_response
 #: model_terms:ir.ui.view,arch_db:account_peppol_response.account_peppol_rejection_wizard_view_form
@@ -29,8 +29,16 @@ msgstr "<span>سيتم إرسال هذه المعلومات مع ردك.</span>"
 #. odoo-python
 #: code:addons/account_peppol_response/models/account_edi_proxy_user.py:0
 msgid ""
-"A Peppol response was sent to the Peppol Access Point declaring you "
-"%(status)s this document."
+"A Peppol response declaring you %(status)s this document could not be sent "
+"to the Peppol Access Point."
+msgstr ""
+
+#. module: account_peppol_response
+#. odoo-python
+#: code:addons/account_peppol_response/models/account_edi_proxy_user.py:0
+msgid ""
+"A Peppol response was sent to the Peppol Access Point declaring you %"
+"(status)s this document."
 msgstr ""
 "تم إرسال استجابة Peppol إلى نقطة وصول Peppol تعلن أنك %(status)s هذا المستند."
 
@@ -47,20 +55,21 @@ msgstr "شكر وتقدير"
 #. module: account_peppol_response
 #: model_terms:ir.ui.view,arch_db:account_peppol_response.account_peppol_rejection_wizard_view_form
 msgid "Actions to suggest"
-msgstr ""
+msgstr "الإجراءات المقترحة"
 
 #. module: account_peppol_response
 #. odoo-python
 #: code:addons/account_peppol_response/models/account_edi_proxy_user.py:0
 msgid ""
-"An error occurred while responding to this invoice's expeditor.%(br)sStatus:"
-" %(status)s - %(error)s"
+"An error occurred while responding to this invoice's expeditor.%(br)sStatus: "
+"%(status)s - %(error)s"
 msgstr ""
+"حدث خطأ أثناء الرد على مرسل هذه الفاتورة.%(br)sالحالة: %(status)s - %(error)s"
 
 #. module: account_peppol_response
 #: model:ir.model.fields.selection,name:account_peppol_response.selection__account_peppol_response__response_code__ap
 msgid "Approval"
-msgstr ""
+msgstr "الموافقة"
 
 #. module: account_peppol_response
 #: model:ir.model.fields.selection,name:account_peppol_response.selection__account_move__peppol_move_state__ap
@@ -381,8 +390,8 @@ msgid ""
 "The Peppol receiver of this document has rejected it with the following "
 "information:%(br)s%(rejection_message)s"
 msgstr ""
-"رفض مستلم Peppol لهذا المستند مع المعلومات التالية:%(br)s%(rejection_message)"
-"s"
+"رفض مستلم Peppol لهذا المستند مع المعلومات التالية:%(br)s%"
+"(rejection_message)s"
 
 #. module: account_peppol_response
 #. odoo-python
@@ -403,8 +412,9 @@ msgid ""
 "document to be accepted when sent again (eventually). These will be sent to "
 "the document's sender. Not mandatory."
 msgstr ""
-"الإجراءات التي سيتم اقتراحها على مرسل المستند حتى يتم قبول المستند عند إرساله "
-"مرة أخرى (في النهاية). سيتم إرسال هذه الإجراءات إلى مرسل المستند. غير إلزامي."
+"الإجراءات التي سيتم اقتراحها على مرسل المستند حتى يتم قبول المستند عند "
+"إرساله مرة أخرى (في النهاية). سيتم إرسال هذه الإجراءات إلى مرسل المستند. غير "
+"إلزامي."
 
 #. module: account_peppol_response
 #: model:ir.model.fields,help:account_peppol_response.field_account_peppol_rejection_wizard__reason_ids

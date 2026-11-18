@@ -14,15 +14,15 @@
 # Simon S, 2022
 # Martin Trigaux, 2022
 # Mikael Åkerberg <mikael.akerberg@mariaakerberg.com>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # Hanna Kharraziha <hakha@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:38+0000\n"
-"PO-Revision-Date: 2026-06-11 17:46+0000\n"
+"POT-Creation-Date: 2026-10-30 17:38+0000\n"
+"PO-Revision-Date: 2026-11-04 12:35+0000\n"
 "Last-Translator: Hanna Kharraziha <hakha@odoo.com>\n"
 "Language-Team: Swedish <https://translate.odoo.com/projects/odoo-19/"
 "stock_account/sv/>\n"
@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: stock_account
 #. odoo-python
@@ -353,7 +353,7 @@ msgstr ""
 #. module: stock_account
 #: model:ir.model.fields.selection,name:stock_account.selection__res_company__inventory_period__daily
 msgid "Daily"
-msgstr "Dagligen"
+msgstr "Varje dag"
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_product_value__date
@@ -560,7 +560,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:stock_account.field_product_category__property_valuation
 #: model_terms:ir.ui.view,arch_db:stock_account.view_category_property_form_stock
 msgid "Inventory Valuation"
-msgstr "Värdering av lager"
+msgstr "Lagervärdering"
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_stock_move__is_dropship
@@ -669,7 +669,7 @@ msgstr ""
 #. module: stock_account
 #: model:ir.model.fields.selection,name:stock_account.selection__res_company__inventory_period__monthly
 msgid "Monthly"
-msgstr "Månatlig"
+msgstr "Varje månad"
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_product_value__move_id
@@ -706,7 +706,7 @@ msgstr "Alternativ"
 #: model:ir.model.fields.selection,name:stock_account.selection__product_template__valuation__periodic
 #: model:ir.model.fields.selection,name:stock_account.selection__res_company__inventory_valuation__periodic
 msgid "Periodic (at closing)"
-msgstr ""
+msgstr "Periodisk (vid bokslut)"
 
 #. module: stock_account
 #: model:ir.model.fields,help:stock_account.field_product_category__property_valuation
@@ -723,7 +723,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:stock_account.selection__product_template__valuation__real_time
 #: model:ir.model.fields.selection,name:stock_account.selection__res_company__inventory_valuation__real_time
 msgid "Perpetual (at invoicing)"
-msgstr ""
+msgstr "Löpande (vid fakturering)"
 
 #. module: stock_account
 #: model:ir.model,name:stock_account.model_stock_picking_type
@@ -920,8 +920,6 @@ msgid "Stock Replenishment Report"
 msgstr "Lagerpåfyllningsrapport"
 
 #. module: stock_account
-#. odoo-javascript
-#: code:addons/stock_account/static/src/stock_account_forecasted/forecasted_header.js:0
 #: model:ir.model,name:stock_account.model_stock_account_stock_valuation_report
 msgid "Stock Valuation"
 msgstr "Lagervärdering"
@@ -931,7 +929,7 @@ msgstr "Lagervärdering"
 #: model:ir.model.fields,field_description:stock_account.field_res_company__account_stock_valuation_id
 #: model:ir.model.fields,field_description:stock_account.field_stock_location__valuation_account_id
 msgid "Stock Valuation Account"
-msgstr "Konto för värdering av lager"
+msgstr "Konto för lagervärdering"
 
 #. module: stock_account
 #. odoo-javascript
@@ -963,8 +961,8 @@ msgid ""
 "The ISO country code in two chars. \n"
 "You can use this field for quick search."
 msgstr ""
-"ISO-kod med två tecken.\n"
-"Fältet används för snabbsökning."
+"ISO-landskod angiven med två tecken.\n"
+"Fältet kan användas för snabbsökning."
 
 #. module: stock_account
 #: model:ir.model.fields,help:stock_account.field_product_value__current_value
@@ -1132,8 +1130,9 @@ msgid ""
 "When doing automated inventory valuation, this is the Accounting Journal in "
 "which entries will be automatically posted when stock moves are processed."
 msgstr ""
-"Vid automatisk lagerutvärdering är detta bokföringsjournalen där poster "
-"automatiskt kommer att postas när lagerflyttningar behandlas."
+"Vid automatisk lagerutvärdering är detta bokföringsjournalen där "
+"verifikationer automatiskt kommer att bokföras när lagertransporter "
+"behandlas."
 
 #. module: stock_account
 #: model:ir.model.fields,help:stock_account.field_product_category__property_price_difference_account_id

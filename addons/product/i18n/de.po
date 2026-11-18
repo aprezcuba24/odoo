@@ -8,16 +8,16 @@
 # Friederike Fasterling-Nesselbosch, 2022
 # Martin Trigaux, 2022
 # Larissa Manderfeld, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Larissa Manderfeld (lman)" <lman@odoo.com>, 2025, 2026.
-# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025.
+# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025, 2026.
 # Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:39+0000\n"
-"PO-Revision-Date: 2026-06-08 10:51+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-09-09 08:11+0000\n"
 "Last-Translator: \"Larissa Manderfeld (lman)\" <lman@odoo.com>\n"
 "Language-Team: German <https://translate.odoo.com/projects/odoo-19/product/"
 "de/>\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: product
 #. odoo-python
@@ -1345,7 +1345,7 @@ msgstr "Schreibtischunterlage"
 #. module: product
 #: model:product.template,name:product.product_product_22_product_template
 msgid "Desk Stand with Screen"
-msgstr "Schreibtischstand mit Leinwand"
+msgstr "Schreibtisch mit Trennwand"
 
 #. module: product
 #: model:product.template,description_sale:product.product_product_3_product_template
@@ -3607,6 +3607,12 @@ msgstr "Mülleimer mit Soft-Close-Funktion für den Bürogebrauch"
 #: model:product.attribute.value,name:product.pav_brand_sony
 msgid "Sony"
 msgstr "Sony"
+
+#. module: product
+#. odoo-python
+#: code:addons/product/report/product_pricelist_report.py:0
+msgid "Sorry, you are not allowed to access this document."
+msgstr ""
 
 #. module: product
 #: model:ir.model.fields,field_description:product.field_res_partner__specific_property_product_pricelist

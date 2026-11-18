@@ -10,16 +10,18 @@
 # Nancy Momoland <thanhnguyen.icsc@gmail.com>, 2023
 # Martin Trigaux, 2023
 # Thi Huong Nguyen, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Thi Huong Nguyen (thng)" <thng@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
+# Alex Tran <tral@odoo.com>, 2026.
+# Deleted User <noreply+31@weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:37+0000\n"
-"PO-Revision-Date: 2026-04-13 20:49+0000\n"
-"Last-Translator: \"Thi Huong Nguyen (thng)\" <thng@odoo.com>\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-07 05:14+0000\n"
+"Last-Translator: Alex Tran <tral@odoo.com>\n"
 "Language-Team: Vietnamese <https://translate.odoo.com/projects/odoo-19/web/"
 "vi/>\n"
 "Language: vi\n"
@@ -27,7 +29,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: web
 #. odoo-javascript
@@ -1770,6 +1772,7 @@ msgstr "Chuyển đổi thành webp"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.js:0
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 msgid "Copied"
@@ -1780,6 +1783,12 @@ msgstr "Đã sao chép"
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 msgid "Copy"
 msgstr "Sao chép"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
+msgid "Copy Arch"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -4252,12 +4261,7 @@ msgstr "Chủ đề Cuộc gặp"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-msgid "Memory limit (in bytes)"
-msgstr ""
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-msgid "Memory profile"
+msgid "Memory (heuristic)"
 msgstr ""
 
 #. module: web
@@ -4549,7 +4553,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/web/static/src/webclient/user_menu/user_menu_items.js:0
 msgid "My Preferences"
-msgstr ""
+msgstr "Tùy chọn của tôi"
 
 #. module: web
 #. odoo-javascript
@@ -6041,6 +6045,12 @@ msgstr "Lưu thủ công"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation_button.js:0
+msgid "Save this record and its parent to translate"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/many2one/many2one.xml:0
 msgid "Scan barcode"
 msgstr "Quét mã vạch"
@@ -6078,6 +6088,12 @@ msgstr "Tìm kiếm thêm..."
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/reference/reference_field.js:0
+msgid "Search a record..."
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_picker.js:0
 msgid "Search emoji"
 msgstr "Tìm kiếm biểu tượng cảm xúc"
@@ -6098,7 +6114,7 @@ msgstr "Tìm kiếm menu..."
 #. odoo-javascript
 #: code:addons/web/static/src/views/fields/relational_utils.js:0
 msgid "Search more..."
-msgstr "Search more..."
+msgstr "Tìm kiếm thêm..."
 
 #. module: web
 #. odoo-javascript
@@ -6381,6 +6397,12 @@ msgstr "Tàu Shinkansen"
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "Shinto"
 msgstr "Cổng Shinto"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/user_menu/user_menu_items.js:0
+msgid "Shortcuts"
+msgstr "Phím tắt"
 
 #. module: web
 #. odoo-javascript
@@ -6752,16 +6774,6 @@ msgid "Text file"
 msgstr "Tệp văn bản"
 
 #. module: web
-#: model:ir.model.fields,help:web.field_base_document_layout__vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"Mã số thuế. Các giá trị ở đây sẽ được xác thực dựa trên định dạng quốc gia. "
-"Bạn có thể sử dụng dấu '/' để chỉ một đối tác không phải chịu thuế."
-
-#. module: web
 #. odoo-python
 #: code:addons/web/controllers/action.py:0
 msgid "The action “%s” does not exist"
@@ -6784,6 +6796,14 @@ msgstr "Không thể cài đặt ứng dụng bằng trình duyệt này"
 #: code:addons/web/static/src/core/install_scoped_app/install_scoped_app.xml:0
 msgid "The app seems to be installed on your device"
 msgstr "Có vẻ ứng dụng đã được cài đặt trên thiết bị của bạn"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_arch_parser.js:0
+msgid ""
+"The autocomplete value for %(field)s has not been found: the record with id %"
+"(id)s doesn't seem to exist"
+msgstr ""
 
 #. module: web
 #. odoo-python
@@ -7863,6 +7883,11 @@ msgstr "Bạn có thể cài đặt ứng dụng từ menu trình duyệt"
 #. odoo-python
 #: code:addons/web/models/properties_base_definition.py:0
 msgid "You can not read that field definition."
+msgstr ""
+
+#. module: web
+#: model:ir.model.fields,help:web.field_base_document_layout__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
 msgstr ""
 
 #. module: web
@@ -19120,7 +19145,6 @@ msgstr "oops"
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
 msgid "open"
 msgstr "open"
 
@@ -26948,6 +26972,14 @@ msgstr ""
 msgid "空"
 msgstr ""
 
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "Mã số thuế. Các giá trị ở đây sẽ được xác thực dựa trên định dạng quốc "
+#~ "gia. Bạn có thể sử dụng dấu '/' để chỉ một đối tác không phải chịu thuế."
+
 #~ msgid "00"
 #~ msgstr "00"
 
@@ -27629,9 +27661,6 @@ msgstr ""
 
 #~ msgid "Share with all users"
 #~ msgstr "Chia sẻ với tất cả người dùng"
-
-#~ msgid "Shortcuts"
-#~ msgstr "Phím tắt"
 
 #~ msgid "Size:"
 #~ msgstr "Kích thước:"

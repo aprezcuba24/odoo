@@ -9,15 +9,15 @@
 # Martin Trigaux, 2022
 # Andy Yiu, 2023
 # Ryoko Tsuda <ryoko@quartile.co>, 2023, 2026.
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:39+0000\n"
-"PO-Revision-Date: 2026-05-02 09:49+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-11-11 07:33+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/product/"
 "ja/>\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: product
 #. odoo-python
@@ -352,8 +352,8 @@ msgid ""
 "This description will be copied to every Sales Order, Delivery Order and "
 "Customer Invoice/Credit Note"
 msgstr ""
-"顧客に見せたい製品の説明。この説明は販売注文、配送注文、顧客請求書/クレジット"
-"ノートにコピーされます。"
+"顧客に表示するプロダクトの説明。この説明は販売オーダ、出荷オーダ、顧客請求書/"
+"クレジットノートにコピーされます。"
 
 #. module: product
 #. odoo-python
@@ -594,7 +594,7 @@ msgstr "すべてのプロダクト"
 #: model_terms:ir.ui.view,arch_db:product.product_pricelist_item_form_view
 #: model_terms:ir.ui.view,arch_db:product.product_pricelist_item_tree_view_from_product
 msgid "All variants"
-msgstr "全バリアント"
+msgstr "すべてのバリアント"
 
 #. module: product
 #: model:ir.model.fields,help:product.field_product_attribute_value__is_custom
@@ -1993,7 +1993,7 @@ msgstr "仕入先価格表のテンプレートをインポート"
 #: model_terms:ir.ui.view,arch_db:product.product_attribute_search
 #: model_terms:ir.ui.view,arch_db:product.product_template_attribute_value_view_search
 msgid "Inactive"
-msgstr "無効"
+msgstr "非アクティブ"
 
 #. module: product
 #: model:ir.model.fields,field_description:product.field_product_document__index_content
@@ -3578,6 +3578,12 @@ msgid "Sony"
 msgstr "Sony"
 
 #. module: product
+#. odoo-python
+#: code:addons/product/report/product_pricelist_report.py:0
+msgid "Sorry, you are not allowed to access this document."
+msgstr ""
+
+#. module: product
 #: model:ir.model.fields,field_description:product.field_res_partner__specific_property_product_pricelist
 #: model:ir.model.fields,field_description:product.field_res_users__specific_property_product_pricelist
 msgid "Specific Property Product Pricelist"
@@ -4214,7 +4220,7 @@ msgstr "バリアント"
 #. module: product
 #: model:ir.model.fields,field_description:product.field_product_supplierinfo__product_variant_count
 msgid "Variant Count"
-msgstr "種別カウント"
+msgstr "バリアント数"
 
 #. module: product
 #: model:ir.model.fields,field_description:product.field_product_attribute__create_variant

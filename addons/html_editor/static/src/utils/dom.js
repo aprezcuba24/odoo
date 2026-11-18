@@ -148,12 +148,17 @@ export function removeClass(element, ...classNames) {
     }
 }
 
+/**
+ * Removes the specified CSS properties from an element's inline styles.
+ * If no inline styles remain afterward, the `style` attribute is removed.
+ *
+ * @param {Element} element
+ * @param {...string} styleProperties
+ */
 export function removeStyle(element, ...styleProperties) {
-    const propsToRemoveSet = new Set(styleProperties);
-    if ([...element.style].every((prop) => propsToRemoveSet.has(prop))) {
+    styleProperties.forEach((prop) => element.style.removeProperty(prop));
+    if (element.getAttribute("style") === "") {
         element.removeAttribute("style");
-    } else {
-        styleProperties.forEach((prop) => element.style.removeProperty(prop));
     }
 }
 
@@ -206,7 +211,8 @@ export function fillShrunkPhrasingParent(el) {
 /**
  * Removes a trailing BR if it is unnecessary:
  * in a non-empty block, if the last childNode is a BR and its previous sibling
- * is not a BR, remove the BR.
+ * is not a BR, remove the BR. A BR at the end of an inline `el` with some
+ * content after that inline in its block is a real line break, so it is kept.
  *
  * @param {HTMLElement} el
  * @param {Array} predicates exceptions where a trailing BR should not be removed
@@ -218,6 +224,7 @@ export function cleanTrailingBR(el, predicates = []) {
         candidate?.nodeName === "BR" &&
         candidate.previousSibling?.nodeName !== "BR" &&
         !isEmptyBlock(el) &&
+        !nextLeaf(candidate, closestBlock(el), true) &&
         !predicates.some((predicate) => predicate(candidate))
     ) {
         candidate.remove();

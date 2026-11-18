@@ -15,17 +15,17 @@
 # Leonardo J. Caballero G. <leonardocaballero@gmail.com>, 2023
 # Martin Trigaux, 2023
 # Pedro M. Baeza <pedro.baeza@tecnativa.com>, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
 # "Noemi Pla Garcia (nopl)" <nopl@odoo.com>, 2025, 2026.
-# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 17:35+0000\n"
-"PO-Revision-Date: 2026-06-06 15:49+0000\n"
+"POT-Creation-Date: 2026-11-13 17:36+0000\n"
+"PO-Revision-Date: 2026-10-01 18:33+0000\n"
 "Last-Translator: \"Noemi Pla Garcia (nopl)\" <nopl@odoo.com>\n"
 "Language-Team: Spanish <https://translate.odoo.com/projects/odoo-19/website/"
 "es/>\n"
@@ -35,7 +35,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n != 0 && n % 1000000 == "
 "0) ? 1 : 2);\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_quotes_carousel_compact
@@ -272,12 +272,6 @@ msgid "$ 32M"
 msgstr "32 millones"
 
 #. module: website
-#. odoo-python
-#: code:addons/website/models/ir_ui_view.py:0
-msgid "%(error)s (website: %(website_id)s)"
-msgstr "%(error)s (sitio web: %(website_id)s)"
-
-#. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/client_actions/website_preview/website_builder_action.js:0
 msgid "%s is not a valid URL."
@@ -322,6 +316,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.list_website_public_pages
 msgid "'. Showing results for '"
 msgstr "\". Mostrando resultados para \""
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/search_bar.js:0
+msgid "(%(count)s found)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -408,7 +408,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.layout
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "/contactus"
-msgstr "/contáctenos"
+msgstr "/contactus"
 
 #. module: website
 #. odoo-javascript
@@ -1125,9 +1125,9 @@ msgid ""
 "<br/>This is a simple hero unit, a simple jumbotron-style component for "
 "calling extra attention to featured content or information.<br/><br/>"
 msgstr ""
-"<br/>Se trata de una sencilla unidad de héroe, un componente simple de "
-"estilo jumbotrón para llamar la atención sobre el contenido o la información "
-"destacados.<br/><br/>"
+"<br/>Este es un banner principal sencillo, con un estilo similar al de un "
+"jumbotron, diseñado para destacar contenido o información importante.<br/"
+"><br/>"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_faq_horizontal
@@ -3165,8 +3165,8 @@ msgstr "Imagen en acordeón"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
-msgid "Accounts are usable across all your multiple websites"
-msgstr "Puede utilizar las cuentas en todos sus sitios web"
+msgid "Accounts created on this website are usable across all other websites"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_2_s_three_columns
@@ -3316,7 +3316,7 @@ msgstr "Añadir imágenes"
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/media_list_option.xml:0
 msgid "Add Media"
-msgstr "Añadir medios"
+msgstr "Añadir archivo multimedia"
 
 #. module: website
 #. odoo-javascript
@@ -3849,12 +3849,6 @@ msgstr "Siempre"
 #: code:addons/website/static/src/builder/plugins/theme/theme_tab.xml:0
 msgid "Always Underline"
 msgstr "Siempre subrayar"
-
-#. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
-msgid "Always Visible"
-msgstr "Siempre visible"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_3_s_three_columns
@@ -4497,7 +4491,7 @@ msgstr "Bluesky"
 #: code:addons/website/static/src/builder/plugins/font/add_font_dialog.xml:0
 #: code:addons/website/static/src/builder/plugins/options/header/header_navigation_option.xml:0
 msgid "Bold"
-msgstr "Área negra"
+msgstr "Negrita"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_call_to_action_menu
@@ -5309,7 +5303,7 @@ msgstr "Elegir de la lista"
 #. odoo-javascript
 #: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
 msgid "Choose your favorite"
-msgstr "Elija su"
+msgstr "Elige tu"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_product_catalog
@@ -5373,7 +5367,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 msgid "Click here to go back to block tab."
-msgstr "Haga clic aquí para volver a la pestaña de bloques."
+msgstr "Haz clic aquí para volver a la pestaña de bloques."
 
 #. module: website
 #. odoo-javascript
@@ -5603,7 +5597,7 @@ msgstr "Compañía"
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_elements_option.xml:0
 msgid "Company Logo"
-msgstr "Logotipo de la compañía"
+msgstr "Logotipo de la empresa"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
@@ -5791,10 +5785,9 @@ msgid ""
 "                                    We'll do our best to get back to you as "
 "soon as possible."
 msgstr ""
-"Contacta con nosotros sobre cualquier cosa relacionada con nuestra empresa o "
-"servicios.<br/>\n"
-"                                    Haremos todo lo posible por responderle "
-"a la brevedad."
+"Contacta con nosotros sobre cualquier aspecto relacionado con nuestra "
+"empresa o servicios.<br/>\n"
+"                                    Te responderemos lo antes posible."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_contact
@@ -6460,7 +6453,7 @@ msgstr "Estilo de entrada por defecto"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website__default_lang_id
 msgid "Default Language"
-msgstr "Idioma por defecto"
+msgstr "Idioma predeterminado"
 
 #. module: website
 #. odoo-javascript
@@ -6501,12 +6494,12 @@ msgstr "Casilla por defecto"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_res_config_settings__website_default_lang_id
 msgid "Default language"
-msgstr "Idioma por defecto"
+msgstr "Idioma predeterminado"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_res_config_settings__website_default_lang_code
 msgid "Default language code"
-msgstr "Código de idioma por defecto"
+msgstr "Código de idioma predeterminado"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -7228,6 +7221,12 @@ msgstr "Haga doble clic en un icono para reemplazarlo con uno de su elección."
 #: code:addons/website/static/src/builder/plugins/options/chart_option.xml:0
 msgid "Doughnut"
 msgstr "Doughnut"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/popup_option_plugin.js:0
+msgid "Drag blocks here"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -8115,6 +8114,12 @@ msgid "External ID"
 msgstr "ID externo"
 
 #. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "External ID can not be loaded: %(error)s (website: %(website_id)s)"
+msgstr ""
+
+#. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/popup_option.xml:0
 msgid "Extra Large"
@@ -8248,7 +8253,7 @@ msgstr "URL de función"
 #: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Features"
-msgstr "Funciones"
+msgstr "Funcionalidades"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
@@ -9088,6 +9093,15 @@ msgstr "Google Maps"
 #: model:ir.model.fields,field_description:website.field_website__google_maps_api_key
 msgid "Google Maps API Key"
 msgstr "Clave de la API de Google Maps"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_service.js:0
+#: code:addons/website/static/src/core/website_map_service.js:0
+msgid ""
+"Google Maps configuration has changed. Please reload the page for changes to "
+"take effect."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -13859,8 +13873,8 @@ msgstr "Marcador de posición"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_api_key_dialog.xml:0
-msgid "Places API"
-msgstr "API de Places"
+msgid "Places API (NEW)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -13897,7 +13911,7 @@ msgstr "Clave de autenticación de Plausible"
 #. odoo-javascript
 #: code:addons/website/static/src/snippets/s_website_form/form.js:0
 msgid "Please fill in the form correctly."
-msgstr "Complete el formulario correctamente."
+msgstr "Rellena el formulario correctamente."
 
 #. module: website
 #. odoo-javascript
@@ -14086,6 +14100,7 @@ msgstr "Planes de precios"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 msgid "Primary"
 msgstr "Primario"
 
@@ -15289,6 +15304,7 @@ msgstr "Segundo radio por defecto"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 msgid "Secondary"
 msgstr "Secundario"
 
@@ -16620,9 +16636,23 @@ msgid "Template ID: %s"
 msgstr "ID de la plantilla: %s"
 
 #. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid ""
+"Template does not exist or has been deleted: %(error)s (website: %"
+"(website_id)s)"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.qweb_500
 msgid "Template fallback"
 msgstr "Alternativa a la plantilla"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "Template not found: '%(error)s' (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_mega
@@ -16844,12 +16874,6 @@ msgstr "El siguiente dominio no es válido:"
 #: code:addons/website/static/src/xml/website_form.xml:0
 msgid "The form has been sent successfully."
 msgstr "El formulario ha sido enviado correctamente."
-
-#. module: website
-#. odoo-python
-#: code:addons/website/controllers/form.py:0
-msgid "The form's specified model does not exist"
-msgstr "El modelo especificado del formulario no existe"
 
 #. module: website
 #: model:ir.model.fields,help:website.field_ir_actions_server__website_url
@@ -17152,11 +17176,8 @@ msgstr ""
 #: code:addons/website/static/src/builder/plugins/form/form_option_plugin.js:0
 msgid ""
 "This field is mandatory for this action. You cannot remove it. Try hiding it "
-"with the 'Visibility' option instead and add it a default value."
+"with the 'Visibility Rule' option instead and add it a default value."
 msgstr ""
-"Este campo es obligatorio para realizar esta acción, no se puede eliminar. "
-"Sin embargo, puede ocultarlo en la opción \"visibilidad\" y añadir un valor "
-"predeterminado."
 
 #. module: website
 #: model:ir.model.fields,help:website.field_website_controller_page__arch_base
@@ -17225,6 +17246,13 @@ msgstr ""
 "reemplazar la versión de servidor."
 
 #. module: website
+#. odoo-python
+#: code:addons/website/controllers/form.py:0
+msgid ""
+"This form cannot be submitted. Please contact the website administrator."
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
 msgid "This is a \""
 msgstr "Esto es una alerta \""
@@ -17248,8 +17276,8 @@ msgid ""
 "This is a simple hero unit, a simple jumbotron-style component for calling "
 "extra attention to featured content or information."
 msgstr ""
-"Esta es una unidad de héroe simple, un simple componente de estilo jumbotron "
-"para llamar la atención extra sobre el contenido o la información destacado."
+"Este es un banner principal sencillo, con un estilo similar al de un "
+"jumbotron, diseñado para destacar contenido o información importante."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_key_images
@@ -18428,6 +18456,12 @@ msgid "Visibility Password Display"
 msgstr "Pantalla de visibilidad de contraseña"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
+msgid "Visibility Rule"
+msgstr ""
+
+#. module: website
 #: model:ir.model.fields,field_description:website.field_website_menu__group_ids
 msgid "Visible Groups"
 msgstr "Grupos visibles"
@@ -18890,7 +18924,7 @@ msgstr ""
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.contactus_thanks_ir_ui_view
 msgid "We will get back to you shortly."
-msgstr "Nos pondremos en contacto con usted lo antes posible."
+msgstr "Nos pondremos en contacto contigo lo antes posible."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_contact_info
@@ -19626,6 +19660,12 @@ msgstr ""
 #: code:addons/website/static/src/builder/plugins/form/form_option_plugin.js:0
 msgid "You cannot duplicate this field."
 msgstr "No puede duplicar este campo."
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/card_image_option_plugin.js:0
+msgid "You cannot duplicate this image."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -21307,6 +21347,29 @@ msgstr "✽  Pizza"
 #: model_terms:ir.ui.view,arch_db:website.s_key_benefits
 msgid "✽  What We Offer"
 msgstr "✽  Lo que ofrecemos"
+
+#~ msgid "Always Visible"
+#~ msgstr "Siempre visible"
+
+#~ msgid ""
+#~ "This field is mandatory for this action. You cannot remove it. Try hiding "
+#~ "it with the 'Visibility' option instead and add it a default value."
+#~ msgstr ""
+#~ "Este campo es obligatorio para realizar esta acción, no se puede "
+#~ "eliminar. Sin embargo, puede ocultarlo en la opción \"visibilidad\" y "
+#~ "añadir un valor predeterminado."
+
+#~ msgid "%(error)s (website: %(website_id)s)"
+#~ msgstr "%(error)s (sitio web: %(website_id)s)"
+
+#~ msgid "Places API"
+#~ msgstr "API de Places"
+
+#~ msgid "The form's specified model does not exist"
+#~ msgstr "El modelo especificado del formulario no existe"
+
+#~ msgid "Accounts are usable across all your multiple websites"
+#~ msgstr "Puede utilizar las cuentas en todos sus sitios web"
 
 #~ msgid "Translate the whole content with AI"
 #~ msgstr "Traducir todo el contenido con IA"

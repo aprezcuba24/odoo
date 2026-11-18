@@ -7,16 +7,16 @@
 # Niyas Raphy, 2022
 # Martin Trigaux, 2023
 # Malaz Abuidris <msea@odoo.com>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Mohammad Abdulmoneim <abdu@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Mohammad Abdulmoneim <abdu@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Malaz Siddig Elsayed Abuidris (msea)" <msea@odoo.com>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:35+0000\n"
-"PO-Revision-Date: 2026-05-05 10:27+0000\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-09-19 20:13+0000\n"
 "Last-Translator: \"Malaz Siddig Elsayed Abuidris (msea)\" <msea@odoo.com>\n"
 "Language-Team: Arabic <https://translate.odoo.com/projects/odoo-19/hr/ar/>\n"
 "Language: ar\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: hr
 #. odoo-python
@@ -478,7 +478,7 @@ msgstr "<span>عرض</span>"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_hr_job_form
 msgid "<span>new employees</span>"
-msgstr ""
+msgstr "<span>الموظفون الجدد</span> "
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_trainee
@@ -3829,6 +3829,18 @@ msgstr ""
 
 #. module: hr
 #. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Contact Profile"
+msgstr "فتح ملف تعريف جهة الاتصال"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Employee Profile (activates company)"
+msgstr "فتح الملف التعريفي للموظف (يؤدي إلى تفعيل الشركة)"
+
+#. module: hr
+#. odoo-javascript
 #: code:addons/hr/static/src/core/web/thread_actions.js:0
 msgid "Open Profile"
 msgstr "فتح الملف التعريفي"
@@ -4273,7 +4285,7 @@ msgstr "البحث والتطوير في الولايات المتحدة الأ�
 #. odoo-javascript
 #: code:addons/hr/static/src/fields/radio_followed_by_element.js:0
 msgid "Radio followed by element"
-msgstr ""
+msgstr "زر اختيار متبوع بعنصر"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_department__rating_ids
@@ -4799,21 +4811,19 @@ msgid "Temporary"
 msgstr "مؤقت"
 
 #. module: hr
-#. odoo-python
-#: code:addons/hr/models/hr_employee.py:0
-msgid ""
-"The Badge ID must be alphanumeric without any accents and no longer than 18 "
-"characters."
-msgstr ""
-"يجب أن يكون مُعرِّف الشارة بحروف أبجدية عددية بدون أي رموز ويجب ألا يزيد عن 18 "
-"حرفاً."
-
-#. module: hr
 #: model:ir.model.constraint,message:hr.constraint_hr_employee_barcode_uniq
 msgid ""
 "The Badge ID must be unique, this one is already assigned to another "
 "employee."
 msgstr "يجب أن يكون معرف الشارة فريدًا، هذا المعرف مستخدم لموظف آخر."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"The Badge ID must contain only printable ASCII characters, without spaces, "
+"and be no longer than 18 characters."
+msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_departure_reason__country_code
@@ -5060,7 +5070,7 @@ msgstr "عدد الموظفين المتوقعين"
 #. odoo-python
 #: code:addons/hr/wizard/hr_bank_account_wizard.py:0
 msgid "Total percentage allocation must equal 100%."
-msgstr ""
+msgstr "جب أن يكون إجمالي نسبة التوزيع 100%."
 
 #. module: hr
 #. odoo-python
@@ -5167,7 +5177,7 @@ msgstr "المستخدم"
 #. odoo-python
 #: code:addons/hr/wizard/hr_departure_wizard.py:0
 msgid "User Archive Notification"
-msgstr ""
+msgstr "إشعار أرشفة المستخدم"
 
 #. module: hr
 #. odoo-python
@@ -5178,7 +5188,7 @@ msgstr "إشعار إنشاء المستخدم"
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_departure_wizard__is_user_employee
 msgid "User Employee"
-msgstr ""
+msgstr "المستخدم الموظف"
 
 #. module: hr
 #. odoo-python
@@ -5195,7 +5205,7 @@ msgstr ""
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__is_user_active
 msgid "User's active"
-msgstr ""
+msgstr "المستخدم نشط"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__user_partner_id
@@ -5236,6 +5246,11 @@ msgid "Version"
 msgstr "الإصدار"
 
 #. module: hr
+#: model:ir.model.fields,field_description:hr.field_hr_employee__version_revision
+msgid "Version Revision"
+msgstr "مراجعة الإصدار"
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__versions_count
 msgid "Versions Count"
 msgstr "عدد النسخ"
@@ -5243,12 +5258,18 @@ msgstr "عدد النسخ"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_version_list_view
 msgid "View"
-msgstr ""
+msgstr "عرض"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "View Profile"
+msgstr "عرض الملف التعريفي"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "Visa & Work Permit"
-msgstr ""
+msgstr "التأشيرة وتصريح العمل"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__visa_expire
@@ -5589,6 +5610,12 @@ msgstr "لا تملك صلاحيات الوصول إلى هذا المستند."
 
 #. module: hr
 #. odoo-python
+#: code:addons/hr/wizard/hr_bank_account_allocation_wizard_line.py:0
+msgid "You do not have the rights to trust or un-trust accounts."
+msgstr ""
+
+#. module: hr
+#. odoo-python
 #: code:addons/hr/models/hr_employee.py:0
 msgid "You need to set a valid work email address for %s"
 msgstr ""
@@ -5770,7 +5797,7 @@ msgstr "مثال: myprivateemail@example.com"
 #. module: hr
 #: model:ir.model,name:hr.model_hr_mixin
 msgid "hr.mixin"
-msgstr ""
+msgstr "hr.mixin"
 
 #. module: hr
 #. odoo-python
@@ -5828,6 +5855,13 @@ msgstr "عمل"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
 msgstr "work_permit_name"
+
+#~ msgid ""
+#~ "The Badge ID must be alphanumeric without any accents and no longer than "
+#~ "18 characters."
+#~ msgstr ""
+#~ "يجب أن يكون مُعرِّف الشارة بحروف أبجدية عددية بدون أي رموز ويجب ألا يزيد عن "
+#~ "18 حرفاً."
 
 #~ msgid "%(activity)s, assigned to %(name)s, due on the %(deadline)s"
 #~ msgstr "%(activity)s، مسند إلى %(name)s، يجب إنجازه بتاريخ %(deadline)s "

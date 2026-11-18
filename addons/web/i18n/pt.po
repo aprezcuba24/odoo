@@ -21,16 +21,16 @@
 # Nuno Silva <nuno.silva@arxi.pt>, 2022
 # Manuela Silva <mmsrs@sky.com>, 2023
 # Reinaldo Ramos <reinaldo.ramos@arxi.pt>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # Cristina Paniagua Ramiro <crpan@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:37+0000\n"
-"PO-Revision-Date: 2026-06-06 15:42+0000\n"
-"Last-Translator: Cristina Paniagua Ramiro <crpan@odoo.com>\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-03 07:30+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Portuguese <https://translate.odoo.com/projects/odoo-19/web/"
 "pt/>\n"
 "Language: pt\n"
@@ -1773,6 +1773,7 @@ msgstr "Converter para webp"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.js:0
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 msgid "Copied"
@@ -1783,6 +1784,12 @@ msgstr "Copiado"
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 msgid "Copy"
 msgstr "Copiar"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
+msgid "Copy Arch"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -4256,12 +4263,7 @@ msgstr "Assunto da Reunião"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-msgid "Memory limit (in bytes)"
-msgstr ""
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-msgid "Memory profile"
+msgid "Memory (heuristic)"
 msgstr ""
 
 #. module: web
@@ -6054,6 +6056,12 @@ msgstr "Salvar manualmente"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation_button.js:0
+msgid "Save this record and its parent to translate"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/many2one/many2one.xml:0
 msgid "Scan barcode"
 msgstr "Escanear código de barras"
@@ -6088,6 +6096,12 @@ msgstr "Procurar"
 #: code:addons/web/static/src/views/calendar/calendar_filter_section/calendar_filter_section.js:0
 msgid "Search More..."
 msgstr "Procurar Mais..."
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/reference/reference_field.js:0
+msgid "Search a record..."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -6394,6 +6408,12 @@ msgstr "Shinkansen"
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "Shinto"
 msgstr "Shinto"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/user_menu/user_menu_items.js:0
+msgid "Shortcuts"
+msgstr "Atalhos"
 
 #. module: web
 #. odoo-javascript
@@ -6765,17 +6785,6 @@ msgid "Text file"
 msgstr "Arquivo de texto"
 
 #. module: web
-#: model:ir.model.fields,help:web.field_base_document_layout__vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"O número de identificação fiscal. Os valores aqui definidos serão validados "
-"de acordo com o formato do país. Pode utilizar \"/\" para indicar que o "
-"contacto não está sujeito a impostos."
-
-#. module: web
 #. odoo-python
 #: code:addons/web/controllers/action.py:0
 msgid "The action “%s” does not exist"
@@ -6798,6 +6807,14 @@ msgstr "O aplicativo não pode ser instalado com este navegador"
 #: code:addons/web/static/src/core/install_scoped_app/install_scoped_app.xml:0
 msgid "The app seems to be installed on your device"
 msgstr "O aplicativo parece estar instalado em seu dispositivo"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_arch_parser.js:0
+msgid ""
+"The autocomplete value for %(field)s has not been found: the record with id %"
+"(id)s doesn't seem to exist"
+msgstr ""
 
 #. module: web
 #. odoo-python
@@ -7880,6 +7897,11 @@ msgstr "Você pode instalar o aplicativo no menu do navegador"
 #. odoo-python
 #: code:addons/web/models/properties_base_definition.py:0
 msgid "You can not read that field definition."
+msgstr ""
+
+#. module: web
+#: model:ir.model.fields,help:web.field_base_document_layout__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
 msgstr ""
 
 #. module: web
@@ -19141,7 +19163,6 @@ msgstr "oops"
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
 msgid "open"
 msgstr "open"
 
@@ -26969,6 +26990,15 @@ msgstr ""
 msgid "空"
 msgstr ""
 
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "O número de identificação fiscal. Os valores aqui definidos serão "
+#~ "validados de acordo com o formato do país. Pode utilizar \"/\" para "
+#~ "indicar que o contacto não está sujeito a impostos."
+
 #~ msgid "00"
 #~ msgstr "00"
 
@@ -27391,9 +27421,6 @@ msgstr ""
 
 #~ msgid "Share with all users"
 #~ msgstr "Partilhar com todos os utilizadores"
-
-#~ msgid "Shortcuts"
-#~ msgstr "Atalhos"
 
 #~ msgid "Size:"
 #~ msgstr "Tamanho:"

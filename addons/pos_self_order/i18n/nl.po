@@ -2,15 +2,15 @@
 # This file contains the translation of the following modules:
 # * pos_self_order
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # Bren Driesen <brdri@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:37+0000\n"
-"PO-Revision-Date: 2026-06-06 13:20+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-11-13 07:41+0000\n"
 "Last-Translator: Bren Driesen <brdri@odoo.com>\n"
 "Language-Team: Dutch <https://translate.odoo.com/projects/odoo-19/"
 "pos_self_order/nl/>\n"
@@ -19,12 +19,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: pos_self_order
 #: model:ir.actions.report,print_report_name:pos_self_order.report_self_order_qr_codes_page
 msgid "\"QR codes\""
-msgstr "\"QR codes\""
+msgstr "\"QR-codes\""
 
 #. module: pos_self_order
 #. odoo-python
@@ -80,6 +80,43 @@ msgid ""
 "                </div>\n"
 "            "
 msgstr ""
+"<div style=\"margin: 0; padding: 0; font-size: 14px;\">\n"
+"                    <t t-set=\"client\" t-value=\"object.partner_id\"/>\n"
+"                    <t t-set=\"client_name\" t-value=\"client.name\"/>\n"
+"                    <t t-set=\"street\" t-value=\"client.street or ''\"/>\n"
+"                    <t t-set=\"state\" t-value=\"client.state_id.name or "
+"''\"/>\n"
+"                    <t t-set=\"city\" t-value=\"client.city or ''\"/>\n"
+"                    <t t-set=\"country\" t-value=\"client.country_id.name or "
+"''\"/>\n"
+"                    <t t-set=\"store_name\" t-"
+"value=\"object.config_id.name\"/>\n"
+"                    <t t-set=\"tz\" t-"
+"value=\"object.company_id.partner_id.tz\"/>\n"
+"                    <t t-set=\"lg\" t-value=\"object.partner_id.lang or "
+"user.lang\"/>\n"
+"                    <div>\n"
+"                        <t t-if=\"client_name\">Hallo <t t-"
+"out=\"client_name\">Naam van de klant</t>,</t>\n"
+"                        <t t-else=\"\">Hallo,</t>\n"
+"                    </div>\n"
+"                    <br/>\n"
+"                    <div>Je bestelling <t t-"
+"out=\"object.tracking_number\">...</t> voor een bedrag van <t t-"
+"out=\"format_amount(object.amount_total,object.currency_id)\">€ xx,xx</t> is "
+"bevestigd. <span t-if=\"object.preset_time or client.street\">De bestelling "
+"zal klaar zijn</span> <span t-if=\"object.preset_time\"> om <t t-"
+"out=\"format_time(time=object.preset_time, tz=tz, time_format='short', "
+"lang_code=lg)\">12:00</t></span> <span t-if=\"client.street\"> bij <t t-"
+"out=\"street\">straat</t>, <t t-out=\"state\">provincie</t>, <t t-"
+"out=\"client.zip or ''\">postcode</t>, <t t-out=\"city\">stad</t>, <t t-"
+"out=\"country\">land</t></span></div>\n"
+"                    <br/>\n"
+"                    <div>Bedankt,</div>\n"
+"                    <br/>\n"
+"                    <t t-out=\"store_name\">Naam van de winkel</t>\n"
+"                </div>\n"
+"            "
 
 #. module: pos_self_order
 #: model:mail.template,body_html:pos_self_order.takeout_email_template
@@ -110,6 +147,31 @@ msgid ""
 "                </div>\n"
 "            "
 msgstr ""
+"<div style=\"margin: 0; padding: 0; font-size: 14px;\">\n"
+"                    <t t-set=\"store_name\" t-"
+"value=\"object.config_id.name\"/>\n"
+"                    <t t-set=\"tz\" t-"
+"value=\"object.company_id.partner_id.tz\"/>\n"
+"                    <t t-set=\"lg\" t-value=\"object.partner_id.lang or "
+"user.lang\"/>\n"
+"                    <div>\n"
+"                        <t t-if=\"client_name\">Hallo <t t-"
+"out=\"client_name\">Naam van de klant</t>,</t>\n"
+"                        <t t-else=\"\">Hallo,</t>\n"
+"                    </div>\n"
+"                    <br/>\n"
+"                    <div>Je bestelling <t t-"
+"out=\"object.tracking_number\">...</t> voor een bedrag van <t t-"
+"out=\"format_amount(object.amount_total,object.currency_id)\">€ xx,xx</t> is "
+"bevestigd. <span t-if=\"object.preset_time\">De bestelling zal klaar zijn om "
+"<t t-out=\"format_time(time=object.preset_time, tz=tz, time_format='short', "
+"lang_code=lg)\">12:00</t></span></div>\n"
+"                    <br/>\n"
+"                    <div>Bedankt,</div>\n"
+"                    <br/>\n"
+"                    <t t-out=\"store_name\">Naam van de winkel</t>\n"
+"                </div>\n"
+"            "
 
 #. module: pos_self_order
 #: model:ir.model.fields,help:pos_self_order.field_pos_config__self_ordering_default_user_id
@@ -387,8 +449,8 @@ msgid ""
 "Custom links that the restaurant can configure to be displayed on the self "
 "order screen"
 msgstr ""
-"Aangepaste links dat het restaurant kan configureren om weer te geven op het "
-"self-orderscherm"
+"Aangepaste links die het restaurant kan configureren om weer te geven op het "
+"zelfbedieningsscherm"
 
 #. module: pos_self_order
 #: model:ir.model.fields.selection,name:pos_self_order.selection__pos_self_order_custom_link__style__danger
@@ -727,8 +789,33 @@ msgstr "Internetverbinding verbroken"
 #. module: pos_self_order
 #. odoo-python
 #: code:addons/pos_self_order/models/pos_order.py:0
+msgid "Invalid combo line"
+msgstr ""
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/models/pos_order.py:0
 msgid "Invalid preset"
 msgstr "Ongeldige voorinstelling"
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/models/pos_order.py:0
+msgid "Invalid product attribute"
+msgstr ""
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/controllers/orders.py:0
+#: code:addons/pos_self_order/models/pos_order.py:0
+msgid "Invalid product configuration"
+msgstr ""
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/models/pos_order.py:0
+msgid "Invalid quantity"
+msgstr ""
 
 #. module: pos_self_order
 #. odoo-javascript
@@ -1102,6 +1189,18 @@ msgid "Points of Sale"
 msgstr "Kassa's"
 
 #. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/models/pos_order.py:0
+msgid "Preset is not available in self-ordering"
+msgstr ""
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/models/pos_order.py:0
+msgid "Preset is not available in this configuration"
+msgstr ""
+
+#. module: pos_self_order
 #: model:ir.model.fields,field_description:pos_self_order.field_pos_self_order_custom_link__link_html
 msgid "Preview"
 msgstr "Voorbeeld"
@@ -1157,7 +1256,7 @@ msgstr "Product niet gevonden"
 #. module: pos_self_order
 #: model:ir.actions.report,name:pos_self_order.report_self_order_qr_codes_page
 msgid "QR Codes"
-msgstr "QR codes"
+msgstr "QR-codes"
 
 #. module: pos_self_order
 #. odoo-python
@@ -1262,21 +1361,21 @@ msgstr "Selecteer een land"
 
 #. module: pos_self_order
 #. odoo-javascript
-#: code:addons/pos_self_order/static/src/app/components/slots_popup/slots_popup.xml:0
-msgid "Select a hour"
-msgstr "Selecteer een uur"
-
-#. module: pos_self_order
-#. odoo-javascript
 #: code:addons/pos_self_order/static/src/app/components/preset_info_popup/preset_info_popup.xml:0
 msgid "Select a state"
-msgstr "Selecteer een staat"
+msgstr "Selecteer een provincie"
 
 #. module: pos_self_order
 #. odoo-javascript
 #: code:addons/pos_self_order/static/src/app/components/popup_table/popup_table.xml:0
 msgid "Select a table"
 msgstr "Selecteer een tafel"
+
+#. module: pos_self_order
+#. odoo-javascript
+#: code:addons/pos_self_order/static/src/app/components/slots_popup/slots_popup.xml:0
+msgid "Select an hour"
+msgstr ""
 
 #. module: pos_self_order
 #: model:ir.model.fields,help:pos_self_order.field_pos_self_order_custom_link__pos_config_ids
@@ -1373,13 +1472,13 @@ msgstr "Zelfbediening T %s"
 #. odoo-javascript
 #: code:addons/pos_self_order/static/src/overrides/components/product_info_popup/product_info_popup.xml:0
 msgid "Self-ordering:"
-msgstr "Zelfbediening:"
+msgstr "Zelfbestelling:"
 
 #. module: pos_self_order
 #: model:mail.template,description:pos_self_order.delivery_email_template
 #: model:mail.template,description:pos_self_order.takeout_email_template
 msgid "Sent to customers"
-msgstr ""
+msgstr "Verzonden naar klanten"
 
 #. module: pos_self_order
 #: model:ir.model.fields,field_description:pos_self_order.field_pos_self_order_custom_link__sequence
@@ -1509,6 +1608,14 @@ msgstr "De standaardgebruiker voor zelfbediening moet een kassa-gebruiker zijn"
 #: code:addons/pos_self_order/models/pos_order.py:0
 msgid "The mail template with xmlid %s has been deleted."
 msgstr "De e-mailsjabloon met xmlid %s is verwijderd."
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/models/pos_order.py:0
+msgid ""
+"The order ID isn't linked to the order UUID. This is a sign of a tampered "
+"payload."
+msgstr ""
 
 #. module: pos_self_order
 #. odoo-python
@@ -1684,7 +1791,7 @@ msgstr "Je ordernummer"
 #: model:mail.template,subject:pos_self_order.delivery_email_template
 #: model:mail.template,subject:pos_self_order.takeout_email_template
 msgid "Your {{ object.config_id.name }} receipt"
-msgstr "Je {{ object.config_id.name }} ticket"
+msgstr "Je bon {{ object.config_id.name }}"
 
 #. module: pos_self_order
 #. odoo-javascript
@@ -1766,6 +1873,9 @@ msgstr "per extra eenheid"
 #: code:addons/pos_self_order/static/src/app/pages/combo_page/combo_page.xml:0
 msgid "x"
 msgstr "x"
+
+#~ msgid "Select a hour"
+#~ msgstr "Selecteer een uur"
 
 #~ msgid ""
 #~ "<div style=\"margin: 0; padding: 0; font-size: 14px;\">\n"

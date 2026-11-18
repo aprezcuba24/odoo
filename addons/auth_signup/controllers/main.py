@@ -45,6 +45,8 @@ class AuthSignupHome(Home):
 
         if 'error' not in qcontext and request.httprequest.method == 'POST':
             try:
+                # do_signup logs the user in, which resets the context
+                signup_website_id = request.env.context.get('website_id')
                 self.do_signup(qcontext)
 
                 # Set user to public if they were not signed in by do_signup
@@ -60,7 +62,7 @@ class AuthSignupHome(Home):
                 )
                 template = request.env.ref('auth_signup.mail_template_user_signup_account_created', raise_if_not_found=False)
                 if user_sudo and template:
-                    template.sudo().send_mail(user_sudo.id, force_send=True)
+                    template.sudo().with_context(website_id=signup_website_id).send_mail(user_sudo.id, force_send=True)
                 request.update_context(skip_captcha_login=SKIP_CAPTCHA_LOGIN)
                 return self.web_login(*args, **kw)
             except UserError as e:
@@ -173,6 +175,15 @@ class AuthSignupHome(Home):
         credential = {'login': login, 'password': password, 'type': 'password'}
         if do_login:
             request.session.authenticate(request.env, credential)
+
+    @http.route(["/.well-known/change-password"], type="http", auth="public", methods=["GET"])
+    def well_known_change_password(self):
+        """Redirect to the password reset form.
+
+        Implements the Change Password URL specification:
+        https://wicg.github.io/change-password-url/
+        """
+        return request.redirect("/web/reset_password")
 
 class AuthBaseSetup(BaseSetup):
     @http.route()

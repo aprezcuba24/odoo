@@ -7,16 +7,16 @@
 # Linkup <link-up@naver.com>, 2022
 # Martin Trigaux, 2023
 # Sarah Park, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Kwanghee Park (kwpa)" <kwpa@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:37+0000\n"
-"PO-Revision-Date: 2026-01-27 06:39+0000\n"
-"Last-Translator: \"Kwanghee Park (kwpa)\" <kwpa@odoo.com>\n"
+"POT-Creation-Date: 2026-10-30 17:37+0000\n"
+"PO-Revision-Date: 2026-08-05 22:21+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Korean <https://translate.odoo.com/projects/odoo-19/"
 "hr_expense/ko/>\n"
 "Language: ko\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: hr_expense
 #. odoo-python
@@ -323,6 +323,11 @@ msgid "Attach a receipt - usually an image or a PDF file."
 msgstr "영수증을 첨부하세요 - 이미지 또는 PDF 파일."
 
 #. module: hr_expense
+#: model:ir.model,name:hr_expense.model_ir_attachment
+msgid "Attachment"
+msgstr ""
+
+#. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__message_attachment_count
 msgid "Attachment Count"
 msgstr "첨부 파일 수"
@@ -549,6 +554,7 @@ msgstr "OCR 및 인공 지능을 활용하여 영수증을 디지털로 변환�
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split_wizard__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_ir_actions_report__display_name
+#: model:ir.model.fields,field_description:hr_expense.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_product_product__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_product_template__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_res_company__display_name
@@ -940,6 +946,11 @@ msgid "Hotel, plane ticket, taxi, etc."
 msgstr "호텔, 비행기 티켓, 택시 등."
 
 #. module: hr_expense
+#: model:ir.model.fields,field_description:hr_expense.field_account_tax__hr_expense_ids
+msgid "Hr Expense"
+msgstr ""
+
+#. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_res_config_settings__hr_expense_alias_domain_id
 msgid "Hr Expense Alias Domain"
 msgstr "HR 비용 별칭 도메인"
@@ -962,6 +973,7 @@ msgstr "HR 비용 별칭 도메인"
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__id
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split_wizard__id
 #: model:ir.model.fields,field_description:hr_expense.field_ir_actions_report__id
+#: model:ir.model.fields,field_description:hr_expense.field_ir_attachment__id
 #: model:ir.model.fields,field_description:hr_expense.field_product_product__id
 #: model:ir.model.fields,field_description:hr_expense.field_product_template__id
 #: model:ir.model.fields,field_description:hr_expense.field_res_company__id
@@ -1728,12 +1740,10 @@ msgstr "QR 코드를 스캔하여 Odoo 앱을 다운로드하세요:"
 #: model:ir.model.fields,help:hr_expense.field_hr_employee__expense_manager_id
 msgid ""
 "Select the user responsible for approving \"Expenses\" of this employee.\n"
-"If empty, the approval is done by an Administrator or Approver (determined "
-"in settings/users)."
+"If empty, the approval is done by the department manager (if they are an "
+"expense approver), otherwise by the employee's manager. If there is none, "
+"the expense is auto-validated."
 msgstr ""
-"해당 직원의 \"경비\" 승인을 담당할 관리자를 선택하십시오. \n"
-"비어 있는 경우 일반 관리자 또는 결재권자(설정/사용자에서 설정 가능)가 결재를 "
-"수행합니다."
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__selectable_payment_method_line_ids
@@ -1937,8 +1947,10 @@ msgstr "직원 경비를 생성할 때 사용되는 회사의 기본 전표입�
 #. module: hr_expense
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
-msgid "The current user has no related employee. Please, create one."
-msgstr "현재 사용자에게 연결된 직원이 없습니다. 새로 생성해 주세요."
+msgid ""
+"The current user has no related employee. Please, create one in %(company)s, "
+"or switch to a company where they have one."
+msgstr ""
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_template_register
@@ -2247,6 +2259,25 @@ msgstr "승인된 비용에 대한 회계 항목만 생성할 수 있습니다."
 #. module: hr_expense
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
+msgid "You can't add an attachment to an expense once it has been approved."
+msgstr ""
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/ir_attachment.py:0
+msgid "You can't add attachments to an expense once it has been approved."
+msgstr ""
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/ir_attachment.py:0
+msgid ""
+"You can't delete attachments from an expense once it has been submitted."
+msgstr ""
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense.py:0
 msgid ""
 "You can't post simultaneously employee-paid expenses belonging to different "
 "companies"
@@ -2326,6 +2357,13 @@ msgstr "이 경비를 제출할 권한이 없습니다."
 #: code:addons/hr_expense/models/hr_expense.py:0
 msgid "You do not have the rights to edit this expense."
 msgstr "이 경비를 편집할 권한이 없습니다."
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense.py:0
+#: code:addons/hr_expense/wizard/hr_expense_post_wizard.py:0
+msgid "You don't have the access rights to modify this expense."
+msgstr ""
 
 #. module: hr_expense
 #. odoo-python
@@ -2418,6 +2456,18 @@ msgstr "OCR을 사용하여 청구서 사진의 데이터 채우기"
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_form
 msgid "with the same receipt already exists."
 msgstr "동일한 영수증이 이미 존재합니다."
+
+#~ msgid ""
+#~ "Select the user responsible for approving \"Expenses\" of this employee.\n"
+#~ "If empty, the approval is done by an Administrator or Approver "
+#~ "(determined in settings/users)."
+#~ msgstr ""
+#~ "해당 직원의 \"경비\" 승인을 담당할 관리자를 선택하십시오. \n"
+#~ "비어 있는 경우 일반 관리자 또는 결재권자(설정/사용자에서 설정 가능)가 결재"
+#~ "를 수행합니다."
+
+#~ msgid "The current user has no related employee. Please, create one."
+#~ msgstr "현재 사용자에게 연결된 직원이 없습니다. 새로 생성해 주세요."
 
 #~ msgid "$100.00"
 #~ msgstr "$100.00"

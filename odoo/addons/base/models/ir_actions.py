@@ -21,6 +21,7 @@ from odoo.tools import _, frozendict, get_lang
 from odoo.tools.float_utils import float_compare
 from odoo.tools.misc import get_diff, unquote
 from odoo.tools.safe_eval import safe_eval, test_python_expr
+from odoo.tools.json import stringify_keys
 
 _logger = logging.getLogger(__name__)
 _server_action_logger = _logger.getChild("server_action_safe_eval")
@@ -953,6 +954,7 @@ class IrActionsServer(models.Model):
                         payload.update(sample_record.read(self.webhook_field_ids.mapped('name'), load=None)[0])
                     else:
                         payload[field.name] = WEBHOOK_SAMPLE_VALUES[field.ttype] if field.ttype in WEBHOOK_SAMPLE_VALUES else WEBHOOK_SAMPLE_VALUES[None]
+            payload = stringify_keys(payload)
             action.webhook_sample_payload = json.dumps(payload, indent=4, sort_keys=True, default=str)
 
     @api.constrains('code')
@@ -1016,8 +1018,9 @@ class IrActionsServer(models.Model):
 
     def _run_action_multi(self, eval_context=None):
         res = False
+        env = eval_context['env'] if eval_context else self.env
         for act in self.child_ids.sorted():
-            res = act.run() or res
+            res = act.with_env(env).run() or res
         return res
 
     def _run_action_object_write(self, eval_context=None):
@@ -1160,7 +1163,8 @@ class IrActionsServer(models.Model):
         active_id
             id of the current object (single mode)
         active_model
-            current model that should equal the action's model
+            model of the records in the calling context; when it differs from
+            the action's model, only Python and multi actions run
         active_ids (optional)
            ids of the current records (mass mode). If ``active_ids`` and
            ``active_id`` are present, ``active_ids`` is given precedence.
@@ -1174,7 +1178,19 @@ class IrActionsServer(models.Model):
             records = eval_context.get('record') or eval_context['model']
             records |= eval_context.get('records') or eval_context['model']
             action._can_execute_action_on_records(records)
-            res = action.sudo()._run(records, eval_context)
+
+            action_sudo = action.sudo()
+            active_model = self.env.context.get('active_model')
+            context_ids = self.env.context.get('active_id') or self.env.context.get('active_ids')
+            if active_model != action_sudo.model_name and context_ids and action_sudo.state not in ('code', 'multi'):
+                # Python and multi actions do not use the context records directly
+                _logger.warning(
+                    "Server action %r ignored: the active records are not %s records; got %s.",
+                    action_sudo.name, action_sudo.model_name, active_model,
+                )
+                continue
+
+            res = action_sudo._run(records, eval_context)
         return res
 
     def _run(self, records, eval_context):

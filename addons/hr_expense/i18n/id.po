@@ -6,16 +6,16 @@
 # Muhammad Syarif <mhdsyarif.ms@gmail.com>, 2022
 # Martin Trigaux, 2023
 # Abe Manyo, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# "Abe Manyo (abem)" <abem@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# "Abe Manyo (abem)" <abem@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Nurul Aini Akrima Sabila (nuaas)" <nuaas@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:37+0000\n"
-"PO-Revision-Date: 2026-05-23 09:41+0000\n"
+"POT-Creation-Date: 2026-10-30 17:37+0000\n"
+"PO-Revision-Date: 2026-09-23 05:34+0000\n"
 "Last-Translator: \"Nurul Aini Akrima Sabila (nuaas)\" <nuaas@odoo.com>\n"
 "Language-Team: Indonesian <https://translate.odoo.com/projects/odoo-19/"
 "hr_expense/id/>\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: hr_expense
 #. odoo-python
@@ -317,13 +317,18 @@ msgstr "Diarsipkan"
 #: code:addons/hr_expense/static/src/js/tours/hr_expense.js:0
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_form
 msgid "Attach Receipt"
-msgstr "Lampirkan Resi"
+msgstr "Lampirkan Bukti Bayar"
 
 #. module: hr_expense
 #. odoo-javascript
 #: code:addons/hr_expense/static/src/js/tours/hr_expense.js:0
 msgid "Attach a receipt - usually an image or a PDF file."
 msgstr "Lampirkan resit - biasanya gambar atau file PDF."
+
+#. module: hr_expense
+#: model:ir.model,name:hr_expense.model_ir_attachment
+msgid "Attachment"
+msgstr ""
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__message_attachment_count
@@ -552,6 +557,7 @@ msgstr "Digitalisasikan resi Anda dengan OCR dan AI"
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split_wizard__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_ir_actions_report__display_name
+#: model:ir.model.fields,field_description:hr_expense.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_product_product__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_product_template__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_res_company__display_name
@@ -691,7 +697,7 @@ msgstr ""
 #: model:ir.ui.menu,name:hr_expense.menu_hr_product
 #: model_terms:ir.ui.view,arch_db:hr_expense.product_product_expense_form_view
 msgid "Expense Categories"
-msgstr "Kategori-Kategori Pengeluaran"
+msgstr "Kategori Pengeluaran"
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__date
@@ -903,7 +909,7 @@ msgstr "Laporan Sebelumnya"
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_search
 msgid "Future Activities"
-msgstr "Kegiatan - Kegiatan Mendatang"
+msgstr "Aktivitas Mendatang"
 
 #. module: hr_expense
 #. odoo-javascript
@@ -948,6 +954,11 @@ msgid "Hotel, plane ticket, taxi, etc."
 msgstr "Hotel, tiket pesawat, taksi, dsb."
 
 #. module: hr_expense
+#: model:ir.model.fields,field_description:hr_expense.field_account_tax__hr_expense_ids
+msgid "Hr Expense"
+msgstr ""
+
+#. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_res_config_settings__hr_expense_alias_domain_id
 msgid "Hr Expense Alias Domain"
 msgstr "Hr Expense Alias Domain"
@@ -970,6 +981,7 @@ msgstr "Hr Expense Alias Domain"
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__id
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split_wizard__id
 #: model:ir.model.fields,field_description:hr_expense.field_ir_actions_report__id
+#: model:ir.model.fields,field_description:hr_expense.field_ir_attachment__id
 #: model:ir.model.fields,field_description:hr_expense.field_product_product__id
 #: model:ir.model.fields,field_description:hr_expense.field_product_template__id
 #: model:ir.model.fields,field_description:hr_expense.field_res_company__id
@@ -1128,7 +1140,7 @@ msgstr "Terakhir Diperbarui pada"
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_search
 msgid "Late Activities"
-msgstr "Aktivitas terakhir"
+msgstr "Aktivitas Terlambat"
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_res_config_settings__hr_expense_use_mailgateway
@@ -1227,7 +1239,7 @@ msgstr "Aktivitas Saya"
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__my_activity_date_deadline
 msgid "My Activity Deadline"
-msgstr "Deadline Kegiatan Saya"
+msgstr "Tenggat Aktivitas Saya"
 
 #. module: hr_expense
 #: model:ir.actions.act_window,name:hr_expense.hr_expense_actions_my_all
@@ -1274,7 +1286,7 @@ msgstr "Kalender Acara Aktivitas Berikutnya"
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr "Batas Waktu Aktivitas Berikutnya"
+msgstr "Tenggat Aktivitas Berikutnya"
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__activity_summary
@@ -1747,13 +1759,10 @@ msgstr "Scan kode QR ini untuk mendapatkan app Odoo:"
 #: model:ir.model.fields,help:hr_expense.field_hr_employee__expense_manager_id
 msgid ""
 "Select the user responsible for approving \"Expenses\" of this employee.\n"
-"If empty, the approval is done by an Administrator or Approver (determined "
-"in settings/users)."
+"If empty, the approval is done by the department manager (if they are an "
+"expense approver), otherwise by the employee's manager. If there is none, "
+"the expense is auto-validated."
 msgstr ""
-"Pilih user yang bertanggung jawab untuk menyetujui \"Pengeluaran\" karyawan "
-"ini.\n"
-"Bila kosong, persetujuan dilakukan oleh Administrator atau Approver "
-"(ditentukan di pengaturan/user)."
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__selectable_payment_method_line_ids
@@ -1861,7 +1870,7 @@ msgstr ""
 #: code:addons/hr_expense/static/src/views/list.xml:0
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_form
 msgid "Submit"
-msgstr "Menyerahkan"
+msgstr "Ajukan"
 
 #. module: hr_expense
 #. odoo-javascript
@@ -1960,8 +1969,10 @@ msgstr ""
 #. module: hr_expense
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
-msgid "The current user has no related employee. Please, create one."
-msgstr "User saat ini tidak terkait karyawan. Silakan buat satu."
+msgid ""
+"The current user has no related employee. Please, create one in %(company)s, "
+"or switch to a company where they have one."
+msgstr ""
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_template_register
@@ -2191,7 +2202,7 @@ msgstr "Validasikan Pengeluaran Duplikat"
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__vendor_id
 msgid "Vendor"
-msgstr "Pemasok"
+msgstr "Vendor"
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_template_register
@@ -2274,6 +2285,25 @@ msgstr "Anda sekarang dapat menyerahkannya ke manajer dari link berikut."
 msgid "You can only generate an accounting entry for approved expense(s)."
 msgstr ""
 "Anda hanya dapat membuat entri akuntansi untuk pengeluaran yang disetujui."
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense.py:0
+msgid "You can't add an attachment to an expense once it has been approved."
+msgstr ""
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/ir_attachment.py:0
+msgid "You can't add attachments to an expense once it has been approved."
+msgstr ""
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/ir_attachment.py:0
+msgid ""
+"You can't delete attachments from an expense once it has been submitted."
+msgstr ""
 
 #. module: hr_expense
 #. odoo-python
@@ -2370,6 +2400,13 @@ msgstr "Anda tidak memiliki hak untuk mengedit pengeluaran ini."
 
 #. module: hr_expense
 #. odoo-python
+#: code:addons/hr_expense/models/hr_expense.py:0
+#: code:addons/hr_expense/wizard/hr_expense_post_wizard.py:0
+msgid "You don't have the access rights to modify this expense."
+msgstr ""
+
+#. module: hr_expense
+#. odoo-python
 #: code:addons/hr_expense/wizard/hr_expense_post_wizard.py:0
 msgid "You don't have the rights to create accounting entries."
 msgstr "Anda tidak memiliki hak untuk membuat entri akuntansi."
@@ -2459,6 +2496,19 @@ msgstr "gunakan OCR untuk mengisi data dari gambar tagihan"
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_form
 msgid "with the same receipt already exists."
 msgstr "dengan tanda terima yang sama sudah ada."
+
+#~ msgid ""
+#~ "Select the user responsible for approving \"Expenses\" of this employee.\n"
+#~ "If empty, the approval is done by an Administrator or Approver "
+#~ "(determined in settings/users)."
+#~ msgstr ""
+#~ "Pilih user yang bertanggung jawab untuk menyetujui \"Pengeluaran\" "
+#~ "karyawan ini.\n"
+#~ "Bila kosong, persetujuan dilakukan oleh Administrator atau Approver "
+#~ "(ditentukan di pengaturan/user)."
+
+#~ msgid "The current user has no related employee. Please, create one."
+#~ msgstr "User saat ini tidak terkait karyawan. Silakan buat satu."
 
 #~ msgid "$100.00"
 #~ msgstr "$100.00"

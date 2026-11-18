@@ -1,5 +1,6 @@
 import { reactive } from "@odoo/owl";
 
+import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 
 export class MailCoreWeb {
@@ -26,7 +27,7 @@ export class MailCoreWeb {
             } else if (payload.activity_deleted) {
                 countDiff = -1;
             }
-            this.store.activityCounter += countDiff;
+            this.store.activityCounter = Math.max(this.store.activityCounter + countDiff, 0);
         });
         this.env.bus.addEventListener("mail.message/delete", ({ detail: { message, notifId } }) => {
             if (message.needaction && notifId > this.store.inbox.counter_bus_id) {
@@ -91,6 +92,14 @@ export class MailCoreWeb {
                 inbox.fetchMoreMessages();
             }
         });
+        browser.navigator.serviceWorker?.addEventListener(
+            "message",
+            ({ data: { action, data } }) => {
+                if (action === "OPEN_RECORD") {
+                    this.store.Thread.insert({ id: data.id, model: data.model }).open();
+                }
+            }
+        );
     }
 }
 

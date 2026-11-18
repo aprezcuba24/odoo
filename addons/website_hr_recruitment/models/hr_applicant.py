@@ -8,7 +8,16 @@ from odoo.exceptions import UserError
 class HrApplicant(models.Model):
     _inherit = 'hr.applicant'
 
+    def get_base_url(self):
+        # The applicant only has a company, the job holds the website
+        if self.job_id:
+            return self.job_id.get_base_url()
+        return super().get_base_url()
+
     def website_form_input_filter(self, request, values):
+        if 'partner_id' in values:
+            values.pop('email_from', None)
+            values.pop('partner_phone', None)
         if values.get('job_id'):
             job = self.env['hr.job'].browse(values.get('job_id'))
             if not job.sudo().active:

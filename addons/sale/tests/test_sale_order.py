@@ -330,8 +330,8 @@ class TestSaleOrder(SaleCommon):
 
     def test_discount_rounding(self):
         """
-            Check the discount is properly rounded and the price subtotal
-            computed with this rounded discount
+            Check the discount is not rounded and the price subtotal
+            is computed with the discount as provided
         """
         sale_order = self.env['sale.order'].create({
             'partner_id': self.partner.id,
@@ -342,8 +342,8 @@ class TestSaleOrder(SaleCommon):
                 'discount': 74.246,
             })]
         })
-        self.assertEqual(sale_order.order_line.price_subtotal, 49.44, "Subtotal should be equal to 192 * (1 - 0.7425)")
-        self.assertEqual(sale_order.order_line.discount, 74.25)
+        self.assertEqual(sale_order.order_line.price_subtotal, 49.45, "Subtotal should be equal to 192 * (1 - 0.74246)")
+        self.assertEqual(sale_order.order_line.discount, 74.246)
 
     def test_tax_amount_rounding(self):
         """ Check order amounts are rounded according to settings """
@@ -792,6 +792,30 @@ class TestSaleOrder(SaleCommon):
             sol.price_subtotal, self.product.list_price * sol.product_uom_qty,
             msg="price_total should be equal to expected_total",
         )
+
+    def test_amount_to_invoice_at_date_with_uom(self):
+        self.env.user.group_ids += self.env.ref('uom.group_uom')
+        uom_dozens = self.env.ref('uom.product_uom_dozen')
+
+        product_data = {
+            'name': 'SuperProduct',
+            'type': 'consu',
+            'list_price': 100,
+        }
+        product = self.env['product.product'].create(product_data)
+
+        so_form = Form(self.env['sale.order'])
+        so_form.partner_id = self.partner
+        with so_form.order_line.new() as so_line:
+            so_line.product_id = product
+            so_line.product_uom_id = uom_dozens
+            so_line.product_uom_qty = 2
+        so = so_form.save()
+
+        so.order_line[0].qty_delivered = 2
+
+        self.assertEqual(so.order_line[0].price_unit, 1200)
+        self.assertEqual(so.order_line[0].amount_to_invoice_at_date, 2400)
 
 
 @tagged('post_install', '-at_install')

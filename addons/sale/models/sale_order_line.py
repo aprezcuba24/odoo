@@ -5,7 +5,7 @@ from markupsafe import Markup
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Command, Domain
-from odoo.tools import float_compare, float_is_zero, format_date, groupby
+from odoo.tools import float_compare, float_is_zero, float_round, format_date, groupby
 from odoo.tools.translate import _
 
 
@@ -184,7 +184,7 @@ class SaleOrderLine(models.Model):
     discount = fields.Float(
         string="Discount (%)",
         compute='_compute_discount',
-        digits='Discount',
+        min_display_digits='Discount',
         store=True, readonly=False, precompute=True)
 
     price_subtotal = fields.Monetary(
@@ -496,9 +496,12 @@ class SaleOrderLine(models.Model):
         elif dp_state == 'cancel':
             name = _("Down Payment (Cancelled)")
         else:
-            invoice = self._get_invoice_lines().filtered(
+            invoices = self._get_invoice_lines().filtered(
                 lambda aml: aml.quantity >= 0
-            ).move_id.filtered(lambda move: move.move_type == 'out_invoice')
+            ).move_id.filtered(lambda move: move.move_type == "out_invoice")
+            # A reversed and re-issued down payment (Reverse and Create Invoice)
+            # links both invoices to this line; keep the active (non-reversed) one.
+            invoice = invoices.filtered(lambda move: move.payment_state != "reversed") or invoices
             if len(invoice) == 1 and invoice.payment_reference and invoice.invoice_date:
                 name = _(
                     "Down Payment (ref: %(reference)s on %(date)s)",
@@ -791,6 +794,7 @@ class SaleOrderLine(models.Model):
     @api.depends('product_id', 'product_uom_id', 'product_uom_qty')
     def _compute_discount(self):
         discount_enabled = self.env['product.pricelist.item']._is_discount_feature_enabled()
+        discount_precision = self.env['decimal.precision'].precision_get('Discount')
         for line in self:
             if not line.product_id or line.display_type:
                 line.discount = 0.0
@@ -819,7 +823,7 @@ class SaleOrderLine(models.Model):
                 if (discount > 0 and base_price > 0) or (discount < 0 and base_price < 0):
                     # only show negative discounts if price is negative
                     # otherwise it's a surcharge which shouldn't be shown to the customer
-                    line.discount = discount
+                    line.discount = float_round(discount, precision_digits=discount_precision)
 
     def _prepare_base_line_for_taxes_computation(self, **kwargs):
         """ Convert the current record to a dictionary in order to use the generic taxes computation method
@@ -1004,7 +1008,16 @@ class SaleOrderLine(models.Model):
     def _prepare_qty_invoiced(self):
         invoiced_qties = defaultdict(float)
         for line in self:
-            for invoice_line in line._get_invoice_lines():
+            invoice_lines = line._get_invoice_lines()
+            for invoice_line in invoice_lines:
+                if line.is_downpayment:
+                    if not line.currency_id.is_zero(sum(invoice_lines.filtered(lambda l: l.move_id.state != 'cancel' or l.move_id.payment_state == 'invoicing_legacy').mapped('balance'))):
+                        invoiced_qties[line] = 1
+                        line.qty_invoiced = 1
+                    else:
+                        invoiced_qties[line] = 0
+                        line.qty_invoiced = 0
+                    continue
                 if invoice_line.move_id.state != 'cancel' or invoice_line.move_id.payment_state == 'invoicing_legacy':
                     invoice_qty = invoice_line.product_uom_id._compute_quantity(invoice_line.quantity, line.product_uom_id, round=False)
                     if invoice_line.move_id.move_type == 'out_invoice':
@@ -1196,12 +1209,12 @@ class SaleOrderLine(models.Model):
 
             line.untaxed_amount_to_invoice = amount_to_invoice
 
-    @api.depends('discount', 'price_total', 'product_uom_qty', 'qty_delivered', 'qty_invoiced_posted')
+    @api.depends('discount', 'price_total', 'product_uom_qty', 'qty_invoiced_posted')
     def _compute_amount_to_invoice(self):
         for line in self:
             if line.product_uom_qty:
-                uom_qty_to_consider = line.qty_delivered if line.product_id.invoice_policy == 'delivery' else line.product_uom_qty
-                qty_to_invoice = uom_qty_to_consider - line.qty_invoiced_posted
+                # The ordered quantity is what the customer committed to, delivered or not.
+                qty_to_invoice = line.product_uom_qty - line.qty_invoiced_posted
                 unit_price_total = line.price_total / line.product_uom_qty
                 line.amount_to_invoice = unit_price_total * qty_to_invoice
             else:
@@ -1230,7 +1243,8 @@ class SaleOrderLine(models.Model):
     @api.depends_context('accrual_entry_date')
     def _compute_amount_to_invoice_at_date(self):
         for line in self:
-            line.amount_to_invoice_at_date = (line.qty_delivered_at_date - line.qty_invoiced_at_date) * line._get_gross_price_unit()
+            qty_to_invoice = line.product_uom_id._compute_quantity(line.qty_delivered_at_date - line.qty_invoiced_at_date, line.product_id.uom_id)
+            line.amount_to_invoice_at_date = qty_to_invoice * line._get_gross_price_unit()
 
     @api.depends('order_id.partner_id', 'product_id')
     def _compute_analytic_distribution(self):
@@ -1309,9 +1323,16 @@ class SaleOrderLine(models.Model):
 
     # === ONCHANGE METHODS ===#
 
+    def onchange(self, values, field_names, fields_spec):
+        self_with_context = self
+        if not field_names:
+            # Some onchange methods should not apply to first onchange
+            self_with_context = self.with_context(sale_onchange_first_call=True)
+        return super(SaleOrderLine, self_with_context).onchange(values, field_names, fields_spec)
+
     @api.onchange('product_id')
     def _onchange_product_id(self):
-        if not self.product_id:
+        if not self.product_id or self.env.context.get("sale_onchange_first_call"):
             return
         self._reset_price_unit()
 
@@ -1319,6 +1340,7 @@ class SaleOrderLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        combo_item_ids = []
         for vals in vals_list:
             if vals.get('display_type') or self.default_get(['display_type']).get('display_type'):
                 vals['product_uom_qty'] = 0.0
@@ -1329,7 +1351,16 @@ class SaleOrderLine(models.Model):
                 # because technical_price_unit is set.
                 vals.pop('technical_price_unit')
 
+            if self.env.context.get("import_file"):
+                combo_item_ids.append(vals.pop("combo_item_id", False))
+
         lines = super().create(vals_list)
+
+        if self.env.context.get("import_file"):
+            for line, combo_item_id in zip(lines, combo_item_ids):
+                if combo_item_id:
+                    line.combo_item_id = combo_item_id
+
         for line in lines:
             linked_line = line._get_linked_line()
             if linked_line:
@@ -1518,10 +1549,18 @@ class SaleOrderLine(models.Model):
                 'collapse_composition': self.collapse_composition,
                 **optional_values,
             }
+        product = self.product_id.with_context(
+            lang=self.order_id._get_lang(),
+            partner_id=self.order_id.partner_id.id,
+            company_id=self.company_id.id,
+        )
+        display_name = product.with_context(partner_id=False, seller_id=False).display_name
+        if not display_name or display_name not in self.name:
+            display_name = product.display_name
         res = {
             'display_type': self.display_type or 'product',
             'sequence': self.sequence,
-            'name': self.env['account.move.line']._get_journal_items_full_name(self.name, self.product_id.display_name),
+            'name': self.env['account.move.line']._get_journal_items_full_name(self.name, display_name),
             'product_id': self.product_id.id,
             'product_uom_id': self.product_uom_id.id,
             'quantity': self.qty_to_invoice,
@@ -1585,6 +1624,7 @@ class SaleOrderLine(models.Model):
         if display_taxes:
             res = [
                 {
+                    'tax_names': [tax.name for tax in taxes if tax.name],
                     'tax_labels': [tax.tax_label for tax in taxes if tax.tax_label],
                     'price_subtotal': sum(lines.mapped('price_subtotal')),
                     'price_total': sum(lines.mapped('price_total')),
@@ -1593,15 +1633,12 @@ class SaleOrderLine(models.Model):
             ]
         else:
             res = [{
+                'tax_names': [],
                 'tax_labels': [],
                 'price_subtotal': sum(billable_lines.mapped('price_subtotal')),
                 'price_total': sum(billable_lines.mapped('price_total')),
             }]
-        return res or [{
-            'tax_labels': [],
-            'price_subtotal': 0.0,
-            'price_total': 0.0,
-        }]
+        return res
 
     def get_parent_section_line(self):
         if not self.display_type and self.parent_id.display_type == 'line_subsection':
@@ -1782,7 +1819,16 @@ class SaleOrderLine(models.Model):
         ) or self.env['sale.order.line']
 
     def _get_linked_lines(self):
-        """ Return the linked lines of this line, if any.
+        """ Return the linked lines of this line, if any."""
+        self.ensure_one()
+        return self.order_id.order_line._get_linked_lines_by_line().get(
+            self, self.env['sale.order.line']
+        )
+
+    def _get_linked_lines_by_line(self):
+        """Batched version of `_get_linked_lines`.
+
+        Return in a single pass a mapping ``{line: linked_lines}`` for each line in `self`.
 
         This method relies on either `linked_line_id` or `linked_virtual_id` to retrieve the linked
         lines, depending on whether this line is saved in the DB.
@@ -1790,16 +1836,24 @@ class SaleOrderLine(models.Model):
         Note: we can't rely on `linked_line_ids` as it will only be populated when both this line
         and its linked lines are saved in the DB, which we can't ensure.
         """
-        self.ensure_one()
-        return (
-            self._origin and self.order_id.order_line.filtered(
-                lambda line: line.linked_line_id._origin == self._origin
-            )
-        ) or (
-            self.virtual_id and self.order_id.order_line.filtered(
-                lambda line: line.linked_virtual_id == self.virtual_id
-            )
-        ) or self.env['sale.order.line']
+        lines_by_origin = defaultdict(lambda: self.env['sale.order.line'])
+        lines_by_virtual = defaultdict(lambda: self.env['sale.order.line'])
+        for line in self:
+            if line.linked_line_id._origin:
+                lines_by_origin[line.linked_line_id._origin] |= line
+            if line.linked_virtual_id:
+                lines_by_virtual[line.linked_virtual_id] |= line
+
+        SaleOrderLine = self.env['sale.order.line']
+        linked_lines_by_line = {}
+        for line in self:
+            linked_lines = SaleOrderLine
+            if line._origin:
+                linked_lines = lines_by_origin.get(line._origin, SaleOrderLine)
+            if not linked_lines and line.virtual_id:
+                linked_lines = lines_by_virtual.get(line.virtual_id, SaleOrderLine)
+            linked_lines_by_line[line] = linked_lines
+        return linked_lines_by_line
 
     def _sellable_lines_domain(self):
         discount_products_ids = self.env.companies.sale_discount_product_id.ids

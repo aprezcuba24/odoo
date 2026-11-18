@@ -25,17 +25,17 @@
 # Anders Wallenquist <anders.wallenquist@vertel.se>, 2023
 # Kim Asplund <kim.asplund@gmail.com>, 2023
 # Martin Trigaux, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
-# Jacob Ljungström <jacob.ljungstrom03@gmail.com>, 2025.
-# Camille Dantinne <cmd@odoo.com>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
+# Jacob Ljungström <jacob.ljungstrom03@gmail.com>, 2025, 2026.
+# Camille Dantinne <cmd@odoo.com>, 2025, 2026.
 # Hanna Kharraziha <hakha@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 17:35+0000\n"
-"PO-Revision-Date: 2026-06-10 16:32+0000\n"
+"POT-Creation-Date: 2026-11-13 17:36+0000\n"
+"PO-Revision-Date: 2026-10-28 13:33+0000\n"
 "Last-Translator: Hanna Kharraziha <hakha@odoo.com>\n"
 "Language-Team: Swedish <https://translate.odoo.com/projects/odoo-19/website/"
 "sv/>\n"
@@ -44,7 +44,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_quotes_carousel_compact
@@ -262,12 +262,6 @@ msgid "$ 32M"
 msgstr "$32M"
 
 #. module: website
-#. odoo-python
-#: code:addons/website/models/ir_ui_view.py:0
-msgid "%(error)s (website: %(website_id)s)"
-msgstr ""
-
-#. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/client_actions/website_preview/website_builder_action.js:0
 msgid "%s is not a valid URL."
@@ -310,6 +304,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.list_website_public_pages
 msgid "'. Showing results for '"
 msgstr "'. Visar resultat för '"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/search_bar.js:0
+msgid "(%(count)s found)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -2876,7 +2876,7 @@ msgstr "Åtkomst nekad"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_visitor__access_token
 msgid "Access Token"
-msgstr "Åtkomsttecken"
+msgstr "Åtkomsttoken"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.protected_403
@@ -2906,8 +2906,8 @@ msgstr "Bild för dragspel"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
-msgid "Accounts are usable across all your multiple websites"
-msgstr "Konton kan användas på alla dina webbplatser"
+msgid "Accounts created on this website are usable across all other websites"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_2_s_three_columns
@@ -3587,12 +3587,6 @@ msgid "Always Underline"
 msgstr "Alltid understruken"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
-msgid "Always Visible"
-msgstr "Alltid synlig"
-
-#. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_3_s_three_columns
 msgid "Amazing Sound Quality"
 msgstr "Fantastisk ljudkvalitet"
@@ -3799,7 +3793,7 @@ msgstr "Arkitektur Fs"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.view_rewrite_search
 msgid "Archived"
-msgstr "Arkiverad"
+msgstr "Arkiverade"
 
 #. module: website
 #. odoo-javascript
@@ -4381,7 +4375,7 @@ msgstr "Bygg upp din %s"
 #. odoo-javascript
 #: code:addons/website/static/src/components/website_loader/website_loader.js:0
 msgid "Building your website."
-msgstr "Bygga din webbplats."
+msgstr "Vi bygger din hemsida..."
 
 #. module: website
 #. odoo-javascript
@@ -6934,6 +6928,12 @@ msgstr "Munk"
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/popup_option_plugin.js:0
+msgid "Drag blocks here"
+msgstr ""
+
+#. module: website
+#. odoo-javascript
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 msgid "Drag the <b>%s</b> block and drop it at the bottom of the page."
 msgstr "Dra blocket <b>%s</b> och släpp det längst ner på sidan."
@@ -7779,6 +7779,12 @@ msgstr "Förlängningsvy"
 #: model:ir.model.fields,field_description:website.field_website_page__xml_id
 msgid "External ID"
 msgstr "Externt ID"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "External ID can not be loaded: %(error)s (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -8742,6 +8748,15 @@ msgstr "Google Map"
 #: model:ir.model.fields,field_description:website.field_website__google_maps_api_key
 msgid "Google Maps API Key"
 msgstr "Google Maps API-nyckel"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_service.js:0
+#: code:addons/website/static/src/core/website_map_service.js:0
+msgid ""
+"Google Maps configuration has changed. Please reload the page for changes to "
+"take effect."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -13478,8 +13493,8 @@ msgstr "Platshållare"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_api_key_dialog.xml:0
-msgid "Places API"
-msgstr "API för platser"
+msgid "Places API (NEW)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -13701,6 +13716,7 @@ msgstr "Prissättningsplaner"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 msgid "Primary"
 msgstr "Primär"
 
@@ -14337,7 +14353,7 @@ msgstr ""
 #. module: website
 #: model:ir.ui.menu,name:website.menu_reporting
 msgid "Reporting"
-msgstr "Rapportering"
+msgstr "Rapporter"
 
 #. module: website
 #. odoo-javascript
@@ -14895,6 +14911,7 @@ msgstr "Andra standardradio"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 msgid "Secondary"
 msgstr "Sekundär"
 
@@ -15477,7 +15494,7 @@ msgstr "Storlek 5x"
 #. odoo-javascript
 #: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
 msgid "Skip and start from scratch"
-msgstr "Hoppa över och börja om från början"
+msgstr "Hoppa över och skapa eget"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_product_list
@@ -16207,9 +16224,23 @@ msgid "Template ID: %s"
 msgstr "Mall-ID: %s"
 
 #. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid ""
+"Template does not exist or has been deleted: %(error)s (website: %"
+"(website_id)s)"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.qweb_500
 msgid "Template fallback"
 msgstr "Fallback för mall"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "Template not found: '%(error)s' (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_mega
@@ -16422,12 +16453,6 @@ msgstr "Följande domän är inte giltig:"
 #: code:addons/website/static/src/xml/website_form.xml:0
 msgid "The form has been sent successfully."
 msgstr "Formuläret har skickats framgångsrikt."
-
-#. module: website
-#. odoo-python
-#: code:addons/website/controllers/form.py:0
-msgid "The form's specified model does not exist"
-msgstr "Formulärets specificerade modell existerar inte"
 
 #. module: website
 #: model:ir.model.fields,help:website.field_ir_actions_server__website_url
@@ -16725,11 +16750,8 @@ msgstr ""
 #: code:addons/website/static/src/builder/plugins/form/form_option_plugin.js:0
 msgid ""
 "This field is mandatory for this action. You cannot remove it. Try hiding it "
-"with the 'Visibility' option instead and add it a default value."
+"with the 'Visibility Rule' option instead and add it a default value."
 msgstr ""
-"Detta fält är obligatoriskt för denna åtgärd. Du kan inte ta bort det. "
-"Försök dölja det med alternativet \"Synlighet\" istället och lägg till det "
-"som ett standardvärde."
 
 #. module: website
 #: model:ir.model.fields,help:website.field_website_controller_page__arch_base
@@ -16796,6 +16818,13 @@ msgid ""
 msgstr ""
 "Detta teckensnitt finns redan, du kan bara lägga till det som ett lokalt "
 "teckensnitt för att ersätta serverversionen."
+
+#. module: website
+#. odoo-python
+#: code:addons/website/controllers/form.py:0
+msgid ""
+"This form cannot be submitted. Please contact the website administrator."
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -17984,6 +18013,12 @@ msgid "Visibility Password Display"
 msgstr "Synlighet Lösenordsdisplay"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
+msgid "Visibility Rule"
+msgstr ""
+
+#. module: website
 #: model:ir.model.fields,field_description:website.field_website_menu__group_ids
 msgid "Visible Groups"
 msgstr "Synliga grupper"
@@ -19169,6 +19204,12 @@ msgstr ""
 #: code:addons/website/static/src/builder/plugins/form/form_option_plugin.js:0
 msgid "You cannot duplicate this field."
 msgstr "Du kan inte duplicera detta fält."
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/card_image_option_plugin.js:0
+msgid "You cannot duplicate this image."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -20687,7 +20728,7 @@ msgstr ""
 #. module: website
 #: model:ir.model.fields.selection,name:website.selection__theme_ir_ui_view__inherit_id__theme_ir_ui_view
 msgid "theme.ir.ui.view"
-msgstr "tema.ir.ui.vy"
+msgstr "theme.ir.ui.view"
 
 #. module: website
 #. odoo-javascript
@@ -20755,6 +20796,26 @@ msgstr "✽ Pizzor"
 #: model_terms:ir.ui.view,arch_db:website.s_key_benefits
 msgid "✽  What We Offer"
 msgstr "✽ Vad vi erbjuder"
+
+#~ msgid "Always Visible"
+#~ msgstr "Alltid synlig"
+
+#~ msgid ""
+#~ "This field is mandatory for this action. You cannot remove it. Try hiding "
+#~ "it with the 'Visibility' option instead and add it a default value."
+#~ msgstr ""
+#~ "Detta fält är obligatoriskt för denna åtgärd. Du kan inte ta bort det. "
+#~ "Försök dölja det med alternativet \"Synlighet\" istället och lägg till "
+#~ "det som ett standardvärde."
+
+#~ msgid "Places API"
+#~ msgstr "API för platser"
+
+#~ msgid "The form's specified model does not exist"
+#~ msgstr "Formulärets specificerade modell existerar inte"
+
+#~ msgid "Accounts are usable across all your multiple websites"
+#~ msgstr "Konton kan användas på alla dina webbplatser"
 
 #~ msgid "<u>Wednesday</u><br/>8.00am-12.00am"
 #~ msgstr "<u>Veddag</u><br/>8.00-12.00"

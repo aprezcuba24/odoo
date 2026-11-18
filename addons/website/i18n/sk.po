@@ -27,8 +27,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 17:35+0000\n"
-"PO-Revision-Date: 2026-06-06 19:59+0000\n"
+"POT-Creation-Date: 2026-11-13 17:36+0000\n"
+"PO-Revision-Date: 2026-08-02 23:04+0000\n"
 "Last-Translator: Tomáš Píšek <Tomas.Pisek@seznam.cz>\n"
 "Language-Team: Slovak <https://translate.odoo.com/projects/odoo-19/website/"
 "sk/>\n"
@@ -36,8 +36,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && "
-"n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n "
+">= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
 "X-Generator: Weblate 2026.6.1\n"
 
 #. module: website
@@ -271,12 +271,6 @@ msgid "$ 32M"
 msgstr "32 mil. $"
 
 #. module: website
-#. odoo-python
-#: code:addons/website/models/ir_ui_view.py:0
-msgid "%(error)s (website: %(website_id)s)"
-msgstr "%(error)s (webová stránka: %(website_id)s)"
-
-#. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/client_actions/website_preview/website_builder_action.js:0
 msgid "%s is not a valid URL."
@@ -320,6 +314,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.list_website_public_pages
 msgid "'. Showing results for '"
 msgstr "'. Zobrazujú sa výsledky pre '"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/search_bar.js:0
+msgid "(%(count)s found)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -3143,8 +3143,8 @@ msgstr "Obrázok akordeónu"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
-msgid "Accounts are usable across all your multiple websites"
-msgstr "Účty sú použiteľné na všetkých vašich viacerých webových stránkach"
+msgid "Accounts created on this website are usable across all other websites"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_2_s_three_columns
@@ -3826,12 +3826,6 @@ msgstr "Vždy"
 #: code:addons/website/static/src/builder/plugins/theme/theme_tab.xml:0
 msgid "Always Underline"
 msgstr "Vždy podčiarknuté"
-
-#. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
-msgid "Always Visible"
-msgstr "Vždy viditeľné"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_3_s_three_columns
@@ -7194,6 +7188,12 @@ msgstr "Kolesový"
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/popup_option_plugin.js:0
+msgid "Drag blocks here"
+msgstr ""
+
+#. module: website
+#. odoo-javascript
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 msgid "Drag the <b>%s</b> block and drop it at the bottom of the page."
 msgstr "Presuňte blok <b>%s</b> a umiestnite ho na spodok stránky."
@@ -8072,6 +8072,12 @@ msgstr "Rozširujúce view"
 #: model:ir.model.fields,field_description:website.field_website_page__xml_id
 msgid "External ID"
 msgstr "Externé ID"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "External ID can not be loaded: %(error)s (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -9043,6 +9049,15 @@ msgstr "Google Map"
 #: model:ir.model.fields,field_description:website.field_website__google_maps_api_key
 msgid "Google Maps API Key"
 msgstr "Google Maps API kľúč"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_service.js:0
+#: code:addons/website/static/src/core/website_map_service.js:0
+msgid ""
+"Google Maps configuration has changed. Please reload the page for changes to "
+"take effect."
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -13796,8 +13811,8 @@ msgstr "Nápoveda pre hodnotu"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/google_maps_option/google_maps_api_key_dialog.xml:0
-msgid "Places API"
-msgstr "Places API"
+msgid "Places API (NEW)"
+msgstr ""
 
 #. module: website
 #. odoo-javascript
@@ -14021,6 +14036,7 @@ msgstr "Plány"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 msgid "Primary"
 msgstr "Hlavné"
 
@@ -15221,6 +15237,7 @@ msgstr "Druhý predvolené prepínač"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/header/header_font_option.xml:0
+#: code:addons/website/static/src/builder/plugins/theme/theme_colors_option.xml:0
 msgid "Secondary"
 msgstr "Sekundárne"
 
@@ -16548,9 +16565,23 @@ msgid "Template ID: %s"
 msgstr "ID šablóny: %s"
 
 #. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid ""
+"Template does not exist or has been deleted: %(error)s (website: %"
+"(website_id)s)"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.qweb_500
 msgid "Template fallback"
 msgstr "Náhradná šablóna"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/ir_ui_view.py:0
+msgid "Template not found: '%(error)s' (website: %(website_id)s)"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_mega
@@ -16733,8 +16764,8 @@ msgstr ""
 msgid ""
 "The domain path cannot contain relative path segments like '/./' or '/../'."
 msgstr ""
-"Cesta k doméne nesmie obsahovať segmenty relatívnej cesty, ako napríklad „/./"
-"“ alebo „/../“."
+"Cesta k doméne nesmie obsahovať segmenty relatívnej cesty, ako napríklad "
+"„/./“ alebo „/../“."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_striped
@@ -16772,12 +16803,6 @@ msgstr "Nasledujúca doména nie je platná:"
 #: code:addons/website/static/src/xml/website_form.xml:0
 msgid "The form has been sent successfully."
 msgstr "Formulár bol úspešne odoslaný."
-
-#. module: website
-#. odoo-python
-#: code:addons/website/controllers/form.py:0
-msgid "The form's specified model does not exist"
-msgstr "Špecifikovaný model formulára neexistuje"
 
 #. module: website
 #: model:ir.model.fields,help:website.field_ir_actions_server__website_url
@@ -17078,11 +17103,8 @@ msgstr ""
 #: code:addons/website/static/src/builder/plugins/form/form_option_plugin.js:0
 msgid ""
 "This field is mandatory for this action. You cannot remove it. Try hiding it "
-"with the 'Visibility' option instead and add it a default value."
+"with the 'Visibility Rule' option instead and add it a default value."
 msgstr ""
-"Toto pole je pre túto akciu povinné. Nemôžete ho odstrániť. Skúste ho "
-"namiesto toho skryť pomocou možnosti „Viditeľnosť“ a pridajte mu predvolenú "
-"hodnotu."
 
 #. module: website
 #: model:ir.model.fields,help:website.field_website_controller_page__arch_base
@@ -17149,6 +17171,13 @@ msgid ""
 msgstr ""
 "Toto písmo už existuje, môžete ho pridať iba ako lokálne písmo, ktoré "
 "nahradí verziu na serveri."
+
+#. module: website
+#. odoo-python
+#: code:addons/website/controllers/form.py:0
+msgid ""
+"This form cannot be submitted. Please contact the website administrator."
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -18344,6 +18373,12 @@ msgstr "Heslo pre viditeľnosť"
 #: model:ir.model.fields,field_description:website.field_website_page_properties__visibility_password_display
 msgid "Visibility Password Display"
 msgstr "Zobrazenie hesla viditeľnosti"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/form/form_option.xml:0
+msgid "Visibility Rule"
+msgstr ""
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_menu__group_ids
@@ -19544,6 +19579,12 @@ msgstr "Toto pole nemôžete duplikovať."
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/builder/plugins/options/card_image_option_plugin.js:0
+msgid "You cannot duplicate this image."
+msgstr ""
+
+#. module: website
+#. odoo-javascript
 #: code:addons/website/static/src/builder/plugins/options/facebook_option_plugin.js:0
 msgid "You didn't provide a valid Facebook link"
 msgstr "Neuviedli ste platný odkaz na Facebook"
@@ -19570,7 +19611,8 @@ msgstr "Nemáte oprávnenie na úpravu tohto záznamu."
 #. odoo-python
 #: code:addons/website/models/website.py:0
 msgid "You don't have the necessary access rights to access this dashboard."
-msgstr "Nemáte potrebné prístupové práva na prístup k tomuto riadiacemu panelu."
+msgstr ""
+"Nemáte potrebné prístupové práva na prístup k tomuto riadiacemu panelu."
 
 #. module: website
 #. odoo-javascript
@@ -21202,6 +21244,29 @@ msgstr "✽ Pizze"
 #: model_terms:ir.ui.view,arch_db:website.s_key_benefits
 msgid "✽  What We Offer"
 msgstr "✽ Čo ponúkame"
+
+#~ msgid "Always Visible"
+#~ msgstr "Vždy viditeľné"
+
+#~ msgid ""
+#~ "This field is mandatory for this action. You cannot remove it. Try hiding "
+#~ "it with the 'Visibility' option instead and add it a default value."
+#~ msgstr ""
+#~ "Toto pole je pre túto akciu povinné. Nemôžete ho odstrániť. Skúste ho "
+#~ "namiesto toho skryť pomocou možnosti „Viditeľnosť“ a pridajte mu "
+#~ "predvolenú hodnotu."
+
+#~ msgid "%(error)s (website: %(website_id)s)"
+#~ msgstr "%(error)s (webová stránka: %(website_id)s)"
+
+#~ msgid "Places API"
+#~ msgstr "Places API"
+
+#~ msgid "The form's specified model does not exist"
+#~ msgstr "Špecifikovaný model formulára neexistuje"
+
+#~ msgid "Accounts are usable across all your multiple websites"
+#~ msgstr "Účty sú použiteľné na všetkých vašich viacerých webových stránkach"
 
 #~ msgid "<u>Wednesday</u><br/>8.00am-12.00am"
 #~ msgstr "<u>Streda</u><br/>8.00 –12.00"

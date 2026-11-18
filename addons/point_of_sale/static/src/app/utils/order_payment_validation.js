@@ -38,7 +38,7 @@ export default class OrderPaymentValidation {
     }
 
     get nextPage() {
-        if (this.pos.config.iface_print_auto && this.pos.config.iface_print_skip_screen) {
+        if (this.pos.config.autoPrint && this.pos.config.iface_print_skip_screen) {
             return {
                 page: "FeedbackScreen",
                 params: {
@@ -149,6 +149,7 @@ export default class OrderPaymentValidation {
 
         this.pos.addPendingOrder([this.order.id]);
         this.order.state = "paid";
+        this.pos.data.localUnsyncedPaidOrderUuids.add(this.order.uuid);
 
         try {
             // 1. Save order to server.
@@ -211,7 +212,7 @@ export default class OrderPaymentValidation {
     get canPrintReceipt() {
         return (
             this.order.nb_print === 0 &&
-            this.pos.config.iface_print_auto &&
+            this.pos.config.autoPrint &&
             (this.order.isToInvoice() ? this.order.finalized : true)
         );
     }
@@ -226,7 +227,7 @@ export default class OrderPaymentValidation {
         }
 
         if (this.canPrintReceipt) {
-            await this.pos.printReceipt({ order: this.order });
+            this.pos.printReceipt({ order: this.order });
         }
     }
 
@@ -239,6 +240,9 @@ export default class OrderPaymentValidation {
 
     handleValidationError(error) {
         if (error instanceof ConnectionLostError) {
+            // Bypass the 300ms debounce to immediately persist the paid order to IndexedDB.
+            // Without this, a page reload within the debounce window permanently loses the order.
+            this.pos.data.synchronizeLocalDataInIndexedDB();
             this.afterOrderValidation();
             Promise.reject(error);
         } else if (error instanceof RPCError) {

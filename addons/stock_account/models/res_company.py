@@ -51,11 +51,14 @@ class ResCompany(models.Model):
         if at_date and isinstance(at_date, str):
             at_date = fields.Date.from_string(at_date)
         last_closing_date = self._get_last_closing_date()
-        if at_date and last_closing_date and at_date < fields.Date.to_date(last_closing_date):
+        if at_date and last_closing_date and at_date < fields.Datetime.context_timestamp(self.with_context(tz=self._get_company_tz()), last_closing_date).date():
             raise UserError(self.env._('It exists closing entries after the selected date. Cancel them before generate an entry prior to them'))
         aml_vals_list = self.with_context(allowed_company_ids=self.ids)._action_close_stock_valuation(at_date=at_date)
 
         if not aml_vals_list:
+            # if we come from cron there might be no move to create for this company, but some for other companies
+            if self.env.context.get('closing_cron'):
+                return
             # No account moves to create, so nothing to display.
             raise UserError(_("Everything is correctly closed"))
         if not self.account_stock_journal_id:
@@ -65,14 +68,15 @@ class ResCompany(models.Model):
 
         moves_vals = {
             'journal_id': self.account_stock_journal_id.id,
-            'date': at_date or fields.Date.today(),
+            'date': at_date or self._get_company_today(),
             'ref': _('Stock Closing'),
             'line_ids': [Command.create(aml_vals) for aml_vals in aml_vals_list],
+            'company_id': self.id,
         }
-        account_move = self.with_context(allowed_company_ids=self.env.company.ids).env['account.move'].create(moves_vals)
+        account_move = self.env['account.move'].create(moves_vals)
         self._save_closing_id(account_move.id)
         if auto_post:
-            account_move._post()
+            account_move.with_context(tz=self._get_company_tz())._post()
 
         return {
             'type': 'ir.actions.act_window',
@@ -85,7 +89,7 @@ class ResCompany(models.Model):
     def stock_value(self, accounts_by_product=None, at_date=None):
         self.ensure_one()
         value_by_account: dict = defaultdict(float)
-        if not accounts_by_product:
+        if accounts_by_product is None:
             accounts_by_product = self.with_context(prefetch_fields=False)._get_accounts_by_product()
         for product, accounts in accounts_by_product.items():
             account = accounts['valuation']
@@ -95,19 +99,27 @@ class ResCompany(models.Model):
 
     def stock_accounting_value(self, accounts_by_product=None, at_date=None):
         self.ensure_one()
-        if not accounts_by_product:
-            accounts_by_product = self._get_accounts_by_product()
         account_data = defaultdict(float)
-        stock_valuation_accounts_ids = {accounts['valuation'].id for accounts in accounts_by_product.values()}
-        stock_valuation_accounts = self.env['account.account'].browse(stock_valuation_accounts_ids)
+        categ_accounts = self.env['product.category'].with_company(self).search_fetch(
+            domain=[('property_stock_valuation_account_id', '!=', False)],
+            field_names=['property_stock_valuation_account_id'],
+        ).property_stock_valuation_account_id
+        stock_valuation_accounts = self.account_stock_valuation_id | categ_accounts
+        if not stock_valuation_accounts:
+            return account_data
         domain = Domain([
             ('account_id', 'in', stock_valuation_accounts.ids),
             ('company_id', '=', self.id),
             ('parent_state', '=', 'posted'),
         ])
         if at_date:
-            domain = domain & Domain([('date', '<=', at_date)])
-        amls_group = self.env['account.move.line']._read_group(domain, ['account_id'], ['balance:sum'])
+            domain &= Domain([('date', '<=', at_date)])
+        amls_group = self.env['account.move.line']._read_group(
+            domain,
+            ['account_id'],
+            ['balance:sum'],
+            having=[('balance:sum', '!=', 0.0)],
+        )
         for account, balance in amls_group:
             account_data[account] += balance
         return account_data
@@ -132,22 +144,36 @@ class ResCompany(models.Model):
 
     @api.model
     def _cron_post_stock_valuation(self):
-        periods = ['daily']
-        if fields.Date.today() == fields.Date.today() + relativedelta(day=31):
-            periods.append('monthly')
         domain = Domain([
-            ('inventory_period', 'in', periods),
-            ('inventory_valuation', '!=', 'real_time'),
+            ('inventory_period', 'in', ['daily', 'monthly']),
         ])
         companies = self.env['res.company'].search(domain)
         for company in companies:
-            company.action_close_stock_valuation(auto_post=True)
+            today = company._get_company_today()
+            if company.inventory_period == 'monthly' and today != today + relativedelta(day=31):
+                continue
+            try:
+                company.with_context(closing_cron=True).action_close_stock_valuation(auto_post=True)
+            except UserError:
+                continue
 
     def _get_valuation_product_domain(self):
-        return [('is_storable', '=', True)]
+        return [
+            ('is_storable', '=', True),
+            '|',
+            ('stock_move_ids', 'any', [
+                ('company_id', '=', self.id),
+                ('state', '=', 'done'),
+            ]),
+            ('stock_quant_ids', 'any', [
+                ('company_id', '=', self.id),
+                ('location_id.is_valued_internal', '=', True),
+                ('quantity', '!=', 0),
+            ]),
+        ]
 
     def _get_accounts_by_product(self, products=None):
-        if not products:
+        if products is None:
             products = self.env['product.product'].with_company(self).search_fetch(
                 self._get_valuation_product_domain(), ['categ_id'],
             )
@@ -187,7 +213,7 @@ class ResCompany(models.Model):
         if last_closing_date:
             moves_base_domain &= Domain([('date', '>', last_closing_date)])
         if at_date:
-            moves_base_domain &= Domain([('date', '<=', at_date)])
+            moves_base_domain &= Domain([('date', '<=', self._to_datetime_upper_bound(at_date))])
         moves_in_domain = Domain([
             ('is_out', '=', True),
             ('company_id', '=', self.id),
@@ -231,8 +257,6 @@ class ResCompany(models.Model):
 
     def _get_stock_valuation_account_vals(self, accounts_by_product, at_date=None, extra_aml_vals_list=None):
         amls_vals_list = []
-        if not accounts_by_product:
-            return amls_vals_list
 
         extra_balance = self._get_extra_balance(extra_aml_vals_list)
 
@@ -271,7 +295,7 @@ class ResCompany(models.Model):
         """
         extra_balance = self._get_extra_balance(extra_aml_vals_list)
 
-        fiscal_year_date_from = self.compute_fiscalyear_dates(fields.Date.today())['date_from']
+        fiscal_year_date_from = self.compute_fiscalyear_dates(self._get_company_today())['date_from']
 
         amls_vals_list = []
         accounting_data_today = self.stock_accounting_value(accounts_by_product)
@@ -348,9 +372,9 @@ class ResCompany(models.Model):
         am_state_field = self.env['ir.model.fields'].sudo().search([('model', '=', 'account.move'), ('name', '=', 'state')], limit=1)
         state_tracking = closing.message_ids.sudo().tracking_value_ids.filtered(lambda t: t.field_id == am_state_field).sorted('id')
         create_date = state_tracking[-1:].create_date
-        if create_date and create_date.date() == closing.date:
+        if create_date and fields.Datetime.context_timestamp(self.with_context(tz=self._get_company_tz()), create_date).date() == closing.date:
             return create_date
-        return fields.Datetime.to_datetime(closing.date)
+        return self._to_datetime_upper_bound(closing.date)
 
     def _save_closing_id(self, move_id):
         self.ensure_one()

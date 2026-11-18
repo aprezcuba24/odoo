@@ -123,7 +123,7 @@ export class FormOptionPlugin extends Plugin {
             if (el.classList.contains("s_website_form_model_required")) {
                 reasons.push(
                     _t(
-                        "This field is mandatory for this action. You cannot remove it. Try hiding it with the 'Visibility' option instead and add it a default value."
+                        "This field is mandatory for this action. You cannot remove it. Try hiding it with the 'Visibility Rule' option instead and add it a default value."
                     )
                 );
             }
@@ -156,7 +156,8 @@ export class FormOptionPlugin extends Plugin {
             SetVisibilityAction,
             SetVisibilityDependencyAction,
             SetFormCustomFieldValueListAction,
-            PropertyAction,
+            PropertyAction, // TODO: remove on master (unused)
+            PropertyAndAttributeValueAction,
             SetCustomErrorMessageAction,
             SetDefaultErrorMessageAction,
             SetRequirementComparatorAction,
@@ -279,14 +280,7 @@ export class FormOptionPlugin extends Plugin {
         const formKey = activeForm?.website_form_key;
         const formInfo = registry.category("website.form_editor_actions").get(formKey, null);
         if (formInfo) {
-            const formatInfo = getDefaultFormat(el);
-            await Promise.all(
-                formInfo.formFields.map((field) => {
-                    field.formatInfo = formatInfo;
-                    return this.fetchFieldRecords(field);
-                })
-            );
-            await this.fetchFormInfoFields(formInfo);
+            await Promise.all(formInfo.formFields.map((field) => this.fetchFieldRecords(field)));
         }
         return formInfo;
     }
@@ -334,7 +328,7 @@ export class FormOptionPlugin extends Plugin {
     applyFormModel(el, activeForm, modelId, formInfo) {
         let oldFormInfo;
         if (modelId) {
-            const oldFormKey = activeForm.website_form_key;
+            const oldFormKey = activeForm?.website_form_key;
             if (oldFormKey) {
                 oldFormInfo = registry
                     .category("website.form_editor_actions")
@@ -381,20 +375,11 @@ export class FormOptionPlugin extends Plugin {
             // In some forms (e.g., contact forms), the "email_to" field must be included as hidden.
             // For example, this may force the 'email_to' value to a dummy/default one on the
             // contact us form just by interacting with it.
-            formInfo.fields?.forEach(field => {
+            formInfo.fields?.forEach((field) => {
                 if (field.defaultValue) {
                     this.addHiddenField(el, field.defaultValue, field.name);
                 }
             });
-        }
-    }
-    /**
-     * Ensures formInfo fields are fetched.
-     */
-    async fetchFormInfoFields(formInfo) {
-        if (formInfo.fields) {
-            const proms = formInfo.fields.map((field) => this.fetchFieldRecords(field));
-            await Promise.all(proms);
         }
     }
     async fetchAuthorizedFields(formEl) {
@@ -455,9 +440,7 @@ export class FormOptionPlugin extends Plugin {
         const field = getCustomField("char", _t("Custom Text"));
         field.formatInfo = getDefaultFormat(formEl);
         const fieldEl = renderField(field);
-        let locationEl = formEl.querySelector(
-            ".s_website_form_submit, .s_website_form_recaptcha"
-        );
+        let locationEl = formEl.querySelector(".s_website_form_submit, .s_website_form_recaptcha");
         if (!locationEl) {
             locationEl = formEl.querySelector(".s_website_form_rows");
             locationEl.insertAdjacentElement("beforeend", fieldEl);
@@ -515,6 +498,7 @@ export class FormOptionPlugin extends Plugin {
         const activeField = getActiveField(oldFieldEl, { fields });
         if (activeField.type !== field.type) {
             field.value = "";
+            field.propertyValue = "";
         }
         const targetEl = oldFieldEl.querySelector(".s_website_form_input");
         if (targetEl) {
@@ -925,7 +909,7 @@ export class SelectAction extends BuilderAction {
         const models = this.dependencies.websiteFormOption.getModelsCache(el);
         const targetModelName = getModelName(el);
         const activeForm = models.find((m) => m.model === targetModelName);
-        return parseInt(modelId) === activeForm.id;
+        return parseInt(modelId) === activeForm?.id;
     }
 }
 // Select the value of a field (hidden) that will be used on the model as a preset.
@@ -933,6 +917,7 @@ export class SelectAction extends BuilderAction {
 export class AddActionFieldAction extends BuilderAction {
     static id = "addActionField";
     static dependencies = ["websiteFormOption"];
+    loadOnClean = true;
     async load({ editingElement: el }) {
         return this.dependencies.websiteFormOption.fetchAuthorizedFields(el);
     }
@@ -946,8 +931,8 @@ export class AddActionFieldAction extends BuilderAction {
             }
         }
         const fieldName = params.fieldName;
-        if (params.isSelect === "true") {
-            value = parseInt(value);
+        if (value && params.isSelect) {
+            value = JSON.parse(value).id;
         }
         this.dependencies.websiteFormOption.addHiddenField(el, value, fieldName);
     }
@@ -970,11 +955,10 @@ export class AddActionFieldAction extends BuilderAction {
             const dataForValues = getParsedDataFor(formId, el.ownerDocument);
             return dataForValues?.["email_to"] || DEFAULT_EMAIL_TO_VALUE;
         }
-        if (value) {
-            return value;
-        } else {
-            return params.isSelect ? "0" : "";
+        if (!value) {
+            return "";
         }
+        return params.isSelect ? JSON.stringify({ id: parseInt(value) }) : value;
     }
     isApplied({ editingElement, params, value }) {
         const currentValue = this.getValue({
@@ -982,6 +966,9 @@ export class AddActionFieldAction extends BuilderAction {
             params,
         });
         return currentValue === value;
+    }
+    clean(context) {
+        this.apply(context);
     }
 }
 export class PromptSaveRedirectAction extends BuilderAction {
@@ -1261,19 +1248,28 @@ export class ToggleDescriptionAction extends BuilderAction {
         const description = fieldEl.querySelector(".s_website_form_field_description");
         const hasDescription = !!description;
         const field = getActiveField(fieldEl, { fields });
-        field.description = !hasDescription; // Will be changed to default description in qweb
+
+        if (hasDescription) {
+            description.classList.toggle("d-none");
+        } else {
+            field.description = true; // Will be changed to default description in qweb
+        }
+
         this.dependencies.websiteFormOption.replaceField(fieldEl, field, fields);
     }
     isApplied({ editingElement: fieldEl }) {
         const description = fieldEl.querySelector(".s_website_form_field_description");
-        return !!description;
+        return !!description && !description.classList.contains("d-none");
     }
 }
 export class SelectTextareaValueAction extends BuilderAction {
     static id = "selectTextareaValue";
+    static dependencies = ["valueHistory"];
     apply({ editingElement: fieldEl, value }) {
+        // Set the property first, because changing the attribute silently
+        // sets the value (the first time), messing the history
+        this.dependencies.valueHistory.setValue(fieldEl, value);
         fieldEl.textContent = value;
-        fieldEl.value = value;
     }
     getValue({ editingElement: fieldEl }) {
         return fieldEl.textContent;
@@ -1426,10 +1422,31 @@ export class SetFormCustomFieldValueListAction extends BuilderAction {
     }
 }
 class PropertyAction extends BuilderAction {
+    // TODO: remove this class on master (unused)
     static id = "property";
 
     apply({ editingElement, params: { property, format } = {}, value }) {
         editingElement[property] = format ? format(value) : value;
+    }
+}
+export class PropertyAndAttributeValueAction extends BuilderAction {
+    static id = "propertyAndAttributeValue";
+    static dependencies = ["valueHistory"];
+
+    getValue({ editingElement }) {
+        return editingElement.getAttribute("value");
+    }
+    apply({ editingElement, params: { format } = {}, value }) {
+        // Set both the property and the attribute in this action (instead of
+        // using the `attributeAction` shortcut) to ensure the order between
+        // the two, because setting the `value` attribute changes the `value`
+        // property the first time (leading to bad history)
+        this.dependencies.valueHistory.setValue(editingElement, format ? format(value) : value);
+        if (value) {
+            editingElement.setAttribute("value", value);
+        } else {
+            editingElement.removeAttribute("value");
+        }
     }
 }
 class SetMultipleFilesAction extends BuilderAction {

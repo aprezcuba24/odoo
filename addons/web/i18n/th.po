@@ -11,16 +11,16 @@
 # Martin Trigaux, 2022
 # Amin Cheloh <amincheloh@gmail.com>, 2022
 # Odoo Thaidev <odoothaidev@gmail.com>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # Odoo Translation Bot <c3p@odoo.com>, 2026.
 # Nusara Boonma <nuboo@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:37+0000\n"
-"PO-Revision-Date: 2026-05-30 09:39+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-13 03:55+0000\n"
 "Last-Translator: Nusara Boonma <nuboo@odoo.com>\n"
 "Language-Team: Thai <https://translate.odoo.com/projects/odoo-19/web/th/>\n"
 "Language: th\n"
@@ -28,7 +28,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: web
 #. odoo-javascript
@@ -1743,6 +1743,7 @@ msgstr ""
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.js:0
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 msgid "Copied"
@@ -1753,6 +1754,12 @@ msgstr "ทำสำเนาแล้ว"
 #: code:addons/web/static/src/views/fields/copy_clipboard/copy_clipboard_field.js:0
 msgid "Copy"
 msgstr "คัดลอก"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
+msgid "Copy Arch"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -4198,12 +4205,7 @@ msgstr "หัวเรื่องในการประชุม"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-msgid "Memory limit (in bytes)"
-msgstr ""
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
-msgid "Memory profile"
+msgid "Memory (heuristic)"
 msgstr ""
 
 #. module: web
@@ -5183,7 +5185,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/web/static/src/core/pager/pager.xml:0
 msgid "Pager"
-msgstr "เพจเจอร์"
+msgstr "แถบเลือกหน้า"
 
 #. module: web
 #: model:ir.model.fields,field_description:web.field_base_document_layout__paperformat_id
@@ -5565,7 +5567,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/web/static/src/views/fields/radio/radio_field.js:0
 msgid "Radio"
-msgstr "คลื่นวิทยุ"
+msgstr "ปุ่มตัวเลือก"
 
 #. module: web
 #. odoo-javascript
@@ -5979,6 +5981,12 @@ msgstr "บันทึกด้วยตนเอง"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation_button.js:0
+msgid "Save this record and its parent to translate"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/many2one/many2one.xml:0
 msgid "Scan barcode"
 msgstr "สแกนบาร์โค้ด"
@@ -6013,6 +6021,12 @@ msgstr "ค้นหา"
 #: code:addons/web/static/src/views/calendar/calendar_filter_section/calendar_filter_section.js:0
 msgid "Search More..."
 msgstr "ค้นหาเพิ่มเติม..."
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/reference/reference_field.js:0
+msgid "Search a record..."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -6317,6 +6331,12 @@ msgstr "ชินคันเซ็น"
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "Shinto"
 msgstr "ชินโตะ"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/user_menu/user_menu_items.js:0
+msgid "Shortcuts"
+msgstr "คีย์ลัด"
 
 #. module: web
 #. odoo-javascript
@@ -6686,16 +6706,6 @@ msgid "Text file"
 msgstr "ไฟล์ข้อความ"
 
 #. module: web
-#: model:ir.model.fields,help:web.field_base_document_layout__vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"หมายเลขประจำตัวผู้เสียภาษี ค่าที่นี่จะได้รับการตรวจสอบตามรูปแบบประเทศ คุณสามารถใช้ '/' "
-"เพื่อระบุว่าพาร์ทเนอร์ไม่ต้องเสียภาษี"
-
-#. module: web
 #. odoo-python
 #: code:addons/web/controllers/action.py:0
 msgid "The action “%s” does not exist"
@@ -6718,6 +6728,14 @@ msgstr "ไม่สามารถติดตั้งแอปด้วยเ
 #: code:addons/web/static/src/core/install_scoped_app/install_scoped_app.xml:0
 msgid "The app seems to be installed on your device"
 msgstr "แอปดูเหมือนจะได้รับการติดตั้งบนอุปกรณ์ของคุณแล้ว"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_arch_parser.js:0
+msgid ""
+"The autocomplete value for %(field)s has not been found: the record with id %"
+"(id)s doesn't seem to exist"
+msgstr ""
 
 #. module: web
 #. odoo-python
@@ -7774,6 +7792,11 @@ msgstr "คุณสามารถติดตั้งแอปได้จา
 #. odoo-python
 #: code:addons/web/models/properties_base_definition.py:0
 msgid "You can not read that field definition."
+msgstr ""
+
+#. module: web
+#: model:ir.model.fields,help:web.field_base_document_layout__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
 msgstr ""
 
 #. module: web
@@ -19029,7 +19052,6 @@ msgstr "อุ๊ปส์"
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
-#: model_terms:ir.ui.view,arch_db:web.config_speedscope_index
 msgid "open"
 msgstr "เปิด"
 
@@ -19304,7 +19326,7 @@ msgstr "หน้ามีขด"
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "pager"
-msgstr "เพจเจอร์"
+msgstr "แถบเลือกหน้า"
 
 #. module: web
 #. odoo-javascript
@@ -20126,7 +20148,7 @@ msgstr "กองอุจจาระ"
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "pill"
-msgstr "ยา"
+msgstr "ปุ่มขอบมน"
 
 #. module: web
 #. odoo-javascript
@@ -20942,13 +20964,13 @@ msgstr "ไม้เทนนิส"
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "radio"
-msgstr "วิทยุ"
+msgstr "ปุ่มตัวเลือก"
 
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 msgid "radio button"
-msgstr "ปุ่มวิทยุ"
+msgstr "ปุ่มตัวเลือก"
 
 #. module: web
 #. odoo-javascript
@@ -26857,6 +26879,14 @@ msgstr ""
 msgid "空"
 msgstr ""
 
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "หมายเลขประจำตัวผู้เสียภาษี ค่าที่นี่จะได้รับการตรวจสอบตามรูปแบบประเทศ คุณสามารถใช้ '/' "
+#~ "เพื่อระบุว่าพาร์ทเนอร์ไม่ต้องเสียภาษี"
+
 #~ msgid "00"
 #~ msgstr "00"
 
@@ -27476,9 +27506,6 @@ msgstr ""
 
 #~ msgid "Share with all users"
 #~ msgstr "แชร์กับผู้ใช้ทั้งหมด"
-
-#~ msgid "Shortcuts"
-#~ msgstr "คีย์ลัด"
 
 #~ msgid "Size:"
 #~ msgstr "ขนาด:"

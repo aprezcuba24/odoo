@@ -202,7 +202,7 @@ class TestIrSequenceGenerate(BaseCase):
                 'suffix': '/%(y)s/%(doy)s/%(woy)s',
             })
             self.assertTrue(seq)
-            now = datetime.now()
+            now = datetime.now(env.tz)
             self.assertEqual(
                 env['ir.sequence'].next_by_code('test_sequence_type_8'),
                 now.strftime('%Y/%m/%d/1/%y/%j/%W'),
@@ -218,7 +218,7 @@ class TestIrSequenceGenerate(BaseCase):
                 'suffix': '/%(isoweek)s/%(weekday)s',
             })
             self.assertTrue(seq)
-            isoyear, isoweek, weekday = datetime.now().isocalendar()
+            isoyear, isoweek, weekday = datetime.now(env.tz).isocalendar()
             self.assertEqual(
                 env['ir.sequence'].next_by_code('test_sequence_type_9'),
                 f"{isoyear}/{isoyear % 100:02d}/1/{isoweek:02d}/{weekday % 7}",
@@ -275,3 +275,26 @@ class TestIrSequenceInit(common.TransactionCase):
         # Read the value of the current sequence
         n = seq.next_by_id()
         self.assertEqual(n, "0001", 'The actual sequence value must be 1. reading : %s' % n)
+
+    def test_change_implementation_keeps_next_number(self):
+        """ Changing the implementation of a sequence must keep its next
+            number, and the one of its date ranges, instead of reissuing
+            numbers that were already drawn.
+        """
+        for use_date_range in (False, True):
+            for implementation, new_implementation in [('standard', 'no_gap'), ('no_gap', 'standard')]:
+                with self.subTest(use_date_range=use_date_range, implementation=implementation):
+                    seq = self.env['ir.sequence'].create({
+                        'name': 'test-sequence-implementation',
+                        'implementation': implementation,
+                        'use_date_range': use_date_range,
+                        'padding': 3,
+                    })
+                    numbers = [seq.next_by_id(sequence_date='2024-01-15') for _i in range(3)]
+                    self.assertEqual(numbers, ['001', '002', '003'])
+
+                    seq.implementation = new_implementation
+                    self.assertEqual(seq.next_by_id(sequence_date='2024-01-15'), '004')
+
+                    seq.implementation = implementation
+                    self.assertEqual(seq.next_by_id(sequence_date='2024-01-15'), '005')

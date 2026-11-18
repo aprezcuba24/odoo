@@ -338,3 +338,40 @@ class TestLoyalty(TransactionCase):
         # attempt to unarchive both programs together
         with self.assertRaises(ValidationError):
             (program1 + program2).action_unarchive()
+
+    def test_discount_description_translation(self):
+        """A discount product's name field should automatically update for all languages for which changes
+        are made on the reward's description"""
+        self.env['res.lang']._activate_lang('fr_FR')
+        program = self.env['loyalty.program'].create({
+            'name': 'Test Program',
+            'reward_ids': [(0, 0, {})],
+        })
+        reward = self.env['loyalty.reward'].with_context(lang='en_US').create({
+            'program_id': program.id,
+            'reward_type': 'discount',
+            'description': 'My Discount'
+        })
+        product = reward.discount_line_product_id
+        translations = {'en_US': 'Test Discount EN', 'fr_FR': 'Test Discount FR'}
+        reward.update_field_translations('description', translations)
+        product.invalidate_recordset(['name'])
+        self.assertEqual(product.with_context(lang='en_US').name, 'Test Discount EN')
+        self.assertEqual(product.with_context(lang='fr_FR').name, 'Test Discount FR')
+
+    def test_loyalty_program_reward_update(self):
+        """Updating a reward from an already saved loyalty program should work."""
+        with Form(self.env["loyalty.program"]) as program_form:
+            program_form.name = "Test Loyalty"
+            program_form.program_type = "promotion"
+            program_form.save()
+
+            with program_form.reward_ids.edit(0) as reward_form:
+                reward_form.discount = 5.0
+
+        program = program_form.record
+        self.assertEqual(
+            program.reward_ids.discount,
+            5.0,
+            "The discount update should be successfully saved to the database.",
+        )

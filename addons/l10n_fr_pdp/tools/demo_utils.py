@@ -58,10 +58,7 @@ def _mock_pdp_register_receiver(func, self):
     if self.proxy_type != 'pdp':
         return
     self.company_id.account_peppol_proxy_state = 'receiver'
-    if self.company_id.l10n_fr_pdp_pilot_phase:
-        self.sudo().company_id.l10n_fr_pdp_annuaire_start_date = fields.Date.to_date(fields.Datetime.now())
-    else:
-        self.sudo().company_id.l10n_fr_pdp_annuaire_start_date = fields.Date.to_date('2026-09-01')
+    self.sudo().company_id.l10n_fr_pdp_annuaire_start_date = fields.Date.to_date(fields.Datetime.now())
 
 
 def _mock_pdp_annuaire_lookup_participant(func, self, edi_identification):
@@ -70,7 +67,7 @@ def _mock_pdp_annuaire_lookup_participant(func, self, edi_identification):
 
 
 def _mock_get_peppol_verification_state(func, self, peppol_endpoint, peppol_eas, invoice_edi_format, process_type='billing'):
-    if peppol_eas != '0225':
+    if peppol_eas != '0225' or self.env.company._get_peppol_proxy_type() != 'pdp':
         return func(self, peppol_endpoint, peppol_eas, invoice_edi_format, process_type=process_type)
     if not invoice_edi_format:
         return 'not_valid'
@@ -85,21 +82,21 @@ def _mock_button_verify_partner_endpoint(func, self, company=None):
     company = company or self.env.company
     endpoint, eas, edi_format = self.peppol_endpoint, self.peppol_eas, self._get_peppol_edi_format()
     state = _mock_get_peppol_verification_state(ResPartner._get_peppol_verification_state, self, endpoint, eas, edi_format)
-    self.with_company(company).peppol_verification_state = state
+    self.sudo().with_company(company).peppol_verification_state = state
     self._log_verification_state_update(company, old_value, state)
-
-
-def _mock_l10n_fr_pdp_update_pilot_phase(func, self, value):
-    self.sudo().l10n_fr_pdp_pilot_phase = value
-    if value:
-        self.sudo().l10n_fr_pdp_annuaire_start_date = fields.Date.to_date(fields.Datetime.now())
-    else:
-        self.sudo().l10n_fr_pdp_annuaire_start_date = fields.Date.to_date('2026-09-01')
 
 
 def _mock_button_trigger_authentication(func, self):
     self.pdp_kyc_status = 'success'
     return self._action_open_pdp_form()
+
+
+def _mock_fetch_active_annuaire_lines(func, self, siren):
+    return {
+            'in_annuaire': False,
+            'identifiers': [],
+            'count': 0,
+        }
 
 
 _demo_behaviour = {
@@ -109,8 +106,8 @@ _demo_behaviour = {
     '_call_peppol_proxy': _mock_call_peppol_proxy,  # account_edi_proxy_client.user
     '_pdp_annuaire_lookup_participant': _mock_pdp_annuaire_lookup_participant,  # res.partner
     '_get_peppol_verification_state': _mock_get_peppol_verification_state,  # res.partner
-    '_l10n_fr_pdp_update_pilot_phase': _mock_l10n_fr_pdp_update_pilot_phase,  # res.company
     'button_trigger_authentication': _mock_button_trigger_authentication,  # pdp.registration
+    '_fetch_active_annuaire_lines': _mock_fetch_active_annuaire_lines,  # res.partner
 }
 
 # -------------------------------------------------------------------------

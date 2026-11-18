@@ -3,7 +3,6 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Command, Domain
 from odoo.tools import frozendict, groupby, html2plaintext, is_html_empty, split_every, SQL
 from odoo.tools.float_utils import float_is_zero, float_repr, float_round, float_compare
-from odoo.tools.misc import clean_context, formatLang
 from odoo.tools.translate import html_translate
 
 from collections import defaultdict
@@ -105,6 +104,7 @@ class AccountTax(models.Model):
         column1='dest_tax_id',  # This Replacement tax
         column2='src_tax_id',  # Domestic Tax to replace
         string="Replaces",
+        copy=False,
         domain="""[
             ('type_tax_use', '=', type_tax_use),
             ('is_domestic', '=', True),
@@ -156,7 +156,9 @@ class AccountTax(models.Model):
     tax_group_id = fields.Many2one(
         comodel_name='account.tax.group',
         string="Tax Group",
-        compute='_compute_tax_group_id', readonly=False, store=True,
+        compute='_compute_tax_group_id',
+        inverse='_inverse_tax_group_id',
+        readonly=False, store=True,
         required=True, precompute=True,
         domain="[('country_id', 'in', (country_id, False))]")
     # Technical field to make the 'tax_exigibility' field invisible if the same named field is set to false in 'res.company' model
@@ -202,12 +204,32 @@ class AccountTax(models.Model):
         help="The country for which this tax is applicable.",
     )
     country_code = fields.Char(related='country_id.code', readonly=True)
+    company_country_code = fields.Char(
+        related='company_id.account_fiscal_country_id.code',
+        string="Fiscal Country Code of the Company",
+    )
     is_used = fields.Boolean(string="Tax used", compute='_compute_is_used')
     repartition_lines_str = fields.Char(string="Repartition Lines", tracking=True, compute='_compute_repartition_lines_str')
     invoice_legal_notes = fields.Html(string="Legal Notes", translate=True, help="Legal mentions that have to be printed on the invoices.")
     # Technical field depicting if the tax has at least one repartition line with a percentage below 0.
     # Used for the taxes computation to manage the reverse charge taxes having a repartition +100 -100.
     has_negative_factor = fields.Boolean(compute='_compute_has_negative_factor')
+    account_move_line_ids = fields.Many2many(
+        comodel_name='account.move.line',
+        relation='account_move_line_account_tax_rel',
+        column1='account_tax_id',
+        column2='account_move_line_id',
+        copy=False,
+        readonly=True,
+    )
+    account_reconcile_model_line_ids = fields.Many2many(
+        comodel_name='account.reconcile.model.line',
+        relation='account_reconcile_model_line_account_tax_rel',
+        column1='account_tax_id',
+        column2='account_reconcile_model_line_id',
+        copy=False,
+        readonly=True,
+    )
 
     @api.constrains('company_id', 'name', 'type_tax_use', 'tax_scope', 'country_id')
     def _constrains_name(self):
@@ -278,18 +300,19 @@ class AccountTax(models.Model):
     @api.depends('company_id')
     def _compute_country_id(self):
         for tax in self:
-            tax.country_id = tax.company_id.account_fiscal_country_id or tax.company_id.country_id or tax.country_id
+            tax.country_id = tax.tax_group_id.country_id or tax.company_id.account_fiscal_country_id or tax.company_id.country_id or tax.country_id
 
     @api.depends('company_id', 'country_id')
     def _compute_tax_group_id(self):
         by_country_company = defaultdict(self.browse)
         for tax in self:
+            country = tax.country_id or tax.company_id.account_fiscal_country_id or tax.company_id.country_id
             if (
                 not tax.tax_group_id
-                or tax.tax_group_id.country_id != tax.country_id
+                or tax.tax_group_id.country_id != country
                 or tax.tax_group_id.company_id != tax.company_id
             ):
-                by_country_company[(tax.country_id, tax.company_id)] += tax
+                by_country_company[country, tax.company_id] += tax
         for (country, company), taxes in by_country_company.items():
             taxes.tax_group_id = self.env['account.tax.group'].search([
                 *self.env['account.tax.group']._check_company_domain(company),
@@ -298,6 +321,11 @@ class AccountTax(models.Model):
                 *self.env['account.tax.group']._check_company_domain(company),
                 ('country_id', '=', False),
             ], limit=1)
+
+    def _inverse_tax_group_id(self):
+        for tax in self:
+            if tax.tax_group_id.country_id:
+                tax.country_id = tax.tax_group_id.country_id
 
     @api.depends('price_include_override')
     def _compute_price_include(self):
@@ -321,6 +349,8 @@ class AccountTax(models.Model):
 
     def _hook_compute_is_used(self, tax_to_compute):
         '''
+            -- TO BE REMOVED IN MASTER --
+
             Override to compute the ids of taxes used in other modules. It takes
             as parameter a set of tax ids. It should return a set containing the
             ids of the taxes from that input set that are used in transactions.
@@ -330,7 +360,7 @@ class AccountTax(models.Model):
     @api.depends('company_id', 'company_id.domestic_fiscal_position_id', 'fiscal_position_ids')
     def _compute_is_domestic(self):
         for tax in self:
-            tax.is_domestic = not tax.fiscal_position_ids or tax.company_id.domestic_fiscal_position_id in tax.fiscal_position_ids
+            tax.is_domestic = not tax.fiscal_position_ids or tax.company_id.domestic_fiscal_position_id in tax.fiscal_position_ids._origin
 
     @api.depends('fiscal_position_ids')
     def _compute_display_alternative_taxes_field(self):
@@ -343,47 +373,34 @@ class AccountTax(models.Model):
                 )
             )
 
+    @api.depends('account_move_line_ids', 'account_reconcile_model_line_ids')
     def _compute_is_used(self):
-        used_taxes = set()
+        TaxesSudo = self.env['account.tax'].sudo()
+        subset_unused = self.env['account.tax']
 
-        if self.ids:
-            # Fetch for taxes used in account moves
-            self.env['account.move.line'].flush_model(['tax_ids'])
-            used_taxes.update(id_ for [id_] in self.env.execute_query(SQL(
-                """ SELECT id
-                    FROM account_tax
-                    WHERE EXISTS(
-                        SELECT 1
-                        FROM account_move_line_account_tax_rel AS line
-                        WHERE account_tax.id = line.account_tax_id
-                    ) AND id IN %s
-                    """, tuple(self.ids),
-            )))
-            taxes_to_compute = set(self.ids) - used_taxes
+        subset_with_lines = TaxesSudo.search([
+            ('id', 'in', self.ids),
+            ('account_move_line_ids', '!=', False),
+        ])
 
-            # Fetch for taxes used in reconciliation
-            if taxes_to_compute:
-                self.env['account.reconcile.model.line'].flush_model(['tax_ids'])
-                used_taxes.update(id_ for [id_] in self.env.execute_query(SQL(
-                    """ SELECT id
-                        FROM account_tax
-                        WHERE EXISTS(
-                            SELECT 1
-                            FROM account_reconcile_model_line_account_tax_rel AS reco
-                            WHERE account_tax.id = reco.account_tax_id
-                        ) AND id IN %s
-                        """, tuple(taxes_to_compute)
-                )))
-                taxes_to_compute -= used_taxes
+        if subset_no_lines := (self._origin - subset_with_lines):
+            subset_reconciled = TaxesSudo.search([
+                ('id', 'in', subset_no_lines.ids),
+                ('account_reconcile_model_line_ids', '!=', False),
+            ])
 
-            # Fetch for tax used in other modules
-            if taxes_to_compute:
-                used_taxes.update(self._hook_compute_is_used(taxes_to_compute))
+            if subset_not_reconciled := (subset_no_lines - subset_reconciled):
+                # Fetch for tax used in custom modules. To be removed in master.
+                subset_with_hook = self.browse(
+                    self._hook_compute_is_used(set(subset_not_reconciled.ids))
+                )
+                subset_unused = (subset_not_reconciled - subset_with_hook)
 
+        used_tax_ids = set(self.ids) - set(subset_unused.ids)
         for tax in self:
-            tax.is_used = tax._origin.id in used_taxes
+            tax.is_used = tax._origin.id in used_tax_ids
 
-    @api.depends('repartition_line_ids.account_id', 'repartition_line_ids.sequence', 'repartition_line_ids.factor_percent', 'repartition_line_ids.use_in_tax_closing', 'repartition_line_ids.tag_ids')
+    @api.depends('is_used', 'repartition_line_ids.account_id', 'repartition_line_ids.sequence', 'repartition_line_ids.factor_percent', 'repartition_line_ids.use_in_tax_closing', 'repartition_line_ids.tag_ids')
     def _compute_repartition_lines_str(self):
         for tax in self:
             repartition_lines_str = tax.repartition_lines_str or ""
@@ -658,7 +675,12 @@ class AccountTax(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        context = clean_context(self.env.context)
+        # Remove all 'default_*' keys from the context except 'default_type_tax_use'
+        # so that taxes quick-created from views retain the expected tax type.
+        context = {
+            k: v for k, v in self.env.context.items()
+            if not k.startswith('default_') or k == 'default_type_tax_use'
+        }
         context.update({
             'mail_create_nosubscribe': True,  # At create or message_post, do not subscribe the current user to the record thread
             'mail_auto_subscribe_no_notify': True,  # Do no notify users set as followers of the mail thread
@@ -1485,7 +1507,8 @@ class AccountTax(models.Model):
     def _reverse_quantity_base_line_extra_tax_data(self, extra_tax_data):
         """ Reverse all sign in extra_tax_data using the quantity.
 
-        [!] Only added python-side.
+        [!] Mirror of the same method in account_tax.js.
+        PLZ KEEP BOTH METHODS CONSISTENT WITH EACH OTHERS.
 
         :param extra_tax_data: The manual taxes data stored on records.
         :return: The extra_tax_data but reversed.
@@ -1861,6 +1884,9 @@ class AccountTax(models.Model):
                                     defining how much delta will be allocated to this factor.
         :return:                    A list of floats, one per element in 'target_factors'.
         """
+        if not target_factors:
+            return []
+
         precision_rounding = float(f"1e-{precision_digits}")
         amounts_to_distribute = [0.0] * len(target_factors)
         if float_is_zero(delta_amount, precision_digits=precision_digits):
@@ -2566,6 +2592,7 @@ class AccountTax(models.Model):
         tax_details = base_line['tax_details']
         taxes_data = tax_details['taxes_data']
         manual_tax_amounts = base_line['manual_tax_amounts']
+        tax_amount_to_propagate = defaultdict(lambda: defaultdict(float))
 
         # If there are no taxes, we pass None to the grouping function.
         for tax_data in (taxes_data or [None]):
@@ -2589,6 +2616,9 @@ class AccountTax(models.Model):
                     excluded_manual_field = f'manual_{excluded_rounded_field}'
                     excluded_rounded_amount = tax_details[excluded_rounded_field] + tax_details[excluded_delta_field]
                     excluded_raw_amount = tax_details[excluded_raw_field]
+                    if tax_data:
+                        excluded_rounded_amount += tax_amount_to_propagate[tax_data['tax']][excluded_rounded_field]
+                        excluded_raw_amount += tax_amount_to_propagate[tax_data['tax']][excluded_raw_field]
                     values[excluded_rounded_field] = excluded_rounded_amount
                     values[excluded_raw_field] = excluded_raw_amount
                     if base_line[excluded_manual_field] is not None:
@@ -2625,6 +2655,13 @@ class AccountTax(models.Model):
 
             # Tax amount.
             if tax_data:
+                # Compute the amount that should be propagated by tax
+                for tax in tax_data['taxes']:
+                    tax_amount_to_propagate[tax]['raw_total_excluded'] += tax_data['raw_tax_amount']
+                    tax_amount_to_propagate[tax]['raw_total_excluded_currency'] += tax_data['raw_tax_amount_currency']
+                    tax_amount_to_propagate[tax]['total_excluded'] += tax_data['tax_amount']
+                    tax_amount_to_propagate[tax]['total_excluded_currency'] += tax_data['tax_amount_currency']
+
                 reverse_charge_sign = -1 if tax_data['is_reverse_charge'] else 1
                 values = values_per_grouping_key[grouping_key]
                 for suffix in ('_currency', ''):
@@ -2906,8 +2943,9 @@ class AccountTax(models.Model):
             strategy = cash_rounding.strategy
             cash_rounding_pd = cash_rounding.rounding
             cash_rounding_method = cash_rounding.rounding_method
-            total_amount_currency = tax_totals_summary['base_amount_currency'] + tax_totals_summary['tax_amount_currency']
-            total_amount = tax_totals_summary['base_amount'] + tax_totals_summary['tax_amount']
+            # Round first so cash rounding doesn't inflate a sub-unit float residue.
+            total_amount_currency = currency.round(tax_totals_summary['base_amount_currency'] + tax_totals_summary['tax_amount_currency'])
+            total_amount = company.currency_id.round(tax_totals_summary['base_amount'] + tax_totals_summary['tax_amount'])
             expected_total_amount_currency = float_round(
                 total_amount_currency,
                 precision_rounding=cash_rounding_pd,
@@ -3261,17 +3299,17 @@ class AccountTax(models.Model):
 
         factors = self._normalize_target_factors(target_factors)
 
-        new_taxes_data = []
+        new_taxes_data = [None] * len(factors)
 
         # Distribution of raw amounts.
-        for _index, factor in factors:
-            new_taxes_data.append({
+        for index, factor in factors:
+            new_taxes_data[index] = {
                 **tax_data,
                 'raw_tax_amount_currency': factor * tax_data['raw_tax_amount_currency'],
                 'raw_tax_amount': factor * tax_data['raw_tax_amount'],
                 'raw_base_amount_currency': factor * tax_data['raw_base_amount_currency'],
                 'raw_base_amount': factor * tax_data['raw_base_amount'],
-            })
+            }
 
         # Distribution of rounded amounts.
         new_target_factors = [
@@ -3317,11 +3355,11 @@ class AccountTax(models.Model):
 
         factors = self._normalize_target_factors(target_factors)
 
-        new_tax_details_list = []
+        new_tax_details_list = [None] * len(factors)
 
         # Distribution of raw amounts.
-        for _index, factor in factors:
-            new_tax_details_list.append({
+        for index, factor in factors:
+            new_tax_details_list[index] = {
                 'raw_total_excluded_currency': factor * tax_details['raw_total_excluded_currency'],
                 'raw_total_excluded': factor * tax_details['raw_total_excluded'],
                 'raw_total_included_currency': factor * tax_details['raw_total_included_currency'],
@@ -3329,7 +3367,7 @@ class AccountTax(models.Model):
                 'delta_total_excluded_currency': 0.0,
                 'delta_total_excluded': 0.0,
                 'taxes_data': [],
-            })
+            }
 
         # Manage 'taxes_data'.
         for tax_data in tax_details['taxes_data']:
@@ -3396,7 +3434,8 @@ class AccountTax(models.Model):
 
         # Split 'base_line'.
         new_base_lines = [None] * len(factors)
-        for (index, factor), new_tax_details, target_factor in zip(factors, new_tax_details_list, target_factors):
+        for index, factor in factors:
+            new_tax_details, target_factor = new_tax_details_list[index], target_factors[index]
             kwargs = {
                 'price_unit': factor * base_line['price_unit'],
                 'tax_details': new_tax_details,
@@ -3533,6 +3572,8 @@ class AccountTax(models.Model):
         # - line2 of -100 having an analytic distribution of 50%
         # After the aggregation, the result will be an analytic distribution of
         # ((1000 * 1) + (-100 * 0.5)) / (1000 - 100) = 1.055555556
+        # In the special case the aggregated line total is 0, set analytic distribution to 100% by default
+        # (could be anything since 100% of 0 or 50% of 0 is the same)
         for grouping_key, base_line in base_line_map.items():
             total_factor = 0.0
             analytic_distribution_to_aggregate = defaultdict(float)
@@ -3543,7 +3584,7 @@ class AccountTax(models.Model):
                     analytic_distribution_to_aggregate[account_id] += distribution * amount / 100.0
             analytic_distribution = {}
             for account_id, amount in analytic_distribution_to_aggregate.items():
-                analytic_distribution[account_id] = amount * 100 / total_factor
+                analytic_distribution[account_id] = (amount * 100 / total_factor) if total_factor else 100.0
             base_line['analytic_distribution'] = analytic_distribution
 
         return list(base_line_map.values())
@@ -4780,6 +4821,25 @@ class AccountTax(models.Model):
         suffix_currency = base_lines[0]['currency_id'] if in_foreign_currency else company.currency_id
         suffix = '_currency' if in_foreign_currency else ''
 
+        def distribute_delta_on_rounding_residuals(field, delta_amount):
+            # Give each cent to the line whose rounding moved it the farthest from its raw amount in the opposite direction.
+            # That way, each rounded amount stays within one cent of its raw amount and the rounding of 'gross_total_excluded'
+            # and 'discount_amount' can't accumulate in opposite directions on the same line (PEPPOL-EN16931-R040).
+            nb_of_errors = round(abs(delta_amount) / suffix_currency.rounding)
+            if not nb_of_errors:
+                return
+            sign = -1 if delta_amount < 0.0 else 1
+            sorted_base_lines = sorted(
+                base_lines,
+                key=lambda base_line: float_round(
+                    sign * (base_line['tax_details'][f'raw_{field}{suffix}'] - base_line['tax_details'][f'{field}{suffix}']),
+                    precision_digits=6,
+                ),
+                reverse=True,
+            )
+            for i in range(nb_of_errors):
+                sorted_base_lines[i % len(sorted_base_lines)]['tax_details'][f'{field}{suffix}'] += sign * suffix_currency.rounding
+
         # Raw rounding.
         current_gross_total_excluded = 0.0
         current_discount_amount = 0.0
@@ -4818,33 +4878,11 @@ class AccountTax(models.Model):
             value=current_raw_discount_amount,
             precision_rounding=suffix_currency.rounding,
         )
-
-        target_factors = [
-            {
-                'factor': 1.0,  # By default, we avoid to have more than one cent as a difference per line.
-                'base_line': base_line,
-            }
-            for base_line in base_lines
-        ]
-        amounts_to_distribute = self._distribute_delta_amount_smoothly(
-            precision_digits=suffix_currency.decimal_places,
-            delta_amount=expected_gross_total_excluded - current_gross_total_excluded,
-            target_factors=target_factors,
-        )
-        for target_factor, amount_to_distribute in zip(target_factors, amounts_to_distribute):
-            base_line = target_factor['base_line']
-            base_line['tax_details'][f'gross_total_excluded{suffix}'] += amount_to_distribute
+        distribute_delta_on_rounding_residuals('gross_total_excluded', expected_gross_total_excluded - current_gross_total_excluded)
 
         # Fix rounding issues for 'discount_amount'.
         expected_discount_amount = expected_gross_total_excluded - expected_total_excluded
-        amounts_to_distribute = self._distribute_delta_amount_smoothly(
-            precision_digits=suffix_currency.decimal_places,
-            delta_amount=expected_discount_amount - current_discount_amount,
-            target_factors=target_factors,
-        )
-        for target_factor, amount_to_distribute in zip(target_factors, amounts_to_distribute):
-            base_line = target_factor['base_line']
-            base_line['tax_details'][f'discount_amount{suffix}'] += amount_to_distribute
+        distribute_delta_on_rounding_residuals('discount_amount', expected_discount_amount - current_discount_amount)
 
     @api.model
     def _round_raw_tax_amounts(
@@ -5102,8 +5140,8 @@ class AccountTax(models.Model):
     def _fix_tax_included_price_company(self, price, prod_taxes, line_taxes, company_id):
         if company_id:
             #To keep the same behavior as in _compute_tax_id
-            prod_taxes = prod_taxes.filtered(lambda tax: tax.company_id == company_id)
-            line_taxes = line_taxes.filtered(lambda tax: tax.company_id == company_id)
+            prod_taxes = prod_taxes._filter_taxes_by_company(company_id)
+            line_taxes = line_taxes._filter_taxes_by_company(company_id)
         return self._fix_tax_included_price(price, prod_taxes, line_taxes)
 
     def _get_description_plaintext(self):
@@ -5116,6 +5154,18 @@ class AccountTax(models.Model):
     def unlink_except_tax_used(self):
         if any(self.mapped('is_used')):
             raise ValidationError(self.env._("You cannot delete taxes that are currently in use. Consider archiving them instead."))
+
+    @api.model
+    def _import_retrieve_tax_from_account_default_tax(self, tax_values):
+        account = tax_values.get('account')
+        if not account or not account.tax_ids:
+            return
+
+        return {
+            'criteria': [{
+                'domain': [('id', 'in', account.tax_ids.ids)],
+            }],
+        }
 
     @api.model
     def _import_retrieve_tax_from_invoice_predictive(self, tax_values):
@@ -5170,17 +5220,70 @@ class AccountTax(models.Model):
         return {'criteria': criteria}
 
     @api.model
+    def _import_retrieve_tax_from_fixed_allowance_charge(self, tax_values):
+        if tax_values.get('amount_type') != 'fixed':
+            return
+
+        invoice = tax_values.get('invoice_predictive', {}).get('invoice')
+        company_id = invoice.company_id.id if invoice else False
+        calculated_amount = tax_values.get('amount', 0.0)
+        reason = (tax_values.get('name') or '').strip().lower()
+        type_tax_use = tax_values.get('type_tax_use')
+
+        # ignore values param as it has a flawed static_domain, but we have to use it in the function signature
+        def search_fixed_tax_fuzzy(values):
+            candidate_taxes = self.search([
+                ('company_id', 'in', [company_id, False]),
+                ('amount_type', '=', 'fixed'),
+                ('type_tax_use', '=', type_tax_use),
+                ('amount', '>=', calculated_amount - 0.01),
+                ('amount', '<=', calculated_amount + 0.01),
+            ])
+
+            if not candidate_taxes:
+                return self
+
+            if len(candidate_taxes) == 1:
+                return candidate_taxes[0]
+
+            for tax in candidate_taxes:
+                tax_name = tax.name.strip().lower()
+                if reason in tax_name or tax_name in reason:
+                    return tax
+            return self
+
+        cache_key = (
+            company_id,
+            type_tax_use,
+            calculated_amount,
+            reason,
+        )
+
+        return {
+            'criteria': [{
+                'search_method': search_fixed_tax_fuzzy,
+                'cache_key': cache_key,
+            }],
+        }
+
+    @api.model
     def _import_retrieve_tax(self, search_plan, company, tax_values_list):
         cache = self.env.cr.cache.setdefault('retrieved_tax_map', {}).setdefault(company.id, {})
 
         static_domain = Domain(self._check_company_domain(company))
         for tax_values in tax_values_list:
             tax_domain = (
-               Domain('amount_type', '=', tax_values['amount_type']) &
-               Domain('type_tax_use', '=', tax_values['type_tax_use']) &
-               Domain('amount', '=', tax_values['amount']) &
-               Domain([*([('country_id', '=', tax_values['invoice_predictive']['invoice'].tax_country_id.id)] if 'invoice_predictive' in tax_values else [])])
+                    Domain('amount_type', '=', tax_values['amount_type']) &
+                    Domain('type_tax_use', '=', tax_values['type_tax_use']) &
+                    Domain('amount', '=', tax_values['amount'])
             )
+            if invoice_predictive := tax_values.get('invoice_predictive'):
+                fiscal_position = tax_values.get('fiscal_position')
+                if fiscal_position and fiscal_position.foreign_vat:
+                    country = fiscal_position.country_id
+                else:
+                    country = invoice_predictive['invoice'].tax_country_id
+                tax_domain &= Domain('country_id', '=', country.id)
             orders = ['sequence', 'id']
             if name := tax_values.get('name'):
                 tax_domain &= Domain('name', '=', name)

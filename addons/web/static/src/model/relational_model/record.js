@@ -395,12 +395,7 @@ export class Record extends DataPoint {
 
     _applyDefaultValues() {
         const fieldNames = this.fieldNames.filter((fieldName) => !(fieldName in this.data));
-        const defaultValues = this._getDefaultValues(fieldNames);
-        if (this.isNew) {
-            this._applyChanges({}, defaultValues);
-        } else {
-            this._applyValues(defaultValues);
-        }
+        this._applyValues(this._getDefaultValues(fieldNames));
     }
 
     _applyValues(values) {
@@ -648,7 +643,7 @@ export class Record extends DataPoint {
         this._savePoint = undefined;
         this._setEvalContext();
         this._invalidFields.clear();
-        if (!this.isNew) {
+        if (!this.isNew && this.isInEdition) {
             this._checkValidity();
         }
         this._closeInvalidFieldsNotification();
@@ -1222,7 +1217,7 @@ export class Record extends DataPoint {
             for (const fieldName in this.activeFields) {
                 const field = this.fields[fieldName];
                 if (["one2many", "many2many"].includes(field.type) && !field.relatedPropertyField) {
-                    this._changes[fieldName]?._clearCommands();
+                    this._values[fieldName]?._clearCommands();
                 }
             }
             this._changes = markRaw({});

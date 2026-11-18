@@ -164,6 +164,28 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         self.assertGoogleAPINotCalled()
 
     @patch_api
+    def test_new_google_allday_event(self):
+        values = {
+            'id': 'oj44nep1ldf8a3ll02uip0c9aa',
+            'organizer': {'email': 'odoocalendarref@gmail.com', 'self': True},
+            'summary': 'All day event',
+            'attendees': [],
+            'reminders': {'useDefault': True},
+            'start': {'date': '2020-01-13'},
+            'end': {'date': '2020-01-14'},
+        }
+        self.env['calendar.event']._sync_google2odoo(GoogleEvent([values]))
+        event = self.env['calendar.event'].search([('google_id', '=', values.get('id'))])
+        self.assertTrue(event)
+        self.assertTrue(event.allday)
+        self.assertEqual(event.start_date, date(2020, 1, 13))
+        self.assertEqual(event.stop_date, date(2020, 1, 13))
+        winnipeg = pytz.timezone('America/Winnipeg')
+        self.assertEqual(pytz.utc.localize(event.start).astimezone(winnipeg).date(), date(2020, 1, 13))
+        self.assertEqual(pytz.utc.localize(event.stop).astimezone(winnipeg).date(), date(2020, 1, 13))
+        self.assertGoogleAPINotCalled()
+
+    @patch_api
     def test_invalid_owner_property(self):
         values = {
             'id': 'oj44nep1ldf8a3ll02uip0c9aa',
@@ -1335,6 +1357,7 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
             },
         }
         self.env['calendar.event']._sync_google2odoo(GoogleEvent([values]))
+        self.env.cr.flush()
         triggers_after = self.env['ir.cron.trigger'].search([('cron_id', '=', cron_id)])
         new_triggers = triggers_after - triggers_before
         self.assertFalse(new_triggers, "The event should not be created with triggers.")
@@ -1366,6 +1389,7 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
             },
         }
         self.env['calendar.event']._sync_google2odoo(GoogleEvent([values]))
+        self.env.cr.flush()
         triggers_after = self.env['ir.cron.trigger'].search([('cron_id', '=', cron_id)])
         new_triggers = triggers_after - triggers_before
         self.assertFalse(new_triggers, "The event should not be created with triggers.")
@@ -1565,6 +1589,30 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         attendee = recurrence.calendar_event_ids.attendee_ids.mapped('state')
         self.assertEqual(attendee, ['declined', 'declined', 'declined'], "All events should be declined")
         self.assertGoogleAPINotCalled()
+
+    @patch_api
+    def test_recurrence_without_rrule(self):
+        """ A 'recurrence' list containing only a stale EXDATE and no RRULE does not define an
+        actual recurring series (EXDATE only has meaning together with a RRULE, per RFC5545).
+        It must be synced as a single, non-recurring event instead of a broken recurrence. """
+        google_id = 'gcalendarid123'
+        values = {
+            'id': google_id,
+            'organizer': {'email': 'odoocalendarref@gmail.com', 'self': True},
+            'summary': 'Pricing new update',
+            'recurrence': ['EXDATE;TZID=Europe/Luxembourg:20260527T113000'],
+            'reminders': {'useDefault': True},
+            'start': {'dateTime': '2026-07-01T12:00:00+02:00', 'timeZone': 'Europe/Luxembourg'},
+            'end': {'dateTime': '2026-07-01T13:00:00+02:00', 'timeZone': 'Europe/Luxembourg'},
+        }
+        google_event = GoogleEvent([values])
+        self.assertFalse(google_event.is_recurrence(), "an EXDATE without a RRULE should not be treated as a recurrence")
+        self.env['calendar.event']._sync_google2odoo(google_event)
+        event = self.env['calendar.event'].search([('google_id', '=', google_id)])
+        self.assertTrue(event, "it should have created a single event")
+        self.assertFalse(event.recurrency)
+        self.assertFalse(self.env['calendar.recurrence'].search([('google_id', '=', google_id)]),
+                          "no recurrence should have been created")
 
     @patch_api
     def test_recurrence_creation_with_attendee_answer(self):
@@ -2613,4 +2661,33 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         events = recurrence.calendar_event_ids.sorted('start')
         self.assertEqual(len(events), 3, "The new recurrence must have three events.")
         check_organizer_as_single_attendee(self, recurrence, self.organizer_user)
+
+    @patch_api
+    def test_recurrence_until_utc_boundary_negative_timezone(self):
+        """
+        When Google sends UNTIL=...Z, the UTC datetime must be converted to the
+        recurrence's local timezone before extracting the cutoff date.
+
+        UNTIL=20231026T025959Z = 2023-10-25T23:59:59-03:00 in America/Argentina/Buenos_Aires.
+        Local cutoff date: Oct 25. Last valid Thursday: Oct 19.
+        """
+        google_id = 'recurrence_until_tz_test'
+        values = [{
+            'id': google_id,
+            'summary': 'Weekly Thursday',
+            'recurrence': ['RRULE:FREQ=WEEKLY;BYDAY=TH;UNTIL=20231026T025959Z'],
+            'start': {'dateTime': '2023-10-05T12:00:00-03:00', 'timeZone': 'America/Argentina/Buenos_Aires', 'date': None},
+            'end': {'dateTime': '2023-10-05T13:00:00-03:00', 'timeZone': 'America/Argentina/Buenos_Aires', 'date': None},
+            'reminders': {'useDefault': True},
+            'updated': self.now,
+        }]
+        recurrence = self.env['calendar.recurrence']._sync_google2odoo(GoogleEvent(values))
+        self.assertEqual(recurrence.event_tz, 'America/Argentina/Buenos_Aires')
+        # Local cutoff is Oct 25 -> last valid Thursday is Oct 19
+        self.assertEqual(recurrence.until, date(2023, 10, 25), "until must be the local date, not the UTC date")
+        event_starts = recurrence.calendar_event_ids.mapped('start')
+        self.assertFalse(
+            any(e.date() == date(2023, 10, 26) for e in event_starts),
+            "No event should be created on Oct 26 (the UTC boundary date)",
+        )
         self.assertGoogleAPINotCalled()

@@ -23,8 +23,8 @@
 # Robin Calvin, 2023
 # Mikael Åkerberg <mikael.akerberg@mariaakerberg.com>, 2023
 # Daniel Osser <danielosser@gmail.com>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # Jacob Ljungström <jacob.ljungstrom03@gmail.com>, 2025.
 # Hanna Kharraziha <hakha@odoo.com>, 2025, 2026.
 # symbiotech <symbiotech3@gmail.com>, 2026.
@@ -32,8 +32,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:39+0000\n"
-"PO-Revision-Date: 2026-06-11 12:02+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-11-13 07:41+0000\n"
 "Last-Translator: Hanna Kharraziha <hakha@odoo.com>\n"
 "Language-Team: Swedish <https://translate.odoo.com/projects/odoo-19/sale/sv/>"
 "\n"
@@ -42,7 +42,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: sale
 #. odoo-javascript
@@ -579,20 +579,20 @@ msgstr ""
 "        <t t-set=\"tx_sudo\" t-value=\"object.get_portal_last_transaction()"
 "\"/>\n"
 "        Din beställning med ordernummer <span style=\"font-weight:bold;\" t-"
-"out=\"object.name or ''\">S00049</span> med totalt belopp <span style=\"font-"
+"out=\"object.name or ''\">S00049</span> med totalbeloppet <span style=\"font-"
 "weight:bold;\" t-out=\"format_amount(object.amount_total, "
 "object.currency_id) or ''\">$10,00</span>\n"
 "        <t t-if=\"object.state == 'sale' or (tx_sudo and tx_sudo.state in "
 "('done', 'authorized'))\">\n"
 "            har bekräftats.<br/>\n"
-"            Tack för att du valt att handla med oss!\n"
+"            Tack för att du valt att handla hos oss!\n"
 "        </t>\n"
 "        <t t-elif=\"tx_sudo and tx_sudo.state == 'pending'\">\n"
 "            behandlas för närvarande. Beställningen bekräftas så fort "
-"betalningen är bekräftad.\n"
+"betalningen har gått igenom.\n"
 "            <t t-if=\"object.reference\">\n"
-"                Referensnummer för din betalning är följande: <span "
-"style=\"font-weight:bold;\" t-out=\"object.reference or ''\"/>.\n"
+"                Betalningens referensnummer: <span style=\"font-weight:bold;"
+"\" t-out=\"object.reference or ''\"/>.\n"
 "            </t>\n"
 "        </t>\n"
 "        <br/>\n"
@@ -601,10 +601,10 @@ msgstr ""
 "        <t t-if=\"documents\">\n"
 "            <br/>\n"
 "            <t t-if=\"len(documents)&gt;1\">\n"
-"                Här är några ytterligare dokument som kan vara av intresse:\n"
+"                Här är några ytterligare relevanta dokument:\n"
 "            </t>\n"
 "            <t t-else=\"\">\n"
-"                Här är ett ytterligare dokument som kan vara av intresse:\n"
+"                Här är ett ytterligare relevant dokument:\n"
 "            </t>\n"
 "            <ul style=\"margin-bottom: 0;\">\n"
 "                <t t-foreach=\"documents\" t-as=\"document\">\n"
@@ -617,7 +617,7 @@ msgstr ""
 "            </ul>\n"
 "        </t>\n"
 "        <br/>\n"
-"        Vänligen kontakta oss om du har några frågor.\n"
+"        Vänligen kontakta oss vid eventuella frågor eller funderingar.\n"
 "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
 "quote-container=\"1\">\n"
 "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
@@ -634,7 +634,7 @@ msgstr ""
 "\">Produkter</span></td>\n"
 "                <td/>\n"
 "                <td width=\"15%\" align=\"center\"><span style=\"font-"
-"weight:bold;\">Mängd</span></td>\n"
+"weight:bold;\">Antal</span></td>\n"
 "                <td width=\"20%\" align=\"right\">\n"
 "                    <span style=\"font-weight:bold;\">\n"
 "                        <t t-if=\"hasattr(object, 'website_id') and "
@@ -805,8 +805,7 @@ msgstr ""
 "            <tr>\n"
 "                <td style=\"width: 60%\"/>\n"
 "                <td style=\"width: 30%; border-top: 1px solid #dee2e6;\" "
-"align=\"right\"><span style=\"font-weight:bold;\">Totalt belopp:</span></"
-"td>\n"
+"align=\"right\"><span style=\"font-weight:bold;\">Totalbelopp:</span></td>\n"
 "                <td style=\"width: 10%; border-top: 1px solid #dee2e6;\" "
 "align=\"right\" t-out=\"format_amount(object.amount_total, "
 "object.currency_id) or ''\">$10,00</td>\n"
@@ -898,22 +897,68 @@ msgstr ""
 "</div>"
 
 #. module: sale
+#: model:mail.template,body_html:sale.email_template_proforma
+msgid ""
+"<div style=\"margin: 0px; padding: 0px;\">\n"
+"    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"        Hello,\n"
+"        <br/><br/>\n"
+"        <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"            Your Pro forma invoice for quotation <span style=\"font-weight: "
+"bold;\" t-out=\"object.name or ''\">S00052</span>\n"
+"        </t>\n"
+"        <t t-else=\"\">\n"
+"            Your Pro forma invoice for order <span style=\"font-weight: bold;"
+"\" t-out=\"object.name or ''\">S00052</span>\n"
+"        </t>\n"
+"        <t t-if=\"object.origin\">\n"
+"            (with reference: <t t-out=\"object.origin or ''\"/> )\n"
+"        </t>\n"
+"        amounting in <span style=\"font-weight: bold;\" t-"
+"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+"10.00</span> is available.\n"
+"        <br/><br/>\n"
+"        Do not hesitate to contact us if you have any questions.\n"
+"        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
+"quote-container=\"1\">\n"
+"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
+"out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
+"Admin</t></div>\n"
+"        </t>\n"
+"    </p>\n"
+"</div>\n"
+"            "
+msgstr ""
+
+#. module: sale
 #: model:mail.template,body_html:sale.email_template_edi_sale
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        <t t-set=\"doc_name\" t-value=\"'quotation' if object.state in "
-"('draft', 'sent') else 'order'\"/>\n"
 "        Hello,\n"
 "        <br/><br/>\n"
-"        Your <t t-out=\"doc_name or ''\">quotation</t> <span style=\"font-"
-"weight: bold;\" t-out=\"object.name or ''\"/>\n"
-"        <t t-if=\"object.origin\">\n"
-"            (with reference: <t t-out=\"object.origin or ''\">S00052</t> )\n"
-"        </t>\n"
-"        amounting in <span style=\"font-weight: bold;\" t-"
+"        <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"            Your quotation <span style=\"font-weight: bold;\" t-"
+"out=\"object.name or ''\"/>\n"
+"            <t t-if=\"object.origin\">\n"
+"                (with reference: <t t-out=\"object.origin or ''\">S00052</"
+"t> )\n"
+"            </t>\n"
+"            amounting in <span style=\"font-weight: bold;\" t-"
 "out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
 "10.00</span> is ready for review.\n"
+"        </t>\n"
+"        <t t-else=\"\">\n"
+"            Your order <span style=\"font-weight: bold;\" t-"
+"out=\"object.name or ''\"/>\n"
+"            <t t-if=\"object.origin\">\n"
+"                (with reference: <t t-out=\"object.origin or ''\">S00052</"
+"t> )\n"
+"            </t>\n"
+"            amounting in <span style=\"font-weight: bold;\" t-"
+"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+"10.00</span> is ready for review.\n"
+"        </t>\n"
 "        <br/>\n"
 "        <t t-set=\"documents\" t-value=\"object._get_product_documents()\"/"
 ">\n"
@@ -949,22 +994,33 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        <t t-set=\"doc_name\" t-value=\"'offert' if object.state in "
-"('draft', 'sent') else 'order'\"/>\n"
 "        Hej,\n"
 "        <br/><br/>\n"
-"        Din <t t-out=\"doc_name or ''\">offert</t> <span style=\"font-"
-"weight: bold;\" t-out=\"object.name or ''\"/>\n"
-"        <t t-if=\"object.origin\">\n"
-"            (med referensnummer: <t t-out=\"object.origin or ''\">S00052</"
-"t> )\n"
-"        </t>\n"
-"        för beloppet <span style=\"font-weight: bold;\" t-"
+"        <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"            Din offert <span style=\"font-weight: bold;\" t-"
+"out=\"object.name or ''\"/>\n"
+"            <t t-if=\"object.origin\">\n"
+"                (med referensnummer: <t t-out=\"object.origin or ''\">"
+"S00052</t> )\n"
+"            </t>\n"
+"            med beloppet <span style=\"font-weight: bold;\" t-"
 "out=\"format_amount(object.amount_total, object.currency_id) or ''\">$10,00</"
 "span> är redo att granskas.\n"
+"        </t>\n"
+"        <t t-else=\"\">\n"
+"            Din order <span style=\"font-weight: bold;\" t-out=\"object.name "
+"or ''\"/>\n"
+"            <t t-if=\"object.origin\">\n"
+"                (med referensnummer: <t t-out=\"object.origin or ''\">"
+"S00052</t> )\n"
+"            </t>\n"
+"            med beloppet <span style=\"font-weight: bold;\" t-"
+"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$10,00</"
+"span> är redo att granskas.\n"
+"        </t>\n"
 "        <br/>\n"
-"        <t t-set=\"documents\" t-value=\"object._get_product_documents()\"/"
-">\n"
+"        <t t-set=\"documents\" t-value=\"object._get_product_documents()\"/>"
+"\n"
 "        <t t-if=\"documents\">\n"
 "            <br/>\n"
 "            <t t-if=\"len(documents)&gt;1\">\n"
@@ -984,64 +1040,7 @@ msgstr ""
 "            </ul>\n"
 "        </t>\n"
 "        <br/>\n"
-"        Vänligen kontakta oss om du har några frågor.\n"
-"        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
-"quote-container=\"1\">\n"
-"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
-"out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
-"Admin</t></div>\n"
-"        </t>\n"
-"    </p>\n"
-"</div>\n"
-"            "
-
-#. module: sale
-#: model:mail.template,body_html:sale.email_template_proforma
-msgid ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        <t t-set=\"doc_name\" t-value=\"'quotation' if object.state in "
-"('draft', 'sent') else 'order'\"/>\n"
-"        Hello,\n"
-"        <br/><br/>\n"
-"        Your Pro forma invoice for <t t-out=\"doc_name or ''\">quotation</t> "
-"<span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</"
-"span>\n"
-"        <t t-if=\"object.origin\">\n"
-"            (with reference: <t t-out=\"object.origin or ''\"/> )\n"
-"        </t>\n"
-"        amounting in <span style=\"font-weight: bold;\" t-"
-"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
-"10.00</span> is available.\n"
-"        <br/><br/>\n"
-"        Do not hesitate to contact us if you have any questions.\n"
-"        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
-"quote-container=\"1\">\n"
-"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
-"out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
-"Admin</t></div>\n"
-"        </t>\n"
-"    </p>\n"
-"</div>\n"
-"            "
-msgstr ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        <t t-set=\"doc_name\" t-value=\"'offert' if object.state in "
-"('draft', 'sent') else 'order'\"/>\n"
-"        Hej,\n"
-"        <br/><br/>\n"
-"        Din proformafaktura för <t t-out=\"doc_name or ''\">offerten</t> "
-"<span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</"
-"span>\n"
-"        <t t-if=\"object.origin\">\n"
-"            (med referensnummer: <t t-out=\"object.origin or ''\"/> )\n"
-"        </t>\n"
-"        för beloppet <span style=\"font-weight: bold;\" t-"
-"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$10,00</"
-"span> är nu tillgänglig.\n"
-"        <br/><br/>\n"
-"        Vänligen kontakta oss om du har några frågor.\n"
+"        Vänligen kontakta oss vid eventuella frågor eller funderingar.\n"
 "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
 "quote-container=\"1\">\n"
 "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
@@ -1126,7 +1125,7 @@ msgstr "<small class=\"text-muted\">Din kontaktperson</small>"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "<small><b class=\"text-muted\">Your advantage</b></small>"
-msgstr "<small><b class=\"text-muted\">Din fördel</b></small>"
+msgstr "<small><b class=\"text-muted\">Din rabatt</b></small>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_orders
@@ -1228,8 +1227,27 @@ msgstr "<span>Varning: denna order kan vara en kopia av</span>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
-msgid "<strong class=\"d-block mt-3\">Shipping Address</strong>"
-msgstr "<strong class=\"d-block mt-3\">Leveransadress</strong>"
+msgid ""
+"<strong>\n"
+"                            Invoicing Address\n"
+"                        </strong>"
+msgstr ""
+
+#. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
+msgid ""
+"<strong>\n"
+"                            Shipping Address\n"
+"                        </strong>"
+msgstr ""
+
+#. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
+msgid ""
+"<strong>\n"
+"                        Invoicing and Shipping Address\n"
+"                    </strong>"
+msgstr ""
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
@@ -1415,12 +1433,12 @@ msgstr "Aktiviteter för"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "Undantagsaktiviteter dekoration"
+msgstr "Stilmarkeringar för undantagsaktiviteter"
 
 #. module: sale
 #: model:ir.ui.menu,name:sale.sale_menu_config_activity_plan
 msgid "Activity Plans"
-msgstr "Verksamhetsplaner"
+msgstr "Aktivitetsplaner"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_state
@@ -1577,7 +1595,7 @@ msgstr "Redan fakturerad"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_res_config_settings__module_sale_amazon
 msgid "Amazon Sync"
-msgstr "Amazon synkronisering"
+msgstr "Synkronisering med Amazon"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_discount__discount_amount
@@ -1970,7 +1988,7 @@ msgstr "Kommunikation"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "Communication history"
-msgstr "Kommuniktationshistorik"
+msgstr "Kommunikationshistorik"
 
 #. module: sale
 #: model:ir.model,name:sale.model_res_company
@@ -2074,7 +2092,7 @@ msgstr "Inställningar"
 #. module: sale
 #: model:ir.ui.menu,name:sale.menu_sale_config
 msgid "Configuration"
-msgstr "Konfiguration"
+msgstr "Inställningar"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
@@ -2103,11 +2121,6 @@ msgstr "Meddelande om bekräftelse"
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "Connect with your software!"
 msgstr "Anslut till din programvara!"
-
-#. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
-msgid "Connect your software"
-msgstr "Anslut din programvara"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
@@ -2142,7 +2155,7 @@ msgstr "Kuponger och lojalitet"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_view_search_inherit_quotation
 msgid "Create Date"
-msgstr "Skapat datum"
+msgstr "Skapelsedatum"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_sale_advance_payment_inv
@@ -3043,13 +3056,14 @@ msgstr "Ikon för att indikera en undantagsaktivitet."
 #: model:ir.model.fields,help:sale.field_sale_order__message_needaction
 msgid "If checked, new messages require your attention."
 msgstr ""
-"Om ikryssad, så finns det nya meddelanden som kräver din uppmärksamhet."
+"Om rutan är markerad, så finns det nya meddelanden som kräver din "
+"uppmärksamhet."
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__message_has_error
 #: model:ir.model.fields,help:sale.field_sale_order__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
-msgstr "Om ikryssad, så finns det meddelanden med leveransfel."
+msgstr "Om rutan är markerad, så har vissa meddelanden leveransfel."
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__journal_id
@@ -3291,7 +3305,6 @@ msgid "Invoicing"
 msgstr "Faktura"
 
 #. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
 msgid "Invoicing Address"
 msgstr "Faktureringsadress"
@@ -3314,7 +3327,6 @@ msgid "Invoicing Target"
 msgstr "Fakturamål"
 
 #. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
 msgid "Invoicing and Shipping Address"
 msgstr "Fakturerings- och leveransadress"
@@ -3544,7 +3556,7 @@ msgstr "Medium"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__message_has_error
 msgid "Message Delivery error"
-msgstr "Leveransfel för meddelanden"
+msgstr "Leveransfel för meddelande"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_res_partner__sale_warn_msg
@@ -3633,12 +3645,12 @@ msgstr "Nästa aktivitetshändelse i kalendern"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr "Nästa tidsgräns för en aktivitet"
+msgstr "Tidsgräns för nästa aktivitet"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_summary
 msgid "Next Activity Summary"
-msgstr "Nästa aktivitetssammanfattning"
+msgstr "Sammanfattning av nästa aktivitet"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_type_id
@@ -4523,7 +4535,7 @@ msgstr "Rapporteringsåtgärd"
 #. module: sale
 #: model:ir.ui.menu,name:sale.menu_sale_report
 msgid "Reporting"
-msgstr "Rapportering"
+msgstr "Rapporter"
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__require_payment
@@ -4584,7 +4596,7 @@ msgstr "Intäkter genererade av kampanj"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__message_has_sms_error
 msgid "SMS Delivery error"
-msgstr "Leveransfel för SMS"
+msgstr "Leveransfel för sms"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
@@ -4626,7 +4638,7 @@ msgstr "Order"
 #: model:ir.model.fields,field_description:sale.field_res_partner__sale_order_count
 #: model:ir.model.fields,field_description:sale.field_res_users__sale_order_count
 msgid "Sale Order Count"
-msgstr "Antal säljordrar"
+msgstr "Antal försäljningsordrar"
 
 #. module: sale
 #: model:ir.actions.act_window,name:sale.mail_activity_plan_action_sale_order
@@ -4643,7 +4655,7 @@ msgstr "Ordervarningar"
 #: code:addons/sale/models/res_partner.py:0
 #: model_terms:ir.ui.view,arch_db:sale.account_invoice_form
 msgid "Sale Orders"
-msgstr "Säljordrar"
+msgstr "Försäljningsordrar"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_mass_cancel_orders__sale_orders_count
@@ -5169,10 +5181,10 @@ msgid ""
 "Today: Activity date is today\n"
 "Planned: Future activities."
 msgstr ""
-"Status baserad på aktiviteter\n"
-"Försenade: Leveranstidpunkten har passerat\n"
-"Idag: Aktivitetsdatum är idag\n"
-"Kommande: Framtida aktiviteter."
+"Status baserat på aktivitetsdatum:\n"
+"Försenade: Aktivitetsdatum har redan passerat.\n"
+"Idag: Aktivitetsdatum är dagens datum.\n"
+"Planerade: Kommande aktiviteter."
 
 #. module: sale
 #: model:ir.model.fields.selection,name:sale.selection__res_company__sale_onboarding_payment_method__stripe
@@ -5347,8 +5359,8 @@ msgid ""
 "The ISO country code in two chars. \n"
 "You can use this field for quick search."
 msgstr ""
-"ISO-kod med två tecken.\n"
-"Fältet används för snabbsökning."
+"ISO-landskod angiven med två tecken.\n"
+"Fältet kan användas för snabbsökning."
 
 #. module: sale
 #. odoo-python
@@ -5976,11 +5988,9 @@ msgstr "Giltighetstid"
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__validity_date
 msgid ""
-"Validity of the order, after that you will not able to sign & pay the "
-"quotation."
+"Validity of the quotation. After this date, you will no longer be able to "
+"sign and pay it."
 msgstr ""
-"Giltighet för beställningen, efter det kommer du inte att kunna signera och "
-"betala offerten."
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
@@ -6111,17 +6121,6 @@ msgstr "Du kan inte ändra prislistan för en bekräftad order!"
 
 #. module: sale
 #. odoo-python
-#: code:addons/sale/models/product_product.py:0
-#: code:addons/sale/models/product_template.py:0
-msgid ""
-"You cannot change the product's type because it is already used in sales "
-"orders."
-msgstr ""
-"Du kan inte ändra produkttypen eftersom den redan används i "
-"försäljningsbeställningar."
-
-#. module: sale
-#. odoo-python
 #: code:addons/sale/models/sale_order_line.py:0
 msgid ""
 "You cannot change the type of a sale order line. Instead you should delete "
@@ -6158,6 +6157,16 @@ msgid ""
 msgstr ""
 "Du måste definiera en produkt för allt du säljer eller köper, oavsett\n"
 "om det är en lagringsbar produkt, en förbrukningsprodukt eller en tjänst."
+
+#. module: sale
+#. odoo-python
+#: code:addons/sale/models/product_product.py:0
+#: code:addons/sale/models/product_template.py:0
+msgid ""
+"You should not change the product type because this product is already used "
+"in sales orders. Changing it may affect how the related order lines are "
+"delivered."
+msgstr ""
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_home_sale
@@ -6287,11 +6296,6 @@ msgid "sale order"
 msgstr "försäljningsorder"
 
 #. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
-msgid "to create quotes automatically."
-msgstr "för att skapa offerter automatiskt."
-
-#. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "to learn all the ways to connect your software with"
 msgstr "för att lära dig alla sätt att ansluta din programvara till"
@@ -6300,11 +6304,6 @@ msgstr "för att lära dig alla sätt att ansluta din programvara till"
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "units"
 msgstr "enheter"
-
-#. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
-msgid "with"
-msgstr "med"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
@@ -6345,6 +6344,187 @@ msgid ""
 msgstr ""
 "{{ object.company_id.name }} {{ object.state in ('draft', 'sent') and "
 "'Offert' or 'Order' }} (Ref {{ object.name or 'n/a' }})"
+
+#~ msgid ""
+#~ "<div style=\"margin: 0px; padding: 0px;\">\n"
+#~ "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+#~ "        <t t-set=\"doc_name\" t-value=\"'quotation' if object.state in "
+#~ "('draft', 'sent') else 'order'\"/>\n"
+#~ "        Hello,\n"
+#~ "        <br/><br/>\n"
+#~ "        Your <t t-out=\"doc_name or ''\">quotation</t> <span style=\"font-"
+#~ "weight: bold;\" t-out=\"object.name or ''\"/>\n"
+#~ "        <t t-if=\"object.origin\">\n"
+#~ "            (with reference: <t t-out=\"object.origin or ''\">S00052</"
+#~ "t> )\n"
+#~ "        </t>\n"
+#~ "        amounting in <span style=\"font-weight: bold;\" t-"
+#~ "out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+#~ "10.00</span> is ready for review.\n"
+#~ "        <br/>\n"
+#~ "        <t t-set=\"documents\" t-value=\"object._get_product_documents()"
+#~ "\"/>\n"
+#~ "        <t t-if=\"documents\">\n"
+#~ "            <br/>\n"
+#~ "            <t t-if=\"len(documents)&gt;1\">\n"
+#~ "                Here are some additional documents that may interest "
+#~ "you:\n"
+#~ "            </t>\n"
+#~ "            <t t-else=\"\">\n"
+#~ "                Here is an additional document that may interest you:\n"
+#~ "            </t>\n"
+#~ "            <ul style=\"margin-bottom: 0;\">\n"
+#~ "                <t t-foreach=\"documents\" t-as=\"document\">\n"
+#~ "                    <li style=\"font-size: 13px;\">\n"
+#~ "                        <a t-out=\"document.ir_attachment_id.name\" t-att-"
+#~ "href=\"object.get_portal_url('/document/' + str(document.id))\" t-att-"
+#~ "target=\"target\"/>\n"
+#~ "                    </li>\n"
+#~ "                </t>\n"
+#~ "            </ul>\n"
+#~ "        </t>\n"
+#~ "        <br/>\n"
+#~ "        Do not hesitate to contact us if you have any questions.\n"
+#~ "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-"
+#~ "mail-quote-container=\"1\">\n"
+#~ "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/"
+#~ "><t t-out=\"object.user_id.signature or ''\" data-o-mail-"
+#~ "quote=\"1\">Mitchell Admin</t></div>\n"
+#~ "        </t>\n"
+#~ "    </p>\n"
+#~ "</div>\n"
+#~ "            "
+#~ msgstr ""
+#~ "<div style=\"margin: 0px; padding: 0px;\">\n"
+#~ "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+#~ "        <t t-set=\"doc_name\" t-value=\"'offert' if object.state in "
+#~ "('draft', 'sent') else 'order'\"/>\n"
+#~ "        Hej,\n"
+#~ "        <br/><br/>\n"
+#~ "        Din <t t-out=\"doc_name or ''\">offert</t> <span style=\"font-"
+#~ "weight: bold;\" t-out=\"object.name or ''\"/>\n"
+#~ "        <t t-if=\"object.origin\">\n"
+#~ "            (med referensnummer: <t t-out=\"object.origin or ''\">S00052</"
+#~ "t> )\n"
+#~ "        </t>\n"
+#~ "        för beloppet <span style=\"font-weight: bold;\" t-"
+#~ "out=\"format_amount(object.amount_total, object.currency_id) or "
+#~ "''\">$10,00</span> är redo att granskas.\n"
+#~ "        <br/>\n"
+#~ "        <t t-set=\"documents\" t-value=\"object._get_product_documents()"
+#~ "\"/>\n"
+#~ "        <t t-if=\"documents\">\n"
+#~ "            <br/>\n"
+#~ "            <t t-if=\"len(documents)&gt;1\">\n"
+#~ "                Här är några ytterligare dokument som kan vara av "
+#~ "intresse:\n"
+#~ "            </t>\n"
+#~ "            <t t-else=\"\">\n"
+#~ "                Här är ett ytterligare dokument som kan vara av "
+#~ "intresse:\n"
+#~ "            </t>\n"
+#~ "            <ul style=\"margin-bottom: 0;\">\n"
+#~ "                <t t-foreach=\"documents\" t-as=\"document\">\n"
+#~ "                    <li style=\"font-size: 13px;\">\n"
+#~ "                        <a t-out=\"document.ir_attachment_id.name\" t-att-"
+#~ "href=\"object.get_portal_url('/document/' + str(document.id))\" t-att-"
+#~ "target=\"target\"/>\n"
+#~ "                    </li>\n"
+#~ "                </t>\n"
+#~ "            </ul>\n"
+#~ "        </t>\n"
+#~ "        <br/>\n"
+#~ "        Vänligen kontakta oss om du har några frågor.\n"
+#~ "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-"
+#~ "mail-quote-container=\"1\">\n"
+#~ "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/"
+#~ "><t t-out=\"object.user_id.signature or ''\" data-o-mail-"
+#~ "quote=\"1\">Mitchell Admin</t></div>\n"
+#~ "        </t>\n"
+#~ "    </p>\n"
+#~ "</div>\n"
+#~ "            "
+
+#~ msgid ""
+#~ "<div style=\"margin: 0px; padding: 0px;\">\n"
+#~ "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+#~ "        <t t-set=\"doc_name\" t-value=\"'quotation' if object.state in "
+#~ "('draft', 'sent') else 'order'\"/>\n"
+#~ "        Hello,\n"
+#~ "        <br/><br/>\n"
+#~ "        Your Pro forma invoice for <t t-out=\"doc_name or ''\">quotation</"
+#~ "t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</"
+#~ "span>\n"
+#~ "        <t t-if=\"object.origin\">\n"
+#~ "            (with reference: <t t-out=\"object.origin or ''\"/> )\n"
+#~ "        </t>\n"
+#~ "        amounting in <span style=\"font-weight: bold;\" t-"
+#~ "out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+#~ "10.00</span> is available.\n"
+#~ "        <br/><br/>\n"
+#~ "        Do not hesitate to contact us if you have any questions.\n"
+#~ "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-"
+#~ "mail-quote-container=\"1\">\n"
+#~ "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/"
+#~ "><t t-out=\"object.user_id.signature or ''\" data-o-mail-"
+#~ "quote=\"1\">Mitchell Admin</t></div>\n"
+#~ "        </t>\n"
+#~ "    </p>\n"
+#~ "</div>\n"
+#~ "            "
+#~ msgstr ""
+#~ "<div style=\"margin: 0px; padding: 0px;\">\n"
+#~ "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+#~ "        <t t-set=\"doc_name\" t-value=\"'offert' if object.state in "
+#~ "('draft', 'sent') else 'order'\"/>\n"
+#~ "        Hej,\n"
+#~ "        <br/><br/>\n"
+#~ "        Din proformafaktura för <t t-out=\"doc_name or ''\">offerten</t> "
+#~ "<span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</"
+#~ "span>\n"
+#~ "        <t t-if=\"object.origin\">\n"
+#~ "            (med referensnummer: <t t-out=\"object.origin or ''\"/> )\n"
+#~ "        </t>\n"
+#~ "        för beloppet <span style=\"font-weight: bold;\" t-"
+#~ "out=\"format_amount(object.amount_total, object.currency_id) or "
+#~ "''\">$10,00</span> är nu tillgänglig.\n"
+#~ "        <br/><br/>\n"
+#~ "        Vänligen kontakta oss om du har några frågor.\n"
+#~ "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-"
+#~ "mail-quote-container=\"1\">\n"
+#~ "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/"
+#~ "><t t-out=\"object.user_id.signature or ''\" data-o-mail-"
+#~ "quote=\"1\">Mitchell Admin</t></div>\n"
+#~ "        </t>\n"
+#~ "    </p>\n"
+#~ "</div>\n"
+#~ "            "
+
+#~ msgid "<strong class=\"d-block mt-3\">Shipping Address</strong>"
+#~ msgstr "<strong class=\"d-block mt-3\">Leveransadress</strong>"
+
+#~ msgid ""
+#~ "Validity of the order, after that you will not able to sign & pay the "
+#~ "quotation."
+#~ msgstr ""
+#~ "Giltighet för beställningen, efter det kommer du inte att kunna signera "
+#~ "och betala offerten."
+
+#~ msgid ""
+#~ "You cannot change the product's type because it is already used in sales "
+#~ "orders."
+#~ msgstr ""
+#~ "Du kan inte ändra produkttypen eftersom den redan används i "
+#~ "försäljningsbeställningar."
+
+#~ msgid "Connect your software"
+#~ msgstr "Anslut din programvara"
+
+#~ msgid "to create quotes automatically."
+#~ msgstr "för att skapa offerter automatiskt."
+
+#~ msgid "with"
+#~ msgstr "med"
 
 #~ msgid "2023-12-31"
 #~ msgstr "2023-12-31"

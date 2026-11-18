@@ -11,15 +11,15 @@
 # Sebastiano Picchi, 2023
 # Marianna Ciofani, 2023
 # Sergio Zanchetta <primes2h@gmail.com>, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Marianna Ciofani (cima)" <cima@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-08 17:35+0000\n"
-"PO-Revision-Date: 2026-04-14 13:03+0000\n"
+"POT-Creation-Date: 2026-11-13 17:36+0000\n"
+"PO-Revision-Date: 2026-11-02 11:33+0000\n"
 "Last-Translator: \"Marianna Ciofani (cima)\" <cima@odoo.com>\n"
 "Language-Team: Italian <https://translate.odoo.com/projects/odoo-19/mail/it/"
 ">\n"
@@ -29,7 +29,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n != 0 && n % 1000000 == "
 "0) ? 1 : 2);\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_ir_actions_server__followers_type
@@ -501,6 +501,12 @@ msgstr ",<br/><br/>"
 #: code:addons/mail/static/src/core/web/message_patch.xml:0
 msgid "---------- Forwarded message ----------"
 msgstr "---------- Messaggio inoltrato ----------"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_result.js:0
+msgid "1 message found"
+msgstr "1 messaggio trovato"
 
 #. module: mail
 #. odoo-javascript
@@ -1246,24 +1252,34 @@ msgid "Add Star"
 msgstr "Aggiungi stella"
 
 #. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/core/common/message_actions.js:0
-msgid "Add a Reaction"
-msgstr "Aggiungi una reazione"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Add a Tenor GIF API key to enable GIFs support."
-msgstr "Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF."
+msgid ""
+"Add a Klipy GIF API key to enable GIFs support. If you were using a Tenor "
+"GIF API key (service shutdown on June 30, 2026), please replace it here with "
+"a Klipy GIF API key"
+msgstr ""
+"Aggiungi una chiave API Klipy GIF per abilitare il supporto delle GIF. Se "
+"stavi utilizzando una chiave API Tenor GIF (servizio disattivato il 30 "
+"giugno 2026), sostituiscila qui con una chiave API Klipy GIF"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_res_config_settings__tenor_api_key
 msgid ""
-"Add a Tenor GIF API key to enable GIFs support. https://"
-"developers.google.com/tenor/guides/quickstart#setup"
+"Add a Klipy GIF API key to enable GIFs support. https://docs.klipy.com/"
+"getting-started\n"
+"If you were using a Tenor GIF API key (service shutdown on June 30, 2026), "
+"please replace it here with a Klipy GIF API key"
 msgstr ""
-"Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF. "
-"https://developers.google.com/tenor/guides/quickstart#setup"
+"Aggiungi una chiave API GIF di Klipy per abilitare il supporto delle GIF. "
+"https://docs.klipy.com/getting-started\n"
+"Se stavi utilizzando una chiave API GIF di Tenor (servizio disattivato il 30 "
+"giugno 2026), sostituiscila qui con una chiave API GIF di Klipy"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Add a Reaction"
+msgstr "Aggiungi una reazione"
 
 #. module: mail
 #. odoo-javascript
@@ -1970,6 +1986,12 @@ msgstr "Avviso rendimento sfocatura sfondo"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/blur_manager.js:0
+msgid "Background blur could not be loaded"
+msgstr ""
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
 msgid "Background blur intensity"
 msgstr "Intensità sfocatura sfondo"
@@ -2225,6 +2247,12 @@ msgstr "Per e-mail"
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
 msgid "By order of server priority"
 msgstr "Per ordine priorità server"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "CMD"
+msgstr "CMD"
 
 #. module: mail
 #. odoo-javascript
@@ -5720,6 +5748,16 @@ msgid "If you want to use twilio as TURN/STUN server provider"
 msgstr "Se vuoi utilizzare twilio come fornitore del server TURN/STUN"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid ""
+"If you were using a Tenor API key, please replace it with a Klipy API key in "
+"the General Settings."
+msgstr ""
+"Se stavi utilizzando una chiave API Tenor, sostituiscila con una chiave API "
+"Klipy nelle Impostazioni generali."
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel__image_128
 #: model:ir.model.fields,field_description:mail.field_mail_guest__image_1920
 #: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_image
@@ -6398,6 +6436,16 @@ msgid "Kind Regards"
 msgstr "Cordiali saluti"
 
 #. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
+msgid "Klipy API key"
+msgstr "Chiave API Klipy"
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF API key"
+msgstr "Chiave API Klipy GIF"
+
+#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
 #: code:addons/mail/static/src/discuss/call/public_web/discuss_sidebar_call_participants.xml:0
@@ -6412,6 +6460,12 @@ msgstr "DAL VIVO"
 #: model:ir.model.fields,field_description:mail.field_mail_template__lang
 msgid "Language"
 msgstr "Lingua"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_mail_message_translation__target_lang
+msgid "Language code used as the target for the translation request."
+msgstr ""
+"Codice lingua utilizzato come destinazione per la richiesta di traduzione."
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
@@ -9154,6 +9208,12 @@ msgid "Pop out Attachments"
 msgstr "Allegati pop-out"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_view.js:0
+msgid "Pop out is not supported on mobile."
+msgstr "La funzione \"Pop out\" non è supportata su dispositivi mobili."
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_fetchmail_server__port
 msgid "Port"
 msgstr "Porta"
@@ -10175,6 +10235,12 @@ msgstr "Ricerca server posta in arrivo"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid "Search Klipy"
+msgstr "Cerca su Klipy"
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/core/common/search_messages_panel.js:0
 msgid "Search Message"
 msgstr "Cerca messaggio"
@@ -10229,12 +10295,6 @@ msgstr "Cerca per nome"
 #: code:addons/mail/static/src/core/public_web/discuss_search.xml:0
 msgid "Search conversations"
 msgstr "Cerca conversazioni"
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
-msgid "Search for a GIF"
-msgstr "Cerca una GIF"
 
 #. module: mail
 #. odoo-javascript
@@ -10685,13 +10745,6 @@ msgid "Shortcut"
 msgstr "Scorciatoia"
 
 #. module: mail
-#: model:ir.model.fields,help:mail.field_mail_message_translation__target_lang
-msgid "Shortened language code used as the target for the translation request."
-msgstr ""
-"Codice lingua ridotto utilzizato come obiettivo per la richiesta di "
-"traduzione."
-
-#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/command_palette.js:0
 msgid "Show All Activities"
@@ -10771,6 +10824,16 @@ msgid ""
 msgstr ""
 "%(result_count)s risultati su %(total_count)s. Restringi la tua ricerca per "
 "avere risultati più specifici."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_result.js:0
+msgid ""
+"Showing the first %(count)s messages found. Narrow your search or scroll to "
+"see more."
+msgstr ""
+"Visualizzazione dei primi %(count)s messaggi trovati. Restringi la ricerca o "
+"scorri per vederne altri."
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_template__ref_ir_act_window
@@ -11290,16 +11353,6 @@ msgid "Templates"
 msgstr "Modelli"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
-msgid "Tenor API key"
-msgstr "Chiave API Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF API key"
-msgstr "Chiave API GIF Tenor"
-
-#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_settings.js:0
 msgid "Test"
@@ -11359,18 +11412,6 @@ msgstr ""
 "La funzionalità \"Premi per parlare\" è accessibile solo dalla scheda. Per "
 "abilitare la funzionalità altrove, ti consigliamo di scaricare la nostra "
 "estensione %(anchor_start)s, %(anchor_end)s."
-
-#. module: mail
-#: model:ir.model.fields,help:mail.field_res_partner__vat
-#: model:ir.model.fields,help:mail.field_res_users__vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
-msgstr ""
-"Il numero di partita IVA. I valori saranno convalidati in base al formato "
-"del Paese. Puoi usare '/' per indicare che il partner non è soggetto a "
-"tassazione."
 
 #. module: mail
 #. odoo-python
@@ -13445,6 +13486,20 @@ msgid "You can still turn off your %s anytime."
 msgstr "Puoi ancora spegnere il tuo %s in qualsiasi momento."
 
 #. module: mail
+#: model:ir.model.fields,help:mail.field_res_partner__vat
+#: model:ir.model.fields,help:mail.field_res_users__vat
+msgid "You can use '/' to indicate that the customer has no Tax ID."
+msgstr ""
+"È possibile utilizzare '/' per indicare che il cliente non possiede un "
+"codice fiscale."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_alias_domain.py:0
+msgid "You cannot assign an empty domain name."
+msgstr "Non è possibile assegnare un nome di dominio vuoto."
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_activity_type.py:0
 msgid "You cannot delete %(activity_names)s as it is required in various apps."
@@ -13742,12 +13797,6 @@ msgstr "conversazioni"
 #: code:addons/mail/models/discuss/discuss_channel.py:0
 msgid "created this channel."
 msgstr "ha creato questo canale."
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/js/rotting_mixin/rotting_statusbar.xml:0
-msgid "d"
-msgstr "d"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.account_security_alert
@@ -14302,6 +14351,44 @@ msgstr "“%(member_name)s” in “%(channel_name)s”"
 #: code:addons/mail/static/src/core/web/activity.js:0
 msgid "“%s”"
 msgstr "“%s”"
+
+#~ msgid ""
+#~ "Shortened language code used as the target for the translation request."
+#~ msgstr ""
+#~ "Codice lingua ridotto utilzizato come obiettivo per la richiesta di "
+#~ "traduzione."
+
+#~ msgid "d"
+#~ msgstr "d"
+
+#~ msgid "Search for a GIF"
+#~ msgstr "Cerca una GIF"
+
+#~ msgid ""
+#~ "The Tax Identification Number. Values here will be validated based on the "
+#~ "country format. You can use '/' to indicate that the partner is not "
+#~ "subject to tax."
+#~ msgstr ""
+#~ "Il numero di partita IVA. I valori saranno convalidati in base al formato "
+#~ "del Paese. Puoi usare '/' per indicare che il partner non è soggetto a "
+#~ "tassazione."
+
+#~ msgid "Add a Tenor GIF API key to enable GIFs support."
+#~ msgstr ""
+#~ "Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF."
+
+#~ msgid ""
+#~ "Add a Tenor GIF API key to enable GIFs support. https://"
+#~ "developers.google.com/tenor/guides/quickstart#setup"
+#~ msgstr ""
+#~ "Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF. "
+#~ "https://developers.google.com/tenor/guides/quickstart#setup"
+
+#~ msgid "Tenor API key"
+#~ msgstr "Chiave API Tenor"
+
+#~ msgid "Tenor GIF API key"
+#~ msgstr "Chiave API GIF Tenor"
 
 #~ msgid "111.222.333.444"
 #~ msgstr "111.222.333.444"

@@ -2,15 +2,15 @@
 # This file contains the translation of the following modules:
 # * html_editor
 #
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # Boris Peko <boris.peko@ecodica.eu>, 2026.
 # Odoo Translation Bot <c3p@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-05 19:29+0000\n"
-"PO-Revision-Date: 2026-04-13 20:51+0000\n"
+"POT-Creation-Date: 2026-10-30 17:38+0000\n"
+"PO-Revision-Date: 2026-08-05 01:45+0000\n"
 "Last-Translator: Odoo Translation Bot <c3p@odoo.com>\n"
 "Language-Team: Croatian <https://translate.odoo.com/projects/odoo-19/"
 "html_editor/hr/>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: html_editor
 #. odoo-javascript
@@ -287,12 +287,6 @@ msgstr "Autopokretanje"
 
 #. module: html_editor
 #. odoo-javascript
-#: code:addons/html_editor/static/src/main/column_plugin.js:0
-msgid "Back to one column"
-msgstr "Natrag na jedan stupac"
-
-#. module: html_editor
-#. odoo-javascript
 #: code:addons/html_editor/static/src/main/banner_plugin.js:0
 msgid "Banner"
 msgstr "Baner"
@@ -451,6 +445,12 @@ msgstr "Pretvori u stupce"
 #: code:addons/html_editor/static/src/main/chatgpt/chatgpt_dialog.js:0
 msgid "Content generated"
 msgstr "Sadržaj generiran"
+
+#. module: html_editor
+#. odoo-javascript
+#: code:addons/html_editor/static/src/main/column_plugin.js:0
+msgid "Convert columns to regular content"
+msgstr ""
 
 #. module: html_editor
 #. odoo-javascript
@@ -624,6 +624,12 @@ msgstr ""
 #: code:addons/html_editor/static/src/others/dynamic_placeholder_plugin.js:0
 msgid "Dynamic Placeholder"
 msgstr "Dinamički rezervirano mjesto"
+
+#. module: html_editor
+#. odoo-javascript
+#: code:addons/html_editor/static/src/components/history_dialog/history_dialog.js:0
+msgid "Dynamic element"
+msgstr ""
 
 #. module: html_editor
 #. odoo-python
@@ -1336,6 +1342,12 @@ msgstr "U redu"
 #. module: html_editor
 #. odoo-python
 #: code:addons/html_editor/controllers/main.py:0
+msgid "Only internal users can use AI text generation."
+msgstr ""
+
+#. module: html_editor
+#. odoo-python
+#: code:addons/html_editor/controllers/main.py:0
 msgid "Oops, it looks like our AI is unreachable!"
 msgstr "Ups, izgleda da je naš AI nedostupan!"
 
@@ -1567,8 +1579,8 @@ msgstr "Ukloni poveznicu"
 #. module: html_editor
 #. odoo-javascript
 #: code:addons/html_editor/static/src/main/column_plugin.js:0
-msgid "Remove columns"
-msgstr "Ukloni stupce"
+msgid "Remove column layout"
+msgstr ""
 
 #. module: html_editor
 #. odoo-javascript
@@ -2452,6 +2464,12 @@ msgstr "upravljanje porukama websocketa"
 #: code:addons/html_editor/static/src/main/table/table_picker.xml:0
 msgid "x"
 msgstr ""
+
+#~ msgid "Back to one column"
+#~ msgstr "Natrag na jedan stupac"
+
+#~ msgid "Remove columns"
+#~ msgstr "Ukloni stupce"
 
 #~ msgid "Remove Format"
 #~ msgstr "Ukloni format"

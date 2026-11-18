@@ -276,8 +276,8 @@ class TestMultistepManufacturing(TestMrpCommon):
         })
         so.action_confirm()
         self.assertEqual(so.mrp_production_count, 2, "There should be 2 manufactured orders linked to this sale order.")
-        self.assertEqual(len(so.mrp_production_ids.picking_ids), 1, "There should only be 1 pick components transfer for the 2 manufacturing orders.")
-        self.assertEqual(len(so.mrp_production_ids.picking_ids.production_ids), 2, "There should be 2 manufacture orders linked to the pick components transfer.")
+        self.assertEqual(len(so.mrp_production_ids.picking_ids), 2, "There should only be 2 pick components transfer for the 2 manufacturing orders.")
+        self.assertEqual(len(so.mrp_production_ids.picking_ids.production_ids), 2, "There should be 2 manufacture orders linked to the 2 pick components transfers.")
 
     def test_duplicate_mo_smartbutton_consistency(self):
         """
@@ -291,3 +291,12 @@ class TestMultistepManufacturing(TestMrpCommon):
         self.assertEqual(mo.sale_order_count, 1)
         duplicate_mo = mo.copy()
         self.assertEqual(duplicate_mo.sale_order_count, 0)
+
+    def test_component_picking_origin_is_mo_in_mto_flow(self):
+        """
+        Test that component picking transfers use the manufacturing order as
+        their origin in MTO two-step manufacturing flow.
+        """
+        self.warehouse.manufacture_steps = 'pbm'
+        self.sale_order.action_confirm()
+        self.assertEqual(self.sale_order.mrp_production_ids.name, self.sale_order.mrp_production_ids.picking_ids.origin)

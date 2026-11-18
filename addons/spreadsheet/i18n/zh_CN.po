@@ -2,16 +2,16 @@
 # This file contains the translation of the following modules:
 # * spreadsheet
 #
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # 张飞虎 <feihu.zhang@live.com>, 2026.
 # "Chloe Wang (chwa)" <chwa@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-24 17:37+0000\n"
-"PO-Revision-Date: 2026-04-13 20:51+0000\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-06 12:52+0000\n"
 "Last-Translator: \"Chloe Wang (chwa)\" <chwa@odoo.com>\n"
 "Language-Team: Chinese (Simplified Han script) <https://translate.odoo.com/"
 "projects/odoo-19/spreadsheet/zh_Hans/>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1783,6 +1783,13 @@ msgstr "无法隐藏工作表的所有行。"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot open the link because the linked sheet is hidden."
 msgstr "无法打开链接，因为链接的工作表已隐藏。"
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"Cannot perform this action on merged cells. Unmerge the cells and try again."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -7116,6 +7123,12 @@ msgstr "返回一个电子表格筛选的当前值。"
 
 #. module: spreadsheet
 #. odoo-javascript
+#: code:addons/spreadsheet/static/src/pivot/pivot_functions.js:0
+msgid "Return the label of the current value of a spreadsheet filter."
+msgstr ""
+
+#. module: spreadsheet
+#. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Return unique columns"
 msgstr "返回唯一列"
@@ -12054,9 +12067,9 @@ msgstr "多项选择均不允许执行此操作。"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid ""
-"This operation is not possible due to a merge. Please remove the merges "
-"first than try again."
-msgstr "由于合并，该操作无法实现。请先删除合并，然后再试一次。"
+"This operation would cause tables to overlap. Move or remove the conflicting "
+"table and try again."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -13611,6 +13624,11 @@ msgstr "昨天"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "zero"
 msgstr "零"
+
+#~ msgid ""
+#~ "This operation is not possible due to a merge. Please remove the merges "
+#~ "first than try again."
+#~ msgstr "由于合并，该操作无法实现。请先删除合并，然后再试一次。"
 
 #~ msgid ""
 #~ "An unexpected error occurred while pasting content.\n"

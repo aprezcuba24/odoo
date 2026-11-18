@@ -355,7 +355,7 @@ test("only external links should always open on a new tab in readonly", async ()
     expect("[name='txt'] p").toHaveText("first");
     for (const link of queryAll("a.external")) {
         expect(link.getAttribute("target")).toBe("_blank");
-        expect(link.getAttribute("rel")).toBe("noreferrer");
+        expect(link.getAttribute("rel")).toBe("noreferrer noopener");
     }
     for (const link of queryAll("a.internal")) {
         expect(link.getAttribute("target")).toBe(null);
@@ -366,7 +366,7 @@ test("only external links should always open on a new tab in readonly", async ()
     expect("[name='txt'] p").toHaveText("second");
     for (const link of queryAll("a.external")) {
         expect(link.getAttribute("target")).toBe("_blank");
-        expect(link.getAttribute("rel")).toBe("noreferrer");
+        expect(link.getAttribute("rel")).toBe("noreferrer noopener");
     }
     for (const link of queryAll("a.internal")) {
         expect(link.getAttribute("target")).toBe(null);
@@ -394,7 +394,7 @@ test("XML-like self-closing elements are fixed in readonly mode", async () => {
     expect(".odoo-editor-editable").toHaveCount(0);
     expect(`[name="txt"] .o_readonly`).toHaveCount(1);
     expect(`[name="txt"] .o_readonly`).toHaveInnerHTML(
-        `<a href="#" target="_blank" rel="noreferrer"></a>outside<a href="#" target="_blank" rel="noreferrer">inside</a>`
+        `<a href="#" target="_blank" rel="noreferrer noopener"></a>outside<a href="#" target="_blank" rel="noreferrer noopener">inside</a>`
     );
 });
 
@@ -1339,6 +1339,64 @@ test("add Vimeo video link in 'Videos' tab of MediaDialog", async () => {
     await click(queryOne(".modal-footer").firstChild);
 });
 
+test.tags("desktop");
+test("clicking Replace should allow updating video options", async () => {
+    serverState.debug = "1";
+    const videoId = "qxb74CMR748";
+    const videoURL = `https://www.youtube.com/embed/${videoId}`;
+
+    await mountView({
+        type: "form",
+        resId: 1,
+        resModel: "partner",
+        arch: `
+            <form>
+                <field name="txt" widget="html"/>
+            </form>`,
+    });
+    await onRpc("/html_editor/video_url/data", async () => ({
+        video_id: videoId,
+        platform: "youtube",
+        embed_url: videoURL,
+    }));
+
+    // Insert Video
+    setSelectionInHtmlField();
+    await insertText(htmlEditor, "/video");
+    await waitFor(".o-we-powerbox");
+    await press("Enter");
+
+    await contains(".modal-body .nav-link:contains('Videos')").click();
+    await waitFor("textarea#o_video_text");
+    const input = queryOne("textarea#o_video_text");
+    input.value = videoURL;
+    manuallyDispatchProgrammaticEvent(input, "input", {
+        inputType: "insertText",
+    });
+    await waitFor(".o_video_dialog_options", { timeout: 1500 });
+    await click(queryOne(".modal-footer").firstChild);
+
+    // Hover on VideoBlock shows overlay
+    await waitFor("div[data-embedded='video'] iframe");
+    await hover(queryOne("div[data-embedded='video']"));
+    await expectElementCount(".video-overlay", 1);
+
+    // Click on overlay and choose Replace
+    await click(".video-overlay button");
+    await waitFor(".o-dropdown-item");
+    expect(queryAllTexts(".o-dropdown-item")[0]).toBe("Replace");
+    await click(".o-dropdown-item .fa-exchange");
+
+    // Toggle an option to verify the dialog works without triggering a props validation error
+    await waitFor("textarea#o_video_text");
+    await waitFor(".o_video_dialog_options");
+    await contains(".o_video_dialog_options label:contains('Autoplay') input").click();
+    expect(".o_video_dialog_options label:contains('Autoplay') input").toBeChecked();
+    await contains(".o_video_dialog_options label:contains('Autoplay') input").click();
+    expect(".o_video_dialog_options label:contains('Autoplay') input").not.toBeChecked();
+    await click(queryOne(".modal-footer").firstChild);
+});
+
 test("MediaDialog contains 'Videos' tab by default in html field", async () => {
     await mountView({
         type: "form",
@@ -2123,7 +2181,7 @@ describe("sandbox", () => {
         expect(readonlyIframe.contentDocument.body.querySelector("p")).toHaveText("first");
         for (const link of readonlyIframe.contentDocument.body.querySelectorAll("a")) {
             expect(link.getAttribute("target")).toBe("_blank");
-            expect(link.getAttribute("rel")).toBe("noreferrer");
+            expect(link.getAttribute("rel")).toBe("noreferrer noopener");
         }
 
         await contains(`.o_pager_next`).click();
@@ -2131,7 +2189,7 @@ describe("sandbox", () => {
         expect(readonlyIframe.contentDocument.body.querySelector("p")).toHaveText("second");
         for (const link of readonlyIframe.contentDocument.body.querySelectorAll("a")) {
             expect(link.getAttribute("target")).toBe("_blank");
-            expect(link.getAttribute("rel")).toBe("noreferrer");
+            expect(link.getAttribute("rel")).toBe("noreferrer noopener");
         }
     });
 

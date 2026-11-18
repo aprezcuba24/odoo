@@ -96,6 +96,7 @@ export class OrderSummary extends Component {
         };
 
         // Configurable product
+        const beforeValues = { ...values };
         let keepGoing = await this.pos.handleConfigurableProduct(
             values,
             productTemplate,
@@ -113,6 +114,10 @@ export class OrderSummary extends Component {
             line: orderline,
         });
         if (keepGoing === false) {
+            return false;
+        }
+
+        if (JSON.stringify(values) === JSON.stringify(beforeValues)) {
             return false;
         }
 
@@ -162,7 +167,7 @@ export class OrderSummary extends Component {
             } else if (this.pos.numpadMode === "discount") {
                 buffer = selectedLine.getDiscount() * -1;
             } else if (this.pos.numpadMode === "price") {
-                buffer = selectedLine.prices.total_excluded_currency * -1;
+                buffer = selectedLine.price_unit * -1;
             }
             this.numberBuffer.state.buffer = buffer.toString();
         }

@@ -2,7 +2,9 @@ import logging
 
 from odoo import api, fields, models, modules
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
+from odoo.tools import single_email_re
 
+from odoo.addons.l10n_fr_pdp.models.res_company import PDP_identifier_re
 from odoo.addons.l10n_fr_pdp.tools.demo_utils import handle_demo
 from odoo.addons.iap.tools import iap_tools
 
@@ -11,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class PdpRegistration(models.TransientModel):
     _name = 'pdp.registration'
-    _description = "PDP Registration"
+    _description = "Approved Platform Registration"
 
     company_id = fields.Many2one(
         comodel_name='res.company',
@@ -24,10 +26,13 @@ class PdpRegistration(models.TransientModel):
         required=True,
     )
     pdp_identifier = fields.Char(
-        related='company_id.pdp_identifier',
+        compute="_compute_pdp_identifier",
+        inverse="_inverse_pdp_identifier",
         readonly=False,
         required=True,
+        help="The identifier starts with the SIREN, the part after the SIREN is optional. The expected format of the identifier is: SIREN, SIREN_SIRET, SIREN_SIRET_CodeRoutage or SIREN_SuffixeAdressage",
     )
+    # DEPRECATED - was for the pre-prod phase
     pdp_pilot_phase = fields.Boolean(
         related='company_id.l10n_fr_pdp_pilot_phase',
         readonly=False,
@@ -89,10 +94,20 @@ class PdpRegistration(models.TransientModel):
     # COMPUTE METHODS
     # -------------------------------------------------------------------------
 
-    @api.depends('company_id.company_registry')
+    @api.depends('company_id.pdp_identifier')
+    def _compute_pdp_identifier(self):
+        for wizard in self:
+            wizard.pdp_identifier = wizard.company_id.pdp_identifier or wizard.company_id.partner_id._get_suggested_pdp_identifier()
+
+    def _inverse_pdp_identifier(self):
+        for record in self:
+            record.company_id.pdp_identifier = record.pdp_identifier
+
+    @api.depends('pdp_identifier')
     def _compute_siren_number(self):
         for wizard in self:
-            wizard.siren_number = wizard.company_id.partner_id._l10n_fr_pdp_get_siren()
+            match = PDP_identifier_re.match(wizard.pdp_identifier or '')
+            wizard.siren_number = match and match.group(1)
 
     @api.depends('company_id.account_edi_proxy_client_ids')
     def _compute_edi_user_id(self):
@@ -104,10 +119,25 @@ class PdpRegistration(models.TransientModel):
         for wizard in self:
             wizard.edi_mode = wizard.company_id._get_peppol_edi_mode()
 
-    @api.depends('pdp_identifier')
+    @api.depends('pdp_identifier', 'siren_number')
     def _compute_warnings(self):
         for wizard in self:
             warnings = {}
+            # Check SIREN
+            if not wizard.siren_number:
+                warnings['company_siren_warning'] = {
+                    'level': 'warning',
+                    'message': self.env._("The SIREN of the company could not be determined."),
+                    'action_text': self.env._("Go to company"),
+                    'action': wizard.company_id._get_records_action(name=self.env._("Check Company Data")),
+                }
+            # Check SIREN
+            kyc_siren = wizard._get_kyc_siren()
+            if wizard.siren_number != kyc_siren:
+                warnings['kyc_siren_warning'] = {
+                    'level': 'info',
+                    'message': self.env._("%s will be used as SIREN for the KYC", kyc_siren),
+                }
             # Check identifier
             if (
                 wizard.pdp_identifier
@@ -125,13 +155,13 @@ class PdpRegistration(models.TransientModel):
                 and participant_info.get('platform_id')
                 and not participant_info.get('receiver_on_odoo')
                ):
-                platform_name = participant_info.get("platform_name")
+                platform_name = f" '{name}'" if (name := participant_info.get("platform_name")) else ""
                 warnings["company_pdp_annuaire_warning"] = {
                     "level": "warning",
                     "message": self.env._(
                         "Another platform is already assigned to this identifier in the annuaire (Platform%(platform_name)s with ID %(platform_id)s). "
-                        "If you previously registered with an Approved Platform, please unregister.",
-                        platform_name=f" '{platform_name}'" if platform_name else "",
+                        "By registering, you confirm that you want to migrate to Odoo.",
+                        platform_name=platform_name,
                         platform_id=participant_info.get("platform_id"),
                     ),
                 }
@@ -140,6 +170,12 @@ class PdpRegistration(models.TransientModel):
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
+
+    def _get_kyc_siren(self):
+        kyc_siren_param = self.env['ir.config_parameter'].sudo().get_param('l10n_fr_pdp.kyc_siren', default='')
+        match = PDP_identifier_re.match(kyc_siren_param)
+        kyc_siren = match and match.group(1)
+        return kyc_siren or self.siren_number
 
     def _ensure_mandatory_fields(self):
         if not self.contact_email:
@@ -177,9 +213,11 @@ class PdpRegistration(models.TransientModel):
             )
 
     def _action_open_pdp_form(self, reopen=True):
+        self.ensure_one()
         return self._get_records_action(
             name=self.env._("Send via French electronic invoicing"),
             target='new',
+            view_mode='form',
         )
 
     # -------------------------------------------------------------------------
@@ -195,10 +233,20 @@ class PdpRegistration(models.TransientModel):
                 action=self.company_id._get_records_action(),
                 button_text=self.env._("Go to company"),
             )
+        if not self.contact_email or not single_email_re.match(self.contact_email):
+            raise ValidationError(self.env._("Invalid email address '%s'", self.contact_email))
         base_url = self.company_id._pdp_get_iap_url()
+        if self.env['res.company'].search_count([
+            ('peppol_eas', '=', '0225'),
+            ('peppol_endpoint', '=like', f'{self.siren_number}%'),
+            ('account_peppol_proxy_state', 'in', ('receiver', 'smp_registration')),
+        ], limit=1):
+            # Another company/branch on same db registered with the same siren (and so will do the same kyc)
+            return self.button_register_pdp_participant()
+
         response = iap_tools.iap_jsonrpc(f'{base_url}/api/id_authentication/1/authentication', params={
             'db_uuid': self.env['ir.config_parameter'].sudo().get_param('database.uuid'),
-            'vat': self.siren_number,
+            'vat': self._get_kyc_siren(),
             'auth_email': self.contact_email,
             'company_name': self.company_id.name,
             'localization': 'FR',
@@ -222,11 +270,14 @@ class PdpRegistration(models.TransientModel):
     def _get_status_notification_data(self):
         self.ensure_one()
         if self.pdp_kyc_status == 'success':
+            # An annuaire conflict means registering will migrate the identifier away from another
+            # access point. That needs an explicit authorisation from user, so "Migrate to Odoo" click here,
+            # so don't auto-register here, reopen the form and let the user confirm
             return {
                 'message': self.env._("Identity verified."),
                 'type': 'success',
                 'sticky': True,
-                'next': self._action_open_pdp_form(),
+                'next': self._action_open_pdp_form() if 'company_pdp_annuaire_warning' in (self.warnings or {}) else self.button_register_pdp_participant(),
             }
         elif self.pdp_kyc_status == 'fail':
             return {
@@ -262,7 +313,7 @@ class PdpRegistration(models.TransientModel):
 
     def button_refresh_authentication(self):
         self.ensure_one()
-        self.company_id._refresh_pdp_authentication_status()
+        self.company_id._refresh_pdp_authentication_status(send_bus=False)
         return self._display_status_notification()
 
     def button_open_authentication_link(self):
@@ -270,7 +321,7 @@ class PdpRegistration(models.TransientModel):
         base_url = self.company_id._pdp_get_iap_url()
         response = iap_tools.iap_jsonrpc(f'{base_url}/api/id_authentication/1/get_authentication_hash', params={
             'db_uuid': self.env['ir.config_parameter'].sudo().get_param('database.uuid'),
-            'vat': self.siren_number,
+            'vat': self._get_kyc_siren(),
             'auth_email': self.contact_email,
             'object_uuid': self.pdp_authentication_uuid,
         })
@@ -309,11 +360,12 @@ class PdpRegistration(models.TransientModel):
             raise UserError(self.env._("Cannot register a user with a '%s' application", pdp_state_translated))
 
         if self.company_id.account_edi_proxy_client_ids.filtered(lambda u: u.proxy_type == 'peppol'):
-            raise UserError(self.env._("There is a connection to Peppol (non-PA) already"))
+            raise UserError(self.env._("There is already another e-invoicing connection."))
 
         if not self.env["res.company"]._check_pdp_identifier(self.pdp_identifier):
             raise UserError(self.env._("The Identifier is not valid. The expected format is: SIREN, SIREN_SIRET, SIREN_SIRET_CodeRoutage or SIREN_SuffixeAdressage"))
 
+        self.company_id.pdp_identifier = self.pdp_identifier  # For the initial compute the inverse is not triggered.
         edi_user = self.edi_user_id or self.env['account_edi_proxy_client.user']._register_proxy_user(self.company_id, 'pdp', self.edi_mode)
 
         # if there is an error when activating the participant below,
@@ -344,5 +396,7 @@ class PdpRegistration(models.TransientModel):
         """
         self.ensure_one()
 
+        # Reset the kyc status
+        self.pdp_kyc_status = False
         if self.edi_user_id:
             self.edi_user_id._peppol_deregister_participant()

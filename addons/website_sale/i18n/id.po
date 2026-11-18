@@ -7,16 +7,16 @@
 # Wahyu Setiawan <wahyusetiaaa@gmail.com>, 2022
 # Martin Trigaux, 2022
 # Abe Manyo, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Abe Manyo (abem)" <abem@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Nurul Aini Akrima Sabila (nuaas)" <nuaas@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 17:40+0000\n"
-"PO-Revision-Date: 2026-05-23 09:48+0000\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-09-14 06:32+0000\n"
 "Last-Translator: \"Nurul Aini Akrima Sabila (nuaas)\" <nuaas@odoo.com>\n"
 "Language-Team: Indonesian <https://translate.odoo.com/projects/odoo-19/"
 "website_sale/id/>\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -824,7 +824,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_sale.field_product_product__accessory_product_ids
 #: model:ir.model.fields,field_description:website_sale.field_product_template__accessory_product_ids
 msgid "Accessory Products"
-msgstr "Produk-Produk Aksesori"
+msgstr "Produk Aksesori"
 
 #. module: website_sale
 #. odoo-javascript
@@ -1254,6 +1254,12 @@ msgid "Bordered"
 msgstr "Dengan Border"
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
+msgid "Bottom"
+msgstr "Bawah"
+
+#. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/models/website_snippet_filter.py:0
 msgid "Box"
@@ -1341,7 +1347,7 @@ msgstr "Dapat Dipublikasikan"
 #: code:addons/website_sale/const.py:0
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Cards"
-msgstr "Kartu-Kartu"
+msgstr "Kartu"
 
 #. module: website_sale
 #. odoo-javascript
@@ -1458,7 +1464,7 @@ msgstr "Kursi"
 #. module: website_sale
 #: model:product.public.category,name:website_sale.public_category_furnitures_chairs
 msgid "Chairs"
-msgstr "Kursi-Kursi"
+msgstr "Kursi"
 
 #. module: website_sale
 #: model:product.public.category,name:website_sale.public_category_lamps_chandelier
@@ -1916,7 +1922,7 @@ msgstr "Akun Pelanggan"
 #: model:ir.model.fields,field_description:website_sale.field_res_config_settings__account_on_checkout
 #: model:ir.model.fields,field_description:website_sale.field_website__account_on_checkout
 msgid "Customer Accounts"
-msgstr "Akun-Akun Pelanggan"
+msgstr "Akun Pelanggan"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.template_footer_website_sale
@@ -1931,7 +1937,7 @@ msgstr "Negara Pelanggan"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_comment
 msgid "Customer Reviews"
-msgstr "Review Pelanggan"
+msgstr "Ulasan Pelanggan"
 
 #. module: website_sale
 #: model:ir.ui.menu,name:website_sale.menu_orders_customers
@@ -2552,7 +2558,7 @@ msgstr "File Drawers"
 #: code:addons/website_sale/static/src/website_builder/products_list_page_option.xml:0
 #: model_terms:ir.ui.view,arch_db:website_sale.products
 msgid "Filters"
-msgstr "Penyaring"
+msgstr "Filter"
 
 #. module: website_sale
 #. odoo-python
@@ -2670,7 +2676,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/website_sale/static/src/interactions/checkout.js:0
 msgid "Free"
-msgstr "Bebas"
+msgstr "Gratis"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.view_sales_order_filter_ecommerce
@@ -3177,7 +3183,7 @@ msgstr "Bahasa"
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_feed__website_lang_ids
 msgid "Languages"
-msgstr "Bahasa-Bahasa"
+msgstr "Bahasa"
 
 #. module: website_sale
 #. odoo-javascript
@@ -3265,6 +3271,7 @@ msgstr "Layout"
 
 #. module: website_sale
 #. odoo-javascript
+#: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
 #: code:addons/website_sale/static/src/website_builder/product_ribbon_options.xml:0
 #: model:ir.model.fields.selection,name:website_sale.selection__product_ribbon__position__left
 msgid "Left"
@@ -3303,6 +3310,12 @@ msgstr "Line Subtotals Tax Display"
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Link Color"
 msgstr "Warna Link"
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid "Linked lines must be added to the cart with their parent."
+msgstr ""
 
 #. module: website_sale
 #. odoo-javascript
@@ -3959,7 +3972,7 @@ msgstr "Pembayaran"
 #. module: website_sale
 #: model:ir.ui.menu,name:website_sale.menu_ecommerce_payment_methods
 msgid "Payment Methods"
-msgstr "Metode-Metode Pembayaran"
+msgstr "Metode Pembayaran"
 
 #. module: website_sale
 #: model:ir.ui.menu,name:website_sale.menu_ecommerce_payment_providers
@@ -4048,7 +4061,7 @@ msgstr "Preset"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Presets"
-msgstr "Preset-Preset"
+msgstr "Preset"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.quick_reorder_history
@@ -4325,7 +4338,7 @@ msgstr "Tag Produk"
 #. module: website_sale
 #: model:ir.ui.menu,name:website_sale.product_catalog_product_tags
 msgid "Product Tags"
-msgstr "Tag-Tag Produk"
+msgstr "Tag Produk"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_image__product_tmpl_id
@@ -4529,7 +4542,7 @@ msgstr "Menilai Rata-Rata Teks"
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_template__rating_last_feedback
 msgid "Rating Last Feedback"
-msgstr "Nilai Feedback Terakhir"
+msgstr "Nilai Masukan Terakhir"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_template__rating_last_image
@@ -4581,7 +4594,7 @@ msgstr "Produk yang Baru Saja Terjual"
 #: model:ir.actions.server,name:website_sale.dynamic_snippet_latest_viewed_products_action
 #: model:website.snippet.filter,name:website_sale.dynamic_filter_latest_viewed_products
 msgid "Recently Viewed Products (per user)"
-msgstr "Produk-Produk yang Baru Saja Dilihat (per user)"
+msgstr "Produk yang Baru Saja Dilihat (per user)"
 
 #. module: website_sale
 #: model:product.public.category,name:website_sale.public_category_furnitures_recliners
@@ -5238,6 +5251,14 @@ msgstr "Sold out"
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/controllers/main.py:0
+msgid ""
+"Some products in your cart are not available for purchase in your country. "
+"Please remove them or contact us."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/main.py:0
 msgid "Sorry, we are unable to ship your order."
 msgstr "Maaf, kami tidak dapat mengirimkan pesanan Anda."
 
@@ -5555,6 +5576,14 @@ msgstr ""
 
 #. module: website_sale
 #. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid ""
+"The number of selected combo items must match the number of available combo "
+"choices."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
 #: code:addons/website_sale/controllers/payment.py:0
 msgid "The order has been cancelled."
 msgstr "Pesanan telah dibatalkan."
@@ -5690,6 +5719,18 @@ msgstr "Produk ini sudah tidak tersedia lagi."
 #. odoo-python
 #: code:addons/website_sale/models/sale_order.py:0
 msgid "This product is not available (anymore) in this unit of measure."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/main.py:0
+msgid "This product is not available for purchase in your country."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid "This product is part of a combo and can't be updated individually."
 msgstr ""
 
 #. module: website_sale
@@ -5969,7 +6010,7 @@ msgstr "Halaman yang Dikunjungi"
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_website_visitor__product_ids
 msgid "Visited Products"
-msgstr "Produk-Produk yang Dikunjungi"
+msgstr "Produk yang Dikunjungi"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.website_sale_visitor_page_view_graph
@@ -6237,6 +6278,12 @@ msgstr ""
 #: code:addons/website_sale/controllers/main.py:0
 msgid "You can't use a video as the product's main image."
 msgstr "Anda tidak dapat menggunakan video sebagai gambar utama produk."
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid "You cannot add a combo item separately from its combo."
+msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.sale_report_action_carts
@@ -6855,9 +6902,6 @@ msgstr ""
 
 #~ msgid "Both"
 #~ msgstr "Dua-duanya"
-
-#~ msgid "Bottom"
-#~ msgstr "Bawah"
 
 #~ msgid "Brand"
 #~ msgstr "Brand"

@@ -11,19 +11,20 @@
 # Emily Jia <eji@odoo.com>, 2023
 # Martin Trigaux, 2023
 # Jeffery CHEN <jeffery9@gmail.com>, 2023
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
 # "Chloe Wang (chwa)" <chwa@odoo.com>, 2025, 2026.
-# 何彬 <vnsoft.he@gmail.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# 何彬 <vnsoft.he@gmail.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # colgrave34 <colgrave.idir@simplelogin.co>, 2026.
 # 张飞虎 <feihu.zhang@live.com>, 2026.
+# Peter Jiang <bopjiang@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:35+0000\n"
-"PO-Revision-Date: 2026-04-06 19:02+0000\n"
-"Last-Translator: 张飞虎 <feihu.zhang@live.com>\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-08-26 07:25+0000\n"
+"Last-Translator: Peter Jiang <bopjiang@gmail.com>\n"
 "Language-Team: Chinese (Simplified Han script) <https://translate.odoo.com/"
 "projects/odoo-19/hr/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -31,7 +32,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: hr
 #. odoo-python
@@ -3717,6 +3718,18 @@ msgstr ""
 
 #. module: hr
 #. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Contact Profile"
+msgstr ""
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Employee Profile (activates company)"
+msgstr ""
+
+#. module: hr
+#. odoo-javascript
 #: code:addons/hr/static/src/core/web/thread_actions.js:0
 msgid "Open Profile"
 msgstr "打开个人资料"
@@ -4331,7 +4344,7 @@ msgstr "责任用户"
 #: model_terms:ir.ui.view,arch_db:hr.hr_employee_public_view_form
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "Resume"
-msgstr "恢复"
+msgstr "简历"
 
 #. module: hr
 #: model:hr.departure.reason,name:hr.departure_retired
@@ -4685,19 +4698,19 @@ msgid "Temporary"
 msgstr "临时"
 
 #. module: hr
-#. odoo-python
-#: code:addons/hr/models/hr_employee.py:0
-msgid ""
-"The Badge ID must be alphanumeric without any accents and no longer than 18 "
-"characters."
-msgstr "徽标ID必须为字母数字，不含重音，长度不超过 18 个字符。"
-
-#. module: hr
 #: model:ir.model.constraint,message:hr.constraint_hr_employee_barcode_uniq
 msgid ""
 "The Badge ID must be unique, this one is already assigned to another "
 "employee."
 msgstr "徽标ID必须是唯一的，当前ID已经分配给另一个员工。"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"The Badge ID must contain only printable ASCII characters, without spaces, "
+"and be no longer than 18 characters."
+msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_departure_reason__country_code
@@ -5110,6 +5123,11 @@ msgid "Version"
 msgstr "版本"
 
 #. module: hr
+#: model:ir.model.fields,field_description:hr.field_hr_employee__version_revision
+msgid "Version Revision"
+msgstr ""
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__versions_count
 msgid "Versions Count"
 msgstr "版本数"
@@ -5117,6 +5135,12 @@ msgstr "版本数"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_version_list_view
 msgid "View"
+msgstr ""
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "View Profile"
 msgstr ""
 
 #. module: hr
@@ -5467,6 +5491,12 @@ msgstr "您无权访问此文档。"
 
 #. module: hr
 #. odoo-python
+#: code:addons/hr/wizard/hr_bank_account_allocation_wizard_line.py:0
+msgid "You do not have the rights to trust or un-trust accounts."
+msgstr ""
+
+#. module: hr
+#. odoo-python
 #: code:addons/hr/models/hr_employee.py:0
 msgid "You need to set a valid work email address for %s"
 msgstr "您需要为 %s 设置有效的工作邮箱地址"
@@ -5693,6 +5723,11 @@ msgstr "工作"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
 msgstr "工作许可名称"
+
+#~ msgid ""
+#~ "The Badge ID must be alphanumeric without any accents and no longer than "
+#~ "18 characters."
+#~ msgstr "徽标ID必须为字母数字，不含重音，长度不超过 18 个字符。"
 
 #~ msgid "%(activity)s, assigned to %(name)s, due on the %(deadline)s"
 #~ msgstr "%(activity)s 分配给 %(name)s，在 %(deadline)s 到期"

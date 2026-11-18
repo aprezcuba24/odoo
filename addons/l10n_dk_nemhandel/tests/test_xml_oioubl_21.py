@@ -216,6 +216,10 @@ class TestUBLDKOIOUBL21(TestUBLCommon, TestAccountMoveSendCommon):
     @freeze_time('2017-01-01')
     def test_oioubl_export_import_with_discount(self):
         """ Tests that the discount on a line is well exported, then taken into account when imported """
+        company = self.company_data['company']
+        if "predict_bill_product" in company._fields:
+            company.predict_bill_product = True
+
         line_vals = {
             'product_id': self.product_a.id,
             'quantity': 10.0,
@@ -238,7 +242,9 @@ class TestUBLDKOIOUBL21(TestUBLCommon, TestAccountMoveSendCommon):
         self.assertTrue(invoice.ubl_cii_xml_id)
         self._assert_invoice_attachment(invoice.ubl_cii_xml_id, xpaths=None, expected_file_path="from_odoo/oioubl_out_invoice_discount.xml")
         new_invoice = invoice.journal_id._create_document_from_attachment(invoice.ubl_cii_xml_id.ids)
+        discount = line_vals.pop('discount')
         self.assertRecordValues(new_invoice.invoice_line_ids, [line_vals])
+        self.assertAlmostEqual(new_invoice.invoice_line_ids.discount, discount)
 
     @freeze_time('2017-01-01')
     def test_oioubl_export_should_raise_an_error_when_partner_building_number_is_missing(self):

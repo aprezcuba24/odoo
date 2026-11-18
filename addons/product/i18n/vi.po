@@ -9,16 +9,17 @@
 # Martin Trigaux, 2022
 # Nancy Momoland <thanhnguyen.icsc@gmail.com>, 2023
 # Thi Huong Nguyen, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Thi Huong Nguyen (thng)" <thng@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
+# Deleted User <noreply+31@weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:39+0000\n"
-"PO-Revision-Date: 2026-04-13 20:47+0000\n"
-"Last-Translator: \"Thi Huong Nguyen (thng)\" <thng@odoo.com>\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-08 02:11+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Vietnamese <https://translate.odoo.com/projects/odoo-19/"
 "product/vi/>\n"
 "Language: vi\n"
@@ -26,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: product
 #. odoo-python
@@ -3581,6 +3582,12 @@ msgstr ""
 #: model:product.attribute.value,name:product.pav_brand_sony
 msgid "Sony"
 msgstr "Sony"
+
+#. module: product
+#. odoo-python
+#: code:addons/product/report/product_pricelist_report.py:0
+msgid "Sorry, you are not allowed to access this document."
+msgstr ""
 
 #. module: product
 #: model:ir.model.fields,field_description:product.field_res_partner__specific_property_product_pricelist

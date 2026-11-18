@@ -6,18 +6,18 @@
 # Martin Trigaux, 2022
 # Jolien De Paepe, 2023
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2023, 2025, 2026.
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # Bren Driesen <brdri@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:39+0000\n"
-"PO-Revision-Date: 2026-06-06 15:05+0000\n"
-"Last-Translator: Bren Driesen <brdri@odoo.com>\n"
-"Language-Team: Dutch <https://translate.odoo.com/projects/odoo-19/product/"
-"nl/>\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-05 22:23+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"Language-Team: Dutch <https://translate.odoo.com/projects/odoo-19/product/nl/"
+">\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -3596,6 +3596,12 @@ msgid "Sony"
 msgstr "Sony"
 
 #. module: product
+#. odoo-python
+#: code:addons/product/report/product_pricelist_report.py:0
+msgid "Sorry, you are not allowed to access this document."
+msgstr ""
+
+#. module: product
 #: model:ir.model.fields,field_description:product.field_res_partner__specific_property_product_pricelist
 #: model:ir.model.fields,field_description:product.field_res_users__specific_property_product_pricelist
 msgid "Specific Property Product Pricelist"
@@ -3808,8 +3814,8 @@ msgid ""
 "(id)s\""
 msgstr ""
 "Het uitgaande product heeft andere kenmerkwaarden. \"%(imported_values)s\" "
-"is niet gelijk aan \"%(existing_values)s\" voor \"%(external_id)s\", \"%(id)"
-"s\""
+"is niet gelijk aan \"%(existing_values)s\" voor \"%(external_id)s\", \"%"
+"(id)s\""
 
 #. module: product
 #: model_terms:product.template,website_description:product.product_product_4_product_template

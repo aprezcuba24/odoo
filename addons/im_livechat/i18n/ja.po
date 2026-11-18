@@ -6,15 +6,15 @@
 # Martin Trigaux, 2022
 # Andy Yiu, 2023
 # Ryoko Tsuda <ryoko@quartile.co>, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-03 18:36+0000\n"
-"PO-Revision-Date: 2026-04-22 07:41+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-11-12 06:39+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "im_livechat/ja/>\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: im_livechat
 #. odoo-python
@@ -93,14 +93,10 @@ msgid ""
 "* 'Show with notification' is 'Show' in addition to a floating text just "
 "next to the button.\n"
 "* 'Open automatically' displays the button and automatically opens the "
-"conversation pane.\n"
+"conversation pane on larger screens. On small screens, this behaves like "
+"'Show'.\n"
 "* 'Hide' hides the chat button on the pages.\n"
 msgstr ""
-"* '表示' はページ上にチャットボタンを表示します。\n"
-"* '通知付きで表示'は'表示'に加え、ボタンのすぐ横にフローティングテキストを表"
-"示します。\n"
-"* '自動的に開く'はボタンを表示し、自動的に会話ペインを開きます。\n"
-"* '隠す'はページ上のチャットボタンを隠します。\n"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_kanban
@@ -604,7 +600,7 @@ msgstr "連絡先"
 #. odoo-javascript
 #: code:addons/im_livechat/static/src/embed/common/chat_window_patch.xml:0
 msgid "Continue"
-msgstr "続行"
+msgstr "続ける"
 
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_im_livechat_report_channel__channel_id
@@ -1074,12 +1070,8 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_form
 msgid ""
 "Go to <strong>Website</strong> &gt; <strong>Configuration</strong> &gt; "
-"<strong>Settings</strong> &gt; <strong>Email</strong> &amp; "
-"<strong>Marketing.</strong>"
+"<strong>Settings</strong> &gt; <strong>General.</strong>"
 msgstr ""
-"<strong>ウェブサイト</strong>へ移動 &gt; <strong>設定</strong> &gt; <strong>"
-"管理設定</strong> &gt; <strong>Eメール</strong> &amp; <strong>マーケティング"
-"</strong>"
 
 #. module: im_livechat
 #. odoo-javascript
@@ -1476,7 +1468,7 @@ msgstr "直近24時間"
 #: model_terms:ir.ui.view,arch_db:im_livechat.discuss_channel_looking_for_help_view_search
 #: model_terms:ir.ui.view,arch_db:im_livechat.discuss_channel_view_search
 msgid "Last 30 Days"
-msgstr "過去30日"
+msgstr "直近30日"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.discuss_channel_looking_for_help_view_search
@@ -1785,7 +1777,7 @@ msgstr "メールRTCセッション"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_im_livechat_channel_rule__sequence
 msgid "Matching order"
-msgstr "一致するオーダ"
+msgstr "適用順序"
 
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_im_livechat_channel__max_sessions
@@ -2069,7 +2061,7 @@ msgstr "進行中のセッション"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_script_step__triggering_answer_ids
 msgid "Only If"
-msgstr "表示条件"
+msgstr "条件分岐(Only If)"
 
 #. module: im_livechat
 #. odoo-python
@@ -2682,6 +2674,12 @@ msgid "Thank you for your feedback"
 msgstr "ご意見頂きありがとうございます"
 
 #. module: im_livechat
+#. odoo-python
+#: code:addons/im_livechat/models/im_livechat_channel.py:0
+msgid "The URL Regex '%(regex)s' is not valid."
+msgstr ""
+
+#. module: im_livechat
 #: model:ir.model.fields,help:im_livechat.field_im_livechat_channel_rule__channel_id
 msgid "The channel of the rule"
 msgstr "ルールのチャネル"
@@ -3231,6 +3229,29 @@ msgstr "秒"
 #: model:ir.model,name:im_livechat.model_ir_websocket
 msgid "websocket message handling"
 msgstr "WebSocketメッセージ処理"
+
+#~ msgid ""
+#~ "* 'Show' displays the chat button on the pages.\n"
+#~ "* 'Show with notification' is 'Show' in addition to a floating text just "
+#~ "next to the button.\n"
+#~ "* 'Open automatically' displays the button and automatically opens the "
+#~ "conversation pane.\n"
+#~ "* 'Hide' hides the chat button on the pages.\n"
+#~ msgstr ""
+#~ "* '表示' はページ上にチャットボタンを表示します。\n"
+#~ "* '通知付きで表示'は'表示'に加え、ボタンのすぐ横にフローティングテキストを"
+#~ "表示します。\n"
+#~ "* '自動的に開く'はボタンを表示し、自動的に会話ペインを開きます。\n"
+#~ "* '隠す'はページ上のチャットボタンを隠します。\n"
+
+#~ msgid ""
+#~ "Go to <strong>Website</strong> &gt; <strong>Configuration</strong> &gt; "
+#~ "<strong>Settings</strong> &gt; <strong>Email</strong> &amp; "
+#~ "<strong>Marketing.</strong>"
+#~ msgstr ""
+#~ "<strong>ウェブサイト</strong>へ移動 &gt; <strong>設定</strong> &gt; "
+#~ "<strong>管理設定</strong> &gt; <strong>Eメール</strong> &amp; <strong>マー"
+#~ "ケティング</strong>"
 
 #~ msgid "This livechat conversation has ended"
 #~ msgstr "ライブチャットは終了しました"

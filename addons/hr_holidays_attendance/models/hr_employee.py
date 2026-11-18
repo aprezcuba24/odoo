@@ -60,13 +60,12 @@ class HrEmployee(models.Model):
 
         unspent_overtime = self._get_deductible_employee_overtime()
         for employee in unspent_overtime:
-            overtime_data[employee.id]['unspent_compensable_overtime'] += max(
-                0, unspent_overtime[employee]
-            )
+            overtime_data[employee.id]['unspent_compensable_overtime'] += unspent_overtime[employee]
 
         all_overtimes = self.env['hr.attendance.overtime.line']._read_group(
             domain=[
                 ('employee_id', 'in', self.ids),
+                ('status', '=', 'approved'),
             ],
             groupby=["employee_id", "compensable_as_leave"],
             aggregates=["duration:sum"],

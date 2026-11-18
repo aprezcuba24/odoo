@@ -3,15 +3,15 @@
 # * mass_mailing
 #
 # Translators:
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Anastasiia Koroleva (koan)" <koan@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-01 17:35+0000\n"
-"PO-Revision-Date: 2026-05-23 09:39+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-08-10 11:29+0000\n"
 "Last-Translator: \"Anastasiia Koroleva (koan)\" <koan@odoo.com>\n"
 "Language-Team: Russian <https://translate.odoo.com/projects/odoo-19/"
 "mass_mailing/ru/>\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: mass_mailing
 #. odoo-python
@@ -245,7 +245,7 @@ msgstr "7 секретов дизайна самых красивых домов
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_text_contact
 msgid "8.00am - 12.00pm"
-msgstr ""
+msgstr "08:00 – 12:00"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_text_contact
@@ -951,12 +951,12 @@ msgstr "<span style=\"color: #878d97;\">Отключить отчеты по р�
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_event
 msgid "<span style=\"font-size: 18px\">Event Two</span>"
-msgstr ""
+msgstr "<span style=\"font-size: 18px\">Мероприятие 2</span>"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_event
 msgid "<span style=\"font-size: 18px;\">Event One</span>"
-msgstr ""
+msgstr "<span style=\"font-size: 18px;\">Мероприятие 1</span>"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_cover
@@ -1701,6 +1701,11 @@ msgid "Attach a file"
 msgstr "Прикрепить файл"
 
 #. module: mass_mailing
+#: model:ir.model,name:mass_mailing.model_ir_attachment
+msgid "Attachment"
+msgstr ""
+
+#. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_contact__message_attachment_count
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_mailing__message_attachment_count
 msgid "Attachment Count"
@@ -2135,6 +2140,25 @@ msgstr "Отменено"
 #: model_terms:ir.ui.view,arch_db:mass_mailing.mailing_trace_view_search
 msgid "Cancelled"
 msgstr "Отменен"
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is configured as the dedicated Email "
+"Marketing server."
+msgstr ""
+"Нельзя назначить владельца для «%(server)s»: этот сервер настроен как "
+"выделенный сервер рассылок."
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is used by mailing '%(mailing)s'."
+msgstr ""
+"Нельзя назначить владельца для «%(server)s»: он используется в рассылке «%"
+"(mailing)s»."
 
 #. module: mass_mailing
 #: model:ir.model.fields,help:mass_mailing.field_mailing_mailing_test__email_to
@@ -2801,6 +2825,7 @@ msgstr ""
 "когда заходите внутрь."
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__display_name
@@ -3194,12 +3219,12 @@ msgstr "Функция два"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
 msgid "Features Column"
-msgstr ""
+msgstr "Колонка функций"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
 msgid "Features Showcase"
-msgstr ""
+msgstr "Обзор возможностей"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_features_showcase
@@ -3465,6 +3490,7 @@ msgid "I receive too many emails from this list"
 msgstr "Я получаю слишком много писем из этого списка"
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__id
@@ -4380,7 +4406,7 @@ msgstr "Познакомьтесь с нашей командой"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
 msgid "Membership"
-msgstr ""
+msgstr "Членство"
 
 #. module: mass_mailing
 #. odoo-javascript
@@ -5169,7 +5195,7 @@ msgstr "Описание товара"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
 msgid "Product Showcase"
-msgstr ""
+msgstr "Витрина товаров"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_comparisons
@@ -5571,7 +5597,7 @@ msgstr "Второстепенная кнопка"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
 msgid "Section Mobile"
-msgstr ""
+msgstr "Мобильная секция"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_text_card
@@ -6817,13 +6843,13 @@ msgstr ""
 #: code:addons/mass_mailing/static/src/builder/tabs/design_tab.xml:0
 #: model_terms:ir.ui.view,arch_db:mass_mailing.social_links
 msgid "X"
-msgstr ""
+msgstr "X"
 
 #. module: mass_mailing
 #. odoo-javascript
 #: code:addons/mass_mailing/static/src/builder/tabs/design_tab.xml:0
 msgid "Y"
-msgstr ""
+msgstr "Y"
 
 #. module: mass_mailing
 #. odoo-python

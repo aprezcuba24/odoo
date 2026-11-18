@@ -66,15 +66,17 @@ class ProductTemplate(models.Model):
     fiscal_country_codes = fields.Char(compute='_compute_fiscal_country_codes')
 
     def _get_product_accounts(self):
+        # Branch users can read the parent company's products but not the parent company itself
+        company = (self.company_id or self.env.company).sudo()
         return {
             'income': (
                 self.property_account_income_id
                 or self._get_category_account('property_account_income_categ_id')
-                or (self.company_id or self.env.company).income_account_id
+                or company.income_account_id.with_env(self.env)
             ), 'expense': (
                 self.property_account_expense_id
                 or self._get_category_account('property_account_expense_categ_id')
-                or (self.company_id or self.env.company).expense_account_id
+                or company.expense_account_id.with_env(self.env)
             ),
         }
 
@@ -314,6 +316,32 @@ class ProductProduct(models.Model):
         if default_code:
             return {'criteria': [{'domain': [('default_code', '=', default_code)]}]}
 
+    def _import_retrieve_product_from_supplierinfo(self, product_values):
+        vendor_partner_id = product_values.get('vendor_partner_id')
+        if not vendor_partner_id:
+            return {}
+        product_codes = [
+            code for code in [
+                product_values.get('sellers_item_id'),
+                product_values.get('standard_item_id'),
+                product_values.get('buyers_item_id'),
+            ]
+            if code
+        ]
+        if not product_codes:
+            return {}
+
+        return {
+            'criteria': [{
+                'domain': [(
+                    'product_tmpl_id.seller_ids', 'any', [
+                        ('partner_id', '=', vendor_partner_id),
+                        ('product_code', 'in', product_codes),
+                    ],
+                )]
+            }]
+        }
+
     def _import_retrieve_product_from_name(self, product_values):
 
         name = product_values.get('name')
@@ -486,9 +514,10 @@ class ProductProduct(models.Model):
 
     def _get_retrieval_product_search_plan(self):
         return [
-            (5, self._import_retrieve_product_from_barcode),
-            (10, self._import_retrieve_product_from_default_code),
-            (15, self._import_retrieve_product_from_name),
+            (5, self._import_retrieve_product_from_supplierinfo),
+            (10, self._import_retrieve_product_from_barcode),
+            (15, self._import_retrieve_product_from_default_code),
+            (20, self._import_retrieve_product_from_name),
         ]
 
     def _retrieve_product(self, company=None, extra_domain=None, **product_vals):

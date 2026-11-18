@@ -1,6 +1,10 @@
 import { test, expect } from "@odoo/hoot";
+import { freezeTime } from "@odoo/hoot-dom";
 import { getFilledOrder, setupPosEnv } from "../utils";
 import { definePosModels } from "../data/generate_model_definitions";
+import { serializeDateTime } from "@web/core/l10n/dates";
+
+const { DateTime } = luxon;
 
 definePosModels();
 
@@ -58,6 +62,27 @@ test("updateLastOrderChange", async () => {
     order.updateLastOrderChange();
     expect(order.last_order_preparation_change.general_customer_note).toBe("Customer note");
     expect(order.last_order_preparation_change.internal_note).toBe("Internal note");
+});
+
+test("updateLastOrderChange with device clock behind the server", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    freezeTime();
+    const now = DateTime.now();
+
+    // Version stamped by the server, 5 minutes ahead of the device clock
+    const serverDate = serializeDateTime(now.plus({ minutes: 5 }));
+    order.last_order_preparation_change.metadata = { serverDate };
+    order.updateLastOrderChange();
+    // Otherwise the server considers the change as outdated and discards it
+    expect(order.last_order_preparation_change.metadata.serverDate).toBe(serverDate);
+
+    // Server version older than the device clock: the device date is used
+    order.last_order_preparation_change.metadata = {
+        serverDate: serializeDateTime(now.minus({ minutes: 5 })),
+    };
+    order.updateLastOrderChange();
+    expect(order.last_order_preparation_change.metadata.serverDate).toBe(serializeDateTime(now));
 });
 
 test("removeOrderline", async () => {
@@ -509,6 +534,63 @@ test("priceDoesntChangeWhenChangingPresetMultipleQuantity", async () => {
         [[{ combo_item_id: comboProduct1, qty: 2 }], [{ combo_item_id: comboProduct1, qty: 2 }]],
         21250
     );
+});
+
+test("comboLineSplitFollowsChoicesSequence", async () => {
+    const store = await setupPosEnv();
+    store.models["pos.preset"].get(1).pricelist_id = false;
+    store.models["product.product"].get(7).lst_price = 100;
+    const chairsCombo = store.models["product.combo"].get(1);
+    const desksCombo = store.models["product.combo"].get(2);
+    chairsCombo.qty_free = 2;
+    chairsCombo.qty_max = 2;
+    const template = store.models["product.template"].get(7);
+    // The chairs choice is displayed last but comes first in the configurator payload (by id)
+    template.combo_ids = [desksCombo.id, chairsCombo.id];
+    const chair = store.models["product.combo.item"].get(1);
+    const desk = store.models["product.combo.item"].get(3);
+
+    const checkComboLines = async (basePrice, expectedLines) => {
+        chairsCombo.base_price = basePrice;
+        desksCombo.base_price = basePrice;
+        const order = store.addNewOrder();
+        await store.addLineToOrder(
+            {
+                product_tmpl_id: template,
+                payload: [
+                    [
+                        { combo_item_id: chair, qty: 2 },
+                        { combo_item_id: desk, qty: 1 },
+                    ],
+                ],
+                qty: 1,
+            },
+            order
+        );
+        const getComboLines = () =>
+            order.lines[0].combo_line_ids.map((line) => [
+                line.combo_item_id.id,
+                line.qty,
+                Math.round(line.price_unit * 100) / 100,
+            ]);
+        expect(getComboLines()).toEqual(expectedLines);
+        // The prices are recomputed when the pricelist is set
+        order.setPricelist(order.pricelist_id);
+        expect(getComboLines()).toEqual(expectedLines);
+    };
+
+    // The last chair absorbs the rounding difference
+    await checkComboLines(10, [
+        [desk.id, 1, 33.33],
+        [chair.id, 1, 33.33],
+        [chair.id, 1, 33.34],
+    ]);
+    // Choices with a free product have a 0 base price: the last chair gets the combo price
+    await checkComboLines(0, [
+        [desk.id, 1, 0],
+        [chair.id, 1, 0],
+        [chair.id, 1, 100],
+    ]);
 });
 
 test("Ignore attribute always extra price with combo", async () => {

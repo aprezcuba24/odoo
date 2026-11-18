@@ -7,16 +7,16 @@
 # Wil Odoo, 2025
 # Tony Ng, 2025
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # "Tony Ng (ngto)" <ngto@odoo.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:38+0000\n"
-"PO-Revision-Date: 2026-06-06 14:19+0000\n"
-"Last-Translator: \"Tony Ng (ngto)\" <ngto@odoo.com>\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-08-07 04:27+0000\n"
+"Last-Translator: \"Dylan Kiss (dyki)\" <dyki@odoo.com>\n"
 "Language-Team: Chinese (Traditional Han script) <https://translate.odoo.com/"
 "projects/odoo-19/website_hr_recruitment/zh_Hant/>\n"
 "Language: zh_TW\n"
@@ -783,6 +783,8 @@ msgstr "在一家快速發展的公司中的真正責任和挑戰"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.apply
+#: model_terms:ir.ui.view,arch_db:website_hr_recruitment.detail
+#: model_terms:ir.ui.view,arch_db:website_hr_recruitment.index
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_filter_by_offices
 msgid "Remote"
 msgstr "遙距工作"

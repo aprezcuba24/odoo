@@ -9,17 +9,17 @@
 # Martin Trigaux, 2022
 # Andy Yiu, 2023
 # Ryoko Tsuda <ryoko@quartile.co>, 2023, 2025, 2026.
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
-# Yoshi Tashiro <tashiro@quartile.co>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
+# Yoshi Tashiro <tashiro@quartile.co>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 17:40+0000\n"
-"PO-Revision-Date: 2026-05-30 09:37+0000\n"
-"Last-Translator: Ryoko Tsuda <ryoko@quartile.co>\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-11-11 01:39+0000\n"
+"Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "website_sale/ja/>\n"
 "Language: ja\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -591,7 +591,7 @@ msgstr "<span><b>Good job!</b> このツアーの全ステップを終了しま�
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.confirmation
 msgid "<span>Order</span>"
-msgstr "<span>オーダ</span>"
+msgstr "<span>ご注文</span>"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_document_kanban
@@ -790,8 +790,8 @@ msgid ""
 "This description will be copied to every Sales Order, Delivery Order and "
 "Customer Invoice/Credit Note"
 msgstr ""
-"顧客に見せたい製品の説明。この説明は販売注文、配送注文、顧客請求書/クレジット"
-"ノートにコピーされます。"
+"顧客に表示するプロダクトの説明。この説明は販売オーダ、出荷オーダ、顧客請求書/"
+"クレジットノートにコピーされます。"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_title
@@ -1333,13 +1333,19 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Border-Primary"
-msgstr "ボーダー(プライマリ)"
+msgstr "ボーダー(メイン)"
 
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_list_page_option.xml:0
 msgid "Bordered"
 msgstr "枠線あり"
+
+#. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
+msgid "Bottom"
+msgstr "下"
 
 #. module: website_sale
 #. odoo-python
@@ -1591,7 +1597,7 @@ msgstr "囲みチップ"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/location_selector/location_selector_dialog/location_selector_dialog.js:0
 msgid "Choose a pick-up point"
-msgstr "受取場所を選択してください"
+msgstr "受取拠点を選択してください"
 
 #. module: website_sale
 #. odoo-javascript
@@ -3218,7 +3224,8 @@ msgstr ""
 msgid ""
 "It seems that there is already a transaction for your order; you can't "
 "change the delivery method anymore."
-msgstr "ご注文にはすでに取引が存在するため、配送方法はこれ以上変更できません。"
+msgstr ""
+"このご注文はすでに決済手続きが行われているため、配送方法を変更できません。"
 
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_account_move
@@ -3357,6 +3364,7 @@ msgstr "レイアウト"
 
 #. module: website_sale
 #. odoo-javascript
+#: code:addons/website_sale/static/src/website_builder/product_page_option.xml:0
 #: code:addons/website_sale/static/src/website_builder/product_ribbon_options.xml:0
 #: model:ir.model.fields.selection,name:website_sale.selection__product_ribbon__position__left
 msgid "Left"
@@ -3392,7 +3400,13 @@ msgstr "明細小計税表示"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/products_design_panel.xml:0
 msgid "Link Color"
-msgstr "リンクカラー"
+msgstr "リンク色"
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid "Linked lines must be added to the cart with their parent."
+msgstr ""
 
 #. module: website_sale
 #. odoo-javascript
@@ -3414,7 +3428,7 @@ msgstr "ログイン済ユーザ"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.quick_reorder_button
 msgid "Login to reorder"
-msgstr "ログインして再オーダ"
+msgstr "再注文するにはログインしてください"
 
 #. module: website_sale
 #: model:product.public.category,name:website_sale.public_category_boxes_luxury
@@ -3667,7 +3681,7 @@ msgstr "カゴ落ちが見つかりませんでした"
 #: code:addons/website_sale/static/src/js/website_sale_utils.js:0
 #: model_terms:ir.ui.view,arch_db:website_sale.quick_reorder_button
 msgid "No previous products available for reorder."
-msgstr "再注文可能な過去のプロダクトはありません。"
+msgstr "再注文可能な購入履歴はありません。"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -3751,7 +3765,7 @@ msgstr "%sでは使用できません"
 #. odoo-python
 #: code:addons/website_sale/controllers/reorder.py:0
 msgid "Nothing can be reordered in this order"
-msgstr "このオーダでは再注文できるプロダクトがありません"
+msgstr "この注文には再注文できる商品が含まれていません。"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_crm_team__abandoned_carts_count
@@ -3998,7 +4012,7 @@ msgstr "オーバーレイ"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.packaging_title
 msgid "Packaging"
-msgstr "梱包"
+msgstr "パッケージング"
 
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_website_page
@@ -4238,7 +4252,7 @@ msgstr "プライバシーポリシー"
 #: model_terms:ir.actions.act_window,help:website_sale.action_unpaid_orders_ecommerce
 #: model_terms:ir.actions.act_window,help:website_sale.action_view_unpaid_quotation_tree
 msgid "Process the order once the payment is received."
-msgstr "支払いを受け取り次第、オーダを処理します。"
+msgstr "入金を確認次第、オーダ処理を進めてください。"
 
 #. module: website_sale
 #. odoo-javascript
@@ -4788,7 +4802,7 @@ msgstr "特定のウェブサイトに制限する。"
 #. odoo-python
 #: code:addons/website_sale/models/sale_order.py:0
 msgid "Resume Order"
-msgstr "オーダを続ける"
+msgstr "注文を再開"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.template_footer_website_sale
@@ -5163,7 +5177,7 @@ msgstr "店舗支払い"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "Shop, products, cart and wishlist visibility"
-msgstr "ショップ、プロダクト、カート、ウィッシュリストの表示設定"
+msgstr "ショップ、プロダクト、カート、ほしい物リストの表示設定"
 
 #. module: website_sale
 #. odoo-javascript
@@ -5238,7 +5252,7 @@ msgstr "eコマースで表示"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/website_builder/website_sale_show_empty_option.xml:0
 msgid "Show the button even if the Cart/Wishlist is empty"
-msgstr "カートやウィッシュリストが空でもボタンを表示"
+msgstr "カートやほしい物リストが空でもボタンを表示"
 
 #. module: website_sale
 #. odoo-javascript
@@ -5263,7 +5277,7 @@ msgstr "サイドバー"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.confirmation
 msgid "Sign Up"
-msgstr "サインアップ"
+msgstr "登録する"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
@@ -5319,6 +5333,14 @@ msgstr "ソファ"
 #: model:product.ribbon,name:website_sale.sold_out_ribbon
 msgid "Sold out"
 msgstr "完売"
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/main.py:0
+msgid ""
+"Some products in your cart are not available for purchase in your country. "
+"Please remove them or contact us."
+msgstr ""
 
 #. module: website_sale
 #. odoo-python
@@ -5638,6 +5660,14 @@ msgstr ""
 
 #. module: website_sale
 #. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid ""
+"The number of selected combo items must match the number of available combo "
+"choices."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
 #: code:addons/website_sale/controllers/payment.py:0
 msgid "The order has been cancelled."
 msgstr "注文はキャンセルされました。"
@@ -5708,7 +5738,7 @@ msgstr "テーマデフォルト"
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.action_orders_ecommerce
 msgid "There is no confirmed order from the website"
-msgstr "サイトから確認したオーダがありません"
+msgstr "ウェブサイトからの確定オーダはありません"
 
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.action_unpaid_orders_ecommerce
@@ -5720,7 +5750,7 @@ msgstr "ウェブサイトからの未払いのオーダはありません"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/location_selector/map_container/map_container.js:0
 msgid "There was an error loading the map"
-msgstr "地図をロード中にエラーが発生しました"
+msgstr "地図を読み込み中にエラーが発生しました"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.alternative_products
@@ -5769,6 +5799,18 @@ msgstr "この製品はもう使用できません。"
 #. odoo-python
 #: code:addons/website_sale/models/sale_order.py:0
 msgid "This product is not available (anymore) in this unit of measure."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/main.py:0
+msgid "This product is not available for purchase in your country."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid "This product is part of a combo and can't be updated individually."
 msgstr ""
 
 #. module: website_sale
@@ -6027,7 +6069,7 @@ msgstr "バーチャルデザインツール"
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_attribute__visibility
 msgid "Visibility"
-msgstr "可視性"
+msgstr "表示設定"
 
 #. module: website_sale
 #: model:ir.model.fields.selection,name:website_sale.selection__product_attribute__preview_variants__visible
@@ -6319,6 +6361,12 @@ msgid "You can't use a video as the product's main image."
 msgstr "プロダクトのメインイメージとして動画を使用することはできません。"
 
 #. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/cart.py:0
+msgid "You cannot add a combo item separately from its combo."
+msgstr ""
+
+#. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.sale_report_action_carts
 #: model_terms:ir.actions.act_window,help:website_sale.sale_report_action_dashboard
 msgid "You don't have any order from the website"
@@ -6521,7 +6569,7 @@ msgid ""
 "if you want to restore your previous cart. Your current cart will be "
 "replaced with your previous cart."
 msgstr ""
-"して、前のカートを復元します。現在のカートは前のカートで置き換えられます。"
+"以前のカートを復元します。現在のカートは、以前のカートで置き換えられます。"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -6937,9 +6985,6 @@ msgstr "{{0}} 画像"
 
 #~ msgid "Both"
 #~ msgstr "両方"
-
-#~ msgid "Bottom"
-#~ msgstr "下"
 
 #~ msgid "Brand"
 #~ msgstr "ブランド"

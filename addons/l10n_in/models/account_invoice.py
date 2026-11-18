@@ -251,7 +251,7 @@ class AccountMove(models.Model):
                 if company.l10n_in_tcs_feature and invalid_tax_lines:
                     warnings['lower_tcs_tax'] = {
                         'message': _("As the Partner's PAN missing/invalid apply TCS at the higher rate."),
-                        'actions': invalid_tax_lines.with_context(tax_validation=True)._get_records_action(
+                        'action': invalid_tax_lines.with_context(tax_validation=True)._get_records_action(
                             name=action_name,
                             views=[(_xmlid_to_res_id("l10n_in.view_move_line_tree_hsn_l10n_in"), "list")],
                             domain=[('id', 'in', invalid_tax_lines.ids)],
@@ -365,7 +365,7 @@ class AccountMove(models.Model):
 
     def _compute_l10n_in_total_withholding_amount(self):
         for move in self:
-            if self.env.company.l10n_in_tds_feature:
+            if move.company_id.l10n_in_tds_feature:
                 move.l10n_in_total_withholding_amount = sum(
                     move.l10n_in_withhold_move_ids.filtered(
                         lambda m: m.state == 'posted'

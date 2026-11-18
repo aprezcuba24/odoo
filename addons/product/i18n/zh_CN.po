@@ -9,17 +9,17 @@
 # Martin Trigaux, 2022
 # Raymond Yu <cl_yu@hotmail.com>, 2022
 # Jeffery CHEN <jeffery9@gmail.com>, 2022
-# "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
+# "Tiffany Chang (tic)" <tic@odoo.com>, 2025, 2026.
 # "Chloe Wang (chwa)" <chwa@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 # 张飞虎 <feihu.zhang@live.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:39+0000\n"
-"PO-Revision-Date: 2026-04-13 20:47+0000\n"
-"Last-Translator: \"Chloe Wang (chwa)\" <chwa@odoo.com>\n"
+"POT-Creation-Date: 2026-10-24 17:38+0000\n"
+"PO-Revision-Date: 2026-08-06 03:29+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://translate.odoo.com/"
 "projects/odoo-19/product/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: product
 #. odoo-python
@@ -3547,6 +3547,12 @@ msgstr "办公室用缓冲脚踏垃圾桶"
 #: model:product.attribute.value,name:product.pav_brand_sony
 msgid "Sony"
 msgstr "索尼"
+
+#. module: product
+#. odoo-python
+#: code:addons/product/report/product_pricelist_report.py:0
+msgid "Sorry, you are not allowed to access this document."
+msgstr ""
 
 #. module: product
 #: model:ir.model.fields,field_description:product.field_res_partner__specific_property_product_pricelist

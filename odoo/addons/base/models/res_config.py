@@ -240,6 +240,7 @@ class ResConfigSettings(models.TransientModel):
         if not fields:
             return res
 
+        self.check_access('read')
         IrDefault = self.env['ir.default']
         IrConfigParameter = self.env['ir.config_parameter'].sudo()
         classified = self._get_classified_fields(fields)
@@ -338,7 +339,7 @@ class ResConfigSettings(models.TransientModel):
                 # bugs when users leave spaces around them
                 value = (value or "").strip() or False
             elif field.type in ('integer', 'float'):
-                value = repr(value) if value else False
+                value = repr(value)
             elif field.type == 'many2one':
                 # value is a (possibly empty) recordset
                 value = value.id

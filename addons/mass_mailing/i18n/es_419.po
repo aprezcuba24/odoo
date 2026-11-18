@@ -2,16 +2,16 @@
 # This file contains the translation of the following modules:
 # * mass_mailing
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Fernanda Alvarez (mfar)" <mfar@odoo.com>, 2025, 2026.
 # "Patricia Gutiérrez (pagc)" <pagc@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-01 17:35+0000\n"
-"PO-Revision-Date: 2026-05-16 09:34+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-11-10 18:33+0000\n"
 "Last-Translator: \"Fernanda Alvarez (mfar)\" <mfar@odoo.com>\n"
 "Language-Team: Spanish (Latin America) <https://translate.odoo.com/projects/"
 "odoo-19/mass_mailing/es_419/>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: mass_mailing
 #. odoo-python
@@ -1713,6 +1713,11 @@ msgid "Attach a file"
 msgstr "Adjuntar un archivo"
 
 #. module: mass_mailing
+#: model:ir.model,name:mass_mailing.model_ir_attachment
+msgid "Attachment"
+msgstr ""
+
+#. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_contact__message_attachment_count
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_mailing__message_attachment_count
 msgid "Attachment Count"
@@ -2147,6 +2152,24 @@ msgstr "Cancelada"
 #: model_terms:ir.ui.view,arch_db:mass_mailing.mailing_trace_view_search
 msgid "Cancelled"
 msgstr "Cancelado"
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is configured as the dedicated Email "
+"Marketing server."
+msgstr ""
+"No puedes definir un propietario en %(server)s porque está configurado como "
+"el servidor específico de Marketing por correo."
+
+#. module: mass_mailing
+#. odoo-python
+#: code:addons/mass_mailing/models/ir_mail_server.py:0
+msgid ""
+"Cannot set an owner on '%(server)s': it is used by mailing '%(mailing)s'."
+msgstr ""
+"No puedes definir un propietario en %(server)s porque lo usa %(mailing)s."
 
 #. module: mass_mailing
 #: model:ir.model.fields,help:mass_mailing.field_mailing_mailing_test__email_to
@@ -2808,6 +2831,7 @@ msgstr ""
 "cuidado para que <strong>sientas paz</strong> cada vez que entres."
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__display_name
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__display_name
@@ -3475,6 +3499,7 @@ msgid "I receive too many emails from this list"
 msgstr "Recibo demasiados correos de esta lista"
 
 #. module: mass_mailing
+#: model:ir.model.fields,field_description:mass_mailing.field_ir_attachment__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_http__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_mail_server__id
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__id
@@ -3672,7 +3697,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_text_need_help
 msgid "In this section, you can address common questions efficiently."
 msgstr ""
-"En esta sección podrá responder algunas de las preguntas más frecuentes."
+"En esta sección puedes responder las preguntas frecuentes con claridad."
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
@@ -5280,7 +5305,7 @@ msgstr "Proporción de correos recibidos"
 #. odoo-python
 #: code:addons/mass_mailing/wizard/mail_compose_message.py:0
 msgid "Received the mailing <b>{mailing_name}</b>"
-msgstr "Recibió el correoq <b>{mailing_name}</b>"
+msgstr "Recibió el correo <b>{mailing_name}</b>"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.mailing_mailing_view_calendar
@@ -6605,9 +6630,9 @@ msgid ""
 "create a list that fits your needs.\n"
 "                            <br/>"
 msgstr ""
-"Utiliza este snippet para crear varios tipos de componentes que incluyan una "
-"imagen alineada a la izquierda o a la derecha y texto. Duplica los elementos "
-"para crear una lista que se adapte a tus necesidades.\n"
+"Usa este bloque para crear distintos tipos de componentes con una imagen "
+"alineada a la izquierda o a la derecha del texto. Duplica el elemento para "
+"crear una lista que se adapte a tus necesidades.\n"
 "                            <br/>"
 
 #. module: mass_mailing

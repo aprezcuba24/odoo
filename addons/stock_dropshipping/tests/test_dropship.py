@@ -503,6 +503,28 @@ class TestDropship(common.TransactionCase):
             {'product_id': subscription_dropship_product.id, 'date_planned': datetime(2026, 1, 1)},
         ])
 
+    def test_modifying_partner_on_dropship_picking(self):
+        """
+        Test that changing the contact on a dropship picking does not
+        replace the original customer.
+        """
+        self.dropship_product.route_ids = [Command.set(self.dropshipping_route.ids)]
+        self.supplier.write({'child_ids': [Command.create({'name': 'Supplier employee'})]})
+        sale_order = self.env['sale.order'].create({
+            'partner_id': self.customer.id,
+            'order_line': [
+                Command.create({
+                    'product_id': self.dropship_product.id,
+                    'product_uom_qty': 1.0,
+                }),
+            ],
+        })
+        sale_order.action_confirm()
+        sale_order._get_purchase_orders().button_confirm()
+        self.assertEqual(sale_order.picking_ids.move_ids.partner_id.id, self.customer.id)
+        sale_order.picking_ids.partner_id = self.supplier.child_ids
+        self.assertEqual(sale_order.picking_ids.move_ids.partner_id.id, self.customer.id)
+
 
 @tagged('post_install', '-at_install')
 class TestDropshipPostInstall(common.TransactionCase):
@@ -664,3 +686,37 @@ class TestDropshipPostInstall(common.TransactionCase):
         po.button_confirm()
         po.picking_ids.button_validate()
         self.assertEqual(so.order_line.qty_delivered, 0)
+
+    def test_merged_dropship_po_links_all_sale_orders(self):
+        """When dropship POs from different SOs are merged and confirmed,
+        each SO must get its own picking so delivery status is updated on validation."""
+        product_b = self.env['product.product'].create({
+            'name': 'Dropshipped Product B',
+            'standard_price': 20,
+            'seller_ids': [Command.create({'partner_id': self.supplier.id})],
+            'route_ids': [Command.link(self.env.ref('stock_dropshipping.route_drop_shipping').id)],
+        })
+        so1, so2 = self.env['sale.order'].create([{
+            'partner_id': self.customer.id,
+            'order_line': [Command.create({'product_id': self.dropship_product.id, 'product_uom_qty': 1})],
+        }, {
+            'partner_id': self.customer.id,
+            'order_line': [Command.create({'product_id': product_b.id, 'product_uom_qty': 1})],
+        }])
+        all_sos = so1 | so2
+        all_sos.action_confirm()
+
+        pos = all_sos._get_purchase_orders()
+        pos.action_merge()
+        merged_pos = pos.filtered(lambda p: p.state != 'cancel')
+        merged_pos.button_confirm()
+
+        pickings = merged_pos.picking_ids.filtered('is_dropship')
+        self.assertEqual(len(pickings), 2)
+        self.assertEqual(pickings.mapped('sale_id'), so1 | so2)
+        for picking in pickings:
+            picking.move_ids.write({'quantity': 1, 'picked': True})
+            picking.button_validate()
+
+        for so in [so1, so2]:
+            self.assertEqual(so.delivery_status, 'full')

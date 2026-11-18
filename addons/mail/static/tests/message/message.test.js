@@ -20,6 +20,7 @@ import {
     startServer,
     triggerHotkey,
 } from "@mail/../tests/mail_test_helpers";
+import { Gif } from "@mail/core/common/gif";
 import { LONG_PRESS_DELAY } from "@mail/utils/common/hooks";
 import { describe, expect, test } from "@odoo/hoot";
 import { animationFrame, leave, pointerDown, press, queryFirst, waitFor } from "@odoo/hoot-dom";
@@ -29,6 +30,7 @@ import {
     contains as webContains,
     Command,
     mockService,
+    mountWithCleanup,
     onRpc,
     patchWithCleanup,
     serverState,
@@ -221,6 +223,32 @@ test("Can add reaction to a message on an ipad", async () => {
     await click("button:contains('Add a Reaction')");
     await click(".o-EmojiPicker-content .o-Emoji:contains('😀')");
     await contains(".o-mail-MessageReaction:contains('😀 1')");
+});
+
+test("Can join an existing reaction of a message (mobile)", async () => {
+    patchUiSize({ size: SIZES.SM });
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        name: "general",
+        channel_type: "channel",
+    });
+    const messageId = pyEnv["mail.message"].create({
+        body: "Hello world",
+        model: "discuss.channel",
+        res_id: channelId,
+        message_type: "comment",
+    });
+    pyEnv["mail.message.reaction"].create({
+        content: "👍",
+        message_id: messageId,
+        partner_id: pyEnv["res.partner"].create({ name: "Demo" }),
+    });
+    await start();
+    await openDiscuss(channelId);
+    await contains(".o-mail-MessageReaction:contains('👍 1')");
+    await click(".o-mail-MessageReactions button[title='Add a Reaction']");
+    await click(".o-EmojiPicker-content .o-Emoji:contains('👍')");
+    await contains(".o-mail-MessageReaction:contains('👍 2')");
 });
 
 test("Editing message keeps the mentioned channels", async () => {
@@ -720,6 +748,72 @@ test("can add new mentions when editing message", async () => {
     });
 });
 
+test("edit message with multiple mentions keeps the links", async () => {
+    const pyEnv = await startServer();
+    const partnersId = pyEnv["res.partner"].create([
+        {
+            // id: 123
+            email: "testpartner1@odoo.com",
+            name: "Test Partner",
+        },
+        {
+            // id: 1234
+            email: "testpartner2@odoo.com",
+            name: "Other Partner",
+        },
+        {
+            // id: 125
+            email: "testpartner3@odoo.com",
+            name: "Test Partner Junior",
+        },
+    ]);
+    // Craft partner id whose value is included in other partner's id, e.g. "123" and "1234".
+    // Mentions are presented by partner id and should be detected unambiguously.
+    const idOverrides = [{ id: 123 }, { id: 1234 }, { id: 125 }];
+    partnersId.forEach((p, i) => {
+        pyEnv["res.partner"].write(p, idOverrides[i]);
+    });
+
+    pyEnv["mail.message"].create([
+        {
+            author_id: serverState.partnerId,
+            body: "@Other Partner says hi to @Test Partner",
+            model: "res.partner",
+            message_type: "comment",
+            partner_ids: [123, 1234],
+            res_id: serverState.partnerId,
+        },
+        {
+            author_id: serverState.partnerId,
+            body: "@Test Partner Junior says hi to @Test Partner",
+            model: "res.partner",
+            message_type: "comment",
+            partner_ids: [123, 125],
+            res_id: serverState.partnerId,
+        },
+    ]);
+    await start();
+    await openFormView("res.partner", serverState.partnerId);
+    await click(".o-mail-Message:eq(0) [title='Edit']");
+    await insertText(".o-mail-Message:eq(0) .o-mail-Composer-input", " with edit");
+    await click(".o-mail-Message button", { text: "save" });
+    await contains('.o-mail-Message:eq(0) a.o_mail_redirect[data-oe-id="125"]', {
+        text: "@Test Partner Junior",
+    });
+    await contains('.o-mail-Message:eq(0) a.o_mail_redirect[data-oe-id="123"]', {
+        text: "@Test Partner",
+    });
+    await click(".o-mail-Message:eq(1) [title='Edit']");
+    await insertText(".o-mail-Message:eq(1) .o-mail-Composer-input", " with edit");
+    await click(".o-mail-Message button", { text: "save" });
+    await contains('.o-mail-Message:eq(1) a.o_mail_redirect[data-oe-id="1234"]', {
+        text: "@Other Partner",
+    });
+    await contains('.o-mail-Message:eq(1) a.o_mail_redirect[data-oe-id="123"]', {
+        text: "@Test Partner",
+    });
+});
+
 test("Other messages are grayed out when replying to another one", async () => {
     const pyEnv = await startServer();
     const channelId = pyEnv["discuss.channel"].create({
@@ -994,6 +1088,114 @@ test("Reaction summary", async () => {
             await leave(".o-mail-MessageReaction");
         });
     }
+});
+
+test("Reaction with long content stays inside the thread", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        channel_type: "channel",
+        name: "channel1",
+    });
+    const messageId = pyEnv["mail.message"].create({
+        body: "Hello world",
+        res_id: channelId,
+        message_type: "comment",
+        model: "discuss.channel",
+    });
+    const content = "long".repeat(100);
+    pyEnv["mail.message.reaction"].create({
+        message_id: messageId,
+        content,
+        partner_id: serverState.partnerId,
+    });
+    await start();
+    await openDiscuss(channelId);
+    await contains(".o-mail-MessageReaction");
+    const contentRect = queryFirst(".o-mail-DiscussContent").getBoundingClientRect();
+    const reactionRect = queryFirst(".o-mail-MessageReaction").getBoundingClientRect();
+    expect(reactionRect.right).not.toBeGreaterThan(contentRect.right);
+    await click(".o-mail-Message [title='Expand']");
+    await click(".o-dropdown-item:contains('View Reactions')");
+    await contains(".o-mail-MessageReactionMenu-persona");
+    const persona = queryFirst(".o-mail-MessageReactionMenu-persona");
+    expect(persona.scrollWidth).not.toBeGreaterThan(persona.clientWidth);
+    await contains(`.o-mail-MessageReactionMenu button[title='${content}']`);
+});
+
+test("Reaction summary closes when leaving it", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        channel_type: "channel",
+        name: "channel1",
+    });
+    const messageId = pyEnv["mail.message"].create({
+        body: "Hello world",
+        res_id: channelId,
+        message_type: "comment",
+        model: "discuss.channel",
+    });
+    pyEnv["mail.message.reaction"].create({
+        message_id: messageId,
+        content: "😅",
+        partner_id: serverState.partnerId,
+    });
+    await start();
+    await openDiscuss(channelId);
+    await hover(".o-mail-MessageReaction");
+    await contains(".o-mail-MessageReactionList-preview");
+    await hover(".o-mail-MessageReactionList-preview");
+    await hover(".o-mail-Composer-input");
+    await contains(".o-mail-MessageReactionList-preview", { count: 0 });
+});
+
+test("Reaction summary opens again after clicking it", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        channel_type: "channel",
+        name: "channel1",
+    });
+    const messageId = pyEnv["mail.message"].create({
+        body: "Hello world",
+        res_id: channelId,
+        message_type: "comment",
+        model: "discuss.channel",
+    });
+    pyEnv["mail.message.reaction"].create({
+        message_id: messageId,
+        content: "😅",
+        partner_id: serverState.partnerId,
+    });
+    await start();
+    await openDiscuss(channelId);
+    await hover(".o-mail-MessageReaction");
+    await contains(".o-mail-MessageReactionList-preview");
+    await hover(".o-mail-MessageReactionList-preview");
+    await click(".o-mail-MessageReactionList-preview");
+    await contains(".o-mail-MessageReactionMenu");
+    await press("Escape");
+    await contains(".o-mail-MessageReactionMenu", { count: 0 });
+    await contains(".o-mail-MessageReactionList-preview", { count: 0 });
+    await hover(".o-mail-MessageReaction");
+    await contains(".o-mail-MessageReactionList-preview");
+    await hover(".o-mail-Message-body");
+    await hover(".o-mail-MessageReactionList-preview");
+    await click(".o-mail-MessageReactionList-preview");
+    await contains(".o-mail-MessageReactionMenu");
+    await press("Escape");
+    await contains(".o-mail-MessageReactionMenu", { count: 0 });
+    await contains(".o-mail-MessageReactionList-preview", { count: 0 });
+    await hover(".o-mail-MessageReaction");
+    await contains(".o-mail-MessageReactionList-preview");
+    await hover(".o-mail-Message-body");
+    await hover(".o-mail-MessageReaction");
+    await hover(".o-mail-MessageReactionList-preview");
+    await click(".o-mail-MessageReactionList-preview");
+    await contains(".o-mail-MessageReactionMenu");
+    await press("Escape");
+    await contains(".o-mail-MessageReactionMenu", { count: 0 });
+    await contains(".o-mail-MessageReactionList-preview", { count: 0 });
+    await hover(".o-mail-MessageReaction");
+    await contains(".o-mail-MessageReactionList-preview");
 });
 
 test("Select already reacted emoji from quick reaction removes the reaction on message", async () => {
@@ -2300,7 +2502,7 @@ test("display the notification message's posting date and time", async () => {
     });
 });
 
-test("Pause GIF when thread is not focused", async () => {
+test("Pause GIF attachment when thread is not focused", async () => {
     const pyEnv = await startServer();
     const channelId = pyEnv["discuss.channel"].create({ name: "General" });
     const attachmentId = pyEnv["ir.attachment"].create({
@@ -2325,6 +2527,19 @@ test("Pause GIF when thread is not focused", async () => {
     await contains(".o-mail-AttachmentImage[data-paused]");
     await focus(".o-mail-Thread");
     await contains(".o-mail-AttachmentImage:not([data-paused])");
+});
+
+test("GIF snapshot loads same-origin URLs in CORS mode", async () => {
+    patchWithCleanup(CanvasRenderingContext2D.prototype, {
+        drawImage(image) {
+            asyncStep(`crossOrigin: ${image.crossOrigin}`);
+            return super.drawImage(...arguments);
+        },
+    });
+    await mountWithCleanup(Gif, {
+        props: { src: `${window.location.origin}/web/static/img/sep-a.gif`, paused: true },
+    });
+    await waitForSteps(["crossOrigin: anonymous"]);
 });
 
 test("Prettify message links", async () => {

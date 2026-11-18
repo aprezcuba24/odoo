@@ -7,7 +7,7 @@ from collections import defaultdict
 from psycopg2 import errors as pgerrors
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.fields import Domain
 from odoo.tools import SQL, unique
 from odoo.addons.account.models.account_move import BYPASS_LOCK_CHECK
@@ -26,7 +26,7 @@ _ref_company_registry = {
 class AccountFiscalPosition(models.Model):
     _name = 'account.fiscal.position'
     _description = 'Fiscal Position'
-    _order = 'sequence'
+    _order = 'sequence, id'
     _check_company_auto = True
     _check_company_domain = models.check_company_domain_parent_of
 
@@ -154,8 +154,8 @@ class AccountFiscalPosition(models.Model):
     def map_tax(self, taxes):
         if not self:
             return taxes
-        if not self.tax_ids and taxes.fiscal_position_ids:  # empty fiscal positions (like those created by tax units) remove all taxes
-            return self.env['account.tax']
+        if not self.tax_ids:
+            return taxes.filtered(lambda tax: not tax.fiscal_position_ids)
         return self.env['account.tax'].browse(unique(
             tax_id
             for tax in taxes
@@ -280,16 +280,24 @@ class AccountFiscalPosition(models.Model):
 
     def action_open_related_taxes(self):
         list_view = self.env.ref('account.account_tax_fiscal_position_view_tree', raise_if_not_found=False)
+        domain = [
+            *self.env['account.tax']._check_company_domain(self.company_id),
+            '|',
+                ('id', 'in', self.tax_ids.ids),
+                ('fiscal_position_ids', '=', False),
+        ]
         return {
             'type': 'ir.actions.act_window',
             'name': self.env._("%s taxes", self.display_name),
             'res_model': 'account.tax',
             'views': [(list_view.id if list_view else False, 'list'), (False, 'form')],
-            'domain': [('id', 'in', self.tax_ids.ids)],
+            'domain': domain,
             'context': {'active_test': False},
         }
 
     def action_create_foreign_taxes(self):
+        if not (self.env.is_admin() or self.env.user.has_group('account.group_account_manager')):
+            raise AccessError(_("Only Accounting managers can create foreign taxes."))
         self.ensure_one()
         template_code = self.env['account.chart.template']._guess_chart_template(self.country_id)
         template = self.env['account.chart.template']._get_chart_template_mapping()[template_code]
@@ -582,7 +590,7 @@ class ResPartner(models.Model):
         compute_sudo=True,
     )
     invoice_edi_format_store = fields.Char(company_dependent=True)
-    display_invoice_edi_format = fields.Boolean(default=lambda self: len(self._fields['invoice_edi_format'].selection), store=False)
+    display_invoice_edi_format = fields.Boolean(default=lambda self: len(self._fields['invoice_edi_format']._description_selection(self.env)), store=False)
     invoice_template_pdf_report_id = fields.Many2one(
         string="Invoice report",
         comodel_name='ir.actions.report',
@@ -627,6 +635,7 @@ class ResPartner(models.Model):
         for partner in self:
             partner.bank_account_count = mapped_data.get(partner.id, 0)
 
+    @api.depends_context('allowed_company_ids')
     def _compute_supplier_invoice_count(self):
         # retrieve all children partners and prefetch 'parent_id' on them
         all_partners = self.with_context(active_test=False).search_fetch(
@@ -635,7 +644,7 @@ class ResPartner(models.Model):
         )
         supplier_invoice_groups = self.env['account.move']._read_group(
             domain=[('partner_id', 'in', all_partners.ids),
-                    *self.env['account.move']._check_company_domain(self.env.company),
+                    *self.env['account.move']._check_company_domain(self.env.companies),
                     ('move_type', 'in', ('in_invoice', 'in_refund'))],
             groupby=['partner_id'], aggregates=['__count']
         )
@@ -867,7 +876,7 @@ class ResPartner(models.Model):
     def _get_vat_required_valid(self, company=None):
         """ Hook for determining VAT validity with more complex VAT requirements. (like VIES)"""
         self.ensure_one()
-        return bool(self.vat)
+        return bool(self.vat and self.vat != '/')
 
     # TODO accounting/JCO, seems strange that this address validation logic is only there for pos, and
     # not for standard address management on portal/ecommerce
@@ -890,14 +899,17 @@ class ResPartner(models.Model):
     @api.model
     def _import_retrieve_customer_from_vat(self, customer_values):
         vat = customer_values.get('vat')
-        if not vat:
+        if not vat or vat in ('/', 'na', 'NA'):
             return
 
         # Sometimes, the vat is specified with some whitespaces or dots.
         normalized_vat = vat.replace(' ', '').replace('.', '')
         country_prefix = re.match('^[a-zA-Z]{2}|^', vat).group()
 
-        criteria = [{'domain': [('vat', 'in', (normalized_vat, vat))]}]
+        criteria = []
+        if country_code := customer_values.get('country_code'):
+            criteria.append({'domain': [('vat', 'in', (normalized_vat, vat)), ('country_id.code', '=', country_code.upper())]})
+        criteria.append({'domain': [('vat', 'in', (normalized_vat, vat))]})
         extra_vat_values = self._get_country_specific_vat_variants(normalized_vat, country_prefix)
         if extra_vat_values:
             criteria.append({'domain': [('vat', 'in', extra_vat_values)]})
@@ -1127,13 +1139,11 @@ class ResPartner(models.Model):
     @api.depends('country_id')
     def _compute_partner_vat_placeholder(self):
         for partner in self:
-            placeholder = _("not applicable")
+            expected_vat = ''
             if partner.country_id:
                 expected_vat = _ref_vat.get(partner.country_id.code.lower())
-                if expected_vat:
-                    placeholder = _("%s, or not applicable", expected_vat)
 
-            partner.partner_vat_placeholder = placeholder
+            partner.partner_vat_placeholder = self.env._(expected_vat or '')  # pylint: disable=E8502
 
     @api.depends('country_id')
     def _compute_partner_company_registry_placeholder(self):

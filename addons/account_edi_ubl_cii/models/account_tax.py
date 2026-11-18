@@ -112,9 +112,22 @@ class AccountTax(models.Model):
             ('VATEX-FR-298SEXDECIESA', 'VATEX-FR-298SEXDECIESA - Exempt based on article 298 sexdecies A of the Code Général des Impôts (CGI ; General tax code)'),
             ('VATEX-FR-CGI295', 'VATEX-FR-CGI295 - Exempt based on article 295 of the Code Général des Impôts (CGI ; General tax code)'),
             ('VATEX-FR-AE', 'VATEX-FR-AE - Exempt based on 2 of article 283 of the Code Général des Impôts (CGI ; General tax code)'),
+            ('VATEX-FR-F', 'VATEX-FR-F - Second-hand sales'),
+            ('VATEX-FR-I', 'VATEX-FR-I - Sales of works of art'),
+            ('VATEX-FR-J', 'VATEX-FR-J - Sales of antiques'),
         ]
     )
     ubl_cii_requires_exemption_reason = fields.Boolean(compute='_compute_ubl_cii_requires_exemption_reason')
+    ubl_cii_available_tax_category_codes = fields.Json(compute='_compute_ubl_cii_available_tax_category_codes')
+    ubl_cii_available_tax_exemption_reason_codes = fields.Json(compute='_compute_ubl_cii_available_tax_exemption_reason_codes')
+
+    def _compute_ubl_cii_available_tax_category_codes(self):
+        # TO OVERRIDE
+        self.ubl_cii_available_tax_category_codes = self._fields['ubl_cii_tax_category_code'].get_values(self.env)
+
+    def _compute_ubl_cii_available_tax_exemption_reason_codes(self):
+        # TO OVERRIDE
+        self.ubl_cii_available_tax_exemption_reason_codes = self._fields['ubl_cii_tax_exemption_reason_code'].get_values(self.env)
 
     @api.depends('ubl_cii_tax_category_code')
     def _compute_ubl_cii_requires_exemption_reason(self):

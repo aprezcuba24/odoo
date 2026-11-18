@@ -234,7 +234,7 @@ class ResPartner(models.Model):
         precompute=True,  # avoid queries post-create
         readonly=False, store=True,
         help='The internal user in charge of this contact.')
-    vat = fields.Char(string='Tax ID', index=True, help="The Tax Identification Number. Values here will be validated based on the country format. You can use '/' to indicate that the partner is not subject to tax.")
+    vat = fields.Char(string='Tax ID', index=True, help="You can use '/' to indicate that the customer has no Tax ID.")
     vat_label = fields.Char(string='Tax ID Label', compute='_compute_vat_label')
     same_vat_partner_id: ResPartner = fields.Many2one('res.partner', string='Partner with same Tax ID', compute='_compute_same_vat_partner_id', store=False)
     same_company_registry_partner_id: ResPartner = fields.Many2one('res.partner', string='Partner with same Company Registry', compute='_compute_same_vat_partner_id', store=False)
@@ -424,11 +424,13 @@ class ResPartner(models.Model):
     @api.depends_context("uid")
     @api.depends("user_ids.active", "user_ids.share")
     def _compute_main_user_id(self):
-        for partner in self:
-            if self.env.user.partner_id == partner:
-                partner.main_user_id = self.env.user
-                continue
-            users = partner.user_ids.filtered(lambda u: u.active).with_prefetch(self.user_ids.ids)
+        partners = self
+        if partner := partners & self.env.user.partner_id:
+            partner.main_user_id = self.env.user
+            partners -= partner
+        active_users = partners.user_ids.filtered('active')
+        for partner in partners:
+            users = partner.user_ids & active_users
             # Special case for OdooBot as its user might be archived.
             if not users and partner.id == self.env["ir.model.data"]._xmlid_to_res_id("base.partner_root"):
                 partner.main_user_id = self.env["ir.model.data"]._xmlid_to_res_id("base.user_root")
@@ -882,7 +884,7 @@ class ResPartner(models.Model):
             for partner in self:
                 for bank in partner.bank_ids:
                     if bank.acc_holder_name == partner.name:
-                        bank.acc_holder_name = vals['name']
+                        bank.sudo().acc_holder_name = vals['name']
 
         # filter to keep only really updated values -> field synchronize goes through
         # partner tree and we should avoid infinite loops in case same value is
@@ -917,6 +919,14 @@ class ResPartner(models.Model):
             if internal_users := partner.user_ids.filtered(lambda u: u._is_internal() and u != self.env.user):
                 internal_users.check_access('write')
             updated = {fname: fvalue for fname, fvalue in vals.items() if partner[fname] != pre_values.get(fname)}
+            if (
+                'parent_id' in updated and pre_values['parent_id']
+                and partner.commercial_partner_id not in (partner, pre_values['parent_id'].commercial_partner_id)
+            ):
+                # synced values still come from the previous commercial entity
+                commercial = partner.commercial_partner_id
+                if stale := [fname for fname in partner._synced_commercial_fields() if partner[fname] and not commercial[fname]]:
+                    super(ResPartner, partner).write(dict.fromkeys(stale, False))
             if updated:
                 partner._fields_sync(updated)
         return result
@@ -930,7 +940,13 @@ class ResPartner(models.Model):
                 vals['website'] = self._clean_website(vals['website'])
             if vals.get('parent_id'):
                 vals['company_name'] = False
-        partners = super().create(vals_list)
+        create_self = self
+        if 'default_user_ids' in self.env.context:
+            # default_user_ids targets other models (e.g. task assignees); as
+            # user_ids is the inverse of res.users.partner_id, applying it here
+            # would re-link those users to the new partner
+            create_self = self.with_context({k: v for k, v in self.env.context.items() if k != 'default_user_ids'})
+        partners = super(ResPartner, create_self).create(vals_list)
         # due to ir.default, compute is not called as there is a default value
         # hence calling the compute manually
         for partner, values in zip(partners, vals_list):
@@ -982,7 +998,7 @@ class ResPartner(models.Model):
             to_write = {}
             # commercial fields from commercial partner
             if cp_id:
-                to_write = self.browse(cp_id)._convert_fields_to_values(self._commercial_fields())
+                to_write = self.sudo().browse(cp_id)._convert_fields_to_values(self._commercial_fields())
             # address fields from parent
             if add_id:
                 parent = self.browse(add_id)
@@ -1039,7 +1055,7 @@ class ResPartner(models.Model):
             if partner.env.context.get("formatted_display_name"):
                 name = partner.name or ''
                 if partner.parent_id or partner.company_name:
-                    name = (f"{partner.company_name or partner.parent_id.name} \t "
+                    name = (f"{partner.company_name or partner.sudo().parent_id.name} \t "
                             f"--{partner.name or type_description.get(partner.type, '')}--")
 
                 if partner.env.context.get('show_email') and partner.email:
@@ -1245,8 +1261,10 @@ class ResPartner(models.Model):
         return [{
             'contact_type': self.street,
             'street': self.street,
+            'street2': self.street2,
             'zip': self.zip,
             'city': self.city,
+            'state': self.state_id.code,
             'country': self.country_id.code,
         }]
 

@@ -1,5 +1,6 @@
 from . import account_edi_common
 from . import account_edi_ubl
+from . import account_edi_cii
 from . import account_edi_ubl_cen_en16931
 from . import account_edi_ubl_pint
 from . import account_edi_ubl_pint_eu
@@ -17,3 +18,4 @@ from . import account_move_send
 from . import account_tax
 from . import ir_actions_report
 from . import res_partner
+from . import res_company

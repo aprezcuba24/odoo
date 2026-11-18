@@ -57,6 +57,7 @@ import {
     localStorageNoDialogKey,
     TranslatorInfoDialog,
 } from "./translation_components/translatorInfoDialog";
+import { ValueHistoryPlugin } from "./plugins/value_history_plugin";
 
 const TRANSLATION_PLUGINS = [
     BuilderOptionsTranslationPlugin,
@@ -91,6 +92,7 @@ const TRANSLATION_PLUGINS = [
     MonetaryFieldPlugin,
     DateTimeFieldPlugin,
     Many2OneOptionPlugin,
+    ValueHistoryPlugin,
     CustomizeTranslationTabPlugin,
     // Those plugin are depended by other Plugin but not used in translation
     // mode.
@@ -130,7 +132,15 @@ export class WebsiteBuilder extends Component {
                 this.dialog.add(TranslatorInfoDialog);
             }
             this.websiteEditService?.clearRpcCache();
+            this.pushHistoryState();
         });
+    }
+
+    pushHistoryState() {
+        const state = { skipRouteChange: true };
+        history.state?.skipRouteChange
+            ? history.replaceState(state, "")
+            : history.pushState(state, "");
     }
 
     async discard() {
@@ -167,19 +177,24 @@ export class WebsiteBuilder extends Component {
             return true;
         }
         if (this.editor.shared.history.canUndo()) {
-            let continueProcess = true;
+            let shouldCloseEditor = true;
             await new Promise((resolve) => {
                 this.dialog.add(ConfirmationDialog, {
                     body: _t("If you proceed, your changes will be lost"),
                     confirmLabel: _t("Continue"),
                     confirm: () => resolve(),
                     cancel: () => {
-                        continueProcess = false;
+                        shouldCloseEditor = false;
                         resolve();
                     },
                 });
             });
-            return continueProcess;
+            if (shouldCloseEditor) {
+                this.props.builderProps.closeEditor();
+            } else {
+                this.pushHistoryState();
+            }
+            return false;
         }
         return true;
     }

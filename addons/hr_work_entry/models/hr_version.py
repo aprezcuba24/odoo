@@ -75,10 +75,11 @@ class HrVersion(models.Model):
         # global time off first (eg: Public Holiday > Home Working)
         self.ensure_one()
         for leave in leaves:
-            if interval[0] >= leave[0] and interval[1] <= leave[1] and leave[2]:
-                interval_start = interval[0].astimezone(pytz.utc).replace(tzinfo=None)
-                interval_stop = interval[1].astimezone(pytz.utc).replace(tzinfo=None)
-                return self._get_leave_work_entry_type_dates(leave[2], interval_start, interval_stop, self.employee_id)
+            if interval[0] >= leave[0] and interval[1] <= leave[1]:
+                for rcleave in leave[2]:
+                    interval_start = interval[0].astimezone(pytz.utc).replace(tzinfo=None)
+                    interval_stop = interval[1].astimezone(pytz.utc).replace(tzinfo=None)
+                    return self._get_leave_work_entry_type_dates(rcleave, interval_start, interval_stop, self.employee_id)
         return self.env.ref('hr_work_entry.work_entry_type_leave')
 
     def _get_sub_leave_domain(self):
@@ -239,8 +240,8 @@ class HrVersion(models.Model):
                 # For multi day leaves, we want them to occupy the virtual working schedule 12 AM to average working days
                 # For one day leaves, we want them to occupy exactly the time it was taken, for a time off in days
                 # this will mean the virtual schedule and for time off in hours the chosen hours
-                one_day_leaves = Intervals([l for l in leaves if l[0].date() == l[1].date()], keep_distinct=True)
-                one_day_worked_leaves = Intervals([l for l in worked_leaves if l[0].date() == l[1].date()], keep_distinct=True)
+                one_day_leaves = Intervals([l for l in leaves if l[0].date() == l[1].date() and l[2].resource_id], keep_distinct=True)
+                one_day_worked_leaves = Intervals([l for l in worked_leaves if l[0].date() == l[1].date() and l[2].resource_id], keep_distinct=True)
                 multi_day_leaves = leaves - one_day_leaves
                 multi_day_worked_leaves = worked_leaves - one_day_worked_leaves
                 static_attendances = calendar._attendance_intervals_batch(
@@ -723,7 +724,7 @@ class HrVersion(models.Model):
         # It is more interesting for batching to process statically generated work entries first
         # since we get benefits from having multiple versions on the same calendar
         versions_todo = versions_todo.sorted(key=lambda v: 1 if v.has_static_work_entries() else 100)
-        versions_todo = versions_todo[:BATCH_SIZE].generate_work_entries(start.date(), stop.date(), False)
+        versions_todo = versions_todo[:BATCH_SIZE].with_context(lang=self.env.user.lang).generate_work_entries(start.date(), stop.date(), False)
         # if necessary, retrigger the cron to generate more work entries
         if version_todo_count > BATCH_SIZE:
             self.env.ref('hr_work_entry.ir_cron_generate_missing_work_entries')._trigger()

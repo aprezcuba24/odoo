@@ -8,8 +8,8 @@ from odoo import fields, Command
 from odoo.fields import Domain
 from odoo.tests import Form, users, new_test_user, HttpCase, tagged, TransactionCase
 from odoo.addons.hr.tests.common import TestHrCommon
-from odoo.tools import mute_logger
-from odoo.exceptions import ValidationError
+from odoo.tools import mute_logger, split_every
+from odoo.exceptions import AccessError, ValidationError
 from psycopg2.errors import NotNullViolation
 
 class TestHrEmployee(TestHrCommon):
@@ -300,6 +300,39 @@ class TestHrEmployee(TestHrCommon):
         self.assertFalse(employee_A.work_contact_id)
         self.assertEqual(employee_B.work_contact_id, user.partner_id)
 
+    def test_hr_manager_link_employee_to_user(self):
+        """
+            An HR manager can link an employee to an internal user even
+            without the rights to write on users/partners.
+        """
+        hr_manager = new_test_user(self.env, login='hrm', groups='base.group_user,hr.group_hr_manager', name='HR Manager', email='hrm@example.com')
+        user = self.env['res.users'].create({
+            'name': 'Test',
+            'login': 'test',
+            'email': 'test@example.com',
+        })
+        employee = self.env['hr.employee'].create({
+            'name': 'Employee',
+            'work_email': 'employee@example.com',
+        })
+        with Form(employee.with_user(hr_manager)) as employee_form:
+            employee_form.user_id = user
+        self.assertEqual(employee.work_contact_id, user.partner_id)
+        self.assertEqual(employee.work_email, 'test@example.com')
+
+        other_user = self.env['res.users'].create({
+            'name': 'Other Test',
+            'login': 'other_test',
+            'email': 'other_test@example.com',
+        })
+        other_employee = self.env['hr.employee'].create({
+            'name': 'Other Employee',
+            'work_contact_id': other_user.partner_id.id,
+        })
+        with self.assertRaises(AccessError):
+            other_employee.with_user(hr_manager).work_email = 'new_email@example.com'
+        self.assertEqual(other_user.email, 'other_test@example.com')
+
     def test_availability_user_infos_employee(self):
         """ Ensure that all the user infos needed to display the avatar popover card
             are available on the model hr.employee.
@@ -485,24 +518,21 @@ class TestHrEmployee(TestHrCommon):
         self.assertEqual(employee_norbert.avatar_1920, user_norbert.avatar_1920)
 
     def test_badge_validation(self):
-        # check employee's barcode should be a sequence of digits and alphabets
+        # check employee's barcode should be printable ASCII characters except spaces
         employee = self.env['hr.employee'].create({
             'name': 'Badge Employee'
         })
 
         employee_form = Form(employee)
-        employee_form.barcode = 'Test@badge1'
-        with self.assertRaises(ValidationError):
-            employee_form.save()
-
-        employee_form.barcode = 'Testàë@badge'
-        with self.assertRaises(ValidationError):
-            employee_form.save()
-
-        employee_form.barcode = 'Testbadge2'
+        employee_form.barcode = 'Test@badge_1'
         employee_form.save()
 
-        self.assertEqual(employee_form.barcode, 'Testbadge2')
+        self.assertEqual(employee_form.barcode, 'Test@badge_1')
+
+        for invalid_barcode in ('Testàë@badge', 'Test badge', ' Testbadge', 'Testbadge ', 'Testbadge\n', 'A' * 19):
+            with self.subTest(barcode=invalid_barcode), self.assertRaises(ValidationError):
+                employee_form.barcode = invalid_barcode
+                employee_form.save()
 
     def test_departure_wizard(self):
         """ Test the archiving wizard in the case of multiple employees """
@@ -617,6 +647,8 @@ class TestHrEmployee(TestHrCommon):
         ])
         employeeA = self.env['hr.employee'].create({
             'name': 'Employee',
+            'date_version': datetime(2025, 1, 1),
+            'contract_date_start': datetime(2025, 1, 1),
         })
 
         # Testing employeA on regular working schedule
@@ -720,6 +752,90 @@ class TestHrEmployee(TestHrCommon):
         self.assertNotEqual(partner.email, second_employee.work_email)
         self.assertNotEqual(partner.email, first_employee.work_email)
 
+    def test_exclude_archived_employees_from_direct_subordinate_filter(self):
+        """ Test that archived subordinates aren't included when searching on child_ids. """
+        employee_1, employee_2 = self.env['hr.employee'].create([
+            {'name': 'first employee'},
+            {'name': 'second employee'}
+        ])
+        employee_2.parent_id = employee_1
+
+        result = self.env['hr.employee'].search([('child_ids', '!=', False)])
+        self.assertIn(employee_1, result)
+
+        employee_2.active = False
+
+        result = self.env['hr.employee'].search([('child_ids', '!=', False)])
+        self.assertNotIn(employee_1, result)
+
+    def test_employee_contract_type_timeline_context(self):
+        """
+        Test that navigating historical employee records via the version_id context
+        correctly recalculates the cached, stored related field `contract_type_id`
+        instead of persistently displaying the active contract type.
+        """
+        contract_type_1 = self.env['hr.contract.type'].create({'name': 'Permanent Type 1'})
+        contract_type_2 = self.env['hr.contract.type'].create({'name': 'Temporary Type 2'})
+
+        employee = self.env['hr.employee'].create({
+            'name': 'Timeline Test Employee',
+            'contract_type_id': contract_type_1.id,
+            'date_version': fields.Date.today() - relativedelta(days=10)
+        })
+        version_1 = employee.version_id
+
+        version_2 = employee.create_version({
+            'contract_type_id': contract_type_2.id,
+            'date_version': fields.Date.today()
+        })
+
+        self.assertEqual(
+            employee.contract_type_id,
+            contract_type_2,
+            "The main employee record should reflect the active contract type of version_2."
+        )
+
+        employee_v1 = employee.with_context(version_id=version_1.id)
+        self.assertEqual(
+            employee_v1.contract_type_id,
+            contract_type_1,
+            "The contract_type_id should dynamically recompute to Type 1 based on version_1 in context."
+        )
+
+        employee_v2 = employee.with_context(version_id=version_2.id)
+        self.assertEqual(
+            employee_v2.contract_type_id,
+            contract_type_2,
+            "The contract_type_id should dynamically recompute to Type 2 based on version_2 in context."
+        )
+
+    def test_copy_cache_from_alignment(self):
+        EXPORT_BATCH_SIZE = 3
+        joe, harrison, miles, chris = self.env['hr.employee'].create([
+            {'name': 'Joe'},
+            {'name': 'Harrison'},
+            {'name': 'Miles'},
+            {'name': 'Chris'}])
+        departments = self.env['hr.department'].create([
+            {'name': 'Department 1', 'manager_id': joe.id},
+            {'name': 'Department 2', 'manager_id': harrison.id},
+            {'name': 'Department 3', 'manager_id': miles.id},
+            {'name': 'Department 4', 'manager_id': chris.id},
+            {'name': 'Department 5', 'manager_id': joe.id}])
+        user = self.env['res.users'].create({
+            'name': "User",
+            'login': "user@example.com",
+            'email': "user@example.com",
+            'group_ids': [(6, 0, (self.env.ref('base.group_user') + self.env.ref('base.group_allow_export')).ids)]
+        })
+        rows = []
+        for batch in split_every(EXPORT_BATCH_SIZE, departments.ids, self.env['hr.department'].with_user(user).browse):
+            rows.extend(batch.export_data(['name', 'manager_id']).get('datas', []))
+
+        self.assertEqual(len(rows), 5)
+        self.assertEqual([row[1] for row in rows], [
+            'Joe', 'Harrison', 'Miles', 'Chris', 'Joe'
+        ])
 
 @tagged('-at_install', 'post_install')
 class TestHrEmployeeLinks(HttpCase):
@@ -829,6 +945,21 @@ class TestVersionCron(TransactionCase):
             self.employee.distance_home_work,
             "distance_home_work should have changed after calling _cron_update_current_version_id()",
         )
+
+    def test_get_version_without_any_version(self):
+        """
+        _get_version() should not raise an IndexError and should return an
+        empty recordset when the employee has no version at all, neither
+        active nor archived (e.g. an employee left over by a faulty
+        migration script).
+        """
+        # Bypass the ORM guards preventing an employee from losing its last
+        # version (_unlink_except_last_version, write() on 'active'), as
+        # this is precisely the invalid state a bad migration can produce.
+        self.env.cr.execute("DELETE FROM hr_version WHERE employee_id = %s", (self.employee.id,))
+        self.employee.invalidate_recordset(['version_ids'])
+        self.assertFalse(self.employee.version_ids)
+        self.assertFalse(self.employee._get_version())
 
 
 @tagged('-at_install', 'post_install')

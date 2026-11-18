@@ -226,10 +226,14 @@ class AccountMove(models.Model):
         # Sometimes the documents are not available right away. This is quite rare, but I saw it happen a few times.
         # To handle that we will try up to three time to fetch the document => The impact should be negligible.
         threshold = 1
-        while not files_data['fileToBytes'] and threshold < 3:
+        while not files_data.get('fileToBytes') and threshold < 3:
             time.sleep(0.125 * threshold)
             files_data, error_message = self._l10n_vn_edi_try_fetch_invoice_file_data(file_format)
             threshold += 1
+        if not error_message and not files_data.get('fileToBytes'):
+            return {}, _(
+                "SInvoice returned an empty file for this invoice. Please try again later."
+            )
         return files_data, error_message
 
     def _l10n_vn_edi_try_fetch_invoice_file_data(self, file_format):
@@ -265,6 +269,18 @@ class AccountMove(models.Model):
 
         Returns a list of tuple with both file names, mimetype, content and the field it should be stored in.
         """
+
+        def _zip_to_xml_file_data(zip_file):
+            for file in zip_file.infolist():
+                if file.filename.endswith('.xml'):
+                    return {
+                        'name': file.filename,
+                        'mimetype': 'application/xml',
+                        'raw': zip_file.read(file),
+                        'res_field': 'l10n_vn_edi_sinvoice_xml_file',
+                    }
+            return None
+
         self.ensure_one()
         files_data, error_message = self._l10n_vn_edi_fetch_invoice_file_data('ZIP')
         if error_message:
@@ -272,20 +288,26 @@ class AccountMove(models.Model):
 
         file_bytes = base64.b64decode(files_data['fileToBytes'])
 
-        # For some reason, request_response['fileToBytes'] is a zip file containing the other zip file.
-        # The content of the inner zip is a xsl file as well as a xml file.
-        # In our case the xsl file is not important, so we can simply ignore it.
-        with zipfile.ZipFile(io.BytesIO(file_bytes)) as zip_file:
-            inner_zip_bytes = zip_file.read(zip_file.infolist()[0])
-            with zipfile.ZipFile(io.BytesIO(inner_zip_bytes)) as inner_zip:
-                for file in inner_zip.infolist():
-                    if file.filename.endswith('.xml'):
-                        return {
-                            'name': file.filename,
-                            'mimetype': 'application/xml',
-                            'raw': inner_zip.read(file),
-                            'res_field': 'l10n_vn_edi_sinvoice_xml_file',
-                        }, ""
+        if not zipfile.is_zipfile(io.BytesIO(file_bytes)):
+            return {}, _(
+                "The file received from SInvoice is not a valid ZIP archive. "
+                "Please try again later."
+            )
+
+        with zipfile.ZipFile(io.BytesIO(file_bytes)) as outer_zip:
+            result = _zip_to_xml_file_data(outer_zip)
+            if not result:
+                for entry in outer_zip.infolist():
+                    if entry.filename.endswith('.zip'):
+                        with outer_zip.open(entry) as inner_bytes:
+                            with zipfile.ZipFile(inner_bytes) as inner_zip:
+                                result = _zip_to_xml_file_data(inner_zip)
+                                if result:
+                                    break
+
+        if not result:
+            return {}, _("No XML file found in the zip archive.")
+        return result, ""
 
     def _l10n_vn_edi_fetch_invoice_pdf_file_data(self):
         """
@@ -316,14 +338,19 @@ class AccountMove(models.Model):
         if self.l10n_vn_edi_invoice_state != 'sent':
             raise UserError(_("Please send the invoice to SInvoice before fetching the tax invoice files."))
 
-        xml_data, xml_error_message = self._l10n_vn_edi_fetch_invoice_xml_file_data()
-        pdf_data, pdf_error_message = self._l10n_vn_edi_fetch_invoice_pdf_file_data()
+        # A stored SInvoice file never changes; fetching it again would only attach a duplicate.
+        xml_data, xml_error_message = {}, ''
+        if not self.l10n_vn_edi_sinvoice_xml_file:
+            xml_data, xml_error_message = self._l10n_vn_edi_fetch_invoice_xml_file_data()
+        pdf_data, pdf_error_message = {}, ''
+        if not self.l10n_vn_edi_sinvoice_pdf_file:
+            pdf_data, pdf_error_message = self._l10n_vn_edi_fetch_invoice_pdf_file_data()
 
         # Not using _link_invoice_documents for these because it depends on _need_invoice_document and I can't get it to work
         # well while allowing users to download the files before sending.
         attachments_data = []
         for file, error in [(xml_data, xml_error_message), (pdf_data, pdf_error_message)]:
-            if error:
+            if error or not file:
                 continue
 
             attachments_data.append({
@@ -640,12 +667,15 @@ class AccountMove(models.Model):
         # When invoicing in a foreign currency, we need to provide the rate, or it will default to 1.
         if self.currency_id.name != 'VND':
             # Sinvoice only allow upto 2 decimal place for exchange rate
-            exchange_rate = self.env['res.currency']._get_conversion_rate(
-                from_currency=self.currency_id,
-                to_currency=self.env.ref('base.VND'),
-                company=self.company_id,
-                date=self.invoice_date or self.date,
-            )
+            if self.company_currency_id.name == 'VND':
+                exchange_rate = 1 / self.invoice_currency_rate
+            else:
+                exchange_rate = self.env['res.currency']._get_conversion_rate(
+                    from_currency=self.currency_id,
+                    to_currency=self.env.ref('base.VND'),
+                    company=self.company_id,
+                    date=self.invoice_date or self.date,
+                )
             invoice_data['exchangeRate'] = float_repr(float_round(exchange_rate, 2), 2)
 
         adjustment_origin_invoice = None
@@ -876,11 +906,11 @@ class AccountMove(models.Model):
             - We use the credentials of the parent company, if no credentials are set on the child one.
             - We store the access token on the appropriate company, based on which holds the credentials.
         """
-        if self.company_id.l10n_vn_edi_username and self.company_id.l10n_vn_edi_password:
+        if self.company_id.sudo().l10n_vn_edi_username and self.company_id.sudo().l10n_vn_edi_password:
             return self.company_id
 
-        return self.company_id.sudo().parent_ids.filtered(
-            lambda c: c.l10n_vn_edi_username and c.l10n_vn_edi_password
+        return self.company_id.parent_ids.filtered(
+            lambda c: c.sudo().l10n_vn_edi_username and c.sudo().l10n_vn_edi_password
         )[-1:]
 
     # -------------------------------------------------------------------------

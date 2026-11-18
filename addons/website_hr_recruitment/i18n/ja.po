@@ -5,16 +5,16 @@
 # Translators:
 # Martin Trigaux, 2022
 # Andy Yiu, 2023
-# Ryoko Tsuda <ryoko@quartile.co>, 2023, 2025.
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# Ryoko Tsuda <ryoko@quartile.co>, 2023, 2025, 2026.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0beta\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:38+0000\n"
-"PO-Revision-Date: 2026-03-27 07:51+0000\n"
+"POT-Creation-Date: 2026-10-24 17:37+0000\n"
+"PO-Revision-Date: 2026-08-28 01:44+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "website_hr_recruitment/ja/>\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: website_hr_recruitment
 #. odoo-python
@@ -477,7 +477,7 @@ msgstr "Facebook"
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_filter_base
 msgid "Filter by country"
-msgstr "国ごとにフィルタ"
+msgstr "国で絞り込む"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.topbar_customizations
@@ -795,6 +795,8 @@ msgstr "急成長企業での真の責任と挑戦"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.apply
+#: model_terms:ir.ui.view,arch_db:website_hr_recruitment.detail
+#: model_terms:ir.ui.view,arch_db:website_hr_recruitment.index
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_filter_by_offices
 msgid "Remote"
 msgstr "リモート"
@@ -946,7 +948,7 @@ msgstr "タイプ"
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_filter_base
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.job_filter_base_mobile
 msgid "Unspecified"
-msgstr "特定されていない"
+msgstr "未指定"
 
 #. module: website_hr_recruitment
 #: model_terms:ir.ui.view,arch_db:website_hr_recruitment.default_website_description

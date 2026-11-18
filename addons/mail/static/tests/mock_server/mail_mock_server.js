@@ -276,6 +276,12 @@ async function channel_call_leave(request) {
     BusBus._sendmany(notifications);
 }
 
+registerRoute("/mail/rtc/channel/upgrade_connection", channel_upgrade_connection);
+/** @type {RouteCallback} */
+async function channel_upgrade_connection() {
+    // tests have no SFU server to hand out, so the call stays peer to peer
+}
+
 registerRoute("/discuss/channel/members", discuss_channel_members);
 /** @type {RouteCallback} */
 async function discuss_channel_members(request) {
@@ -579,10 +585,12 @@ async function mail_link_preview(request) {
     const { message_id } = await parseRequestParams(request);
     const [message] = MailMessage.search_read([["id", "=", message_id]]);
     const link = createDocumentFragmentFromContent(markup(message.body)).querySelector(
-        "a[href^='https://tenor.com'], a[href^='https://make-link-preview.com']"
+        "a[href^='https://tenor.com'], a[href^='https://make-link-preview.com'], a[href^='https://media.tenor.com']"
     );
     if (link) {
-        const isGifPreview = link.href.startsWith("https://tenor.com");
+        const isGifPreview =
+            link.href.startsWith("https://tenor.com") ||
+            link.href.startsWith("https://media.tenor.com");
         const linkPreviewId = MailLinkPreview.create({
             og_description: isGifPreview ? "Click to view the GIF" : "test description",
             og_image: isGifPreview ? link.href : undefined,
@@ -857,6 +865,36 @@ async function read_subscription_data(request) {
     };
 }
 
+registerRoute("/mail/rtc/session/notify_call_members", session_call_notify);
+/** @type {RouteCallback} */
+async function session_call_notify(request) {
+    /** @type {import("mock_models").DiscussChannelRtcSession} */
+    const DiscussChannelRtcSession = this.env["discuss.channel.rtc.session"];
+    /** @type {import("mock_models").ResPartner} */
+    const ResPartner = this.env["res.partner"];
+
+    const { peer_notifications } = await parseRequestParams(request);
+    const [partner, guest] = ResPartner._get_current_persona();
+    const notificationsBySessionId = new Map();
+    for (const [senderSessionId, targetSessionIds, content] of peer_notifications) {
+        const [session] = DiscussChannelRtcSession.browse(senderSessionId);
+        if (
+            !session ||
+            (session.guest_id && session.guest_id !== guest?.id) ||
+            (session.partner_id && session.partner_id !== partner?.id)
+        ) {
+            continue;
+        }
+        if (!notificationsBySessionId.has(session.id)) {
+            notificationsBySessionId.set(session.id, []);
+        }
+        notificationsBySessionId.get(session.id).push([targetSessionIds, content]);
+    }
+    for (const [sessionId, notifications] of notificationsBySessionId) {
+        DiscussChannelRtcSession._notify_peers(sessionId, notifications);
+    }
+}
+
 registerRoute("/mail/rtc/session/update_and_broadcast", session_update_and_broadcast);
 /** @type {RouteCallback} */
 async function session_update_and_broadcast(request) {
@@ -867,10 +905,13 @@ async function session_update_and_broadcast(request) {
 
     const { session_id, values } = await parseRequestParams(request);
     const [session] = DiscussChannelRtcSession.search_read([["id", "=", session_id]]);
+    if (!session) {
+        return;
+    }
     const [currentChannelMember] = DiscussChannelMember.search_read([
         ["id", "=", session.channel_member_id[0]],
     ]);
-    if (session && currentChannelMember.partner_id[0] === serverState.partnerId) {
+    if (currentChannelMember.partner_id[0] === serverState.partnerId) {
         DiscussChannelRtcSession._update_and_broadcast(session.id, values);
     }
 }
@@ -1400,6 +1441,9 @@ class Store {
         _delete = _delete ?? false;
         let model_name;
         if (data instanceof models.Model) {
+            if (!data.length) {
+                return this;
+            }
             if (fields) {
                 if (Object.keys(kwargs).length) {
                     throw new Error(

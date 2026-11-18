@@ -6,16 +6,16 @@
 # Martin Trigaux, 2023
 # Jolien De Paepe, 2023
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2023
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # Bren Driesen <brdri@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:37+0000\n"
-"PO-Revision-Date: 2026-06-06 15:39+0000\n"
-"Last-Translator: Bren Driesen <brdri@odoo.com>\n"
+"POT-Creation-Date: 2026-10-30 17:37+0000\n"
+"PO-Revision-Date: 2026-08-06 22:54+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Dutch <https://translate.odoo.com/projects/odoo-19/hr_expense/"
 "nl/>\n"
 "Language: nl\n"
@@ -330,6 +330,11 @@ msgstr ""
 "Voeg een ontvangstbewijs toe - meestal een afbeelding of een PDF-bestand."
 
 #. module: hr_expense
+#: model:ir.model,name:hr_expense.model_ir_attachment
+msgid "Attachment"
+msgstr "Bijlage"
+
+#. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__message_attachment_count
 msgid "Attachment Count"
 msgstr "Aantal bijlagen"
@@ -558,6 +563,7 @@ msgstr "Digitaliseer je bonnen met OCR en kunstmatige intelligentie"
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split_wizard__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_ir_actions_report__display_name
+#: model:ir.model.fields,field_description:hr_expense.field_ir_attachment__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_product_product__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_product_template__display_name
 #: model:ir.model.fields,field_description:hr_expense.field_res_company__display_name
@@ -953,6 +959,11 @@ msgid "Hotel, plane ticket, taxi, etc."
 msgstr "Hotel, vliegticket, taxi, etc."
 
 #. module: hr_expense
+#: model:ir.model.fields,field_description:hr_expense.field_account_tax__hr_expense_ids
+msgid "Hr Expense"
+msgstr ""
+
+#. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_res_config_settings__hr_expense_alias_domain_id
 msgid "Hr Expense Alias Domain"
 msgstr "Aliasdomein HR-onkosten"
@@ -975,6 +986,7 @@ msgstr "Aliasdomein HR-onkosten"
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__id
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split_wizard__id
 #: model:ir.model.fields,field_description:hr_expense.field_ir_actions_report__id
+#: model:ir.model.fields,field_description:hr_expense.field_ir_attachment__id
 #: model:ir.model.fields,field_description:hr_expense.field_product_product__id
 #: model:ir.model.fields,field_description:hr_expense.field_product_template__id
 #: model:ir.model.fields,field_description:hr_expense.field_res_company__id
@@ -1751,13 +1763,10 @@ msgstr "Scan deze QR-code om de Odoo-app te krijgen:"
 #: model:ir.model.fields,help:hr_expense.field_hr_employee__expense_manager_id
 msgid ""
 "Select the user responsible for approving \"Expenses\" of this employee.\n"
-"If empty, the approval is done by an Administrator or Approver (determined "
-"in settings/users)."
+"If empty, the approval is done by the department manager (if they are an "
+"expense approver), otherwise by the employee's manager. If there is none, "
+"the expense is auto-validated."
 msgstr ""
-"Selecteer de gebruiker die verantwoordelijk is voor het goedkeuren van "
-"\"onkosten\" van deze werknemer.\n"
-"Indien leeg, wordt de goedkeuring gedaan door een Beheerder of Goedkeurder "
-"(bepaald in instellingen / gebruikers)."
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__selectable_payment_method_line_ids
@@ -1970,9 +1979,10 @@ msgstr ""
 #. module: hr_expense
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
-msgid "The current user has no related employee. Please, create one."
+msgid ""
+"The current user has no related employee. Please, create one in %(company)s, "
+"or switch to a company where they have one."
 msgstr ""
-"De huidige gebruiker heeft geen gekoppelde werknemer. Maak er eerst één aan."
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_template_register
@@ -2297,6 +2307,31 @@ msgstr ""
 #. module: hr_expense
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
+msgid "You can't add an attachment to an expense once it has been approved."
+msgstr ""
+"Je kunt geen bijlage meer toevoegen aan een onkostendeclaratie zodra deze is "
+"goedgekeurd."
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/ir_attachment.py:0
+msgid "You can't add attachments to an expense once it has been approved."
+msgstr ""
+"Je kunt geen bijlagen meer toevoegen aan een onkostendeclaratie zodra deze "
+"is goedgekeurd."
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/ir_attachment.py:0
+msgid ""
+"You can't delete attachments from an expense once it has been submitted."
+msgstr ""
+"Je kunt bijlagen niet meer verwijderen uit een onkostendeclaratie nadat deze "
+"is ingediend."
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense.py:0
 msgid ""
 "You can't post simultaneously employee-paid expenses belonging to different "
 "companies"
@@ -2385,6 +2420,13 @@ msgstr "Je hebt de benodigde toestemming niet om deze onkost in te dienen."
 #: code:addons/hr_expense/models/hr_expense.py:0
 msgid "You do not have the rights to edit this expense."
 msgstr "Je hebt de rechten niet om deze onkost te bewerken."
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense.py:0
+#: code:addons/hr_expense/wizard/hr_expense_post_wizard.py:0
+msgid "You don't have the access rights to modify this expense."
+msgstr "Je hebt geen toegangsrechten om deze onkostendeclaratie te wijzigen."
 
 #. module: hr_expense
 #. odoo-python
@@ -2477,6 +2519,21 @@ msgstr "gebruik OCR om gegevens uit een foto van de rekening in te vullen"
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_form
 msgid "with the same receipt already exists."
 msgstr "met hetzelfde bewijs bestaat al."
+
+#~ msgid ""
+#~ "Select the user responsible for approving \"Expenses\" of this employee.\n"
+#~ "If empty, the approval is done by an Administrator or Approver "
+#~ "(determined in settings/users)."
+#~ msgstr ""
+#~ "Selecteer de gebruiker die verantwoordelijk is voor het goedkeuren van "
+#~ "\"onkosten\" van deze werknemer.\n"
+#~ "Indien leeg, wordt de goedkeuring gedaan door een Beheerder of "
+#~ "Goedkeurder (bepaald in instellingen / gebruikers)."
+
+#~ msgid "The current user has no related employee. Please, create one."
+#~ msgstr ""
+#~ "De huidige gebruiker heeft geen gekoppelde werknemer. Maak er eerst één "
+#~ "aan."
 
 #~ msgid "$100.00"
 #~ msgstr "$ 100,00"

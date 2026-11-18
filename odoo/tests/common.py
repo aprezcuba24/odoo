@@ -1079,12 +1079,26 @@ class TransactionCase(BaseCase):
 
         cls.env = api.Environment(cls.cr, api.SUPERUSER_ID, {})
 
-        # speedup CryptContext. Many user an password are done during tests, avoid spending time hasing password with many rounds
+        # speedup CryptContext. Many password-type logins are done during tests, avoid spending time hashing password with many rounds
         def _crypt_context(self):  # noqa: ARG001
-            return CryptContext(
+            cryptCtx = CryptContext(
                 ['pbkdf2_sha512', 'plaintext'],
                 pbkdf2_sha512__rounds=1,
             )
+            # The modified hash configuration causes rotation of the in-database password hash values.
+            # Rotating password hashes mid-test causes session_id rotation leading into indeterministic 'user not logged in' errors.
+            # Never returning a replacement hash prevents this problem.
+            original_verify_and_update = cryptCtx.verify_and_update
+
+            def mock_verify_and_update(*args, **kwargs):
+                valid, replacement_hash = original_verify_and_update(*args, **kwargs)
+                if replacement_hash:
+                    _logger.info("Surpressing hash update in CryptContext override")
+                return valid, None
+
+            cryptCtx.verify_and_update = mock_verify_and_update
+            return cryptCtx
+
         cls._crypt_context_patcher = patch('odoo.addons.base.models.res_users.ResUsersPatchedInTest._crypt_context', _crypt_context)
         cls.startClassPatcher(cls._crypt_context_patcher)
 
@@ -1158,8 +1172,9 @@ class TransactionCase(BaseCase):
             old_run_wkhtmltopdf = ir_actions_report._run_wkhtmltopdf
 
             def _patched_run_wkhtmltopdf(args):
-                with patch.object(self, 'http_request_key', 'wkhtmltopdf'), release_test_lock():
-                    args = ['--cookie', TEST_CURSOR_COOKIE_NAME, 'wkhtmltopdf', *args]
+                http_request_key = self.http_request_key
+                with release_test_lock():
+                    args = ['--cookie', TEST_CURSOR_COOKIE_NAME, http_request_key, *args]
                     return old_run_wkhtmltopdf(args)
 
             stack.enter_context(
@@ -1356,7 +1371,10 @@ class ChromeBrowser:
             self._result.cancel()
 
             self._logger.info("Closing chrome headless with pid %s", self.chrome.pid)
-            self._websocket_request('Browser.close')
+            try:
+                self._websocket_request("Browser.close")
+            except CancelledError:
+                self._logger.info("Chrome closed the devtools connection without answering")
         except ChromeBrowserException as e:
             _logger.runbot("WS error during browser shutdown: %s", e)
             self.chrome_log_level = logging.RUNBOT
@@ -1490,22 +1508,23 @@ class ChromeBrowser:
         try:
             yield proc, devtools_port
         finally:
-            self._logger.info("Terminating chrome headless with pid %s", proc.pid)
-            main = psutil.Process(proc.pid)
-            procs = [main] + main.children(recursive=True)
-            proc.terminate()
-            _, alive = psutil.wait_procs(procs, 5)
-            if alive:  # can't early exit, it suppresses the finally'd exception if any
-                self._logger.warning(
-                    "Killing chrome descendants-or-self of %s: %d remaining%s",
-                    proc.pid,
-                    len(alive),
-                    "".join(f"\n- {p.name()} ({p.status()})" for p in alive),
-                )
-                for p in alive:
-                    p.kill()
-                psutil.wait_procs(alive, 1)
-                self.chrome_log_level = logging.RUNBOT
+            if proc.poll() is None:
+                self._logger.info("Terminating chrome headless with pid %s", proc.pid)
+                main = psutil.Process(proc.pid)
+                procs = [main] + main.children(recursive=True)
+                proc.terminate()
+                _, alive = psutil.wait_procs(procs, 5)
+                if alive:  # can't early exit, it suppresses the finally'd exception if any
+                    self._logger.warning(
+                        "Killing chrome descendants-or-self of %s: %d remaining%s",
+                        proc.pid,
+                        len(alive),
+                        "".join(f"\n- {p.name()} ({p.status()})" for p in alive),
+                    )
+                    for p in alive:
+                        p.kill()
+                    psutil.wait_procs(alive, 1)
+                    self.chrome_log_level = logging.RUNBOT
 
     def read_log(self) -> bytes:
         try:
@@ -1599,6 +1618,18 @@ class ChromeBrowser:
 
     def _receive(self, dbname):
         threading.current_thread().dbname = dbname
+        try:
+            self._receive_events()
+        finally:
+            while True:
+                try:
+                    _, f = self._responses.popitem()
+                except KeyError:
+                    break
+                else:
+                    f.cancel()
+
+    def _receive_events(self):
         # So CDT uses a streamed JSON-RPC structure, meaning a request is
         # {id, method, params} and eventually a {id, result | error} should
         # arrive the other way, however for events it uses "notifications"
@@ -1611,21 +1642,18 @@ class ChromeBrowser:
                 self._logger.debug('\n<- %s', msg)
             except websocket.WebSocketTimeoutException:
                 continue
-            except websocket.WebSocketConnectionClosedException as e:
+            except (websocket.WebSocketConnectionClosedException, ConnectionResetError):
                 if not self._result.done():
                     del self.ws
-                    self._result.set_exception(e)
-                    while True:
-                        try:
-                            _, f = self._responses.popitem()
-                        except KeyError:
-                            break
-                        else:
-                            f.cancel()
+                    try:
+                        status = "exit status %s" % self.chrome.wait(5)
+                    except subprocess.TimeoutExpired:
+                        status = "still running"
+                    self._result.set_exception(
+                        ChromeBrowserException("Lost connection to browser: %s" % status),
+                    )
                 return
             except Exception as e:
-                if isinstance(e, ConnectionResetError) and self._result.done():
-                    return
                 # if the socket is still connected something bad happened,
                 # otherwise the client was just shut down
                 if self.ws.connected:
@@ -1894,10 +1922,16 @@ which leads to stray network requests and inconsistencies."""
         self.error_checker = error_checker
         self._logger.info('Evaluate test code "%s"', code)
         start = time.time()
-        res = self._websocket_request('Runtime.evaluate', params={
-            'expression': code,
-            'awaitPromise': True,
-        }, timeout=timeout)['result']
+        try:
+            res = self._websocket_request('Runtime.evaluate', params={
+                'expression': code,
+                'awaitPromise': True,
+            }, timeout=timeout)['result']
+        except CancelledError:
+            exc = self._result.done() and self._result.exception()
+            if exc:
+                raise exc from None
+            raise
         if res.get('subtype') == 'error':
             raise ChromeBrowserException("Running code returned an error: %s" % res)
 
@@ -1923,7 +1957,7 @@ which leads to stray network requests and inconsistencies."""
 
         if isinstance(err, concurrent.futures.TimeoutError):
             raise ChromeBrowserException('Script timeout exceeded') from err
-        raise ChromeBrowserException("Unknown error") from err
+        raise ChromeBrowserException("Unknown error: %r" % err) from err
 
     def navigate_to(self, url, wait_stop=False):
         self._logger.info('Navigating to: "%s"', url)
@@ -2241,8 +2275,9 @@ class HttpCase(TransactionCase):
         old_run_wkhtmltopdf = ir_actions_report._run_wkhtmltopdf
 
         def _patched_run_wkhtmltopdf(args):
-            with patch.object(self, 'http_request_key', 'wkhtmltopdf'), release_test_lock():
-                args = ['--cookie', TEST_CURSOR_COOKIE_NAME, 'wkhtmltopdf', *args]
+            http_request_key = self.http_request_key
+            with release_test_lock():
+                args = ['--cookie', TEST_CURSOR_COOKIE_NAME, http_request_key, *args]
                 return old_run_wkhtmltopdf(args)
 
         self.startPatcher(

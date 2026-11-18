@@ -6,16 +6,16 @@
 # Wil Odoo, 2025
 # Tony Ng, 2025
 #
-# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025, 2026.
 # "Tony Ng (ngto)" <ngto@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:38+0000\n"
-"PO-Revision-Date: 2026-06-06 14:01+0000\n"
-"Last-Translator: \"Tony Ng (ngto)\" <ngto@odoo.com>\n"
+"POT-Creation-Date: 2026-10-30 17:38+0000\n"
+"PO-Revision-Date: 2026-08-02 12:18+0000\n"
+"Last-Translator: \"Dylan Kiss (dyki)\" <dyki@odoo.com>\n"
 "Language-Team: Chinese (Traditional Han script) <https://translate.odoo.com/"
 "projects/odoo-19/stock_account/zh_Hant/>\n"
 "Language: zh_TW\n"
@@ -492,7 +492,7 @@ msgstr "識別號"
 msgid ""
 "If checked, the product will be valued using the Anglo-Saxon accounting "
 "method."
-msgstr ""
+msgstr "若勾選，產品會採用英式 Anglo-Saxon 會計方法進行估值。"
 
 #. module: stock_account
 #: model:ir.model.fields,help:stock_account.field_product_product__lot_valuated
@@ -704,8 +704,8 @@ msgid ""
 "        "
 msgstr ""
 "周期性：會計記項會以手動方式，在庫存估值報告中建議。\n"
-"        永續性：為產品開立賬單或發票時，系統會自動建立會計記項，進行庫存估值"
-"。\n"
+"        永續性：為產品開立賬單或發票時，系統會自動建立會計記項，進行庫存估"
+"值。\n"
 "        "
 
 #. module: stock_account
@@ -908,8 +908,6 @@ msgid "Stock Replenishment Report"
 msgstr "庫存補貨報告"
 
 #. module: stock_account
-#. odoo-javascript
-#: code:addons/stock_account/static/src/stock_account_forecasted/forecasted_header.js:0
 #: model:ir.model,name:stock_account.model_stock_account_stock_valuation_report
 msgid "Stock Valuation"
 msgstr "庫存估值"
@@ -1027,7 +1025,7 @@ msgstr "更新 SO/PO 上的數量"
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_product_category__anglo_saxon_accounting
 msgid "Use Anglo-Saxon Accounting"
-msgstr ""
+msgstr "使用英式 (Anglo-Saxon) 會計"
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_product_value__user_id

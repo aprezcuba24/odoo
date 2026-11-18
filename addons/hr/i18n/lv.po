@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:35+0000\n"
-"PO-Revision-Date: 2026-03-14 20:05+0000\n"
+"POT-Creation-Date: 2026-11-06 17:37+0000\n"
+"PO-Revision-Date: 2026-08-07 23:15+0000\n"
 "Last-Translator: Armīns Jeltajevs <armins.jeltajevs@gmail.com>\n"
 "Language-Team: Latvian <https://translate.odoo.com/projects/odoo-19/hr/lv/>\n"
 "Language: lv\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2;\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: hr
 #. odoo-python
@@ -3629,6 +3629,18 @@ msgstr ""
 
 #. module: hr
 #. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Contact Profile"
+msgstr ""
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "Open Employee Profile (activates company)"
+msgstr ""
+
+#. module: hr
+#. odoo-javascript
 #: code:addons/hr/static/src/core/web/thread_actions.js:0
 msgid "Open Profile"
 msgstr ""
@@ -4590,19 +4602,19 @@ msgid "Temporary"
 msgstr ""
 
 #. module: hr
-#. odoo-python
-#: code:addons/hr/models/hr_employee.py:0
-msgid ""
-"The Badge ID must be alphanumeric without any accents and no longer than 18 "
-"characters."
-msgstr ""
-
-#. module: hr
 #: model:ir.model.constraint,message:hr.constraint_hr_employee_barcode_uniq
 msgid ""
 "The Badge ID must be unique, this one is already assigned to another "
 "employee."
 msgstr "Nozīmītes ID jābūt unikālam, šāds jau ir piešķirts citam darbiniekam."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"The Badge ID must contain only printable ASCII characters, without spaces, "
+"and be no longer than 18 characters."
+msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_departure_reason__country_code
@@ -5007,6 +5019,11 @@ msgid "Version"
 msgstr ""
 
 #. module: hr
+#: model:ir.model.fields,field_description:hr.field_hr_employee__version_revision
+msgid "Version Revision"
+msgstr ""
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__versions_count
 msgid "Versions Count"
 msgstr ""
@@ -5014,6 +5031,12 @@ msgstr ""
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_version_list_view
 msgid "View"
+msgstr ""
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/avatar_card/avatar_card_popover_patch.xml:0
+msgid "View Profile"
 msgstr ""
 
 #. module: hr
@@ -5345,6 +5368,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/hr/models/hr_employee.py:0
 msgid "You do not have access to this document."
+msgstr ""
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/wizard/hr_bank_account_allocation_wizard_line.py:0
+msgid "You do not have the rights to trust or un-trust accounts."
 msgstr ""
 
 #. module: hr

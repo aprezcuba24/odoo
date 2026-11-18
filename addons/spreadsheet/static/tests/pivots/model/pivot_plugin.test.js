@@ -423,6 +423,56 @@ test("Context is purged from PivotView related keys", async function (assert) {
     expect.verifySteps(["pop"]);
 });
 
+test("Context stays purged from PivotView related keys after an invalidating command", async function () {
+    const spreadsheetData = {
+        sheets: [{ id: "sheet1", cells: { A1: '=ODOO.PIVOT(1, "probability")' } }],
+        pivots: {
+            1: {
+                type: "ODOO",
+                columns: [{ fieldName: "foo" }],
+                rows: [{ fieldName: "bar" }],
+                domain: [],
+                measures: [{ fieldName: "probability" }],
+                model: "partner",
+                context: {
+                    pivot_measures: ["__count"],
+                    pivot_row_groupby: ["test"],
+                    pivot_column_groupby: ["check"],
+                },
+            },
+        },
+    };
+    const { model } = await createModelWithDataSource({
+        spreadsheetData,
+        mockRPC: function (route, { model, method, kwargs }) {
+            if (model === "partner" && method === "read_group") {
+                const hasBadKeys = [
+                    "pivot_measures",
+                    "pivot_row_groupby",
+                    "pivot_column_groupby",
+                ].some((val) => val in (kwargs.context || {}));
+                if (hasBadKeys) {
+                    throw new Error("context contains bad keys");
+                }
+            }
+        },
+    });
+    await waitForDataLoaded(model);
+
+    // invalidating command: the pivot is set up again with the same definition
+    model.dispatch("ADD_COLUMNS_ROWS", {
+        sheetId: "sheet1",
+        dimension: "ROW",
+        position: "before",
+        base: 0,
+        quantity: 1,
+        sheetName: model.getters.getSheetName("sheet1"),
+    });
+    model.dispatch("REFRESH_PIVOT", { id: "1" });
+    await waitForDataLoaded(model);
+    expect(1).toBe(1);
+});
+
 test("fetch metadata only once per model", async function () {
     const spreadsheetData = {
         sheets: [
@@ -2577,6 +2627,13 @@ test("`getPivotCellFromPosition` should not throw on missing company default cur
     expect(() => {
         model.getters.getPivotCellFromPosition({ sheetId, col: 0, row: 0 });
     }).not.toThrow();
+});
+
+test("Pivot normalization of many2one is a string in case of account.root", () => {
+    const normalizer = pivotNormalizationValueRegistry.get("many2one");
+    expect(normalizer({ value: 1 }, { relation: "account.root" })).toBe("1");
+    expect(normalizer({ value: "01" }, { relation: "account.root" })).toBe("01");
+    expect(normalizer({ value: "coucou" }, { relation: "account.root" })).toBe("coucou");
 });
 
 test("Groupable fields in pivot", async function () {

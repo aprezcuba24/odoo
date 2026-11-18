@@ -123,6 +123,7 @@ class PosOrder(models.Model):
         return selected_clave_regimen and selected_clave_regimen.split('_', 1)[0]
 
     def l10n_es_edi_verifactu_button_send(self):
+        self.check_access('write')
         self._l10n_es_edi_verifactu_mark_for_next_batch()
 
     def _l10n_es_edi_verifactu_check(self, cancellation=False):
@@ -171,7 +172,7 @@ class PosOrder(models.Model):
         else:
             refunded_document = refunded_order.l10n_es_edi_verifactu_document_ids._get_last('submission')
 
-        name = self.l10n_es_edi_verifactu_get_invoice_name()
+        name = self._l10n_es_edi_verifactu_get_simplified_invoice_name()
         vals.update({
             'rejected_before': rejected_before,
             'verifactu_state': self.l10n_es_edi_verifactu_state,
@@ -288,10 +289,13 @@ class PosOrder(models.Model):
 
         return res
 
+    def _l10n_es_edi_verifactu_get_simplified_invoice_name(self):
+        return str(self.config_id.id) + '/' + str(self.sequence_number).zfill(6)
+
     def l10n_es_edi_verifactu_get_invoice_name(self):
         if self.account_move:
             return self.account_move.name
-        return str(self.config_id.id) + '/' + str(self.sequence_number).zfill(6)
+        return self._l10n_es_edi_verifactu_get_simplified_invoice_name()
 
     def _update_sequence_number(self, session, values):
         """ Override: do not allow updating the sequence number for Spanish pos orders"""

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 17:35+0000\n"
-"PO-Revision-Date: 2026-06-06 19:34+0000\n"
+"POT-Creation-Date: 2026-10-30 17:37+0000\n"
+"PO-Revision-Date: 2026-08-14 05:09+0000\n"
 "Last-Translator: Bone NI <bounkirdni@gmail.com>\n"
 "Language-Team: Lao <https://translate.odoo.com/projects/odoo-19/"
 "point_of_sale/lo/>\n"
@@ -448,6 +448,13 @@ msgid "? Clicking \"Confirm\" will validate the payment."
 msgstr "? ການກົດ \"ຢືນຢັນ\" ຈະເປັນການກວດສອບການຊຳລະເງິນ."
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
+msgid ""
+"A QR code payment already covers the amount due. Send it or remove it first."
+msgstr ""
+
+#. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_config__uuid
 msgid ""
 "A globally unique identifier for this pos configuration, used to prevent "
@@ -559,16 +566,16 @@ msgstr "ລະຫັດເຂົ້າເຖິງ"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/backend/lna_checklist/lna_checklist.xml:0
 msgid ""
-"Access printer configuration panel by puttin this URL in your search bar:"
-msgstr "ເຂົ້າເຖິງແຜງຕັ້ງຄ່າເຄື່ອງພິມໂດຍການໃສ່ URL ນີ້ໃນຊ່ອງຄົ້ນຫາ:"
+"Access printer configuration panel by putting this URL in your search bar:"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/backend/lna_checklist/lna_checklist.xml:0
 msgid ""
-"Access the below URL but replace [printer_ip] with your current Pritner IP "
+"Access the below URL but replace [printer_ip] with your current Printer IP "
 "address"
-msgstr "ເຂົ້າເຖິງ URL ລຸ່ມນີ້ ແຕ່ໃຫ້ປ່ຽນ [printer_ip] ດ້ວຍທີ່ຢູ່ IP ຂອງເຄື່ອງພິມປະຈຸບັນຂອງທ່ານ"
+msgstr ""
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__access_warning
@@ -2058,6 +2065,7 @@ msgstr "ລູກຄ້າ"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/product_configurator_popup/product_configurator_popup.xml:0
 #: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.xml:0
 #: code:addons/point_of_sale/static/src/app/components/tour_selector_popup/tour_selector_popup.xml:0
 #: code:addons/point_of_sale/static/src/app/customer_display/customer_display_qr_code_popup.xml:0
@@ -2321,6 +2329,7 @@ msgstr "ກະລຸນາກຳນົດຄ່າຈຸດຂາຍຢ່າງ
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/cash_move_popup/cash_move_popup.xml:0
 #: code:addons/point_of_sale/static/src/app/components/popups/date_picker_popup/date_picker_popup.js:0
+#: code:addons/point_of_sale/static/src/app/components/popups/error_dialog/error_dialog.js:0
 #: code:addons/point_of_sale/static/src/app/components/popups/money_details_popup/money_details_popup.xml:0
 #: code:addons/point_of_sale/static/src/app/components/popups/number_popup/number_popup.js:0
 #: code:addons/point_of_sale/static/src/app/components/tour_selector_popup/tour_selector_popup.xml:0
@@ -2381,6 +2390,7 @@ msgstr "ກຳລັງເຊື່ອມຕໍ່ກັບ Proxy"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/opening_control_popup/opening_control_popup.js:0
 #: code:addons/point_of_sale/static/src/app/utils/error_handlers.js:0
 msgid "Connection Lost"
 msgstr "ການເຊື່ອມຕໍ່ຂາດຫາຍ"
@@ -3196,6 +3206,7 @@ msgstr "ສ່ວນຫຼຸດ"
 #: model:ir.model.fields,field_description:point_of_sale.field_product_pricelist__display_name
 #: model:ir.model.fields,field_description:point_of_sale.field_product_pricelist_item__display_name
 #: model:ir.model.fields,field_description:point_of_sale.field_product_product__display_name
+#: model:ir.model.fields,field_description:point_of_sale.field_product_removal__display_name
 #: model:ir.model.fields,field_description:point_of_sale.field_product_tag__display_name
 #: model:ir.model.fields,field_description:point_of_sale.field_product_template__display_name
 #: model:ir.model.fields,field_description:point_of_sale.field_product_template_attribute_exclusion__display_name
@@ -3491,8 +3502,10 @@ msgstr "ທີ່ຢູ່ IP ເຄື່ອງພິມໃບບິນ Epson"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/closing_popup/closing_popup.js:0
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.js:0
 #: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
+#: code:addons/point_of_sale/static/src/app/services/printer_service.js:0
 msgid "Error"
 msgstr "ຂໍ້ຜິດພາດ"
 
@@ -3925,7 +3938,7 @@ msgstr "ມີລາຍການທີ່ສາມາດຄືນເງິນໄ
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_stock_picking_type__has_stock_reports_to_print
 msgid "Has Stock Reports To Print"
-msgstr ""
+msgstr "ມີບົດລາຍງານສາງທີ່ຕ້ອງພິມ"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -4064,6 +4077,7 @@ msgstr "ຂ້ອຍໃຊ້ເຄື່ອງພິມ Epson"
 #: model:ir.model.fields,field_description:point_of_sale.field_product_pricelist__id
 #: model:ir.model.fields,field_description:point_of_sale.field_product_pricelist_item__id
 #: model:ir.model.fields,field_description:point_of_sale.field_product_product__id
+#: model:ir.model.fields,field_description:point_of_sale.field_product_removal__id
 #: model:ir.model.fields,field_description:point_of_sale.field_product_tag__id
 #: model:ir.model.fields,field_description:point_of_sale.field_product_template__id
 #: model:ir.model.fields,field_description:point_of_sale.field_product_template_attribute_exclusion__id
@@ -4165,9 +4179,9 @@ msgstr "ຖ້າເບົາເຊີບໍ່ຮອງຮັບ LNA, PoS ຈ�
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/backend/lna_checklist/lna_checklist.xml:0
 msgid ""
-"If this endpoint does not returan a 404 error and displays a blank page, "
+"If this endpoint does not return a 404 error and displays a blank page, "
 "everything is ready."
-msgstr "ຖ້າຈຸດເຊື່ອມຕໍ່ນີ້ບໍ່ສະແດງຂໍ້ຜິດພາດ 404 ແລະ ສະແດງໜ້າວ່າງເປົ່າ, ສະແດງວ່າທຸກຢ່າງພ້ອມແລ້ວ."
+msgstr ""
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_order_line__refunded_orderline_id
@@ -5129,6 +5143,14 @@ msgid "Message Delivery error"
 msgstr "ຂໍ້ຜິດພາດໃນການສົ່ງຂໍ້ຄວາມ"
 
 #. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/controllers/main.py:0
+msgid ""
+"Message: %(messages)s\n"
+"Please update the %(invalid_fields)s"
+msgstr ""
+
+#. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__message_ids
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__message_ids
 msgid "Messages"
@@ -5556,6 +5578,12 @@ msgid "Not available"
 msgstr "ບໍ່ພ້ອມໃຊ້ງານ"
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/utils/printer/base_printer.js:0
+msgid "Not implemented"
+msgstr "ຍັງບໍ່ທັນໄດ້ຈັດຕັ້ງປະຕິບັດ"
+
+#. module: point_of_sale
 #: model:ir.model.fields.selection,name:point_of_sale.selection__pos_preset__identification__none
 msgid "Not required"
 msgstr "ບໍ່ຈຳເປັນ"
@@ -5678,6 +5706,12 @@ msgstr "ເກີບຜ້າໃບ Odoo"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/navbar/proxy_status/proxy_status.js:0
+msgid "Offline"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
 msgid "Offline Orders"
 msgstr "ໃບສັ່ງຊື້ອອບໄລນ໌"
@@ -5712,6 +5746,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Online reservation for Point of Sale"
 msgstr "ການຈອງອອນໄລນ໌ສຳລັບຈຸດຂາຍ (POS)"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_config.py:0
+msgid "Only Point of Sale managers can modify a Point of Sale configuration."
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -6878,6 +6918,7 @@ msgid "Pos Order Count"
 msgstr "ຈຳນວນໃບສັ່ງຊື້ POS"
 
 #. module: point_of_sale
+#: model:ir.model.fields,field_description:point_of_sale.field_account_tax__pos_order_line_ids
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_pack_operation_lot__pos_order_line_id
 msgid "Pos Order Line"
 msgstr "ແຖວໃບສັ່ງຊື້ POS"
@@ -7230,8 +7271,8 @@ msgstr "ຝາເຄື່ອງພິມເປີດຢູ່. ກະລຸນ�
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/backend/lna_checklist/lna_checklist.xml:0
-msgid "Printer's local IP address is printerd"
-msgstr "ທີ່ຢູ່ IP ພາຍໃນຂອງເຄື່ອງພິມຖືກພິມແລ້ວ"
+msgid "Printer's local IP address is printed"
+msgstr ""
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -7261,7 +7302,7 @@ msgstr "ດຳເນີນການຕໍ່ຕໍ່ໄປ"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/feedback_screen/feedback_screen.xml:0
 msgid "Processing..."
-msgstr ""
+msgstr "ກຳລັງປະມວນຜົນ..."
 
 #. module: point_of_sale
 #: model:ir.model,name:point_of_sale.model_product_template
@@ -7748,6 +7789,9 @@ msgstr "ໂຫຼດໃໝ່"
 #: code:addons/point_of_sale/static/src/app/components/navbar/navbar.xml:0
 #: code:addons/point_of_sale/static/src/app/components/popups/confirmation_dialog/confirmation_dialog.js:0
 #: code:addons/point_of_sale/static/src/app/components/popups/confirmation_dialog/confirmation_dialog.xml:0
+#: code:addons/point_of_sale/static/src/app/components/popups/error_dialog/error_dialog.js:0
+#: code:addons/point_of_sale/static/src/app/components/popups/error_dialog/error_dialog.xml:0
+#: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
 msgid "Reload Data"
 msgstr "ໂຫຼດຂໍ້ມູນໃໝ່"
 
@@ -7773,6 +7817,11 @@ msgstr "ໂຫຼດຂໍ້ມູນໃໝ່"
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_status/payment_status.js:0
 msgid "Remaining"
 msgstr "ຄົງເຫຼືອ"
+
+#. module: point_of_sale
+#: model:ir.model,name:point_of_sale.model_product_removal
+msgid "Removal Strategy"
+msgstr "ຍຸດທະສາດການນຳອອກ"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -8159,6 +8208,12 @@ msgid "Secure printing"
 msgstr "ການພິມແບບປອດໄພ"
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/backend/lna_checklist/lna_checklist.xml:0
+msgid "Secure printing enabled"
+msgstr ""
+
+#. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_bus_mixin__access_token
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__access_token
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__access_token
@@ -8358,6 +8413,12 @@ msgstr "ລາຍງານຮອບການຂາຍ"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__statistics_for_current_session
 msgid "Session Statistics"
 msgstr "ສະຖິຕິຮອບການຂາຍ"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Session already closed"
+msgstr "ຮອບການເຮັດວຽກຖືກປິດແລ້ວ"
 
 #. module: point_of_sale
 #: model:mail.activity.type,name:point_of_sale.mail_activity_old_session
@@ -8607,6 +8668,17 @@ msgid ""
 msgstr ""
 "ບາງລາຍການສັ່ງຊື້ບໍ່ສາມາດສົ່ງໄປຍັງເຊີບເວີໄດ້ເນື່ອງຈາກບັນຫາການເຊື່ອມຕໍ່ອິນເຕີເນັດ. "
 "ທ່ານສາມາດອອກຈາກຈຸດຂາຍໄດ້, ແຕ່ຫ້າມປິດຮອບການຂາຍກ່ອນທີ່ບັນຫາຈະຖືກແກ້ໄຂ."
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/main.js:0
+#: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
+msgid ""
+"Some paid orders have not been synced to the server yet. Closing or "
+"reloading now may cause data loss."
+msgstr ""
+"ບາງລາຍການສັ່ງຊື້ທີ່ຊຳລະແລ້ວ ຍັງບໍ່ທັນໄດ້ຊິງຂໍ້ມູນໄປຫາເຊີບເວີເທື່ອ. ການປິດ ຫຼື ໂຫຼດຄືນໃໝ່ຕອນນີ້ "
+"ອາດເຮັດໃຫ້ຂໍ້ມູນສູນຫາຍໄດ້."
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -8960,6 +9032,12 @@ msgstr "ທົດສອບ"
 #: code:addons/point_of_sale/static/src/customer_display/customer_display.xml:0
 msgid "Thank you."
 msgstr "ຂອບໃຈ."
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/controllers/main.py:0
+msgid "The %s must be filled in your details."
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-python
@@ -9404,6 +9482,12 @@ msgstr "ໃບບິນຈະຖືກພິມໂດຍອັດຕະໂນມ
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/opening_control_popup/opening_control_popup.js:0
+msgid "The register cannot be opened while offline. Please try again."
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.js:0
 msgid ""
 "The requested quantity to be refunded is higher than the ordered quantity. "
@@ -9679,6 +9763,13 @@ msgstr "ວິທີການຊຳລະເຫຼົ່ານີ້ຈະມີ
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/error_dialog/error_dialog.js:0
+msgid ""
+"This action will delete all unsaved orders and other locally stored data"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/services/barcode_reader_service.js:0
 msgid ""
 "This barcode is not compatible with the GS1 standard. Consider configuring a "
@@ -9759,6 +9850,7 @@ msgstr "ການດຳເນີນການນີ້ຈະທຳລາຍທັ
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/product_configurator_popup/product_configurator_popup.xml:0
+#: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
 msgid "This option or combination of options is not available"
 msgstr "ຕົວເລືອກນີ້ ຫຼື ການລວມຕົວເລືອກນີ້ແມ່ນບໍ່ມີໃຫ້ໃຊ້"
 
@@ -9784,7 +9876,7 @@ msgstr "ລາຍການສັ່ງຊື້ນີ້ຖືກຊຳລະແ
 #: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
 msgid ""
 "This order is currently syncing, please wait a moment before loading it."
-msgstr ""
+msgstr "ລາຍການສັ່ງຊື້ນີ້ກຳລັງຊິງຂໍ້ມູນຢູ່, ກະລຸນາລໍຖ້າຈັກຄາວ ກ່ອນຈະໂຫລດມັນຂຶ້ນມາ."
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -10369,6 +10461,12 @@ msgid "Value"
 msgstr "ມູນຄ່າ"
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/services/pos_store.js:0
+msgid "Variant does not exist"
+msgstr ""
+
+#. module: point_of_sale
 #: model:product.template,description_sale:point_of_sale.product_green_hood_product_template
 msgid ""
 "Versatile cotton hoodie with an adjustable drawstring hood and front zipper "
@@ -10738,6 +10836,12 @@ msgstr "ທ່ານບໍ່ສາມາດລຶບລຳດັບທີ່ຖ
 #: code:addons/point_of_sale/models/pos_payment.py:0
 msgid "You cannot edit a payment for a posted order."
 msgstr "ທ່ານບໍ່ສາມາດແກ້ໄຂການຊຳລະເງິນສຳລັບລາຍການສັ່ງຊື້ທີ່ລົງບັນຊີແລ້ວ."
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_order.py:0
+msgid "You cannot refund more than the outstanding quantity for this product."
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-python
@@ -11136,6 +11240,18 @@ msgid "open orders planned for later."
 msgstr "ລາຍການສັ່ງຊື້ທີ່ເປີດຢູ່ວາງແຜນໄວ້ສຳລັບພາຍຫຼັງ."
 
 #. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_config.py:0
+msgid "order"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_config.py:0
+msgid "orders"
+msgstr ""
+
+#. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_preset_form
 msgid "orders per"
 msgstr "ລາຍການສັ່ງຊື້ຕໍ່"
@@ -11203,6 +11319,23 @@ msgstr "ດ້ວຍມູນຄ່າ"
 #: code:addons/point_of_sale/static/src/customer_display/customer_display.xml:0
 msgid "x"
 msgstr "x"
+
+#~ msgid ""
+#~ "Access printer configuration panel by puttin this URL in your search bar:"
+#~ msgstr "ເຂົ້າເຖິງແຜງຕັ້ງຄ່າເຄື່ອງພິມໂດຍການໃສ່ URL ນີ້ໃນຊ່ອງຄົ້ນຫາ:"
+
+#~ msgid ""
+#~ "Access the below URL but replace [printer_ip] with your current Pritner "
+#~ "IP address"
+#~ msgstr "ເຂົ້າເຖິງ URL ລຸ່ມນີ້ ແຕ່ໃຫ້ປ່ຽນ [printer_ip] ດ້ວຍທີ່ຢູ່ IP ຂອງເຄື່ອງພິມປະຈຸບັນຂອງທ່ານ"
+
+#~ msgid ""
+#~ "If this endpoint does not returan a 404 error and displays a blank page, "
+#~ "everything is ready."
+#~ msgstr "ຖ້າຈຸດເຊື່ອມຕໍ່ນີ້ບໍ່ສະແດງຂໍ້ຜິດພາດ 404 ແລະ ສະແດງໜ້າວ່າງເປົ່າ, ສະແດງວ່າທຸກຢ່າງພ້ອມແລ້ວ."
+
+#~ msgid "Printer's local IP address is printerd"
+#~ msgstr "ທີ່ຢູ່ IP ພາຍໃນຂອງເຄື່ອງພິມຖືກພິມແລ້ວ"
 
 #~ msgid "A request is still being processed in the background. Please wait."
 #~ msgstr "ຄຳຮ້ອງຂໍກຳລັງຖືກປະມວນຜົນຢູ່ໃນເບື້ອງຫຼັງ. ກະລຸນາລໍຖ້າ."

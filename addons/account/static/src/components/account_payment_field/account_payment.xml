@@ -21,7 +21,7 @@
                             <td style="max-width: 9rem;">
                                 <a t-att-title="(line.bank_label ? line.bank_label + ' - ' : '') + (line.move_ref ? line.move_ref : '')"
                                    role="button"
-                                   class="open_account_move oe_form_field btn btn-link w-100 text-start"
+                                   class="open_account_move oe_form_field btn btn-link text-truncate w-100 text-start"
                                    t-on-click="() => this.openMove(line.move_id)"
                                    data-bs-toggle="tooltip"
                                    t-att-payment-id="account_payment_id"
@@ -112,7 +112,7 @@
                     </table>
                 </div>
                 <button class="btn btn-sm btn-primary js_unreconcile_payment float-start" t-if="!props.is_exchange" style="margin-top:5px; margin-bottom:5px;" groups="account.group_account_invoice" t-on-click="() => props._onRemoveMoveReconcile(props.move_id, props.partial_id)">Unreconcile</button>
-                <button class="btn btn-sm btn-secondary js_open_payment float-end" style="margin-top:5px; margin-bottom:5px;" t-on-click="() => props._onOpenMove(props.move_id)">View</button>
+                <button class="btn btn-sm btn-secondary js_open_payment float-end" t-if="props.can_open_move" style="margin-top:5px; margin-bottom:5px;" t-on-click="() => props._onOpenMove(props.move_id)">View</button>
             </div>
         </div>
     </t>
