@@ -169,7 +169,7 @@ Install the addon: `python3 odoo-bin -d odoo -i mcp_api --stop-after-init --no-h
 
 ---
 
-## Tests (`own_modules`).
+## Tests (`own_modules`)
 
 Start the dev server first (e.g. `python3 odoo-bin --dev=all -d odoo` on port **8069**). Then run tests in **another terminal** so logs stay separate:
 
