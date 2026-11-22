@@ -1,1 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_merchant_store_merchant_user,merchant_store.merchant.user,model_merchant_store_merchant,group_merchant_store_user,1,1,1,0
+access_merchant_store_merchant_manager,merchant_store.merchant.manager,model_merchant_store_merchant,group_merchant_store_manager,1,1,1,1
+access_merchant_store_merchant_system,merchant_store.merchant.system,model_merchant_store_merchant,base.group_system,1,1,1,1

@@ -111,12 +111,8 @@ class TestOptionalApps(TransactionCase):
         self.assertEqual(creds.secret_key, 'sk_test_optional')
 
     def test_merchant_store_menu_hidden_until_app_enabled(self):
-        """Empty root menus have no action yet, so Odoo omits them from
-        ``_visible_menu_ids``. Check the optional-app gate directly; point 2+
-        will add children with actions and then the Stripe-style assert applies.
-        """
         menu = self.env.ref(
-            'merchant_store.menu_merchant_store_root',
+            'merchant_store.menu_merchant_store_merchant',
             raise_if_not_found=False,
         )
         if not menu:
@@ -127,11 +123,11 @@ class TestOptionalApps(TransactionCase):
             allowed_company_ids=[self.company.id],
         )
 
-        hidden_off = Menu._optional_app_hidden_menu_ids()
-        self.assertIn(menu.id, hidden_off)
+        visible_off = Menu._visible_menu_ids(debug=False)
+        self.assertNotIn(menu.id, visible_off)
 
         self.company.sudo().write({
             'optional_app_ids': [Command.link(self.optional_app_merchant_store.id)],
         })
-        hidden_on = Menu._optional_app_hidden_menu_ids()
-        self.assertNotIn(menu.id, hidden_on)
+        visible_on = Menu._visible_menu_ids(debug=False)
+        self.assertIn(menu.id, visible_on)

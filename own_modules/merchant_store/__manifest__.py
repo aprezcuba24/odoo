@@ -2,7 +2,7 @@
 
 {
     'name': 'Comercios',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Ventas/Ventas',
     'summary': 'Venta de productos de comerciantes externos, aislada de Tienda Apk.',
     'description': """
@@ -20,6 +20,7 @@ Aplicaciones (apagada por defecto).
     'data': [
         'security/merchant_store_security.xml',
         'security/ir.model.access.csv',
+        'views/merchant_views.xml',
         'views/merchant_store_menu.xml',
     ],
     'license': 'LGPL-3',
