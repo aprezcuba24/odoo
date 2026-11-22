@@ -14,4 +14,12 @@
         action="action_merchant_store_merchant"
         sequence="10"
         groups="merchant_store.group_merchant_store_user,base.group_system"/>
+
+    <menuitem
+        id="menu_merchant_store_product"
+        name="Productos"
+        parent="menu_merchant_store_root"
+        action="action_merchant_store_product_template"
+        sequence="20"
+        groups="merchant_store.group_merchant_store_user,base.group_system"/>
 </odoo>

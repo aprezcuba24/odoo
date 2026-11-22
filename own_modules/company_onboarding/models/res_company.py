@@ -101,11 +101,13 @@ class ResCompany(models.Model):
         }
 
     def _order_bridge_product_domain(self):
-        """Catálogo Tienda Apk: solo productos de esta compañía (sin compartidos)."""
+        """Catálogo Tienda Apk: solo productos de esta compañía (sin compartidos).
+
+        Builds on ``super()`` so filters from other modules (e.g. merchant_store
+        excluding ``merchant_id``) stay in effect. The shared-company OR from
+        ``order_bridge`` is neutralized by requiring this company's id.
+        """
         self.ensure_one()
-        return [
-            ('sale_ok', '=', True),
-            ('active', '=', True),
-            ('product_tmpl_id.order_bridge_visible', '=', True),
+        return super()._order_bridge_product_domain() + [
             ('product_tmpl_id.company_id', '=', self.id),
         ]

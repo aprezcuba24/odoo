@@ -103,6 +103,37 @@ class TestProductCompanyIsolation(TransactionCase):
         self.assertEqual(found_in_a, variant_a)
         self.assertFalse(found_in_b)
 
+    def test_order_bridge_catalog_domain_excludes_merchant_products(self):
+        if 'merchant_id' not in self.env['product.template']._fields:
+            self.skipTest('merchant_store not installed')
+        Merchant = self.env['merchant_store.merchant'].sudo()
+        merchant = Merchant.create({
+            'name': 'Isolation Merchant A',
+            'company_id': self.company_a.id,
+        })
+        merchant_product = self.env['product.template'].sudo().with_company(self.company_a).create({
+            'name': 'Producto comerciante A',
+            'merchant_id': merchant.id,
+            'sale_ok': True,
+        })
+        self.env.cr.execute(
+            'UPDATE product_template SET order_bridge_visible = TRUE WHERE id = %s',
+            (merchant_product.id,),
+        )
+        merchant_product.invalidate_recordset(['order_bridge_visible'])
+
+        domain = self.company_a._order_bridge_product_domain()
+        self.assertIn(('product_tmpl_id.company_id', '=', self.company_a.id), domain)
+        self.assertIn(('product_tmpl_id.merchant_id', '=', False), domain)
+        found = self.env['product.product'].sudo().search(
+            domain + [('product_tmpl_id', '=', merchant_product.id)],
+        )
+        self.assertFalse(found)
+        found_own = self.env['product.product'].sudo().search(
+            domain + [('product_tmpl_id', '=', self.product_a.id)],
+        )
+        self.assertEqual(found_own, self.product_a.product_variant_id)
+
     def test_tenant_category_is_isolated_system_category_stays_shared(self):
         categ_a = self.env['product.category'].sudo().with_company(self.company_a).create({
             'name': 'Categoría solo A',
