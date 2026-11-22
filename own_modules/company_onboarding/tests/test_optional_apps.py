@@ -13,6 +13,9 @@ class TestOptionalApps(TransactionCase):
         cls.optional_app = cls.env.ref(
             'company_onboarding.optional_app_payment_gateway',
         )
+        cls.optional_app_merchant_store = cls.env.ref(
+            'company_onboarding.optional_app_merchant_store',
+        )
         cls.admin = cls.env.ref('base.user_admin')
         cls.company = cls.env['res.company'].sudo().create({
             'name': 'Optional Apps Co',
@@ -22,6 +25,13 @@ class TestOptionalApps(TransactionCase):
     def test_payment_gateway_off_by_default(self):
         self.assertFalse(self.company.has_optional_app('payment_gateway'))
         self.assertNotIn(self.optional_app, self.company.optional_app_ids)
+
+    def test_merchant_store_off_by_default(self):
+        self.assertFalse(self.company.has_optional_app('merchant_store'))
+        self.assertNotIn(
+            self.optional_app_merchant_store,
+            self.company.optional_app_ids,
+        )
 
     def test_admin_enter_company_links_without_moving_partner(self):
         self.admin.invalidate_recordset(['company_ids', 'company_id'])
@@ -99,3 +109,29 @@ class TestOptionalApps(TransactionCase):
         self.assertTrue(payment_gateway_enabled_for_company(self.company))
         creds = credentials_for_company(self.env, self.company)
         self.assertEqual(creds.secret_key, 'sk_test_optional')
+
+    def test_merchant_store_menu_hidden_until_app_enabled(self):
+        """Empty root menus have no action yet, so Odoo omits them from
+        ``_visible_menu_ids``. Check the optional-app gate directly; point 2+
+        will add children with actions and then the Stripe-style assert applies.
+        """
+        menu = self.env.ref(
+            'merchant_store.menu_merchant_store_root',
+            raise_if_not_found=False,
+        )
+        if not menu:
+            self.skipTest('merchant_store not installed')
+
+        self.company.with_user(self.admin).action_enter_company()
+        Menu = self.env(user=self.admin)['ir.ui.menu'].with_context(
+            allowed_company_ids=[self.company.id],
+        )
+
+        hidden_off = Menu._optional_app_hidden_menu_ids()
+        self.assertIn(menu.id, hidden_off)
+
+        self.company.sudo().write({
+            'optional_app_ids': [Command.link(self.optional_app_merchant_store.id)],
+        })
+        hidden_on = Menu._optional_app_hidden_menu_ids()
+        self.assertNotIn(menu.id, hidden_on)

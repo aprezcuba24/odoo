@@ -45,6 +45,7 @@ Los comerciantes no son `res.company`. El tenant ya es la compañía (`company_o
 - **Aislados entre comerciantes de la misma tienda.** Un producto solo entra en la suborden de su comerciante. El personal de la compañía ve los comerciantes de la suya. No hay portal del comerciante en estas fases.
 - **Quién opera.** El personal de la compañía, en menús del módulo nuevo. Sin usuario Odoo ni portal por comerciante en estas fases.
 - **Comerciante.** Nombre, descripción, logo y `company_id`. Productos y subórdenes solo de ese comerciante.
+- **App opcional por compañía.** Con `company_onboarding`, Comercios se enciende en la pestaña Aplicaciones (`code`: `merchant_store`), apagada por defecto. El menú raíz se oculta hasta marcar la casilla. En single-tenant sin ese módulo, basta instalar `merchant_store`.
 
 ```mermaid
 flowchart LR
@@ -63,7 +64,7 @@ Confirmar la suborden, stock, costo, facturas, comisión, liquidación al comerc
 ## Checklist
 
 - [x] **0. Este documento.** `docs/comercios/COMERCIOS.md` con la checklist y la regla de un punto cada vez. Los planes individuales se crean al abrir el punto, en esta carpeta.
-- [ ] **1. Módulo vacío.** `merchant_store` con `depends: ['order_bridge']`, seguridad y menú raíz. Sin modelos de negocio. `order_bridge` no cambia. Plan individual al abrir: [`01-modulo-vacio.md`](01-modulo-vacio.md).
+- [x] **1. Módulo vacío.** `merchant_store` con `depends: ['order_bridge']`, seguridad y menú raíz. Sin modelos de negocio. `order_bridge` no cambia. App opcional por compañía. Plan: [`01-modulo-vacio.md`](01-modulo-vacio.md).
 - [ ] **2. Comerciante.** Modelo con nombre, descripción, logo y `company_id`. Regla multi-compañía. Listado y formulario solo en este módulo, acotados a la compañía del usuario. Plan individual al abrir: [`02-comerciante.md`](02-comerciante.md).
 - [ ] **3. Productos del comerciante.** `product.template` con `merchant_id`. Nombre, precio, imagen y activo. Fuera del catálogo de Tienda Apk, del TPV y del menú de productos del negocio. Plan individual al abrir: [`03-productos.md`](03-productos.md).
 - [ ] **4. Subórdenes.** Una `sale.order` por comerciante, sin `order_bridge_origin`, con líneas y el estado de tienda que ya existe (Revisando → … → Entregado / Cancelado), independiente del pedido propio. Pantallas solo en este módulo. La acción de Ventas las excluye. No se confirman. Los reportes de `bi_analytics` y `sale.report` ignoran `merchant_id`. Plan individual al abrir: [`04-subordenes.md`](04-subordenes.md).
@@ -74,4 +75,4 @@ Confirmar la suborden, stock, costo, facturas, comisión, liquidación al comerc
 
 ## Siguiente paso
 
-Abrir el **punto 1** con un plan corto en [`01-modulo-vacio.md`](01-modulo-vacio.md) e implementar solo el esqueleto de `merchant_store`.
+Abrir el **punto 2** con un plan corto en [`02-comerciante.md`](02-comerciante.md) e implementar el modelo de comerciante.

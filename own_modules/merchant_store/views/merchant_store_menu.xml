@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_merchant_store_root"
+        name="Comercios"
+        sequence="32"
+        web_icon="fa fa-store,#FFFFFF,#714B67"
+        groups="merchant_store.group_merchant_store_user,base.group_system"/>
+</odoo>
