@@ -295,6 +295,7 @@ export class WhatsappPublisherAction extends Component {
                 id: String(product.id),
                 name: this.formatProductLabel(product),
                 price: this.formatPrice(product),
+                storeUrl: product.store_url || "",
                 imageBase64: image.imageBase64,
                 imageMime: image.imageMime,
             });

@@ -6,6 +6,7 @@ from odoo.addons.order_bridge.utils.order_stock import (
     filter_available_products,
     get_catalog_warehouse,
 )
+from odoo.addons.order_bridge.utils.store_url import order_bridge_product_store_url
 
 
 class ProductProduct(models.Model):
@@ -17,8 +18,13 @@ class ProductProduct(models.Model):
     )
 
     def _compute_order_bridge_store_link(self):
+        company = self.env.company
         for product in self:
-            product.order_bridge_store_link = f'/{product.id}' if product.id else False
+            absolute = order_bridge_product_store_url(company, product.id)
+            if absolute:
+                product.order_bridge_store_link = absolute
+            else:
+                product.order_bridge_store_link = f'/{product.id}' if product.id else False
 
     @api.model
     def get_whatsapp_publisher_products(self):
@@ -26,8 +32,8 @@ class ProductProduct(models.Model):
 
         Returns every matching product (visible in Tienda Apk or not). The client
         filters visibility in the browser. Each row includes ``order_bridge_visible``,
-        ``category_id``, ``category_name`` and ``category_sequence`` so the caller
-        can group products by category in the correct order.
+        ``category_id``, ``category_name``, ``category_sequence`` and ``store_url``
+        so the caller can group products by category and publish storefront links.
 
         Products are sorted by:
           1. category ``order_bridge_sequence`` (ascending)
@@ -84,6 +90,7 @@ class ProductProduct(models.Model):
                 'category_id': categ.id if categ else False,
                 'category_name': categ.name if categ else False,
                 'category_sequence': categ.order_bridge_sequence if categ else 10,
+                'store_url': order_bridge_product_store_url(company, product.id) or False,
             })
         return rows
 
