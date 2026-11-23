@@ -2,7 +2,7 @@
 
 {
     'name': 'Comercios',
-    'version': '19.0.1.2.0',
+    'version': '19.0.1.3.0',
     'category': 'Ventas/Ventas',
     'summary': 'Venta de productos de comerciantes externos, aislada de Tienda Apk.',
     'description': """
@@ -16,12 +16,13 @@ dispositivo (Bearer) y el partner del cliente; la tienda arranca sin él.
 En bases con ``company_onboarding``, se activa por compañía en la pestaña
 Aplicaciones (apagada por defecto).
     """,
-    'depends': ['order_bridge'],
+    'depends': ['order_bridge', 'bi_analytics'],
     'data': [
         'security/merchant_store_security.xml',
         'security/ir.model.access.csv',
         'views/merchant_views.xml',
         'views/product_template_views.xml',
+        'views/sale_order_views.xml',
         'views/merchant_store_menu.xml',
     ],
     'license': 'LGPL-3',

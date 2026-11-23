@@ -22,4 +22,12 @@
         action="action_merchant_store_product_template"
         sequence="20"
         groups="merchant_store.group_merchant_store_user,base.group_system"/>
+
+    <menuitem
+        id="menu_merchant_store_order"
+        name="Pedidos"
+        parent="menu_merchant_store_root"
+        action="action_merchant_store_sale_order"
+        sequence="30"
+        groups="merchant_store.group_merchant_store_user,base.group_system"/>
 </odoo>
