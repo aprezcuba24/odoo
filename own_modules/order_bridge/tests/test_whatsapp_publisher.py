@@ -1,5 +1,8 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import os
+from unittest.mock import patch
+
 from odoo.tests.common import TransactionCase, tagged
 
 
@@ -134,3 +137,29 @@ class TestWhatsappPublisherProducts(TransactionCase):
             ids.index(p_b.id),
             'El producto con nombre "A" debe aparecer antes que el "B" dentro de la misma categoría',
         )
+
+    def test_store_url_with_company_slug(self):
+        """Rows include absolute store_url when the company has order_bridge_slug."""
+        self.company.order_bridge_slug = 'yymercado'
+        product = self._create_storable('WA store url product')
+        with patch.dict(
+            os.environ,
+            {'ORDER_BRIDGE_STORE_WEB_BASE_DOMAIN': 'example.test'},
+            clear=False,
+        ):
+            rows = self.env['product.product'].get_whatsapp_publisher_products()
+        by_id = {row['id']: row for row in rows}
+        self.assertIn(product.id, by_id)
+        self.assertEqual(
+            by_id[product.id]['store_url'],
+            f'https://yymercado.example.test/{product.id}',
+        )
+
+    def test_store_url_without_company_slug(self):
+        """Without slug, store_url is False so WhatsApp omits the link line."""
+        self.company.order_bridge_slug = False
+        product = self._create_storable('WA no slug product')
+        rows = self.env['product.product'].get_whatsapp_publisher_products()
+        by_id = {row['id']: row for row in rows}
+        self.assertIn(product.id, by_id)
+        self.assertFalse(by_id[product.id]['store_url'])

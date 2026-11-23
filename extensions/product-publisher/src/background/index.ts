@@ -61,7 +61,9 @@ function buildComposerPayload(
       imageMime: string | null
     } {
   const text =
-    item.type === 'product' ? buildProductPostText(item.name, item.price) : item.text
+    item.type === 'product'
+      ? buildProductPostText(item.name, item.price, item.storeUrl)
+      : item.text
   const imageBase64 = item.type === 'product' ? item.imageBase64 : null
   const imageMime = item.type === 'product' ? item.imageMime : null
 

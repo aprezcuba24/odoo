@@ -1,6 +1,6 @@
 # Publicador de productos
 
-Extensión Chrome/Chromium (Manifest V3) que recibe productos desde Odoo y los prepara en WhatsApp Web (nombre, precio e imagen). El nombre es genérico: el código de Facebook está en el repo pero no está activo.
+Extensión Chrome/Chromium (Manifest V3) que recibe productos desde Odoo y los prepara en WhatsApp Web (foto + nombre + precio + enlace de tienda si la compañía tiene slug). El caption no incluye nada más; el enlace se escribe con un carácter de ancho cero tras `://` para que WhatsApp no genere preview. El nombre del proyecto es genérico: el código de Facebook está en el repo pero no está activo.
 
 ## Requisitos
 

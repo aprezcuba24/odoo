@@ -5,6 +5,8 @@ export type ProductItem = {
   id: string
   name: string
   price: string
+  /** Public storefront URL; omitted or empty when the company has no slug. */
+  storeUrl?: string
   imageBase64: string | null
   imageMime: string | null
 }
@@ -26,6 +28,10 @@ export type PublishQueue = {
   readyIds: string[]
 }
 
+function isOptionalStoreUrl(value: unknown): boolean {
+  return value === undefined || typeof value === 'string'
+}
+
 function isProductItem(value: unknown): value is ProductItem {
   if (!value || typeof value !== 'object') return false
   const item = value as Record<string, unknown>
@@ -34,6 +40,7 @@ function isProductItem(value: unknown): value is ProductItem {
     typeof item.id === 'string' &&
     typeof item.name === 'string' &&
     typeof item.price === 'string' &&
+    isOptionalStoreUrl(item.storeUrl) &&
     (item.imageBase64 === null || typeof item.imageBase64 === 'string') &&
     (item.imageMime === null || typeof item.imageMime === 'string')
   )
