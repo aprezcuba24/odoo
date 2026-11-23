@@ -60,6 +60,7 @@ class TestMerchantStoreMerchant(TransactionCase):
         self.assertEqual(merchant.name, 'Comerciante Demo')
         self.assertEqual(merchant.description, 'Descripción de prueba')
         self.assertFalse(merchant.logo)
+        self.assertTrue(merchant.active)
         self.assertEqual(merchant.company_id, self.company_a)
 
     def test_company_isolation_search_and_browse(self):

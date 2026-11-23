@@ -12,6 +12,7 @@ class MerchantStoreMerchant(models.Model):
     name = fields.Char(required=True, index=True)
     description = fields.Text(string='Descripción')
     logo = fields.Image(string='Logo')
+    active = fields.Boolean(default=True)
     company_id = fields.Many2one(
         'res.company',
         string='Compañía',
@@ -20,3 +21,15 @@ class MerchantStoreMerchant(models.Model):
         index=True,
         default=lambda self: self.env.company,
     )
+
+    def _can_return_content(self, field_name=None, access_token=None):
+        """Allow public ``/web/image`` for logos of active merchants (same company)."""
+        if field_name not in ('logo', 'logo_128', 'logo_256', 'logo_512'):
+            return super()._can_return_content(field_name, access_token)
+        self.ensure_one()
+        rec = self.sudo()
+        if not rec.active or not rec.logo:
+            return False
+        if rec.company_id != self.env.company:
+            return False
+        return True

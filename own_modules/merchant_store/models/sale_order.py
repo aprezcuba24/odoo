@@ -297,6 +297,13 @@ class SaleOrder(models.Model):
                         product=product.display_name,
                     )
                 )
+            if not merchant.active:
+                raise UserError(
+                    _(
+                        'El comerciante %(merchant)s no está activo.',
+                        merchant=merchant.display_name,
+                    )
+                )
             if tmpl.company_id and tmpl.company_id != company:
                 raise UserError(
                     _(

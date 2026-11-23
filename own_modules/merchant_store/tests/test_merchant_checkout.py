@@ -136,6 +136,17 @@ class TestMerchantStoreCheckout(TransactionCase):
             ('company_id', '=', self.company_a.id),
         ]))
 
+    def test_checkout_rejects_inactive_merchant(self):
+        self.merchant_a.active = False
+        with self.assertRaises(UserError):
+            self._checkout([
+                {'product_id': self.merchant_product_a.product_variant_id.id, 'qty': 1},
+            ])
+        self.assertFalse(self.env['sale.order'].search([
+            ('client_checkout_id', '=', 'checkout-1'),
+            ('company_id', '=', self.company_a.id),
+        ]))
+
     def test_checkout_rejects_other_company_product(self):
         with self.assertRaises(UserError):
             self._checkout([
