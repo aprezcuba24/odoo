@@ -1,7 +1,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from collections import defaultdict
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.fields import Command
 
 from odoo.addons.order_bridge.utils.constant import ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS
 
@@ -15,6 +18,25 @@ class SaleOrder(models.Model):
         ondelete='restrict',
         index=True,
         check_company=True,
+    )
+    client_checkout_id = fields.Char(
+        string='Id. checkout cliente',
+        copy=False,
+        index=True,
+        help='Clave de idempotencia que agrupa las subórdenes de un mismo checkout de la app.',
+    )
+    order_bridge_order_id = fields.Many2one(
+        'sale.order',
+        string='Pedido Tienda Apk',
+        ondelete='set null',
+        index=True,
+        copy=False,
+        help='Pedido propio de Tienda Apk creado en el mismo checkout (opcional).',
+    )
+
+    _merchant_store_checkout_merchant_unique = models.Constraint(
+        'unique(company_id, client_checkout_id, merchant_id)',
+        'Ya existe una suborden para este comerciante en el mismo checkout.',
     )
 
     @api.model_create_multi
@@ -54,6 +76,85 @@ class SaleOrder(models.Model):
         if len(companies) == 1:
             vals['company_id'] = companies.id
 
+    @api.constrains('merchant_id', 'client_checkout_id', 'order_bridge_order_id')
+    def _merchant_store_check_checkout_fields(self):
+        for order in self:
+            if order.client_checkout_id and not order.merchant_id:
+                raise ValidationError(
+                    _('El id. de checkout solo aplica a subórdenes de comerciantes.')
+                )
+            if order.order_bridge_order_id and not order.merchant_id:
+                raise ValidationError(
+                    _('El enlace a Tienda Apk solo aplica a subórdenes de comerciantes.')
+                )
+            linked = order.order_bridge_order_id
+            if not linked:
+                continue
+            if linked.merchant_id:
+                raise ValidationError(
+                    _(
+                        'El pedido %(name)s es una suborden y no puede enlazarse '
+                        'como pedido de Tienda Apk.',
+                        name=linked.display_name,
+                    )
+                )
+            if linked.company_id != order.company_id:
+                raise ValidationError(
+                    _(
+                        'El pedido %(name)s pertenece a otra compañía.',
+                        name=linked.display_name,
+                    )
+                )
+            if linked.order_bridge_origin not in ('app', 'admin'):
+                raise ValidationError(
+                    _(
+                        'El pedido %(name)s no es un pedido de Tienda Apk.',
+                        name=linked.display_name,
+                    )
+                )
+
+    @api.constrains('client_checkout_id', 'partner_id', 'order_bridge_order_id', 'company_id')
+    def _merchant_store_check_checkout_consistency(self):
+        checkouts = {
+            (order.company_id.id, order.client_checkout_id)
+            for order in self
+            if order.client_checkout_id and order.merchant_id
+        }
+        if not checkouts:
+            return
+        Order = self.env['sale.order']
+        for company_id, checkout_id in checkouts:
+            siblings = Order.search([
+                ('company_id', '=', company_id),
+                ('client_checkout_id', '=', checkout_id),
+                ('merchant_id', '!=', False),
+            ])
+            partners = siblings.mapped('partner_id')
+            if len(partners) > 1:
+                raise ValidationError(
+                    _(
+                        'Las subórdenes del checkout %(checkout)s deben compartir el mismo cliente.',
+                        checkout=checkout_id,
+                    )
+                )
+            linked = siblings.mapped('order_bridge_order_id')
+            if len(linked) > 1:
+                raise ValidationError(
+                    _(
+                        'Las subórdenes del checkout %(checkout)s deben enlazar '
+                        'el mismo pedido de Tienda Apk (o ninguno).',
+                        checkout=checkout_id,
+                    )
+                )
+            if linked and any(not order.order_bridge_order_id for order in siblings):
+                raise ValidationError(
+                    _(
+                        'Las subórdenes del checkout %(checkout)s deben enlazar '
+                        'el mismo pedido de Tienda Apk (o ninguno).',
+                        checkout=checkout_id,
+                    )
+                )
+
     def _order_bridge_check_store_state_transition(self, old_ss, new_ss):
         self.ensure_one()
         if old_ss == new_ss:
@@ -87,6 +188,131 @@ class SaleOrder(models.Model):
                 )
             )
         return super().action_confirm()
+
+    @api.model
+    def merchant_store_checkout(
+        self,
+        company,
+        partner,
+        client_checkout_id,
+        lines,
+        order_bridge_order=None,
+    ):
+        """Split merchant lines into one draft suborder per merchant (idempotent).
+
+        ``lines`` is a sequence of dicts with ``product_id`` and ``qty``.
+        If suborders for ``client_checkout_id`` already exist in ``company``, they
+        are returned unchanged (first call wins).
+        """
+        company.ensure_one()
+        partner.ensure_one()
+        checkout_id = (client_checkout_id or '').strip()
+        if not checkout_id:
+            raise UserError(_('El id. de checkout es obligatorio.'))
+        if not lines:
+            raise UserError(_('El checkout no tiene líneas.'))
+
+        existing = self.search([
+            ('company_id', '=', company.id),
+            ('client_checkout_id', '=', checkout_id),
+            ('merchant_id', '!=', False),
+        ])
+        if existing:
+            return existing
+
+        linked = order_bridge_order
+        if linked is not None and linked:
+            linked.ensure_one()
+            self._merchant_store_validate_linked_order(company, linked)
+        else:
+            linked = self.browse()
+
+        by_merchant = self._merchant_store_group_checkout_lines(company, lines)
+        Order = self.with_company(company)
+        created = Order.browse()
+        for merchant, merchant_lines in by_merchant.items():
+            vals = {
+                'partner_id': partner.id,
+                'merchant_id': merchant.id,
+                'company_id': company.id,
+                'client_checkout_id': checkout_id,
+                'order_line': [
+                    Command.create({
+                        'product_id': product.id,
+                        'product_uom_qty': qty,
+                    })
+                    for product, qty in merchant_lines
+                ],
+            }
+            if linked:
+                vals['order_bridge_order_id'] = linked.id
+            created |= Order.create(vals)
+        return created
+
+    @api.model
+    def _merchant_store_validate_linked_order(self, company, linked):
+        if linked.merchant_id:
+            raise UserError(
+                _(
+                    'El pedido %(name)s es una suborden y no puede enlazarse '
+                    'como pedido de Tienda Apk.',
+                    name=linked.display_name,
+                )
+            )
+        if linked.company_id != company:
+            raise UserError(
+                _(
+                    'El pedido %(name)s pertenece a otra compañía.',
+                    name=linked.display_name,
+                )
+            )
+        if linked.order_bridge_origin not in ('app', 'admin'):
+            raise UserError(
+                _(
+                    'El pedido %(name)s no es un pedido de Tienda Apk.',
+                    name=linked.display_name,
+                )
+            )
+
+    @api.model
+    def _merchant_store_group_checkout_lines(self, company, lines):
+        Product = self.env['product.product'].sudo()
+        by_merchant = defaultdict(list)
+        for line in lines:
+            product_id = line.get('product_id') if isinstance(line, dict) else None
+            qty = line.get('qty') if isinstance(line, dict) else None
+            if not product_id or not qty:
+                raise UserError(_('Cada línea del checkout necesita producto y cantidad.'))
+            product = Product.browse(product_id).exists()
+            if not product:
+                raise UserError(
+                    _('El producto %(product_id)s no existe.', product_id=product_id)
+                )
+            tmpl = product.product_tmpl_id
+            merchant = tmpl.merchant_id
+            if not merchant:
+                raise UserError(
+                    _(
+                        'El producto %(product)s no pertenece a un comerciante.',
+                        product=product.display_name,
+                    )
+                )
+            if tmpl.company_id and tmpl.company_id != company:
+                raise UserError(
+                    _(
+                        'El producto %(product)s pertenece a otra compañía.',
+                        product=product.display_name,
+                    )
+                )
+            if merchant.company_id != company:
+                raise UserError(
+                    _(
+                        'El producto %(product)s pertenece a otra compañía.',
+                        product=product.display_name,
+                    )
+                )
+            by_merchant[merchant].append((product, qty))
+        return by_merchant
 
 
 class SaleOrderLine(models.Model):

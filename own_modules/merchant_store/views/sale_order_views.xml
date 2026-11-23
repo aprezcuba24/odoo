@@ -10,6 +10,8 @@
                 <field name="date_order"/>
                 <field name="partner_id"/>
                 <field name="merchant_id"/>
+                <field name="client_checkout_id" optional="show" readonly="1"/>
+                <field name="order_bridge_order_id" optional="hide" readonly="1"/>
                 <field
                     name="order_bridge_store_state"
                     widget="badge"
@@ -84,6 +86,8 @@
                             <field name="date_order"/>
                         </group>
                         <group>
+                            <field name="client_checkout_id" readonly="1"/>
+                            <field name="order_bridge_order_id" readonly="1"/>
                             <field name="company_id" groups="base.group_multi_company" readonly="1"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="pricelist_id" invisible="1"/>
