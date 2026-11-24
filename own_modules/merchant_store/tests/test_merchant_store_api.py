@@ -145,6 +145,34 @@ class TestMerchantStoreApi(HttpCase):
         names_b = {item['name'] for item in json.loads(res_b.text)['items']}
         self.assertEqual(names_b, {'API Merchant B'})
 
+    def test_merchant_detail_own_archived_and_other_company(self):
+        key_a, _device_a = self._register_device(self.company_a)
+        headers_a = self._auth_headers(key_a)
+
+        res_ok = self.url_open(
+            f'/api/merchant_store/merchants/{self.merchant_a.id}',
+            headers=headers_a,
+            timeout=60,
+        )
+        self.assertEqual(res_ok.status_code, 200, res_ok.text)
+        payload = json.loads(res_ok.text)
+        self.assertEqual(payload['id'], self.merchant_a.id)
+        self.assertEqual(payload['name'], 'API Merchant A')
+
+        res_archived = self.url_open(
+            f'/api/merchant_store/merchants/{self.merchant_a_archived.id}',
+            headers=headers_a,
+            timeout=60,
+        )
+        self.assertEqual(res_archived.status_code, 404, res_archived.text)
+
+        res_other = self.url_open(
+            f'/api/merchant_store/merchants/{self.merchant_b.id}',
+            headers=headers_a,
+            timeout=60,
+        )
+        self.assertEqual(res_other.status_code, 404, res_other.text)
+
     def test_products_exclude_archived_merchant_and_other_company(self):
         key_a, _device = self._register_device(self.company_a)
         res = self.url_open(

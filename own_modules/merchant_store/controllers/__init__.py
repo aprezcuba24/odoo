@@ -2,5 +2,6 @@
 
 from . import checkouts
 from . import merchants
+from . import openapi
 from . import orders
 from . import products

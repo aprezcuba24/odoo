@@ -5,4 +5,5 @@ from . import test_merchant_checkout
 from . import test_merchant_order
 from . import test_merchant_product
 from . import test_merchant_store_api
+from . import test_merchant_store_openapi
 from . import test_merchant_store_scaffold
