@@ -82,6 +82,73 @@
         "title": "CheckoutLineIn",
         "type": "object"
       },
+      "DeliveryAddressOut": {
+        "additionalProperties": false,
+        "properties": {
+          "municipality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Id"
+          },
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Name"
+          },
+          "neighborhood_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Id"
+          },
+          "neighborhood_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Name"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "street": {
+            "title": "Street",
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "state"
+        ],
+        "title": "DeliveryAddressOut",
+        "type": "object"
+      },
       "MerchantOrderDetailResponse": {
         "additionalProperties": false,
         "properties": {
@@ -140,6 +207,10 @@
             "title": "Merchant Id",
             "type": "integer"
           },
+          "merchant_name": {
+            "title": "Merchant Name",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -176,6 +247,7 @@
           "id",
           "name",
           "merchant_id",
+          "merchant_name",
           "state",
           "store_state",
           "amount_total",
@@ -293,6 +365,10 @@
             "title": "Merchant Id",
             "type": "integer"
           },
+          "merchant_name": {
+            "title": "Merchant Name",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -329,6 +405,7 @@
           "id",
           "name",
           "merchant_id",
+          "merchant_name",
           "state",
           "store_state",
           "amount_total"
@@ -542,6 +619,112 @@
         "title": "MerchantProductsPageResponse",
         "type": "object"
       },
+      "MerchantPurchaseRow": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "client_checkout_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Client Checkout Id"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SaleOrderSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "purchase_key": {
+            "title": "Purchase Key",
+            "type": "string"
+          },
+          "suborders": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantOrderSummary"
+            },
+            "title": "Suborders",
+            "type": "array"
+          }
+        },
+        "required": [
+          "purchase_key",
+          "amount_total",
+          "suborders"
+        ],
+        "title": "MerchantPurchaseRow",
+        "type": "object"
+      },
+      "MerchantPurchasesPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantPurchaseRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "MerchantPurchasesPageResponse",
+        "type": "object"
+      },
       "MerchantRow": {
         "additionalProperties": false,
         "properties": {
@@ -636,6 +819,158 @@
           "message"
         ],
         "title": "MessageErrorResponse",
+        "type": "object"
+      },
+      "SaleOrderSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "delivery_address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAddressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "delivery_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pending",
+                  "started",
+                  "partial",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Delivery Status"
+          },
+          "device_validated": {
+            "title": "Device Validated",
+            "type": "boolean"
+          },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effective Date"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Ref"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered",
+              "canceled"
+            ],
+            "title": "Store State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "origin",
+          "state",
+          "amount_total",
+          "device_validated",
+          "store_state"
+        ],
+        "title": "SaleOrderSummary",
         "type": "object"
       },
       "SimpleErrorResponse": {
@@ -747,7 +1082,7 @@
   "info": {
     "description": "API REST JSON para productos y sub\u00f3rdenes de comerciantes externos bajo `/api/merchant_store/`. Autenticaci\u00f3n con la clave de dispositivo de Tienda Apk (Bearer). La compa\u00f1\u00eda es la del dispositivo; estas rutas no leen `X-Company-Slug`.",
     "title": "API Comercios",
-    "version": "19.0.1.6.0"
+    "version": "19.0.1.7.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1220,6 +1555,83 @@
           }
         ],
         "summary": "Detalle de producto de comerciante"
+      }
+    },
+    "/api/merchant_store/purchases": {
+      "get": {
+        "description": "Historial \u00fanico para la app: agrupa el pedido de Tienda Apk con sus sub\u00f3rdenes de comerciantes, incluye pedidos solo de tienda (`suborders: []`) y compras solo de comerciantes (`order: null`, agrupadas por `client_checkout_id`). No modifica las rutas existentes de `order_bridge` ni `/api/merchant_store/orders`.",
+        "operationId": "merchant_store_purchases_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantPurchasesPageResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Par\u00e1metros de consulta no v\u00e1lidos"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Listar compras agrupadas del cliente (pedido propio + sub\u00f3rdenes)"
       }
     }
   },

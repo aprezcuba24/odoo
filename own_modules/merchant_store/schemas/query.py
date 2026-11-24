@@ -68,3 +68,14 @@ class OrdersListQuery(BaseModel):
     @classmethod
     def from_request_params(cls, params: Any) -> OrdersListQuery:
         return cls.model_validate(_params_to_dict(params))
+
+
+class PurchasesListQuery(BaseModel):
+    model_config = ConfigDict(extra='ignore')
+
+    limit: int = Field(default=50, ge=1, le=200)
+    offset: int = Field(default=0, ge=0)
+
+    @classmethod
+    def from_request_params(cls, params: Any) -> PurchasesListQuery:
+        return cls.model_validate(_params_to_dict(params))

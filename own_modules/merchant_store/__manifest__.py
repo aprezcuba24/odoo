@@ -2,7 +2,7 @@
 
 {
     'name': 'Comercios',
-    'version': '19.0.1.6.0',
+    'version': '19.0.1.7.0',
     'category': 'Ventas/Ventas',
     'summary': 'Venta de productos de comerciantes externos, aislada de Tienda Apk.',
     'description': """

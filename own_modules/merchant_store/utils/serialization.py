@@ -3,6 +3,7 @@
 from odoo.addons.order_bridge.utils.serialization import (
     _order_bridge_public_base_url,
     _product_image_urls,
+    sale_order_to_summary as bridge_sale_order_to_summary,
 )
 
 from ..schemas.responses import (
@@ -14,6 +15,8 @@ from ..schemas.responses import (
     MerchantProductDetailResponse,
     MerchantProductListRow,
     MerchantProductsPageResponse,
+    MerchantPurchaseRow,
+    MerchantPurchasesPageResponse,
     MerchantRow,
     MerchantsListResponse,
 )
@@ -96,6 +99,7 @@ def sale_order_to_summary(order):
         id=order.id,
         name=order.name,
         merchant_id=order.merchant_id.id,
+        merchant_name=order.merchant_id.name,
         client_checkout_id=order.client_checkout_id,
         order_bridge_order_id=order.order_bridge_order_id.id if order.order_bridge_order_id else None,
         state=order.state,
@@ -128,4 +132,32 @@ def checkout_created_response(orders, client_checkout_id):
     return CheckoutCreatedResponse(
         client_checkout_id=client_checkout_id,
         orders=[sale_order_to_detail_response(o) for o in orders],
+    )
+
+
+def purchase_row_response(purchase_key, client_checkout_id, date_order, own_order, suborders):
+    own_total = float(own_order.amount_total) if own_order else 0.0
+    sub_total = sum(float(sub.amount_total) for sub in suborders)
+    currency = None
+    if own_order and own_order.currency_id:
+        currency = own_order.currency_id.name
+    elif suborders and suborders[0].currency_id:
+        currency = suborders[0].currency_id.name
+    return MerchantPurchaseRow(
+        purchase_key=purchase_key,
+        client_checkout_id=client_checkout_id,
+        date_order=date_order.isoformat() if date_order else None,
+        amount_total=own_total + sub_total,
+        currency=currency,
+        order=bridge_sale_order_to_summary(own_order) if own_order else None,
+        suborders=[sale_order_to_summary(sub) for sub in suborders],
+    )
+
+
+def purchases_page_response(rows, limit, offset, total):
+    return MerchantPurchasesPageResponse(
+        items=rows,
+        limit=limit,
+        offset=offset,
+        total=total,
     )

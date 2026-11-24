@@ -331,6 +331,7 @@ class TestMerchantStoreApi(HttpCase):
         body = json.loads(detail.text)
         self.assertEqual(body['store_state'], 'reviewing')
         self.assertEqual(body['merchant_id'], self.merchant_a.id)
+        self.assertEqual(body['merchant_name'], self.merchant_a.name)
 
         key_other, _ = self._register_device(self.company_a, phone='60999888')
         foreign = self.url_open(
@@ -379,3 +380,118 @@ class TestMerchantStoreApi(HttpCase):
             timeout=60,
         )
         self.assertEqual(res.status_code, 404, res.text)
+
+    def test_purchases_grouping_mixed_merchant_only_store_only_and_isolation(self):
+        key_a, device_a = self._register_device(self.company_a)
+        auth_json = self._auth_headers(key_a, content_type=True)
+        auth = self._auth_headers(key_a)
+
+        # 1) Compra solo tienda (sin subórdenes)
+        store_only = self.env['sale.order'].with_company(self.company_a).create({
+            'partner_id': device_a.partner_id.id,
+            'company_id': self.company_a.id,
+            'order_bridge_origin': 'app',
+            'order_line': [Command.create({
+                'product_id': self.own_product_a.product_variant_id.id,
+                'product_uom_qty': 1.0,
+            })],
+        })
+
+        # 2) Compra mixta: pedido propio + subórdenes de dos comercios
+        mixed_own = self.env['sale.order'].with_company(self.company_a).create({
+            'partner_id': device_a.partner_id.id,
+            'company_id': self.company_a.id,
+            'order_bridge_origin': 'app',
+            'order_line': [Command.create({
+                'product_id': self.own_product_a.product_variant_id.id,
+                'product_uom_qty': 1.0,
+            })],
+        })
+        mixed_checkout_id = str(uuid.uuid4())
+        mixed_res = self.url_open(
+            '/api/merchant_store/checkouts',
+            data=json.dumps({
+                'client_checkout_id': mixed_checkout_id,
+                'order_bridge_order_id': mixed_own.id,
+                'lines': [
+                    {'product_id': self.product_a.product_variant_id.id, 'qty': 1},
+                    {'product_id': self.product_a2.product_variant_id.id, 'qty': 2},
+                ],
+            }),
+            headers=auth_json,
+            timeout=60,
+        )
+        self.assertEqual(mixed_res.status_code, 200, mixed_res.text)
+        mixed_subs = json.loads(mixed_res.text)['orders']
+        self.assertEqual(
+            {s['merchant_name'] for s in mixed_subs},
+            {self.merchant_a.name, self.merchant_a2.name},
+        )
+
+        # 3) Compra solo comercio (sin pedido propio)
+        merchant_only_checkout_id = str(uuid.uuid4())
+        only_m_res = self.url_open(
+            '/api/merchant_store/checkouts',
+            data=json.dumps({
+                'client_checkout_id': merchant_only_checkout_id,
+                'lines': [
+                    {'product_id': self.product_a.product_variant_id.id, 'qty': 1},
+                ],
+            }),
+            headers=auth_json,
+            timeout=60,
+        )
+        self.assertEqual(only_m_res.status_code, 200, only_m_res.text)
+
+        purchases_res = self.url_open(
+            '/api/merchant_store/purchases',
+            headers=auth,
+            timeout=60,
+        )
+        self.assertEqual(purchases_res.status_code, 200, purchases_res.text)
+        data = json.loads(purchases_res.text)
+        self.assertEqual(data['total'], 3)
+        by_key = {row['purchase_key']: row for row in data['items']}
+
+        # Fila mixta
+        mixed_row = by_key[f'order:{mixed_own.id}']
+        self.assertEqual(mixed_row['client_checkout_id'], mixed_checkout_id)
+        self.assertEqual(mixed_row['order']['id'], mixed_own.id)
+        self.assertEqual(len(mixed_row['suborders']), 2)
+        self.assertEqual(
+            {s['merchant_name'] for s in mixed_row['suborders']},
+            {self.merchant_a.name, self.merchant_a2.name},
+        )
+        expected_mixed_total = float(mixed_own.amount_total) + sum(
+            float(s['amount_total']) for s in mixed_row['suborders']
+        )
+        self.assertAlmostEqual(mixed_row['amount_total'], expected_mixed_total, places=2)
+
+        # Fila solo comercio
+        only_m_row = by_key[f'checkout:{merchant_only_checkout_id}']
+        self.assertIsNone(only_m_row['order'])
+        self.assertEqual(only_m_row['client_checkout_id'], merchant_only_checkout_id)
+        self.assertEqual(len(only_m_row['suborders']), 1)
+        self.assertEqual(only_m_row['suborders'][0]['merchant_name'], self.merchant_a.name)
+        self.assertAlmostEqual(
+            only_m_row['amount_total'],
+            only_m_row['suborders'][0]['amount_total'],
+            places=2,
+        )
+
+        # Fila solo tienda
+        store_row = by_key[f'order:{store_only.id}']
+        self.assertIsNone(store_row['client_checkout_id'])
+        self.assertEqual(store_row['order']['id'], store_only.id)
+        self.assertEqual(store_row['suborders'], [])
+        self.assertAlmostEqual(store_row['amount_total'], float(store_only.amount_total), places=2)
+
+        # Otro partner de la misma compañía no ve estas compras
+        key_other, _ = self._register_device(self.company_a, phone='60777666')
+        other_res = self.url_open(
+            '/api/merchant_store/purchases',
+            headers=self._auth_headers(key_other),
+            timeout=60,
+        )
+        self.assertEqual(other_res.status_code, 200, other_res.text)
+        self.assertEqual(json.loads(other_res.text)['total'], 0)

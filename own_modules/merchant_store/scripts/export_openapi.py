@@ -310,13 +310,46 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
                 },
             },
         },
+        '/api/merchant_store/purchases': {
+            'get': {
+                'summary': 'Listar compras agrupadas del cliente (pedido propio + subórdenes)',
+                'description': (
+                    'Historial único para la app: agrupa el pedido de Tienda Apk con sus '
+                    'subórdenes de comerciantes, incluye pedidos solo de tienda (`suborders: []`) '
+                    'y compras solo de comerciantes (`order: null`, agrupadas por `client_checkout_id`). '
+                    'No modifica las rutas existentes de `order_bridge` ni `/api/merchant_store/orders`.'
+                ),
+                'operationId': 'merchant_store_purchases_list',
+                'security': [{'deviceBearer': []}],
+                'parameters': [
+                    {
+                        'name': 'limit',
+                        'in': 'query',
+                        'required': False,
+                        'schema': {'type': 'integer', 'minimum': 1, 'maximum': 200, 'default': 50},
+                    },
+                    {
+                        'name': 'offset',
+                        'in': 'query',
+                        'required': False,
+                        'schema': {'type': 'integer', 'minimum': 0, 'default': 0},
+                    },
+                ],
+                'responses': {
+                    '200': _ok('MerchantPurchasesPageResponse'),
+                    **val_400_query,
+                    **unauthorized,
+                    **not_found,
+                },
+            },
+        },
     }
 
     return {
         'openapi': '3.1.0',
         'info': {
             'title': 'API Comercios',
-            'version': '19.0.1.6.0',
+            'version': '19.0.1.7.0',
             'description': (
                 'API REST JSON para productos y subórdenes de comerciantes externos bajo '
                 '`/api/merchant_store/`. Autenticación con la clave de dispositivo de Tienda Apk '

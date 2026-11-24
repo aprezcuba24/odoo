@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from odoo.addons.order_bridge.schemas.responses import SaleOrderSummary
 from odoo.addons.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID
 
 
@@ -92,6 +93,7 @@ class MerchantOrderSummary(BaseModel):
     id: int
     name: str
     merchant_id: int
+    merchant_name: str
     client_checkout_id: str | None = None
     order_bridge_order_id: int | None = None
     state: str
@@ -138,6 +140,32 @@ class CheckoutCreatedResponse(BaseModel):
 
     client_checkout_id: str
     orders: list[MerchantOrderDetailResponse]
+
+
+class MerchantPurchaseRow(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    purchase_key: str
+    client_checkout_id: str | None = None
+    date_order: str | None = None
+    amount_total: float
+    currency: str | None = None
+    order: SaleOrderSummary | None = None
+    suborders: list[MerchantOrderSummary]
+
+    @field_validator('client_checkout_id', 'currency', mode='before')
+    @classmethod
+    def purchase_falsy_to_none(cls, v: Any) -> str | None:
+        return _odoo_falsy_str(v)
+
+
+class MerchantPurchasesPageResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    items: list[MerchantPurchaseRow]
+    limit: int
+    offset: int
+    total: int
 
 
 class SimpleErrorResponse(BaseModel):
