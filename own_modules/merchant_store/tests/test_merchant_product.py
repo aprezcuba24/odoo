@@ -176,3 +176,47 @@ class TestMerchantStoreProduct(TransactionCase):
             menu.action,
             self.env.ref('merchant_store.action_merchant_store_product_template'),
         )
+
+    def test_stock_actions_exclude_merchant_products(self):
+        stock_tmpl_action = self.env.ref('stock.product_template_action_product')
+        stock_variant_action = self.env.ref('stock.stock_product_normal_action')
+
+        tmpl_domain = _action_domain(stock_tmpl_action)
+        variant_domain = _action_domain(stock_variant_action)
+        self.assertIn(('merchant_id', '=', False), tmpl_domain)
+        self.assertIn(('product_tmpl_id.merchant_id', '=', False), variant_domain)
+
+        merchant_product = self.env['product.template'].with_company(self.company_a).create({
+            'name': 'Solo Comercios Stock',
+            'merchant_id': self.merchant_a.id,
+        })
+        own = self.env['product.template'].with_company(self.company_a).create({
+            'name': 'Propio Stock',
+            'company_id': self.company_a.id,
+        })
+
+        ProductTemplate = self.env['product.template'].with_company(self.company_a)
+        ProductProduct = self.env['product.product'].with_company(self.company_a)
+        self.assertTrue(ProductTemplate.search(tmpl_domain + [('id', '=', own.id)]))
+        self.assertFalse(
+            ProductTemplate.search(tmpl_domain + [('id', '=', merchant_product.id)])
+        )
+        self.assertTrue(
+            ProductProduct.search(variant_domain + [('id', '=', own.product_variant_id.id)])
+        )
+        self.assertFalse(
+            ProductProduct.search(
+                variant_domain + [('id', '=', merchant_product.product_variant_id.id)]
+            )
+        )
+
+    def test_merchant_store_product_search_view_filters_by_merchant(self):
+        action = self.env.ref('merchant_store.action_merchant_store_product_template')
+        search_view = self.env.ref(
+            'merchant_store.view_merchant_store_product_template_search'
+        )
+        self.assertEqual(action.search_view_id, search_view)
+        arch = search_view.arch_db or ''
+        self.assertIn('name="merchant_id"', arch)
+        self.assertIn('group_by', arch)
+        self.assertIn('<searchpanel>', arch)
