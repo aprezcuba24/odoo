@@ -2,7 +2,7 @@
 
 {
     'name': 'Inteligencia de Negocio',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Ventas/Informes',
     'summary': 'Reportes de inteligencia de negocio.',
     'description': """

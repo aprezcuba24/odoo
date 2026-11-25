@@ -31,6 +31,7 @@ class StatusResponse(BaseModel):
     phone: str | None = None
     partner_name: str
     partner_id: int
+    early_adopter: bool = False
 
     @field_validator('phone', mode='before')
     @classmethod

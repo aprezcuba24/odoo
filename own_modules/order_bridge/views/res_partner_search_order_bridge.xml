@@ -15,6 +15,11 @@
                     string="Con deuda"
                     domain="[('order_bridge_amount_due', '&gt;', 0)]"
                 />
+                <filter
+                    name="filter_order_bridge_early_adopter"
+                    string="Acceso anticipado"
+                    domain="[('order_bridge_early_adopter', '=', True)]"
+                />
                 <separator/>
             </xpath>
             <xpath expr="//group[@name='group_by']" position="inside">

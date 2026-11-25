@@ -70,6 +70,10 @@ class BiProductSaleReport(models.Model):
             )
         return SQL("'sale'")
 
+    def _sale_order_sql_extra(self) -> SQL:
+        """Extra WHERE predicates on sale_order alias ``s`` (overridable)."""
+        return SQL('TRUE')
+
     def _sale_order_query(self) -> SQL:
         # Use net delivered qty when stock moves exist; keep ordered qty for
         # confirmed lines not yet delivered. Exclude fully returned lines
@@ -116,6 +120,7 @@ class BiProductSaleReport(models.Model):
                 WHERE s.state = 'sale'
                   AND l.display_type IS NULL
                   AND l.product_id IS NOT NULL
+                  AND (%s)
                   AND NOT (
                       l.qty_delivered = 0
                       AND EXISTS (
@@ -128,6 +133,7 @@ class BiProductSaleReport(models.Model):
                   )
             """,
             self._sale_origin_sql(),
+            self._sale_order_sql_extra(),
         )
 
     def _pos_order_query(self) -> SQL:

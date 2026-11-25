@@ -5,4 +5,10 @@
         <field name="code">payment_gateway</field>
         <field name="menu_xmlids">payment_gateway.menu_payment_gateway_stripe_account</field>
     </record>
+
+    <record id="optional_app_merchant_store" model="company.optional.app">
+        <field name="name">Comercios</field>
+        <field name="code">merchant_store</field>
+        <field name="menu_xmlids">merchant_store.menu_merchant_store_root</field>
+    </record>
 </odoo>

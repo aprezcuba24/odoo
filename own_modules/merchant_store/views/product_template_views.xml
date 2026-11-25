@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_merchant_store_product_template_list" model="ir.ui.view">
+        <field name="name">product.template.list.merchant.store</field>
+        <field name="model">product.template</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <list string="Productos del comerciante">
+                <field name="name"/>
+                <field name="list_price"/>
+                <field name="merchant_id"/>
+                <field name="active" column_invisible="True"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_merchant_store_product_template_form" model="ir.ui.view">
+        <field name="name">product.template.form.merchant.store</field>
+        <field name="model">product.template</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <form string="Producto del comerciante">
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Nombre del producto"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="merchant_id" required="1"/>
+                            <field name="list_price"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_merchant_store_product_template_search" model="ir.ui.view">
+        <field name="name">product.template.search.merchant.store</field>
+        <field name="model">product.template</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <search string="Productos del comerciante">
+                <field name="name"/>
+                <field name="merchant_id"/>
+                <filter name="inactive" string="Archivados" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_by_merchant" string="Comerciante" context="{'group_by': 'merchant_id'}"/>
+                </group>
+                <searchpanel>
+                    <field name="merchant_id" icon="fa-store" string="Comerciante" enable_counters="1"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_merchant_store_product_template" model="ir.actions.act_window">
+        <field name="name">Productos</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_merchant_store_product_template_search"/>
+        <field name="domain">[('merchant_id', '!=', False)]</field>
+        <field name="context">{
+            'default_sale_ok': True,
+            'default_purchase_ok': False,
+            'default_order_bridge_visible': False,
+            'default_available_in_pos': False,
+        }</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_merchant_store_product_template_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_merchant_store_product_template_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Cree el primer producto de un comerciante.
+            </p>
+        </field>
+    </record>
+
+    <!-- Exclude merchant products from business product menus -->
+    <record id="sale.product_template_action" model="ir.actions.act_window">
+        <field name="domain">[('merchant_id', '=', False)]</field>
+    </record>
+
+    <record id="product.product_normal_action_sell" model="ir.actions.act_window">
+        <field name="domain">[('product_tmpl_id.merchant_id', '=', False)]</field>
+    </record>
+
+    <record id="point_of_sale.product_template_action_pos_product" model="ir.actions.act_window">
+        <field name="domain">[('merchant_id', '=', False)]</field>
+    </record>
+
+    <record id="stock.product_template_action_product" model="ir.actions.act_window">
+        <field name="domain">[('merchant_id', '=', False)]</field>
+    </record>
+
+    <record id="stock.stock_product_normal_action" model="ir.actions.act_window">
+        <field name="domain">[('product_tmpl_id.merchant_id', '=', False)]</field>
+    </record>
+</odoo>

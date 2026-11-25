@@ -2,7 +2,7 @@
 
 {
     'name': 'Company Onboarding',
-    'version': '19.0.1.4.1',
+    'version': '19.0.1.4.3',
     'author': 'Own',
     'category': 'Hidden',
     'summary': 'Self-service signup: cada usuario crea su propia compañía (multi-company en una BD).',

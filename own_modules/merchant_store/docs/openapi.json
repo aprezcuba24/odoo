@@ -1,0 +1,1644 @@
+{
+  "components": {
+    "schemas": {
+      "CheckoutCreateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "client_checkout_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Client Checkout Id",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CheckoutLineIn"
+            },
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "order_bridge_order_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Bridge Order Id"
+          }
+        },
+        "required": [
+          "client_checkout_id",
+          "lines"
+        ],
+        "title": "CheckoutCreateBody",
+        "type": "object"
+      },
+      "CheckoutCreatedResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "client_checkout_id": {
+            "title": "Client Checkout Id",
+            "type": "string"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantOrderDetailResponse"
+            },
+            "title": "Orders",
+            "type": "array"
+          }
+        },
+        "required": [
+          "client_checkout_id",
+          "orders"
+        ],
+        "title": "CheckoutCreatedResponse",
+        "type": "object"
+      },
+      "CheckoutLineIn": {
+        "additionalProperties": false,
+        "properties": {
+          "product_id": {
+            "exclusiveMinimum": 0,
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "qty": {
+            "exclusiveMinimum": 0,
+            "title": "Qty",
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "qty"
+        ],
+        "title": "CheckoutLineIn",
+        "type": "object"
+      },
+      "DeliveryAddressOut": {
+        "additionalProperties": false,
+        "properties": {
+          "municipality_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Id"
+          },
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Municipality Name"
+          },
+          "neighborhood_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Id"
+          },
+          "neighborhood_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Neighborhood Name"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "street": {
+            "title": "Street",
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "state"
+        ],
+        "title": "DeliveryAddressOut",
+        "type": "object"
+      },
+      "MerchantOrderDetailResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "client_checkout_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Client Checkout Id"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantOrderLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "merchant_id": {
+            "title": "Merchant Id",
+            "type": "integer"
+          },
+          "merchant_name": {
+            "title": "Merchant Name",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_bridge_order_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Bridge Order Id"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered",
+              "canceled"
+            ],
+            "title": "Store State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "merchant_id",
+          "merchant_name",
+          "state",
+          "store_state",
+          "amount_total",
+          "lines"
+        ],
+        "title": "MerchantOrderDetailResponse",
+        "type": "object"
+      },
+      "MerchantOrderLineOut": {
+        "additionalProperties": false,
+        "properties": {
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_subtotal": {
+            "title": "Price Subtotal",
+            "type": "number"
+          },
+          "price_unit": {
+            "title": "Price Unit",
+            "type": "number"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "name",
+          "qty",
+          "price_unit",
+          "price_subtotal"
+        ],
+        "title": "MerchantOrderLineOut",
+        "type": "object"
+      },
+      "MerchantOrderSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "client_checkout_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Client Checkout Id"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "merchant_id": {
+            "title": "Merchant Id",
+            "type": "integer"
+          },
+          "merchant_name": {
+            "title": "Merchant Name",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_bridge_order_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Bridge Order Id"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered",
+              "canceled"
+            ],
+            "title": "Store State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "merchant_id",
+          "merchant_name",
+          "state",
+          "store_state",
+          "amount_total"
+        ],
+        "title": "MerchantOrderSummary",
+        "type": "object"
+      },
+      "MerchantOrdersPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantOrderSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "MerchantOrdersPageResponse",
+        "type": "object"
+      },
+      "MerchantProductDetailResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "description_sale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description Sale"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
+          },
+          "list_price": {
+            "title": "List Price",
+            "type": "number"
+          },
+          "merchant_id": {
+            "title": "Merchant Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "uom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Uom Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "list_price",
+          "merchant_id"
+        ],
+        "title": "MerchantProductDetailResponse",
+        "type": "object"
+      },
+      "MerchantProductListRow": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "image_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Thumbnail Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Image Url"
+          },
+          "list_price": {
+            "title": "List Price",
+            "type": "number"
+          },
+          "merchant_id": {
+            "title": "Merchant Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "uom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Uom Name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "list_price",
+          "merchant_id"
+        ],
+        "title": "MerchantProductListRow",
+        "type": "object"
+      },
+      "MerchantProductsPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantProductListRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "MerchantProductsPageResponse",
+        "type": "object"
+      },
+      "MerchantPurchaseRow": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "client_checkout_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Client Checkout Id"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SaleOrderSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "purchase_key": {
+            "title": "Purchase Key",
+            "type": "string"
+          },
+          "suborders": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantOrderSummary"
+            },
+            "title": "Suborders",
+            "type": "array"
+          }
+        },
+        "required": [
+          "purchase_key",
+          "amount_total",
+          "suborders"
+        ],
+        "title": "MerchantPurchaseRow",
+        "type": "object"
+      },
+      "MerchantPurchasesPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantPurchaseRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "MerchantPurchasesPageResponse",
+        "type": "object"
+      },
+      "MerchantRow": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "logo_thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Logo Thumbnail Url"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Logo Url"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "MerchantRow",
+        "type": "object"
+      },
+      "MerchantsListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MerchantRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "MerchantsListResponse",
+        "type": "object"
+      },
+      "MessageErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "MessageErrorResponse",
+        "type": "object"
+      },
+      "SaleOrderSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_total": {
+            "title": "Amount Total",
+            "type": "number"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "date_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date Order"
+          },
+          "delivery_address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAddressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "delivery_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pending",
+                  "started",
+                  "partial",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Delivery Status"
+          },
+          "device_validated": {
+            "title": "Device Validated",
+            "type": "boolean"
+          },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discount Amount"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effective Date"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Order Ref"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "promo_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Promo Code"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "store_state": {
+            "enum": [
+              "reviewing",
+              "negotiating",
+              "ready_for_delivery",
+              "delivered",
+              "canceled"
+            ],
+            "title": "Store State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "origin",
+          "state",
+          "amount_total",
+          "device_validated",
+          "store_state"
+        ],
+        "title": "SaleOrderSummary",
+        "type": "object"
+      },
+      "SimpleErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "SimpleErrorResponse",
+        "type": "object"
+      },
+      "UnauthorizedErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "description": "Normalmente 'unauthorized'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "UnauthorizedErrorResponse",
+        "type": "object"
+      },
+      "ValidationDetailItem": {
+        "additionalProperties": false,
+        "properties": {
+          "loc": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Loc",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Msg",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationDetailItem",
+        "type": "object"
+      },
+      "ValidationErrorResponse": {
+        "additionalProperties": false,
+        "description": "Pydantic validation errors include ``details``; some handlers return only ``message``.",
+        "properties": {
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationDetailItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Details"
+          },
+          "error": {
+            "description": "Normalmente 'validation'",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "ValidationErrorResponse",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "deviceBearer": {
+        "description": "Clave de dispositivo del registro de Tienda Apk (`Authorization: Bearer <device_key>`).",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "API REST JSON para productos y sub\u00f3rdenes de comerciantes externos bajo `/api/merchant_store/`. Autenticaci\u00f3n con la clave de dispositivo de Tienda Apk (Bearer). La compa\u00f1\u00eda es la del dispositivo; estas rutas no leen `X-Company-Slug`.",
+    "title": "API Comercios",
+    "version": "19.0.1.7.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/merchant_store/checkouts": {
+      "post": {
+        "description": "Crea una suborden por cada comerciante presente en `lines`. Idempotente por `client_checkout_id`: reutilizar el mismo identificador en reintentos devuelve las sub\u00f3rdenes ya creadas sin duplicarlas.",
+        "operationId": "merchant_store_checkouts_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutCreatedResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SimpleErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MessageErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "JSON no v\u00e1lido, error de validaci\u00f3n o regla de negocio"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Conflicto de concurrencia al crear el checkout"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Crear checkout de comerciantes (una suborden por comerciante)"
+      }
+    },
+    "/api/merchant_store/merchants": {
+      "get": {
+        "operationId": "merchant_store_merchants_list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantsListResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Listar comerciantes activos de la compa\u00f1\u00eda del dispositivo"
+      }
+    },
+    "/api/merchant_store/merchants/{merchant_id}": {
+      "get": {
+        "operationId": "merchant_store_merchant_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "merchant_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantRow"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Detalle de un comerciante activo"
+      }
+    },
+    "/api/merchant_store/orders": {
+      "get": {
+        "operationId": "merchant_store_orders_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "store_state",
+            "required": false,
+            "schema": {
+              "enum": [
+                "reviewing",
+                "negotiating",
+                "ready_for_delivery",
+                "delivered",
+                "canceled"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOrdersPageResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Par\u00e1metros de consulta no v\u00e1lidos"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Listar sub\u00f3rdenes de comerciantes del cliente"
+      }
+    },
+    "/api/merchant_store/orders/{order_id}": {
+      "get": {
+        "operationId": "merchant_store_order_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOrderDetailResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Detalle de una suborden con sus l\u00edneas"
+      }
+    },
+    "/api/merchant_store/products": {
+      "get": {
+        "operationId": "merchant_store_products_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 80,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "merchant_id",
+            "required": false,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "B\u00fasqueda por nombre de producto (coincidencia parcial, sin distinci\u00f3n de may\u00fasculas)",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantProductsPageResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Par\u00e1metros de consulta no v\u00e1lidos"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Listado de productos de comerciantes (paginado)"
+      }
+    },
+    "/api/merchant_store/products/{product_id}": {
+      "get": {
+        "operationId": "merchant_store_product_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantProductDetailResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Detalle de producto de comerciante"
+      }
+    },
+    "/api/merchant_store/purchases": {
+      "get": {
+        "description": "Historial \u00fanico para la app: agrupa el pedido de Tienda Apk con sus sub\u00f3rdenes de comerciantes, incluye pedidos solo de tienda (`suborders: []`) y compras solo de comerciantes (`order: null`, agrupadas por `client_checkout_id`). No modifica las rutas existentes de `order_bridge` ni `/api/merchant_store/orders`.",
+        "operationId": "merchant_store_purchases_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantPurchasesPageResponse"
+                }
+              }
+            },
+            "description": "Respuesta correcta"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Par\u00e1metros de consulta no v\u00e1lidos"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "Clave de dispositivo no v\u00e1lida o ausente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleErrorResponse"
+                }
+              }
+            },
+            "description": "Recurso no encontrado o app Comercios desactivada para la compa\u00f1\u00eda"
+          }
+        },
+        "security": [
+          {
+            "deviceBearer": []
+          }
+        ],
+        "summary": "Listar compras agrupadas del cliente (pedido propio + sub\u00f3rdenes)"
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "API de comerciantes, cat\u00e1logo y sub\u00f3rdenes",
+      "name": "merchant_store"
+    }
+  ]
+}

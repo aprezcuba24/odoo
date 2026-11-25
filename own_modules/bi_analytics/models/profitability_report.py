@@ -84,6 +84,10 @@ class BiProfitabilityReport(models.Model):
             return SQL('AND l.sale_order_line_id IS NULL')
         return SQL('')
 
+    def _sale_order_sql_extra(self) -> SQL:
+        """Extra WHERE predicates on sale_order alias ``s`` (overridable)."""
+        return SQL('TRUE')
+
     def _report_timezone(self) -> str:
         """Timezone used to turn UTC datetimes into calendar dates."""
         tz = self.env.context.get('tz') or self.env.user.tz or 'UTC'
@@ -115,6 +119,7 @@ class BiProfitabilityReport(models.Model):
                                         FROM sale_order s
                                         WHERE s.state = 'sale'
                                           AND s.company_id = c.id
+                                          AND (%s)
                                         UNION ALL
                                         SELECT MIN(%s) AS first_date
                                         FROM pos_order o
@@ -165,6 +170,7 @@ class BiProfitabilityReport(models.Model):
                         WHERE s.state = 'sale'
                           AND l.display_type IS NULL
                           AND l.product_id IS NOT NULL
+                          AND (%s)
                           AND NOT (
                               l.qty_delivered = 0
                               AND EXISTS (
@@ -206,8 +212,10 @@ class BiProfitabilityReport(models.Model):
                 )
             """,
             self._local_date_sql(SQL('s.date_order')),
+            self._sale_order_sql_extra(),
             self._local_date_sql(SQL('o.date_order')),
             self._local_date_sql(SQL('s.date_order')),
+            self._sale_order_sql_extra(),
             self._local_date_sql(SQL('o.date_order')),
             self._pos_linked_sale_filter(),
         )

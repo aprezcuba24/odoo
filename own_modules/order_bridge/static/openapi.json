@@ -1736,6 +1736,11 @@
       "StatusResponse": {
         "additionalProperties": false,
         "properties": {
+          "early_adopter": {
+            "default": false,
+            "title": "Early Adopter",
+            "type": "boolean"
+          },
           "partner_id": {
             "title": "Partner Id",
             "type": "integer"

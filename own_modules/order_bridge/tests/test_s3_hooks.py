@@ -65,12 +65,41 @@ class TestOrderBridgeS3Hooks(TransactionCase):
         )()
         self.assertFalse(obhooks._is_user_media_attachment_field(edi_like))
 
+    def _csv_parts(self, raw):
+        return [item.strip() for item in (raw or "").split(",") if item.strip()]
+
+    def _detach_media_xmlids(self, model_xmlids, field_xmlids):
+        """Drop claimed xmlids from existing storages inside this transaction.
+
+        ``model_xmlids`` / ``field_xmlids`` may belong to only one fs.storage.
+        A local database can already route the banner through another code
+        (for example ``Bucket S3``). Provisioning the canonical storage then
+        rolls back with the test.
+        """
+        model_set = set(model_xmlids)
+        field_set = set(field_xmlids)
+        for storage in self.env["fs.storage"].sudo().search([]):
+            models = self._csv_parts(storage.model_xmlids)
+            fields_ids = self._csv_parts(storage.field_xmlids)
+            kept_models = [item for item in models if item not in model_set]
+            kept_fields = [item for item in fields_ids if item not in field_set]
+            vals = {}
+            if kept_models != models:
+                vals["model_xmlids"] = ",".join(kept_models) or False
+            if kept_fields != fields_ids:
+                vals["field_xmlids"] = ",".join(kept_fields) or False
+            if vals:
+                storage.write(vals)
+
     def test_provision_media_fs_storage_sets_model_and_field_xmlids(self):
         fs_mod = self.env["ir.module.module"].sudo().search(
             [("name", "=", "fs_attachment")], limit=1
         )
         if not fs_mod or fs_mod.state != "installed":
             self.skipTest("fs_attachment not installed")
+
+        field_xmlids = obhooks._discover_image_attachment_field_xmlids(self.env)
+        self._detach_media_xmlids([obhooks.BANNER_MODEL_XMLID], field_xmlids)
 
         env_patch = {
             "ORDER_BRIDGE_BANNER_S3_BUCKET": "test-odoo-media-bucket",

@@ -69,6 +69,7 @@ class DeviceAuthController(http.Controller):
             phone=api_device.phone,
             partner_name=api_partner.name,
             partner_id=api_partner.id,
+            early_adopter=bool(api_partner.order_bridge_early_adopter),
         ))
 
     @http.route('/api/order_bridge/profile', type='http', auth='public', methods=['GET'], csrf=False)

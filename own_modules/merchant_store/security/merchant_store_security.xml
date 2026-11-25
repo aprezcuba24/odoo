@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_merchant_store" model="ir.module.category">
+        <field name="name">Comercios</field>
+        <field name="description">Gestionar comerciantes externos y sus pedidos en la tienda</field>
+        <field name="sequence">26</field>
+    </record>
+
+    <record model="res.groups.privilege" id="res_groups_privilege_merchant_store">
+        <field name="name">Comercios</field>
+        <field name="category_id" ref="module_category_merchant_store"/>
+    </record>
+
+    <record id="group_merchant_store_user" model="res.groups">
+        <field name="name">Usuario Comercios</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_merchant_store"/>
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+
+    <record id="group_merchant_store_manager" model="res.groups">
+        <field name="name">Responsable Comercios</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_merchant_store"/>
+        <field name="implied_ids" eval="[(4, ref('group_merchant_store_user')), (4, ref('sales_team.group_sale_manager'))]"/>
+    </record>
+
+    <!-- Multi-company record rules -->
+    <record id="merchant_store_merchant_company_rule" model="ir.rule">
+        <field name="name">Comerciante: multi-company</field>
+        <field name="model_id" ref="model_merchant_store_merchant"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+</odoo>
