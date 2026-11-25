@@ -59,20 +59,31 @@ class TestPhoneMatch(TransactionCase):
         with self.assertRaises(Exception):
             RegisterBody(device_key='k', phone='005353024637')
 
+    def _free_cuban_national(self):
+        """8 national digits that no partner already uses as a phone key."""
+        Partner = self.env['res.partner'].sudo()
+        for number in range(91000000, 91001000):
+            national = str(number)
+            if not Partner.search_count([('order_bridge_phone_key', '=', national)]):
+                return national
+        self.fail('no free Cuban test phone')
+
     def test_register_or_get_merges_legacy_and_e164(self):
         Device = self.env['order_bridge.device'].sudo()
         company = self.env.company
-        first = Device.register_or_get('53024637', 'phone-legacy-key', company=company)
-        self.assertEqual(first['device'].phone, '+5353024637')
-        self.assertEqual(first['partner'].phone, '+5353024637')
-        self.assertEqual(first['partner'].name, '+5353024637')
+        national = self._free_cuban_national()
+        e164 = f'+53{national}'
+        first = Device.register_or_get(national, 'phone-legacy-key', company=company)
+        self.assertEqual(first['device'].phone, e164)
+        self.assertEqual(first['partner'].phone, e164)
+        self.assertEqual(first['partner'].name, e164)
 
         second = Device.register_or_get(
-            '+5353024637', 'phone-e164-key', company=company, app_version='1.0.0 web',
+            e164, 'phone-e164-key', company=company, app_version='1.0.0 web',
         )
         self.assertEqual(second['partner'], first['partner'])
-        self.assertEqual(second['device'].phone, '+5353024637')
-        self.assertEqual(second['partner'].phone, '+5353024637')
+        self.assertEqual(second['device'].phone, e164)
+        self.assertEqual(second['partner'].phone, e164)
 
     def test_find_customer_rewrites_legacy_eight_digit_phone(self):
         Partner = self.env['res.partner'].sudo()
