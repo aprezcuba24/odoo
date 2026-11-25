@@ -6,6 +6,12 @@ import uuid
 from odoo import Command
 from odoo.tests.common import HttpCase, tagged
 
+from odoo.addons.order_bridge.schemas.responses import (
+    OrderCreatedResponse,
+    SaleOrderDetailResponse,
+    SaleOrderSummary,
+)
+
 
 @tagged('post_install', '-at_install')
 class TestMerchantStoreApi(HttpCase):
@@ -495,3 +501,149 @@ class TestMerchantStoreApi(HttpCase):
         )
         self.assertEqual(other_res.status_code, 200, other_res.text)
         self.assertEqual(json.loads(other_res.text)['total'], 0)
+
+    def test_legacy_order_bridge_api_flow_with_merchant_store_installed(self):
+        """Legacy mobile apps using /api/order_bridge/* keep working with merchant_store."""
+        key_a, _device_a = self._register_device(self.company_a)
+        auth = self._auth_headers(key_a)
+        auth_json = self._auth_headers(key_a, content_type=True)
+        own_variant_id = self.own_product_a.product_variant_id.id
+        merchant_variant_id = self.product_a.product_variant_id.id
+
+        # 1) Legacy catalog includes own product and excludes merchant product.
+        catalog_res = self.url_open(
+            '/api/order_bridge/products',
+            headers=auth,
+            timeout=60,
+        )
+        self.assertEqual(catalog_res.status_code, 200, catalog_res.text)
+        catalog_ids = {item['id'] for item in json.loads(catalog_res.text)['items']}
+        self.assertIn(own_variant_id, catalog_ids)
+        self.assertNotIn(merchant_variant_id, catalog_ids)
+
+        # 2) Legacy POST /api/order_bridge/orders creates own order and is idempotent.
+        client_order_id_1 = str(uuid.uuid4())
+        payload_1 = json.dumps({
+            'client_order_id': client_order_id_1,
+            'lines': [{'product_id': own_variant_id, 'qty': 1}],
+        })
+        create_res_1 = self.url_open(
+            '/api/order_bridge/orders',
+            data=payload_1,
+            headers=auth_json,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(create_res_1.status_code, 200, create_res_1.text)
+        created_1 = json.loads(create_res_1.text)
+        self.assertEqual(set(created_1.keys()), set(OrderCreatedResponse.model_fields.keys()))
+        self.assertFalse(any(k.startswith('merchant_') for k in created_1))
+
+        order_1 = self.env['sale.order'].sudo().browse(created_1['id'])
+        self.assertEqual(order_1.order_bridge_origin, 'app')
+        self.assertFalse(order_1.merchant_id)
+
+        retry_res_1 = self.url_open(
+            '/api/order_bridge/orders',
+            data=payload_1,
+            headers=auth_json,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(retry_res_1.status_code, 200, retry_res_1.text)
+        self.assertEqual(json.loads(retry_res_1.text)['id'], created_1['id'])
+
+        # 3) Second legacy POST with another client_order_id succeeds (NULL uniqueness).
+        create_res_2 = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({
+                'client_order_id': str(uuid.uuid4()),
+                'lines': [{'product_id': own_variant_id, 'qty': 1}],
+            }),
+            headers=auth_json,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(create_res_2.status_code, 200, create_res_2.text)
+        created_2 = json.loads(create_res_2.text)
+        self.assertNotEqual(created_2['id'], created_1['id'])
+
+        # 4) Legacy POST rejects merchant products with 400.
+        bad_res = self.url_open(
+            '/api/order_bridge/orders',
+            data=json.dumps({
+                'client_order_id': str(uuid.uuid4()),
+                'lines': [{'product_id': merchant_variant_id, 'qty': 1}],
+            }),
+            headers=auth_json,
+            method='POST',
+            timeout=60,
+        )
+        self.assertEqual(bad_res.status_code, 400, bad_res.text)
+
+        # 5) Merchant checkouts (one linked to order 1, one merchant-only).
+        linked_checkout_res = self.url_open(
+            '/api/merchant_store/checkouts',
+            data=json.dumps({
+                'client_checkout_id': str(uuid.uuid4()),
+                'order_bridge_order_id': created_1['id'],
+                'lines': [{'product_id': merchant_variant_id, 'qty': 1}],
+            }),
+            headers=auth_json,
+            timeout=60,
+        )
+        self.assertEqual(linked_checkout_res.status_code, 200, linked_checkout_res.text)
+        suborder_id = json.loads(linked_checkout_res.text)['orders'][0]['id']
+
+        only_merchant_res = self.url_open(
+            '/api/merchant_store/checkouts',
+            data=json.dumps({
+                'client_checkout_id': str(uuid.uuid4()),
+                'lines': [{'product_id': merchant_variant_id, 'qty': 2}],
+            }),
+            headers=auth_json,
+            timeout=60,
+        )
+        self.assertEqual(only_merchant_res.status_code, 200, only_merchant_res.text)
+
+        # 6) Legacy GET /api/order_bridge/orders lists only the two own orders.
+        list_res = self.url_open(
+            '/api/order_bridge/orders',
+            headers=auth,
+            timeout=60,
+        )
+        self.assertEqual(list_res.status_code, 200, list_res.text)
+        list_data = json.loads(list_res.text)
+        self.assertEqual(list_data['total'], 2)
+        items_by_id = {item['id']: item for item in list_data['items']}
+        self.assertEqual(set(items_by_id.keys()), {created_1['id'], created_2['id']})
+        for item in list_data['items']:
+            self.assertEqual(set(item.keys()), set(SaleOrderSummary.model_fields.keys()))
+        self.assertAlmostEqual(
+            items_by_id[created_1['id']]['amount_total'],
+            created_1['amount_total'],
+            places=2,
+        )
+        self.assertEqual(
+            items_by_id[created_1['id']]['store_state'],
+            created_1['store_state'],
+        )
+
+        # 7) Legacy GET detail works for own order and returns 404 for a suborder.
+        detail_res = self.url_open(
+            f"/api/order_bridge/orders/{created_1['id']}",
+            headers=auth,
+            timeout=60,
+        )
+        self.assertEqual(detail_res.status_code, 200, detail_res.text)
+        detail = json.loads(detail_res.text)
+        self.assertEqual(set(detail.keys()), set(SaleOrderDetailResponse.model_fields.keys()))
+        self.assertEqual(len(detail['lines']), 1)
+        self.assertEqual(detail['lines'][0]['product_id'], own_variant_id)
+
+        sub_detail_res = self.url_open(
+            f'/api/order_bridge/orders/{suborder_id}',
+            headers=auth,
+            timeout=60,
+        )
+        self.assertEqual(sub_detail_res.status_code, 404, sub_detail_res.text)
