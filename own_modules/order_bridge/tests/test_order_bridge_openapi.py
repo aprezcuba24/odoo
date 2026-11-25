@@ -48,12 +48,29 @@ class TestOrderBridgeOpenapi(TransactionCase):
             'partner_id': 42,
             'validated': False,
         })
-        R.StatusResponse.model_validate({
+        status_default = R.StatusResponse.model_validate({
             'validated': False,
             'phone': '+34600111222',
             'partner_name': 'Test',
             'partner_id': 1,
         })
+        self.assertFalse(status_default.early_adopter)
+        status_false = R.StatusResponse.model_validate({
+            'validated': False,
+            'phone': '+34600111222',
+            'partner_name': 'Test',
+            'partner_id': 1,
+            'early_adopter': False,
+        })
+        self.assertFalse(status_false.early_adopter)
+        status_true = R.StatusResponse.model_validate({
+            'validated': True,
+            'phone': '+34600111222',
+            'partner_name': 'Test',
+            'partner_id': 1,
+            'early_adopter': True,
+        })
+        self.assertTrue(status_true.early_adopter)
         R.ProfileResponse.model_validate({
             'id': 1,
             'name': 'N',

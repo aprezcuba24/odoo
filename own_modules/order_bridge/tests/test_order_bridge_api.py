@@ -40,7 +40,18 @@ class TestOrderBridgeApi(HttpCase):
             timeout=60,
         )
         self.assertEqual(res2.status_code, 200, res2.text)
-        self.assertFalse(json.loads(res2.text).get('validated'))
+        status_data = json.loads(res2.text)
+        self.assertFalse(status_data.get('validated'))
+        self.assertIs(status_data.get('early_adopter'), False)
+
+        partner.write({'order_bridge_early_adopter': True})
+        res3 = self.url_open(
+            '/api/order_bridge/status',
+            headers={'Authorization': f'Bearer {key}'},
+            timeout=60,
+        )
+        self.assertEqual(res3.status_code, 200, res3.text)
+        self.assertIs(json.loads(res3.text).get('early_adopter'), True)
 
     def test_last_activity_touch_on_status_and_throttle(self):
         key = str(uuid.uuid4())

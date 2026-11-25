@@ -34,6 +34,7 @@
                     <group>
                         <field name="order_bridge_registered" readonly="1"/>
                         <field name="order_bridge_phone_validated" readonly="1"/>
+                        <field name="order_bridge_early_adopter"/>
                         <label for="order_bridge_amount_due"/>
                         <div class="o_row">
                             <field name="order_bridge_amount_due" readonly="1" nolabel="1" class="oe_inline"/>

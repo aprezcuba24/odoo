@@ -34,6 +34,10 @@ class ResPartner(models.Model):
         compute='_compute_order_bridge_flags',
         store=True,
     )
+    order_bridge_early_adopter = fields.Boolean(
+        string='Acceso anticipado (Tienda Apk)',
+        default=False,
+    )
     order_bridge_order_count = fields.Integer(
         string='Pedidos Tienda Apk',
         compute='_compute_order_bridge_order_count',
