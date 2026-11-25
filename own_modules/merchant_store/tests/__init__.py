@@ -7,3 +7,4 @@ from . import test_merchant_product
 from . import test_merchant_store_api
 from . import test_merchant_store_openapi
 from . import test_merchant_store_scaffold
+from . import test_merchant_telegram

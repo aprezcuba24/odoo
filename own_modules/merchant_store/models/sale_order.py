@@ -2,11 +2,15 @@
 
 from collections import defaultdict
 
-from odoo import _, api, fields, models
+from odoo import SUPERUSER_ID, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Command
+from odoo.modules.registry import Registry
 
 from odoo.addons.order_bridge.utils.constant import ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS
+from odoo.addons.order_bridge.utils.telegram_client import send_message
+
+from ..utils.telegram_merchant_message import format_merchant_order_created_message
 
 
 class SaleOrder(models.Model):
@@ -177,6 +181,24 @@ class SaleOrder(models.Model):
             return
         return super()._order_bridge_check_store_state_transition(old_ss, new_ss)
 
+    def _order_bridge_schedule_order_created_notification(self):
+        """Send Telegram for merchant suborders created via checkout API."""
+        self.ensure_one()
+        if not self.merchant_id:
+            return super()._order_bridge_schedule_order_created_notification()
+        if not self.env.context.get('merchant_store_api_checkout'):
+            return
+        order_id = self.id
+        dbname = self.env.cr.dbname
+
+        @self.env.cr.postcommit.add
+        def _send_merchant_order_created_telegram():
+            with Registry(dbname).cursor() as cr:
+                order = api.Environment(cr, SUPERUSER_ID, {})['sale.order'].browse(order_id).exists()
+                if order and order.merchant_id:
+                    text = format_merchant_order_created_message(order)
+                    send_message(text, order_ref=order.name)
+
     def action_confirm(self):
         merchant_orders = self.filtered('merchant_id')
         if merchant_orders:
@@ -228,7 +250,7 @@ class SaleOrder(models.Model):
             linked = self.browse()
 
         by_merchant = self._merchant_store_group_checkout_lines(company, lines)
-        Order = self.with_company(company)
+        Order = self.with_company(company).with_context(merchant_store_api_checkout=True)
         created = Order.browse()
         for merchant, merchant_lines in by_merchant.items():
             vals = {
