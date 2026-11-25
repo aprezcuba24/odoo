@@ -8,7 +8,7 @@ Plan corto del ítem 2 de [`COMERCIOS.md`](COMERCIOS.md). Modelo de comerciante 
 - Regla multi-compañía global `company_id in company_ids`, igual que el dispositivo de Tienda Apk.
 - ACL solo en grupos Usuario / Responsable Comercios (+ system).
 - Lista y formulario bajo el menú raíz «Comercios»; acción sin dominio extra (la regla acota).
-- Logo en el mismo S3 que las imágenes de producto (`fs.storage` `s3_order_bridge_banners` vía `field_xmlids`); sin bucket nuevo.
+- Logo en el mismo S3 que las imágenes de producto (`fs.storage` `s3_order_bridge_banners` vía `field_xmlids`), bajo la subcarpeta `merchants/{merchant_id}/logo/`; sin bucket nuevo.
 - Versión `19.0.1.1.0`. `order_bridge` no cambia de código.
 
 ## Fuera de este punto

@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from . import fs_attachment_hook
 from . import merchant
 from . import product_product
 from . import product_template

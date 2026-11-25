@@ -6,6 +6,7 @@ from odoo import Command
 from odoo.exceptions import AccessError
 from odoo.tests.common import TransactionCase, tagged
 
+from odoo.addons.merchant_store.models.fs_attachment_hook import _merchant_fs_subdir
 from odoo.addons.order_bridge import hooks as obhooks
 
 
@@ -134,3 +135,96 @@ class TestMerchantStoreMerchant(TransactionCase):
         field_xmlids = (storage.field_xmlids or '').split(',')
         self.assertIn(logo_xmlid, field_xmlids)
         self.assertIn('product.field_product_template__image_1920', field_xmlids)
+
+    def test_merchant_fs_subdir_helper(self):
+        merchant = self.env['merchant_store.merchant'].create({
+            'name': 'Subdir Merchant',
+            'company_id': self.company_a.id,
+        })
+        merchant_tmpl = self.env['product.template'].create({
+            'name': 'Merchant Product',
+            'merchant_id': merchant.id,
+            'company_id': self.company_a.id,
+        })
+        own_tmpl = self.env['product.template'].create({
+            'name': 'Own Store Product',
+            'company_id': self.company_a.id,
+        })
+
+        self.assertEqual(
+            _merchant_fs_subdir(
+                self.env, 'merchant_store.merchant', 'logo', merchant.id
+            ),
+            f'merchants/{merchant.id}/logo',
+        )
+        self.assertEqual(
+            _merchant_fs_subdir(
+                self.env, 'product.template', 'image_1920', merchant_tmpl.id
+            ),
+            f'merchants/{merchant.id}/products/{merchant_tmpl.id}',
+        )
+        self.assertEqual(
+            _merchant_fs_subdir(
+                self.env,
+                'product.product',
+                'image_variant_1920',
+                merchant_tmpl.product_variant_id.id,
+            ),
+            f'merchants/{merchant.id}/products/{merchant_tmpl.id}',
+        )
+        self.assertIsNone(
+            _merchant_fs_subdir(
+                self.env, 'product.template', 'image_1920', own_tmpl.id
+            )
+        )
+        self.assertIsNone(
+            _merchant_fs_subdir(
+                self.env, 'merchant_store.merchant', 'name', merchant.id
+            )
+        )
+
+    def test_get_fs_path_prefixes_merchant_media(self):
+        fs_mod = self.env['ir.module.module'].sudo().search(
+            [('name', '=', 'fs_attachment')], limit=1
+        )
+        if not fs_mod or fs_mod.state != 'installed':
+            self.skipTest('fs_attachment not installed')
+
+        merchant = self.env['merchant_store.merchant'].create({
+            'name': 'S3 Path Merchant',
+            'company_id': self.company_a.id,
+        })
+        merchant_tmpl = self.env['product.template'].create({
+            'name': 'S3 Merchant Product',
+            'merchant_id': merchant.id,
+            'company_id': self.company_a.id,
+        })
+        own_tmpl = self.env['product.template'].create({
+            'name': 'S3 Own Product',
+            'company_id': self.company_a.id,
+        })
+
+        Att = self.env['ir.attachment']
+        sample = b'merchant-media-test-bytes'
+        logo_path = Att.with_context(
+            attachment_res_model='merchant_store.merchant',
+            attachment_res_field='logo',
+            attachment_res_id=merchant.id,
+        )._get_fs_path(obhooks.MEDIA_FS_STORAGE_CODE, sample)
+        self.assertTrue(logo_path.startswith(f'merchants/{merchant.id}/logo/'))
+
+        prod_path = Att.with_context(
+            attachment_res_model='product.template',
+            attachment_res_field='image_1920',
+            attachment_res_id=merchant_tmpl.id,
+        )._get_fs_path(obhooks.MEDIA_FS_STORAGE_CODE, sample)
+        self.assertTrue(
+            prod_path.startswith(f'merchants/{merchant.id}/products/{merchant_tmpl.id}/')
+        )
+
+        own_path = Att.with_context(
+            attachment_res_model='product.template',
+            attachment_res_field='image_1920',
+            attachment_res_id=own_tmpl.id,
+        )._get_fs_path(obhooks.MEDIA_FS_STORAGE_CODE, sample)
+        self.assertFalse(own_path.startswith('merchants/'))
