@@ -43,6 +43,13 @@ class SaleOrder(models.Model):
         'Ya existe una suborden para este comerciante en el mismo checkout.',
     )
 
+    @api.onchange('merchant_id')
+    def _onchange_merchant_id_company(self):
+        """Set the order company from the merchant chosen in the form."""
+        if self.merchant_id:
+            self.company_id = self.merchant_id.company_id
+            self.order_bridge_origin = False
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:

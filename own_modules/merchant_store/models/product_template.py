@@ -14,6 +14,12 @@ class ProductTemplate(models.Model):
         check_company=True,
     )
 
+    @api.onchange('merchant_id')
+    def _onchange_merchant_id_company(self):
+        """Set the product company from the merchant chosen in the form."""
+        if self.merchant_id:
+            self.company_id = self.merchant_id.company_id
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:

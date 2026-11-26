@@ -33,10 +33,12 @@
                     </div>
                     <group>
                         <group>
-                            <field name="merchant_id" required="1"/>
+                            <field name="merchant_id" required="1"
+                                domain="[('company_id', 'in', allowed_company_ids)]"/>
                             <field name="list_price"/>
                         </group>
                         <group>
+                            <field name="company_id" groups="!base.group_multi_company" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company" readonly="1"/>
                         </group>
                     </group>
@@ -75,6 +77,7 @@
             'default_purchase_ok': False,
             'default_order_bridge_visible': False,
             'default_available_in_pos': False,
+            'default_company_id': allowed_company_ids[0],
         }</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_merchant_store_product_template_list')}),

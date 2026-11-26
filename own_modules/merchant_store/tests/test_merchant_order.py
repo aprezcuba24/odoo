@@ -304,3 +304,16 @@ class TestMerchantStoreOrder(TransactionCase):
             self.company_a,
         ).search([('id', '=', order_b.id)])
         self.assertFalse(found)
+
+    def test_new_order_can_select_registered_merchant(self):
+        form = self.env.ref('merchant_store.view_merchant_store_sale_order_form')
+        arch = form.arch_db or ''
+        self.assertIn("('company_id', 'in', allowed_company_ids)", arch)
+        order = self.env['sale.order'].new({
+            'partner_id': self.partner_a.id,
+            'company_id': self.company_a.id,
+        })
+        order.merchant_id = self.merchant_b
+        order._onchange_merchant_id_company()
+        self.assertEqual(order.company_id, self.company_b)
+        self.assertFalse(order.order_bridge_origin)

@@ -220,3 +220,33 @@ class TestMerchantStoreProduct(TransactionCase):
         self.assertIn('name="merchant_id"', arch)
         self.assertIn('group_by', arch)
         self.assertIn('<searchpanel>', arch)
+
+    def test_new_product_can_select_registered_merchant(self):
+        """A draft product has no company, so check_company would hide merchants."""
+        form = self.env.ref('merchant_store.view_merchant_store_product_template_form')
+        arch = form.arch_db or ''
+        self.assertIn("('company_id', 'in', allowed_company_ids)", arch)
+        action = self.env.ref('merchant_store.action_merchant_store_product_template')
+        self.assertIn('default_company_id', action.context)
+
+        empty_company = list(
+            self.env['merchant_store.merchant']._check_company_domain([])
+        )
+        hidden = self.env['merchant_store.merchant'].search(
+            [('id', '=', self.merchant_a.id)] + empty_company
+        )
+        self.assertFalse(hidden)
+
+        visible = self.env['merchant_store.merchant'].with_company(self.company_a).search([
+            ('id', '=', self.merchant_a.id),
+            ('company_id', 'in', self.company_a.ids),
+        ])
+        self.assertEqual(visible, self.merchant_a)
+
+        product = self.env['product.template'].new({
+            'name': 'Borrador',
+            'company_id': False,
+        })
+        product.merchant_id = self.merchant_a
+        product._onchange_merchant_id_company()
+        self.assertEqual(product.company_id, self.company_a)
