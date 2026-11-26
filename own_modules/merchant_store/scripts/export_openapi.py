@@ -312,12 +312,13 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         },
         '/api/merchant_store/purchases': {
             'get': {
-                'summary': 'Listar compras agrupadas del cliente (pedido propio + subórdenes)',
+                'summary': 'Listar historial de órdenes del cliente (tienda y comercios)',
                 'description': (
-                    'Historial único para la app: agrupa el pedido de Tienda Apk con sus '
-                    'subórdenes de comerciantes, incluye pedidos solo de tienda (`suborders: []`) '
-                    'y compras solo de comerciantes (`order: null`, agrupadas por `client_checkout_id`). '
-                    'No modifica las rutas existentes de `order_bridge` ni `/api/merchant_store/orders`.'
+                    'Historial plano para la app: devuelve cada pedido de Tienda Apk '
+                    '(`source: "store"`) y cada orden de comerciante (`source: "merchant"`) '
+                    'como una fila independiente ordenada por `date_order` descendente. '
+                    'Ambas variantes incluyen `order.delivery_address` con la dirección '
+                    'congelada al crear el pedido.'
                 ),
                 'operationId': 'merchant_store_purchases_list',
                 'security': [{'deviceBearer': []}],
@@ -349,7 +350,7 @@ def build_spec(pkg_name: str) -> dict[str, Any]:
         'openapi': '3.1.0',
         'info': {
             'title': 'API Comercios',
-            'version': '19.0.1.7.0',
+            'version': '19.0.1.9.0',
             'description': (
                 'API REST JSON para productos y subórdenes de comerciantes externos bajo '
                 '`/api/merchant_store/`. Autenticación con la clave de dispositivo de Tienda Apk '

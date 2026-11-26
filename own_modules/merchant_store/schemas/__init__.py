@@ -8,11 +8,12 @@ from .responses import (
     MerchantOrdersPageResponse,
     MerchantProductDetailResponse,
     MerchantProductsPageResponse,
-    MerchantPurchaseRow,
+    MerchantPurchaseItem,
     MerchantPurchasesPageResponse,
     MerchantsListResponse,
     MessageErrorResponse,
     SimpleErrorResponse,
+    StorePurchaseItem,
 )
 
 __all__ = [
@@ -23,7 +24,7 @@ __all__ = [
     'MerchantOrdersPageResponse',
     'MerchantProductDetailResponse',
     'MerchantProductsPageResponse',
-    'MerchantPurchaseRow',
+    'MerchantPurchaseItem',
     'MerchantPurchasesPageResponse',
     'MerchantsListResponse',
     'MessageErrorResponse',
@@ -31,4 +32,5 @@ __all__ = [
     'ProductsListQuery',
     'PurchasesListQuery',
     'SimpleErrorResponse',
+    'StorePurchaseItem',
 ]

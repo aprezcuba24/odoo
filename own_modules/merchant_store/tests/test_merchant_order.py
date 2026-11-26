@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from ast import literal_eval
+from unittest.mock import patch
 
 from odoo import Command
 from odoo.exceptions import UserError, ValidationError
@@ -317,3 +318,59 @@ class TestMerchantStoreOrder(TransactionCase):
         order._onchange_merchant_id_company()
         self.assertEqual(order.company_id, self.company_b)
         self.assertFalse(order.order_bridge_origin)
+
+    def test_store_state_buttons_visibility(self):
+        form = self.env.ref('merchant_store.view_merchant_store_sale_order_form')
+        Users = self.env['res.users'].with_context(no_reset_password=True)
+        group_base = self.env.ref('base.group_user')
+        group_salesman = self.env.ref('sales_team.group_sale_salesman')
+
+        salesman = Users.create({
+            'name': 'Merchant Order Salesman',
+            'login': 'merchant_order_salesman',
+            'password': 'merchant_order_salesman',
+            'company_id': self.company_a.id,
+            'company_ids': [Command.set([self.company_a.id])],
+            'group_ids': [Command.set([group_base.id, group_salesman.id])],
+        })
+        plain_user = Users.create({
+            'name': 'Merchant Order Plain User',
+            'login': 'merchant_order_plain_user',
+            'password': 'merchant_order_plain_user',
+            'company_id': self.company_a.id,
+            'company_ids': [Command.set([self.company_a.id])],
+            'group_ids': [Command.set([group_base.id])],
+        })
+
+        salesman_arch = self.env['sale.order'].with_user(salesman).get_view(
+            view_id=form.id, view_type='form',
+        )['arch']
+        plain_arch = self.env['sale.order'].with_user(plain_user).get_view(
+            view_id=form.id, view_type='form',
+        )['arch']
+
+        for action_name in (
+            'action_order_bridge_negotiate',
+            'action_order_bridge_ready_for_delivery',
+            'action_order_bridge_delivered',
+            'action_order_bridge_cancel_store',
+        ):
+            self.assertIn(action_name, salesman_arch)
+            self.assertNotIn(action_name, plain_arch)
+
+    @patch('odoo.addons.merchant_store.models.sale_order._schedule_store_state_push')
+    def test_store_state_change_schedules_push(self, mock_schedule):
+        order = self._create_suborder(
+            self.merchant_a, self.partner_a, self.merchant_product_a,
+        )
+        order.action_order_bridge_negotiate()
+        mock_schedule.assert_called_once_with(order)
+
+    @patch('odoo.addons.merchant_store.models.sale_order._schedule_store_state_push')
+    def test_write_without_store_state_change_does_not_schedule_push(self, mock_schedule):
+        order = self._create_suborder(
+            self.merchant_a, self.partner_a, self.merchant_product_a,
+        )
+        order.write({'note': 'nota interna'})
+        mock_schedule.assert_not_called()
+

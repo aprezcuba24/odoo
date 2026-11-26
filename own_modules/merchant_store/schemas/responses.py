@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from odoo.addons.order_bridge.schemas.responses import SaleOrderSummary
+from odoo.addons.order_bridge.schemas.responses import DeliveryAddressOut, SaleOrderSummary
 from odoo.addons.order_bridge.utils.constant import DEFAULT_STORE_STATE, STORE_STATE_VALID
 
 
@@ -101,6 +101,7 @@ class MerchantOrderSummary(BaseModel):
     date_order: str | None = None
     amount_total: float
     currency: str | None = None
+    delivery_address: DeliveryAddressOut | None = None
 
     @field_validator('client_checkout_id', 'currency', mode='before')
     @classmethod
@@ -142,27 +143,30 @@ class CheckoutCreatedResponse(BaseModel):
     orders: list[MerchantOrderDetailResponse]
 
 
-class MerchantPurchaseRow(BaseModel):
+class StorePurchaseItem(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    purchase_key: str
-    client_checkout_id: str | None = None
-    date_order: str | None = None
-    amount_total: float
-    currency: str | None = None
-    order: SaleOrderSummary | None = None
-    suborders: list[MerchantOrderSummary]
+    source: Literal['store'] = 'store'
+    order: SaleOrderSummary
 
-    @field_validator('client_checkout_id', 'currency', mode='before')
-    @classmethod
-    def purchase_falsy_to_none(cls, v: Any) -> str | None:
-        return _odoo_falsy_str(v)
+
+class MerchantPurchaseItem(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    source: Literal['merchant'] = 'merchant'
+    order: MerchantOrderSummary
+
+
+PurchaseItem = Annotated[
+    StorePurchaseItem | MerchantPurchaseItem,
+    Field(discriminator='source'),
+]
 
 
 class MerchantPurchasesPageResponse(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    items: list[MerchantPurchaseRow]
+    items: list[PurchaseItem]
     limit: int
     offset: int
     total: int

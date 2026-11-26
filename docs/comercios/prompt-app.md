@@ -30,15 +30,14 @@ Separa las líneas del carrito según su origen antes de confirmar:
 
 Si no hay líneas de comerciantes, no llames a `/api/merchant_store/checkouts`.
 
-## Historial de compras y subórdenes
+## Historial de órdenes
 
-- **Historial único (recomendado para la app nueva)**: `GET /api/merchant_store/purchases` (soporta `limit` y `offset`). Si responde `404` porque Comercios está apagado en esa compañía, vuelve a `GET /api/order_bridge/orders`.
-  - Compra mixta: una fila con `order` (pedido de Tienda Apk) y `suborders` debajo.
-  - Solo comercio: una fila con `order: null` y las `suborders` del mismo `client_checkout_id`.
-  - Solo tienda: una fila con `order` y `suborders: []`.
-  - Cada fila trae `purchase_key`, `date_order`, `amount_total` (suma de pedido propio + subórdenes) y `currency`.
-  - Las líneas se consultan en el detalle: `GET /api/order_bridge/orders/{id}` para `order` y `GET /api/merchant_store/orders/{id}` para cada suborden.
-- **Listado plano de subórdenes**: `GET /api/merchant_store/orders` (filtro opcional `store_state`) y detalle `GET /api/merchant_store/orders/{order_id}`.
-- Cada suborden incluye `merchant_id` y `merchant_name`, y su propio `store_state`: `reviewing` → `negotiating` → `ready_for_delivery` → `delivered` / `canceled`.
-- El estado de cada suborden avanza de forma independiente y no altera el estado del pedido propio de Tienda Apk.
-- Las rutas de `/api/order_bridge/orders` no cambian, por lo que las versiones anteriores de la app siguen funcionando sin modificaciones.
+- **Historial unificado**: `GET /api/merchant_store/purchases` (soporta `limit` y `offset`). Si responde `404` porque Comercios está apagado en esa compañía, usa `GET /api/order_bridge/orders`.
+  - Devuelve una lista plana ordenada por `date_order` descendente: cada fila es una orden independiente (tanto las de Tienda Apk como las de comercios), sin subórdenes anidadas.
+  - Cada ítem trae `source` y `order`:
+    - `source: "store"` → `order` es el resumen de Tienda Apk (`SaleOrderSummary`). Abre su detalle con `GET /api/order_bridge/orders/{id}`.
+    - `source: "merchant"` → `order` es el resumen de comercio (`MerchantOrderSummary`, con `merchant_id` y `merchant_name`). Abre su detalle con `GET /api/merchant_store/orders/{id}`.
+  - En ambos casos, la dirección del cliente congelada al comprar está en `order.delivery_address` (`null` si el cliente no tenía dirección al crear la orden).
+- **Listado solo de órdenes de comercios**: `GET /api/merchant_store/orders` (filtro opcional `store_state`) y detalle `GET /api/merchant_store/orders/{order_id}`. También incluyen `merchant_id`, `merchant_name` y `delivery_address`.
+- Cada orden de comercio tiene su propio `store_state`: `reviewing` → `negotiating` → `ready_for_delivery` → `delivered` / `canceled`, independiente del pedido propio de Tienda Apk.
+- Las rutas de `/api/order_bridge/orders` permanecen sin cambios para las apps que no usan Comercios.
