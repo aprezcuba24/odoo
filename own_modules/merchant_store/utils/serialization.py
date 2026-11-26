@@ -3,6 +3,7 @@
 from odoo.addons.order_bridge.utils.serialization import (
     _order_bridge_public_base_url,
     _product_image_urls,
+    delivery_address_from_record,
     sale_order_to_summary as bridge_sale_order_to_summary,
 )
 
@@ -15,10 +16,11 @@ from ..schemas.responses import (
     MerchantProductDetailResponse,
     MerchantProductListRow,
     MerchantProductsPageResponse,
-    MerchantPurchaseRow,
+    MerchantPurchaseItem,
     MerchantPurchasesPageResponse,
     MerchantRow,
     MerchantsListResponse,
+    StorePurchaseItem,
 )
 
 
@@ -107,6 +109,7 @@ def sale_order_to_summary(order):
         date_order=order.date_order.isoformat() if order.date_order else None,
         amount_total=float(order.amount_total),
         currency=order.currency_id.name if order.currency_id else None,
+        delivery_address=delivery_address_from_record(order.order_bridge_snapshot_address_id),
     )
 
 
@@ -135,28 +138,15 @@ def checkout_created_response(orders, client_checkout_id):
     )
 
 
-def purchase_row_response(purchase_key, client_checkout_id, date_order, own_order, suborders):
-    own_total = float(own_order.amount_total) if own_order else 0.0
-    sub_total = sum(float(sub.amount_total) for sub in suborders)
-    currency = None
-    if own_order and own_order.currency_id:
-        currency = own_order.currency_id.name
-    elif suborders and suborders[0].currency_id:
-        currency = suborders[0].currency_id.name
-    return MerchantPurchaseRow(
-        purchase_key=purchase_key,
-        client_checkout_id=client_checkout_id,
-        date_order=date_order.isoformat() if date_order else None,
-        amount_total=own_total + sub_total,
-        currency=currency,
-        order=bridge_sale_order_to_summary(own_order) if own_order else None,
-        suborders=[sale_order_to_summary(sub) for sub in suborders],
-    )
+def purchase_item_response(order):
+    if order.merchant_id:
+        return MerchantPurchaseItem(order=sale_order_to_summary(order))
+    return StorePurchaseItem(order=bridge_sale_order_to_summary(order))
 
 
-def purchases_page_response(rows, limit, offset, total):
+def purchases_page_response(orders, limit, offset, total):
     return MerchantPurchasesPageResponse(
-        items=rows,
+        items=[purchase_item_response(o) for o in orders],
         limit=limit,
         offset=offset,
         total=total,

@@ -387,12 +387,12 @@ class TestMerchantStoreApi(HttpCase):
         )
         self.assertEqual(res.status_code, 404, res.text)
 
-    def test_purchases_grouping_mixed_merchant_only_store_only_and_isolation(self):
+    def test_purchases_flat_orders_with_delivery_address_and_isolation(self):
         key_a, device_a = self._register_device(self.company_a)
         auth_json = self._auth_headers(key_a, content_type=True)
         auth = self._auth_headers(key_a)
 
-        # 1) Compra solo tienda (sin subórdenes)
+        # 1) Compra solo tienda sin dirección guardada -> delivery_address None
         store_only = self.env['sale.order'].with_company(self.company_a).create({
             'partner_id': device_a.partner_id.id,
             'company_id': self.company_a.id,
@@ -403,7 +403,40 @@ class TestMerchantStoreApi(HttpCase):
             })],
         })
 
-        # 2) Compra mixta: pedido propio + subórdenes de dos comercios
+        # Compra solo comercio sin dirección guardada -> delivery_address None
+        no_addr_checkout_id = str(uuid.uuid4())
+        no_addr_res = self.url_open(
+            '/api/merchant_store/checkouts',
+            data=json.dumps({
+                'client_checkout_id': no_addr_checkout_id,
+                'lines': [
+                    {'product_id': self.product_a.product_variant_id.id, 'qty': 1},
+                ],
+            }),
+            headers=auth_json,
+            timeout=60,
+        )
+        self.assertEqual(no_addr_res.status_code, 200, no_addr_res.text)
+        no_addr_merchant_order = json.loads(no_addr_res.text)['orders'][0]
+        self.assertIsNone(no_addr_merchant_order['delivery_address'])
+
+        # Guardar dirección Tienda Apk del cliente antes de la compra mixta
+        municipality = self.env['order_bridge.municipality'].sudo().create({
+            'name': 'Playa Test',
+        })
+        neighborhood = self.env['order_bridge.neighborhood'].sudo().create({
+            'name': 'Miramar Test',
+            'municipality_id': municipality.id,
+        })
+        self.env['order_bridge.partner_address'].sudo().create({
+            'partner_id': device_a.partner_id.id,
+            'street': 'Calle 5ta #123',
+            'municipality_id': municipality.id,
+            'neighborhood_id': neighborhood.id,
+            'state': 'La Habana',
+        })
+
+        # 2) Compra mixta: pedido propio + órdenes de dos comercios (3 filas independientes)
         mixed_own = self.env['sale.order'].with_company(self.company_a).create({
             'partner_id': device_a.partner_id.id,
             'company_id': self.company_a.id,
@@ -428,26 +461,16 @@ class TestMerchantStoreApi(HttpCase):
             timeout=60,
         )
         self.assertEqual(mixed_res.status_code, 200, mixed_res.text)
-        mixed_subs = json.loads(mixed_res.text)['orders']
+        mixed_merchant_orders = json.loads(mixed_res.text)['orders']
         self.assertEqual(
-            {s['merchant_name'] for s in mixed_subs},
+            {o['merchant_name'] for o in mixed_merchant_orders},
             {self.merchant_a.name, self.merchant_a2.name},
         )
-
-        # 3) Compra solo comercio (sin pedido propio)
-        merchant_only_checkout_id = str(uuid.uuid4())
-        only_m_res = self.url_open(
-            '/api/merchant_store/checkouts',
-            data=json.dumps({
-                'client_checkout_id': merchant_only_checkout_id,
-                'lines': [
-                    {'product_id': self.product_a.product_variant_id.id, 'qty': 1},
-                ],
-            }),
-            headers=auth_json,
-            timeout=60,
-        )
-        self.assertEqual(only_m_res.status_code, 200, only_m_res.text)
+        for m_order in mixed_merchant_orders:
+            self.assertEqual(m_order['delivery_address']['street'], 'Calle 5ta #123')
+            self.assertEqual(m_order['delivery_address']['municipality_name'], 'Playa Test')
+            self.assertEqual(m_order['delivery_address']['neighborhood_name'], 'Miramar Test')
+            self.assertEqual(m_order['delivery_address']['state'], 'La Habana')
 
         purchases_res = self.url_open(
             '/api/merchant_store/purchases',
@@ -456,41 +479,33 @@ class TestMerchantStoreApi(HttpCase):
         )
         self.assertEqual(purchases_res.status_code, 200, purchases_res.text)
         data = json.loads(purchases_res.text)
-        self.assertEqual(data['total'], 3)
-        by_key = {row['purchase_key']: row for row in data['items']}
+        # 5 órdenes independientes: store_only + no_addr_merchant_order + mixed_own + 2 mixed merchants
+        self.assertEqual(data['total'], 5)
+        self.assertEqual(len(data['items']), 5)
+        for row in data['items']:
+            self.assertEqual(set(row.keys()), {'source', 'order'})
 
-        # Fila mixta
-        mixed_row = by_key[f'order:{mixed_own.id}']
-        self.assertEqual(mixed_row['client_checkout_id'], mixed_checkout_id)
-        self.assertEqual(mixed_row['order']['id'], mixed_own.id)
-        self.assertEqual(len(mixed_row['suborders']), 2)
-        self.assertEqual(
-            {s['merchant_name'] for s in mixed_row['suborders']},
-            {self.merchant_a.name, self.merchant_a2.name},
-        )
-        expected_mixed_total = float(mixed_own.amount_total) + sum(
-            float(s['amount_total']) for s in mixed_row['suborders']
-        )
-        self.assertAlmostEqual(mixed_row['amount_total'], expected_mixed_total, places=2)
+        by_key = {(row['source'], row['order']['id']): row['order'] for row in data['items']}
 
-        # Fila solo comercio
-        only_m_row = by_key[f'checkout:{merchant_only_checkout_id}']
-        self.assertIsNone(only_m_row['order'])
-        self.assertEqual(only_m_row['client_checkout_id'], merchant_only_checkout_id)
-        self.assertEqual(len(only_m_row['suborders']), 1)
-        self.assertEqual(only_m_row['suborders'][0]['merchant_name'], self.merchant_a.name)
-        self.assertAlmostEqual(
-            only_m_row['amount_total'],
-            only_m_row['suborders'][0]['amount_total'],
-            places=2,
-        )
+        # Solo tienda (sin dirección)
+        store_only_row = by_key[('store', store_only.id)]
+        self.assertIsNone(store_only_row['delivery_address'])
 
-        # Fila solo tienda
-        store_row = by_key[f'order:{store_only.id}']
-        self.assertIsNone(store_row['client_checkout_id'])
-        self.assertEqual(store_row['order']['id'], store_only.id)
-        self.assertEqual(store_row['suborders'], [])
-        self.assertAlmostEqual(store_row['amount_total'], float(store_only.amount_total), places=2)
+        # Solo comercio (sin dirección)
+        no_addr_row = by_key[('merchant', no_addr_merchant_order['id'])]
+        self.assertEqual(no_addr_row['merchant_name'], self.merchant_a.name)
+        self.assertIsNone(no_addr_row['delivery_address'])
+
+        # Mixta: pedido propio y cada comercio como filas independientes con dirección
+        mixed_own_row = by_key[('store', mixed_own.id)]
+        self.assertEqual(mixed_own_row['delivery_address']['street'], 'Calle 5ta #123')
+
+        for m_order in mixed_merchant_orders:
+            m_row = by_key[('merchant', m_order['id'])]
+            self.assertEqual(m_row['client_checkout_id'], mixed_checkout_id)
+            self.assertEqual(m_row['delivery_address']['street'], 'Calle 5ta #123')
+            self.assertEqual(m_row['delivery_address']['municipality_name'], 'Playa Test')
+            self.assertEqual(m_row['delivery_address']['neighborhood_name'], 'Miramar Test')
 
         # Otro partner de la misma compañía no ve estas compras
         key_other, _ = self._register_device(self.company_a, phone='60777666')
