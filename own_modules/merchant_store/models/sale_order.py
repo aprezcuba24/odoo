@@ -7,6 +7,9 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Command
 from odoo.modules.registry import Registry
 
+from odoo.addons.order_bridge.listeners.store_state_push_listener import (
+    _schedule_store_state_push,
+)
 from odoo.addons.order_bridge.utils.constant import ORDER_BRIDGE_ALLOWED_STORE_TRANSITIONS
 from odoo.addons.order_bridge.utils.telegram_client import send_message
 
@@ -59,9 +62,21 @@ class SaleOrder(models.Model):
     def write(self, vals):
         vals = dict(vals)
         self._merchant_store_apply_order_isolation_vals(vals, records=self)
+        previous_store_states = (
+            {order.id: order.order_bridge_store_state for order in self if order.merchant_id}
+            if 'order_bridge_store_state' in vals
+            else None
+        )
         res = super().write(vals)
         if 'merchant_id' in vals:
             self.mapped('order_line')._merchant_store_check_line_merchant()
+        if previous_store_states is not None:
+            for order in self.filtered('merchant_id'):
+                if (
+                    order.partner_id
+                    and previous_store_states.get(order.id) != order.order_bridge_store_state
+                ):
+                    _schedule_store_state_push(order)
         return res
 
     @api.model

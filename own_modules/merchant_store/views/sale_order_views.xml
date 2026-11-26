@@ -39,7 +39,7 @@
                         string="Negociar"
                         type="object"
                         class="btn-warning"
-                        groups="merchant_store.group_merchant_store_user"
+                        groups="sales_team.group_sale_salesman"
                         invisible="order_bridge_store_state != 'reviewing'"
                     />
                     <button
@@ -47,7 +47,7 @@
                         string="Listo para la entrega"
                         type="object"
                         class="btn-info"
-                        groups="merchant_store.group_merchant_store_user"
+                        groups="sales_team.group_sale_salesman"
                         invisible="order_bridge_store_state not in ('reviewing', 'negotiating')"
                     />
                     <button
@@ -55,7 +55,7 @@
                         string="Entregado"
                         type="object"
                         class="btn-success"
-                        groups="merchant_store.group_merchant_store_user"
+                        groups="sales_team.group_sale_salesman"
                         invisible="order_bridge_store_state != 'ready_for_delivery'"
                     />
                     <button
@@ -63,13 +63,14 @@
                         string="Cancelar"
                         type="object"
                         class="btn-danger"
-                        groups="merchant_store.group_merchant_store_user"
+                        groups="sales_team.group_sale_salesman"
                         invisible="order_bridge_store_state not in ('reviewing', 'negotiating', 'ready_for_delivery', 'delivered')"
                     />
                     <field
                         name="order_bridge_store_state"
                         widget="statusbar"
                         statusbar_visible="reviewing,negotiating,ready_for_delivery,delivered,canceled"
+                        groups="sales_team.group_sale_salesman"
                     />
                     <field name="state" invisible="1"/>
                 </header>
