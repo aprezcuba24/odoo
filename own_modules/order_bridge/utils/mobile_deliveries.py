@@ -116,6 +116,10 @@ def order_to_remote_delivery(order) -> dict:
     notes = order.order_bridge_delivery_note_ids.sorted(
         key=lambda n: (n.create_date or fields.Datetime.now(), n.id),
     )
+    amount_total = float(order.amount_total or 0.0)
+    if amount_total < 0.0:
+        amount_total = 0.0
+    currency = order.currency_id.name if order.currency_id and order.currency_id.name else None
     return {
         'identifier': str(order.id),
         'reference': order.name or '',
@@ -126,4 +130,7 @@ def order_to_remote_delivery(order) -> dict:
         'description': order_delivery_description(order),
         'point': delivery_point_from_order(order),
         'notes': [delivery_note_to_remote(note) for note in notes],
+        'paymentPending': bool(order.order_bridge_payment_pending),
+        'amountTotal': amount_total,
+        'currency': currency,
     }

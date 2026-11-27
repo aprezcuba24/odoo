@@ -135,6 +135,14 @@ class TestMobileDeliveriesApi(HttpCase):
         self.assertIsInstance(item['description'], str)
         self.assertIn('Arroz', item['description'])
         self.assertEqual(item['notes'], [])
+        self.assertIsInstance(item['paymentPending'], bool)
+        self.assertFalse(item['paymentPending'])
+        self.assertIsInstance(item['amountTotal'], (int, float))
+        self.assertNotIsInstance(item['amountTotal'], bool)
+        self.assertGreaterEqual(item['amountTotal'], 0)
+        self.assertAlmostEqual(item['amountTotal'], order.amount_total, places=2)
+        self.assertTrue(item['currency'] is None or isinstance(item['currency'], str))
+        self.assertEqual(item['currency'], order.currency_id.name)
         self.assertNotIn('status', item)
         self.assertNotIn('syncStatus', item)
 
@@ -436,3 +444,265 @@ class TestMobileDeliveriesApi(HttpCase):
         self.assertEqual(res.status_code, 201, res.text)
         order.invalidate_recordset()
         self.assertTrue(order.order_bridge_unread_messenger_note)
+
+    def test_get_deliveries_payment_pending_true(self):
+        order = self._create_ready_order(phone='+53555009001')
+        order.write({'order_bridge_payment_pending': True})
+        res = self.url_open(
+            '/api/mobile/v1/deliveries',
+            headers=self._auth_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        item = json.loads(res.text)[0]
+        self.assertIs(item['paymentPending'], True)
+        self.assertIsInstance(item['amountTotal'], (int, float))
+        self.assertEqual(item['currency'], order.currency_id.name)
+
+    def test_post_delivered_payment_validation_400(self):
+        order = self._create_ready_order(phone='+53555009002')
+        url = f'/api/mobile/v1/deliveries/{order.id}/delivered'
+        headers = {**self._auth_headers(), 'Content-Type': 'application/json'}
+        bad_payments = [
+            None,
+            'cash',
+            {},
+            {'transferCodes': [], 'cash': False, 'paymentPending': False},
+            {'transferCodes': ['   '], 'cash': False, 'paymentPending': False},
+            {'transferCodes': [123], 'cash': False, 'paymentPending': False},
+            {'transferCodes': [], 'cash': 'true', 'paymentPending': False},
+            {'transferCodes': [], 'cash': True, 'paymentPending': 'false'},
+            {'transferCodes': [], 'cash': True},
+        ]
+        for bad in bad_payments:
+            res = self.url_open(
+                url,
+                data=json.dumps({
+                    'deviceTimestamp': '2026-11-26T15:30:00.000Z',
+                    'payment': bad,
+                }),
+                headers=headers,
+                timeout=60,
+            )
+            self.assertEqual(res.status_code, 400, f'Expected 400 for {bad!r}: {res.text}')
+            self.assertEqual(json.loads(res.text), {'error': 'invalid_payment'})
+
+    def test_post_delivered_transfer_not_linked_409(self):
+        order = self._create_ready_order(phone='+53555009003')
+        other_order = self._create_ready_order(phone='+53555009004')
+        self.env['order_bridge.transfer'].create({
+            'phone': '53555009003',
+            'amount': 50.0,
+            'code': 'MM-UNLINKED',
+        })
+        linked_other = self.env['order_bridge.transfer'].create({
+            'phone': '53555009004',
+            'amount': 50.0,
+            'code': 'MM-OTHER-ORDER',
+        })
+        linked_other.with_context(order_bridge_transfer_skip_process=True).write({
+            'order_id': other_order.id,
+        })
+
+        url = f'/api/mobile/v1/deliveries/{order.id}/delivered'
+        headers = {**self._auth_headers(), 'Content-Type': 'application/json'}
+        for code in ('MM-DOES-NOT-EXIST', 'MM-UNLINKED', 'MM-OTHER-ORDER'):
+            res = self.url_open(
+                url,
+                data=json.dumps({
+                    'deviceTimestamp': '2026-11-26T15:30:00.000Z',
+                    'payment': {
+                        'transferCodes': [code],
+                        'cash': False,
+                        'paymentPending': False,
+                    },
+                }),
+                headers=headers,
+                timeout=60,
+            )
+            self.assertEqual(res.status_code, 409, f'Expected 409 for {code}: {res.text}')
+            self.assertEqual(json.loads(res.text), {'error': 'transfer_not_linked'})
+
+    def test_post_delivered_transfer_plus_cash_and_idempotent_retry(self):
+        self.messenger.module_payments = True
+        order = self._create_ready_order(phone='+53555009005', list_price=120.0)
+        headers = {**self._auth_headers(), 'Content-Type': 'application/json'}
+
+        res_pay = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '53555009005',
+                'amount': 50,
+                'code': 'MM-DELIV-MIX-1',
+                'orderIdentifier': str(order.id),
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res_pay.status_code, 200, res_pay.text)
+
+        url = f'/api/mobile/v1/deliveries/{order.id}/delivered'
+        res = self.url_open(
+            url,
+            data=json.dumps({
+                'deviceTimestamp': '2026-11-26T15:30:00.000Z',
+                'payment': {
+                    'transferCodes': ['MM-DELIV-MIX-1'],
+                    'cash': True,
+                    'paymentPending': False,
+                },
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        first_stamp = json.loads(res.text)['serverReceivedAt']
+
+        order.invalidate_recordset()
+        self.assertEqual(order.order_bridge_store_state, STATE_DELIVERED)
+        self.assertFalse(order.order_bridge_payment_pending)
+        self.assertEqual(len(order.order_bridge_payment_ids), 2)
+        self.assertAlmostEqual(order.order_bridge_amount_paid, order.amount_total, places=2)
+        self.assertAlmostEqual(order.order_bridge_amount_due, 0.0, places=2)
+
+        # Retry with invalid payment or unlinked code must still return 200 with same stamp
+        res_retry_invalid = self.url_open(
+            url,
+            data=json.dumps({
+                'deviceTimestamp': '2026-11-26T15:35:00.000Z',
+                'payment': {'transferCodes': [], 'cash': False, 'paymentPending': False},
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res_retry_invalid.status_code, 200, res_retry_invalid.text)
+        self.assertEqual(json.loads(res_retry_invalid.text)['serverReceivedAt'], first_stamp)
+
+        res_retry_unlinked = self.url_open(
+            url,
+            data=json.dumps({
+                'deviceTimestamp': '2026-11-26T15:36:00.000Z',
+                'payment': {'transferCodes': ['MM-UNKNOWN'], 'cash': False, 'paymentPending': True},
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res_retry_unlinked.status_code, 200, res_retry_unlinked.text)
+        self.assertEqual(json.loads(res_retry_unlinked.text)['serverReceivedAt'], first_stamp)
+
+        order.invalidate_recordset()
+        self.assertEqual(len(order.order_bridge_payment_ids), 2)
+        self.assertFalse(order.order_bridge_payment_pending)
+
+    def test_post_delivered_transfer_only_settles_remaining_debt(self):
+        """Paid by transfer (not pending): the order debt must be cleared by the backend."""
+        self.messenger.module_payments = True
+        order = self._create_ready_order(phone='+53555009010', list_price=120.0)
+        partner = order.partner_id
+        headers = {**self._auth_headers(), 'Content-Type': 'application/json'}
+
+        res_pay = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '53555009010',
+                'amount': 50,
+                'code': 'MM-TRANSFER-ONLY-PARTIAL',
+                'orderIdentifier': str(order.id),
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res_pay.status_code, 200, res_pay.text)
+
+        res = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/delivered',
+            data=json.dumps({
+                'deviceTimestamp': '2026-11-26T15:30:00.000Z',
+                'payment': {
+                    'transferCodes': ['MM-TRANSFER-ONLY-PARTIAL'],
+                    'cash': False,
+                    'paymentPending': False,
+                },
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+
+        order.invalidate_recordset()
+        partner.invalidate_recordset()
+        self.assertEqual(order.order_bridge_store_state, STATE_DELIVERED)
+        self.assertFalse(order.order_bridge_payment_pending)
+        self.assertAlmostEqual(order.order_bridge_amount_paid, order.amount_total, places=2)
+        self.assertAlmostEqual(order.order_bridge_amount_due, 0.0, places=2)
+        self.assertAlmostEqual(partner.order_bridge_amount_due, 0.0, places=2)
+        self.assertEqual(len(order.order_bridge_payment_ids), 2)
+
+    def test_post_delivered_pending_keeps_remaining_debt(self):
+        """Pending balance: no automatic settlement of the remaining amount."""
+        self.messenger.module_payments = True
+        order = self._create_ready_order(phone='+53555009011', list_price=120.0)
+        headers = {**self._auth_headers(), 'Content-Type': 'application/json'}
+
+        res_pay = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '53555009011',
+                'amount': 50,
+                'code': 'MM-PENDING-PARTIAL',
+                'orderIdentifier': str(order.id),
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res_pay.status_code, 200, res_pay.text)
+
+        res = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/delivered',
+            data=json.dumps({
+                'deviceTimestamp': '2026-11-26T15:30:00.000Z',
+                'payment': {
+                    'transferCodes': ['MM-PENDING-PARTIAL'],
+                    'cash': False,
+                    'paymentPending': True,
+                },
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+
+        order.invalidate_recordset()
+        self.assertTrue(order.order_bridge_payment_pending)
+        self.assertEqual(len(order.order_bridge_payment_ids), 1)
+        self.assertAlmostEqual(order.order_bridge_amount_due, order.amount_total - 50.0, places=2)
+
+    def test_post_delivered_payment_pending_excluded_from_get(self):
+        order = self._create_ready_order(phone='+53555009006', list_price=100.0)
+        headers = {**self._auth_headers(), 'Content-Type': 'application/json'}
+        res = self.url_open(
+            f'/api/mobile/v1/deliveries/{order.id}/delivered',
+            data=json.dumps({
+                'deviceTimestamp': '2026-11-26T15:30:00.000Z',
+                'payment': {
+                    'transferCodes': [],
+                    'cash': False,
+                    'paymentPending': True,
+                },
+            }),
+            headers=headers,
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        order.invalidate_recordset()
+        self.assertTrue(order.order_bridge_payment_pending)
+        self.assertAlmostEqual(order.order_bridge_amount_due, order.amount_total, places=2)
+
+        res_get = self.url_open(
+            '/api/mobile/v1/deliveries',
+            headers=self._auth_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res_get.status_code, 200, res_get.text)
+        ids = {row['identifier'] for row in json.loads(res_get.text)}
+        self.assertNotIn(str(order.id), ids)

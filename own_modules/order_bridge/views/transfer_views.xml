@@ -10,6 +10,7 @@
                 <field name="code"/>
                 <field name="phone"/>
                 <field name="partner_id"/>
+                <field name="order_id" optional="show"/>
                 <field name="amount"/>
                 <field name="currency_id" optional="hide"/>
                 <field name="applied"
@@ -70,6 +71,7 @@
                             <field name="code" readonly="id"/>
                             <field name="phone" readonly="id"/>
                             <field name="partner_id" readonly="applied"/>
+                            <field name="order_id" readonly="1" invisible="not order_id"/>
                             <field name="applied" readonly="1" invisible="not id"/>
                         </group>
                         <group>
