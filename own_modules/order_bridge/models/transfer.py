@@ -71,15 +71,6 @@ class OrderBridgeTransfer(models.Model):
         check_company=True,
         help='Cliente al que el administrador aplica el importe de esta transferencia.',
     )
-    order_id = fields.Many2one(
-        'sale.order',
-        string='Pedido',
-        ondelete='set null',
-        index=True,
-        check_company=True,
-        copy=False,
-        help='Pedido enlazado a esta transferencia desde la app móvil.',
-    )
     result = fields.Selection(
         selection=[
             ('processed', 'Procesado'),
@@ -259,15 +250,17 @@ class OrderBridgeTransfer(models.Model):
         if not order:
             return self._api_result(transfer)
 
-        if transfer.order_id and transfer.order_id.id != order.id:
-            raise TransferLinkedToOtherOrderError()
-
-        if transfer.order_id and transfer.order_id.id == order.id:
+        if transfer.payment_ids.filtered(lambda p: p.order_id.id == order.id):
             return self._api_result(transfer)
+
+        transfer_rounding = (transfer.currency_id or order.currency_id).rounding or 0.01
+        used_amount = sum(transfer.payment_ids.mapped('amount'))
+        free_balance = float(transfer.amount) - used_amount
+        if float_compare(free_balance, 0.0, precision_rounding=transfer_rounding) <= 0:
+            raise TransferLinkedToOtherOrderError()
 
         backend_response = self._format_linked_backend_response(order, transfer)
         link_vals = {
-            'order_id': order.id,
             'result': 'processed',
             'backend_response': backend_response,
         }
@@ -275,14 +268,14 @@ class OrderBridgeTransfer(models.Model):
             link_vals['partner_id'] = order.partner_id.id
         transfer.with_context(order_bridge_transfer_skip_process=True).write(link_vals)
 
-        if not transfer.payment_ids and order.order_bridge_store_state != STATE_CANCELED:
+        if order.order_bridge_store_state != STATE_CANCELED:
             order.lock_for_update()
             order.invalidate_recordset()
             if order.order_bridge_store_state != STATE_CANCELED:
                 rounding = order.currency_id.rounding or 0.01
                 already_paid = sum(order.order_bridge_payment_ids.mapped('amount'))
                 room = order.amount_total - already_paid
-                apply_amount = min(float(transfer.amount), room)
+                apply_amount = min(free_balance, room)
                 if float_compare(apply_amount, 0.0, precision_rounding=rounding) > 0:
                     transfer_method = self.env.ref('order_bridge.payment_method_transfer')
                     self.env['order_bridge.order.payment'].create({

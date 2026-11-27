@@ -212,7 +212,7 @@ class MobileDeliveriesController(http.Controller):
                     [('transfer_type', '=', 'mobile'), ('code', '=', code)],
                     limit=1,
                 )
-                if not transfer or transfer.order_id.id != order.id:
+                if not transfer or not transfer.payment_ids.filtered(lambda p: p.order_id.id == order.id):
                     return _json({'error': 'transfer_not_linked'}, 409)
 
         stamp = utc_now_iso_ms()

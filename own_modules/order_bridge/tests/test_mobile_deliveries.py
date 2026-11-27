@@ -500,8 +500,12 @@ class TestMobileDeliveriesApi(HttpCase):
             'amount': 50.0,
             'code': 'MM-OTHER-ORDER',
         })
-        linked_other.with_context(order_bridge_transfer_skip_process=True).write({
+        transfer_method = self.env.ref('order_bridge.payment_method_transfer')
+        self.env['order_bridge.order.payment'].create({
             'order_id': other_order.id,
+            'method_id': transfer_method.id,
+            'amount': 50.0,
+            'transfer_id': linked_other.id,
         })
 
         url = f'/api/mobile/v1/deliveries/{order.id}/delivered'
