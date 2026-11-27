@@ -256,3 +256,231 @@ class TestMobileModulesPaymentsApi(HttpCase):
             timeout=60,
         )
         self.assertEqual(res.status_code, 401, res.text)
+
+    def test_post_payments_invalid_order_identifier_400(self):
+        for bad_id in ('', '   ', 123, True, [], {}):
+            res = self.url_open(
+                '/api/mobile/v1/payments',
+                data=json.dumps({
+                    'phone': '5359012010',
+                    'amount': 20,
+                    'code': 'MM-BAD-ORDER-ID',
+                    'orderIdentifier': bad_id,
+                }),
+                headers=self._json_headers(),
+                timeout=60,
+            )
+            self.assertEqual(res.status_code, 400, f'Expected 400 for {bad_id!r}: {res.text}')
+            self.assertEqual(json.loads(res.text), {'error': 'invalid_order_identifier'})
+
+    def test_post_payments_order_not_found_404(self):
+        _, foreign_order = self._create_due_order(phone='+5359012011', price=100.0)
+        foreign_order.write({'order_bridge_messenger_id': self.delivery_only.id})
+
+        for identifier in ('999999999', 'SO-NO-NUM', str(foreign_order.id)):
+            res = self.url_open(
+                '/api/mobile/v1/payments',
+                data=json.dumps({
+                    'phone': '5359012011',
+                    'amount': 20,
+                    'code': 'MM-ORDER-404',
+                    'orderIdentifier': identifier,
+                }),
+                headers=self._json_headers(),
+                timeout=60,
+            )
+            self.assertEqual(res.status_code, 404, f'Expected 404 for {identifier}: {res.text}')
+            self.assertEqual(json.loads(res.text), {'error': 'order_not_found'})
+
+    def test_post_payments_link_order_idempotency_and_conflict(self):
+        _, order1 = self._create_due_order(phone='+5359012012', price=100.0)
+        _, order2 = self._create_due_order(phone='+5359012013', price=100.0)
+        order1.write({
+            'order_bridge_messenger_id': self.messenger.id,
+            'order_bridge_store_state': 'ready_for_delivery',
+        })
+        order1.write({'order_bridge_store_state': 'delivered'})
+        order2.write({
+            'order_bridge_messenger_id': self.messenger.id,
+            'order_bridge_store_state': 'ready_for_delivery',
+        })
+
+        # 1. First consult without orderIdentifier
+        res1 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012012',
+                'amount': 60,
+                'code': 'MM-LINK-FLOW-1',
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res1.status_code, 200, res1.text)
+        self._assert_payment_ok(json.loads(res1.text), result='processed', backend_equals='')
+
+        # 2. Re-send same code WITH orderIdentifier (already delivered order) -> links now
+        res2 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012012',
+                'amount': 60,
+                'code': 'MM-LINK-FLOW-1',
+                'orderIdentifier': str(order1.id),
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res2.status_code, 200, res2.text)
+        data2 = json.loads(res2.text)
+        self.assertEqual(data2['result'], 'processed')
+        self.assertIn(order1.name, data2['backendResponse'])
+
+        transfer = self.env['order_bridge.transfer'].search([('code', '=', 'MM-LINK-FLOW-1')])
+        self.assertEqual(len(transfer), 1)
+        self.assertEqual(transfer.payment_ids.mapped('order_id'), order1)
+        self.assertEqual(len(transfer.payment_ids), 1)
+        self.assertAlmostEqual(transfer.payment_ids.amount, 60.0, places=2)
+        order1.invalidate_recordset()
+        self.assertAlmostEqual(order1.order_bridge_amount_due, 40.0, places=2)
+
+        # 3. Repeat same code + same orderIdentifier -> idempotent, no duplicate payment
+        res3 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5300000000',
+                'amount': 999,
+                'code': 'MM-LINK-FLOW-1',
+                'orderIdentifier': str(order1.id),
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res3.status_code, 200, res3.text)
+        self.assertEqual(json.loads(res3.text), data2)
+        transfer.invalidate_recordset()
+        self.assertEqual(len(transfer.payment_ids), 1)
+
+        # 4. Repeat without orderIdentifier -> does NOT touch payments
+        res4 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012012',
+                'amount': 60,
+                'code': 'MM-LINK-FLOW-1',
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res4.status_code, 200, res4.text)
+        transfer.invalidate_recordset()
+        self.assertEqual(transfer.payment_ids.mapped('order_id'), order1)
+
+        # 5. Repeat with different orderIdentifier when balance is exhausted -> 409 conflict
+        res5 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012013',
+                'amount': 60,
+                'code': 'MM-LINK-FLOW-1',
+                'orderIdentifier': str(order2.id),
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res5.status_code, 409, res5.text)
+        self.assertEqual(json.loads(res5.text), {'error': 'transfer_linked_to_other_order'})
+
+    def test_post_payments_backend_applied_to_other_order_returns_409(self):
+        partner1, order1 = self._create_due_order(phone='+5359012020', price=100.0)
+        _, order2 = self._create_due_order(phone='+5359012021', price=100.0)
+        order2.write({
+            'order_bridge_messenger_id': self.messenger.id,
+            'order_bridge_store_state': 'ready_for_delivery',
+        })
+
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': '5359012020',
+            'amount': 80.0,
+            'code': 'MM-BACKEND-USED-1',
+            'partner_id': partner1.id,
+        })
+        transfer.action_apply_to_debt()
+        self.assertEqual(transfer.payment_ids.mapped('order_id'), order1)
+
+        res = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012021',
+                'amount': 80,
+                'code': 'MM-BACKEND-USED-1',
+                'orderIdentifier': str(order2.id),
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res.status_code, 409, res.text)
+        self.assertEqual(json.loads(res.text), {'error': 'transfer_linked_to_other_order'})
+        transfer.invalidate_recordset()
+        self.assertEqual(transfer.payment_ids.mapped('order_id'), order1)
+
+    def test_post_payments_partial_balance_applies_remaining_then_rejects(self):
+        partner1, order1 = self._create_due_order(phone='+5359012022', price=80.0)
+        _, order2 = self._create_due_order(phone='+5359012023', price=100.0)
+        _, order3 = self._create_due_order(phone='+5359012024', price=50.0)
+        order2.write({
+            'order_bridge_messenger_id': self.messenger.id,
+            'order_bridge_store_state': 'ready_for_delivery',
+        })
+        order3.write({
+            'order_bridge_messenger_id': self.messenger.id,
+            'order_bridge_store_state': 'ready_for_delivery',
+        })
+
+        transfer = self.env['order_bridge.transfer'].create({
+            'phone': '5359012022',
+            'amount': 120.0,
+            'code': 'MM-PARTIAL-BAL-1',
+            'partner_id': partner1.id,
+        })
+        transfer.action_apply_to_debt()
+        self.assertEqual(len(transfer.payment_ids), 1)
+        self.assertAlmostEqual(transfer.payment_ids.amount, 80.0, places=2)
+
+        # Free balance is 40 -> order2 gets a payment of 40
+        res2 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012023',
+                'amount': 120,
+                'code': 'MM-PARTIAL-BAL-1',
+                'orderIdentifier': str(order2.id),
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res2.status_code, 200, res2.text)
+        self.assertEqual(json.loads(res2.text)['result'], 'processed')
+        transfer.invalidate_recordset()
+        order2.invalidate_recordset()
+        self.assertEqual(len(transfer.payment_ids), 2)
+        p2 = transfer.payment_ids.filtered(lambda p: p.order_id == order2)
+        self.assertAlmostEqual(p2.amount, 40.0, places=2)
+        self.assertAlmostEqual(order2.order_bridge_amount_due, 60.0, places=2)
+
+        # Free balance is now 0 -> order3 is rejected with 409
+        res3 = self.url_open(
+            '/api/mobile/v1/payments',
+            data=json.dumps({
+                'phone': '5359012024',
+                'amount': 120,
+                'code': 'MM-PARTIAL-BAL-1',
+                'orderIdentifier': str(order3.id),
+            }),
+            headers=self._json_headers(),
+            timeout=60,
+        )
+        self.assertEqual(res3.status_code, 409, res3.text)
+        self.assertEqual(json.loads(res3.text), {'error': 'transfer_linked_to_other_order'})
+        transfer.invalidate_recordset()
+        self.assertEqual(len(transfer.payment_ids), 2)

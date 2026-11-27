@@ -6,6 +6,13 @@ from odoo import _, api, fields, models
 from odoo.exceptions import LockError, UserError, ValidationError
 from odoo.tools import mute_logger
 from odoo.tools.float_utils import float_compare
+from odoo.tools.misc import format_amount
+
+from odoo.addons.order_bridge.utils.constant import STATE_CANCELED
+
+
+class TransferLinkedToOtherOrderError(Exception):
+    """Raised when a transfer code is already linked to a different sale order."""
 
 
 class OrderBridgeTransfer(models.Model):
@@ -210,22 +217,74 @@ class OrderBridgeTransfer(models.Model):
         )
 
     @api.model
+    def _format_linked_backend_response(self, order, transfer):
+        """Short stable markdown response for a transfer linked to an order."""
+        amount_text = format_amount(self.env, transfer.amount, order.currency_id or transfer.currency_id)
+        return f'Transferencia registrada para el pedido **{order.name}** ({amount_text}).'
+
+    @api.model
     def _api_result(self, transfer):
         """Return ``(result, backend_response)`` for an existing transfer."""
         return transfer.result, transfer.backend_response or ''
 
     @api.model
-    def process_mobile_payment(self, messenger, phone, amount, code):
-        """API helper: register a mobile notice without applying payments."""
+    def process_mobile_payment(self, messenger, phone, amount, code, order=None):
+        """API helper: register a mobile notice and optionally link it to an order."""
         self = self.sudo().with_context(order_bridge_transfer_from_api=True)
-        transfer = self._register_notice({
-            'company_id': messenger.company_id.id,
-            'phone': phone,
-            'amount': amount,
-            'code': code,
-            'transfer_type': 'mobile',
-            'messenger_id': messenger.id,
-        })
+        transfer = self._find_by_code('mobile', code)
+        if transfer:
+            transfer.lock_for_update()
+            transfer.invalidate_recordset()
+        else:
+            transfer = self._register_notice({
+                'company_id': messenger.company_id.id,
+                'phone': phone,
+                'amount': amount,
+                'code': code,
+                'transfer_type': 'mobile',
+                'messenger_id': messenger.id,
+            })
+            transfer.lock_for_update()
+            transfer.invalidate_recordset()
+
+        if not order:
+            return self._api_result(transfer)
+
+        if transfer.payment_ids.filtered(lambda p: p.order_id.id == order.id):
+            return self._api_result(transfer)
+
+        transfer_rounding = (transfer.currency_id or order.currency_id).rounding or 0.01
+        used_amount = sum(transfer.payment_ids.mapped('amount'))
+        free_balance = float(transfer.amount) - used_amount
+        if float_compare(free_balance, 0.0, precision_rounding=transfer_rounding) <= 0:
+            raise TransferLinkedToOtherOrderError()
+
+        backend_response = self._format_linked_backend_response(order, transfer)
+        link_vals = {
+            'result': 'processed',
+            'backend_response': backend_response,
+        }
+        if not transfer.partner_id and order.partner_id:
+            link_vals['partner_id'] = order.partner_id.id
+        transfer.with_context(order_bridge_transfer_skip_process=True).write(link_vals)
+
+        if order.order_bridge_store_state != STATE_CANCELED:
+            order.lock_for_update()
+            order.invalidate_recordset()
+            if order.order_bridge_store_state != STATE_CANCELED:
+                rounding = order.currency_id.rounding or 0.01
+                already_paid = sum(order.order_bridge_payment_ids.mapped('amount'))
+                room = order.amount_total - already_paid
+                apply_amount = min(free_balance, room)
+                if float_compare(apply_amount, 0.0, precision_rounding=rounding) > 0:
+                    transfer_method = self.env.ref('order_bridge.payment_method_transfer')
+                    self.env['order_bridge.order.payment'].create({
+                        'order_id': order.id,
+                        'method_id': transfer_method.id,
+                        'amount': apply_amount,
+                        'transfer_id': transfer.id,
+                    })
+
         return self._api_result(transfer)
 
     @api.model

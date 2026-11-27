@@ -3,9 +3,10 @@
 import json
 import logging
 
-from odoo import http
+from odoo import Command, http
 from odoo.exceptions import LockError, UserError
 from odoo.http import request
+from odoo.tools.float_utils import float_compare
 
 from odoo.addons.order_bridge.utils.constant import (
     DELIVERY_NOTE_MAX_LENGTH,
@@ -51,6 +52,65 @@ def _parse_order_identifier(identifier: str):
     if not raw or not raw.isdigit():
         return None
     return int(raw)
+
+
+def _parse_delivery_payment(raw_payment):
+    """Validate optional ``payment`` object on POST .../delivered.
+
+    Return ``(parsed_dict, None)`` or ``(None, 'invalid_payment')``.
+    """
+    if not isinstance(raw_payment, dict):
+        return None, 'invalid_payment'
+
+    for key in ('transferCodes', 'cash', 'paymentPending'):
+        if key not in raw_payment:
+            return None, 'invalid_payment'
+
+    raw_codes = raw_payment['transferCodes']
+    cash = raw_payment['cash']
+    payment_pending = raw_payment['paymentPending']
+
+    if not isinstance(raw_codes, list):
+        return None, 'invalid_payment'
+    if not isinstance(cash, bool) or not isinstance(payment_pending, bool):
+        return None, 'invalid_payment'
+
+    codes = []
+    for item in raw_codes:
+        if not isinstance(item, str) or not item.strip():
+            return None, 'invalid_payment'
+        codes.append(item.strip())
+
+    if not codes and not cash and not payment_pending:
+        return None, 'invalid_payment'
+
+    return {
+        'transfer_codes': codes,
+        'cash': cash,
+        'payment_pending': payment_pending,
+    }, None
+
+
+def _settlement_payment_vals(order, payment):
+    """Payment line that clears the remaining balance when the order is not pending.
+
+    Cash goes to the Efectivo method; otherwise the remainder is booked as Transferencia
+    (no transfer_id, since the SMS amounts were already linked by POST /payments).
+    Return None when nothing remains. Amounts are never taken from the request.
+    """
+    rounding = order.currency_id.rounding or 0.01
+    already_paid = sum(order.order_bridge_payment_ids.mapped('amount'))
+    remaining = order.amount_total - already_paid
+    if float_compare(remaining, 0.0, precision_rounding=rounding) <= 0:
+        return None
+    method_xmlid = (
+        'order_bridge.payment_method_cash' if payment['cash']
+        else 'order_bridge.payment_method_transfer'
+    )
+    return {
+        'method_id': request.env.ref(method_xmlid).id,
+        'amount': remaining,
+    }
 
 
 class MobileDeliveriesController(http.Controller):
@@ -140,13 +200,36 @@ class MobileDeliveriesController(http.Controller):
         if order.order_bridge_store_state != STATE_READY_FOR_DELIVERY:
             return _json({'error': 'conflict'}, 409)
 
+        payment = None
+        if 'payment' in payload:
+            payment, payment_error = _parse_delivery_payment(payload['payment'])
+            if payment_error:
+                return _json({'error': payment_error}, 400)
+
+            Transfer = request.env['order_bridge.transfer'].sudo().with_context(active_test=False)
+            for code in payment['transfer_codes']:
+                transfer = Transfer.search(
+                    [('transfer_type', '=', 'mobile'), ('code', '=', code)],
+                    limit=1,
+                )
+                if not transfer or not transfer.payment_ids.filtered(lambda p: p.order_id.id == order.id):
+                    return _json({'error': 'transfer_not_linked'}, 409)
+
         stamp = utc_now_iso_ms()
+        write_vals = {
+            'order_bridge_store_state': STATE_DELIVERED,
+            'order_bridge_delivery_received_at': stamp,
+            'order_bridge_delivery_device_at': device_ts,
+        }
+        if payment is not None:
+            write_vals['order_bridge_payment_pending'] = payment['payment_pending']
+            if not payment['payment_pending']:
+                settlement = _settlement_payment_vals(order, payment)
+                if settlement:
+                    write_vals['order_bridge_payment_ids'] = [Command.create(settlement)]
+
         try:
-            order.write({
-                'order_bridge_store_state': STATE_DELIVERED,
-                'order_bridge_delivery_received_at': stamp,
-                'order_bridge_delivery_device_at': device_ts,
-            })
+            order.write(write_vals)
         except UserError:
             _logger.info(
                 'mobile delivery rejected order_id=%s messenger_id=%s',
