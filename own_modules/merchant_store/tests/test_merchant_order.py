@@ -324,6 +324,7 @@ class TestMerchantStoreOrder(TransactionCase):
         Users = self.env['res.users'].with_context(no_reset_password=True)
         group_base = self.env.ref('base.group_user')
         group_salesman = self.env.ref('sales_team.group_sale_salesman')
+        group_account_readonly = self.env.ref('account.group_account_readonly')
 
         salesman = Users.create({
             'name': 'Merchant Order Salesman',
@@ -339,7 +340,7 @@ class TestMerchantStoreOrder(TransactionCase):
             'password': 'merchant_order_plain_user',
             'company_id': self.company_a.id,
             'company_ids': [Command.set([self.company_a.id])],
-            'group_ids': [Command.set([group_base.id])],
+            'group_ids': [Command.set([group_base.id, group_account_readonly.id])],
         })
 
         salesman_arch = self.env['sale.order'].with_user(salesman).get_view(
