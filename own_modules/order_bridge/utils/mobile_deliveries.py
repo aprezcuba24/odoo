@@ -99,6 +99,7 @@ def order_delivery_description(order) -> str:
     for line in lines:
         name = line.product_id.with_context(display_default_code=False).display_name or ''
         name = str(name).replace('|', '\\|')
+        name = f'👉 {name}'
         qty = line.product_uom_qty
         if qty and qty != 1.0:
             name = f'{name} × {qty:g}'
